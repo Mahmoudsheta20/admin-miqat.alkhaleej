@@ -170,7 +170,7 @@ export default function CaptainContractBuilderPage() {
   // Inspection Gating Notice
   if (!todayInspection) {
     return (
-      <div className="theme-card rounded-3xl p-8 border border-amber-500/30 text-center space-y-4 max-w-xl mx-auto my-8">
+      <div className="theme-card rounded-3xl p-6 sm:p-8 border border-amber-500/30 text-center space-y-4 max-w-xl mx-auto my-8">
         <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
           <AlertTriangle className="w-8 h-8" />
         </div>
@@ -180,16 +180,16 @@ export default function CaptainContractBuilderPage() {
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
           بناءً على اشتراطات هيئة النقل للنقل المتخصص، لا يمكن إنشاء وتوثيق عقد نقل بري جديد إلا بعد توثيق فحص المركبة اليومي (الصفحة 3 من العقد الرسمي).
         </p>
-        <div className="pt-4 flex items-center justify-center gap-3">
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/captain"
-            className="px-4 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             العودة للرئيسية
           </Link>
           <Link
             href="/captain/inspection"
-            className="px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
+            className="w-full sm:w-auto justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
           >
             <ClipboardCheck className="w-4 h-4" />
             إجراء فحص المركبة الآن
@@ -202,7 +202,7 @@ export default function CaptainContractBuilderPage() {
   // Created Success View
   if (createdContract) {
     return (
-      <div className="theme-card rounded-3xl p-8 border theme-border text-center space-y-4 max-w-xl mx-auto my-8">
+      <div className="theme-card rounded-3xl p-6 sm:p-8 border theme-border text-center space-y-4 max-w-xl mx-auto my-8">
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
           <CheckCircle2 className="w-8 h-8" />
         </div>
@@ -215,7 +215,7 @@ export default function CaptainContractBuilderPage() {
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           تم إنشاء العقد الرسمي المكون من 3 صفحات وتضمين كشف الركاب وتقرير الفحص المعتمد. يمكنك الآن تحميل أو طباعة نسخة الـ PDF.
         </p>
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
           <button
             onClick={() => setIsPdfOpen(true)}
             className="w-full sm:w-auto px-6 py-3 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
@@ -438,7 +438,7 @@ export default function CaptainContractBuilderPage() {
             </div>
 
             {/* Notes */}
-            <div className="space-y-1 sm:col-span-2">
+            <div className="space-y-1 sm:col-span-2 lg:col-span-3">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 ملاحظات إضافية على العقد
               </label>
@@ -453,7 +453,7 @@ export default function CaptainContractBuilderPage() {
         </div>
 
         {/* Section 2: Dynamic Passenger Manifest */}
-        <div className="theme-card p-6 rounded-2xl border theme-border space-y-4">
+        <div className="theme-card p-4 sm:p-6 rounded-2xl border theme-border space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-3">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -465,18 +465,18 @@ export default function CaptainContractBuilderPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={addFivePassengers}
-                className="px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition"
+                className="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition"
               >
                 + إضافة 5 ركاب
               </button>
               <button
                 type="button"
                 onClick={() => append({ name: "", nationality: "سعودي", idNumber: "" })}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
+                className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 إضافة راكب
@@ -488,52 +488,87 @@ export default function CaptainContractBuilderPage() {
             {fields.map((field, index) => (
               <div
                 key={field.id}
-                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition"
+                className="p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border flex flex-col gap-3 transition"
               >
-                <div className="w-7 h-7 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
-                  {index + 1}
+                {/* Mobile row header */}
+                <div className="flex items-center justify-between sm:hidden pb-2 border-b border-slate-200/70 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 font-mono font-bold text-xs flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {index === 0 ? "الضيف الأساسي" : `الراكب ${index + 1}`}
+                    </span>
+                  </div>
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition flex items-center gap-1 text-[11px] font-bold"
+                      title="حذف هذا الراكب"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>حذف</span>
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <input
-                      type="text"
-                      {...register(`passengers.${index}.name` as const)}
-                      placeholder={index === 0 ? "اسم الضيف الأساسي" : `اسم الراكب ${index + 1}`}
-                      className="w-full px-3 py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
-                    />
+                {/* Fields layout */}
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:flex w-7 h-7 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 font-mono font-bold text-xs items-center justify-center shrink-0">
+                    {index + 1}
                   </div>
 
-                  <div>
-                    <input
-                      type="text"
-                      {...register(`passengers.${index}.nationality` as const)}
-                      placeholder="الجنسية (مثال: سعودي)"
-                      className="w-full px-3 py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-                    />
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-bold block sm:hidden mb-1">
+                        الاسم الكامل
+                      </label>
+                      <input
+                        type="text"
+                        {...register(`passengers.${index}.name` as const)}
+                        placeholder={index === 0 ? "اسم الضيف الأساسي" : `اسم الراكب ${index + 1}`}
+                        className="w-full px-3 py-2 sm:py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-bold block sm:hidden mb-1">
+                        الجنسية
+                      </label>
+                      <input
+                        type="text"
+                        {...register(`passengers.${index}.nationality` as const)}
+                        placeholder="الجنسية (مثال: سعودي)"
+                        className="w-full px-3 py-2 sm:py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-bold block sm:hidden mb-1">
+                        رقم الهوية أو الجواز
+                      </label>
+                      <input
+                        type="text"
+                        {...register(`passengers.${index}.idNumber` as const)}
+                        placeholder="رقم الهوية / الجواز"
+                        dir="ltr"
+                        className="w-full px-3 py-2 sm:py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right font-mono"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <input
-                      type="text"
-                      {...register(`passengers.${index}.idNumber` as const)}
-                      placeholder="رقم الهوية / الجواز"
-                      dir="ltr"
-                      className="w-full px-3 py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right font-mono"
-                    />
-                  </div>
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="hidden sm:flex p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0"
+                      title="حذف هذا الراكب"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-
-                {fields.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition self-end sm:self-center shrink-0"
-                    title="حذف هذا الراكب"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
               </div>
             ))}
           </div>
@@ -544,17 +579,17 @@ export default function CaptainContractBuilderPage() {
         </div>
 
         {/* Submit Actions */}
-        <div className="flex items-center justify-end gap-3 pt-3">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-3">
           <Link
             href="/captain"
-            className="px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             إلغاء
           </Link>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-8 py-3 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50"
+            className="w-full sm:w-auto justify-center px-8 py-3 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50"
           >
             <FilePlus2 className="w-4 h-4" />
             {isSubmitting ? "جاري توثيق وتوليد العقد..." : "اعتماد وتوثيق العقد الرسمي"}

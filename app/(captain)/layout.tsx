@@ -64,12 +64,12 @@ export default function CaptainLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header onMenuToggle={() => setMobileSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8">
           <div className="max-w-5xl mx-auto w-full">{children}</div>
         </main>
 
         {/* Mobile Bottom Navigation Bar for Captains */}
-        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-t theme-border py-2 px-6 flex items-center justify-around z-40">
+        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-t theme-border py-2 px-4 sm:px-6 flex items-center justify-around z-40">
           <Link
             href="/captain"
             className={`flex flex-col items-center gap-1 text-xs font-bold transition ${

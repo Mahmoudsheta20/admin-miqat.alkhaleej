@@ -195,7 +195,7 @@ export default function FleetManagementPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
           {["ALL", "AVAILABLE", "ON_TRIP", "MAINTENANCE"].map((st) => (
             <button
               key={st}
@@ -320,10 +320,10 @@ export default function FleetManagementPage() {
 
       {/* Add/Edit Modal */}
       {(isAddModalOpen || editingVehicle) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="relative w-full max-w-lg theme-card rounded-3xl shadow-2xl overflow-hidden border theme-border">
-            <div className="flex items-center justify-between px-6 py-4 border-b theme-border theme-card-subtle">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 {editingVehicle ? "تعديل بيانات المركبة" : "إضافة مركبة جديدة للأسطول"}
               </h3>
               <button
@@ -337,7 +337,7 @@ export default function FleetManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
                   {formError}

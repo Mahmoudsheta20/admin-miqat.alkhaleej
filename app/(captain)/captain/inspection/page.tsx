@@ -181,26 +181,27 @@ export default function CaptainInspectionPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setAllSound(true)}
-            className="px-3.5 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition"
+            className="w-full sm:w-auto justify-center px-3.5 py-2 sm:py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition flex items-center gap-1.5"
           >
+            <Check className="w-3.5 h-3.5" />
             تحديد الكل سليم ✓
           </button>
         </div>
       </div>
 
       {alreadyInspected && !submittedSuccess && (
-        <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between text-blue-900 dark:text-blue-200 text-xs">
+        <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-blue-900 dark:text-blue-200 text-xs">
           <div className="flex items-center gap-2.5 font-bold">
-            <CheckCircle2 className="w-4 h-4 text-blue-500" />
+            <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />
             <span>لقد قمت بالفعل بتسجيل فحص اليوم بنجاح. يمكنك إعادة الفحص أو التحديث عند الحاجة.</span>
           </div>
           <Link
             href="/captain/contract"
-            className="px-3 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold shrink-0"
+            className="w-full sm:w-auto text-center px-3 py-2 rounded-lg gold-gradient-btn text-xs font-bold shrink-0"
           >
             الانتقال للعقد ←
           </Link>
@@ -208,7 +209,7 @@ export default function CaptainInspectionPage() {
       )}
 
       {submittedSuccess ? (
-        <div className="theme-card rounded-3xl p-8 border theme-border text-center space-y-4">
+        <div className="theme-card rounded-3xl p-6 sm:p-8 border theme-border text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -218,16 +219,16 @@ export default function CaptainInspectionPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
             تم اعتماد جاهزية الحافلة ({vehiclePlate}) لليوم. تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.
           </p>
-          <div className="pt-4 flex items-center justify-center gap-3">
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/captain"
-              className="px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-center"
             >
               العودة للرئيسية
             </Link>
             <Link
               href="/captain/contract"
-              className="px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
+              className="w-full sm:w-auto justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
             >
               <FilePlus2 className="w-4 h-4" />
               إنشاء عقد رحلة الآن
@@ -301,7 +302,7 @@ export default function CaptainInspectionPage() {
                   <div
                     key={item.key}
                     onClick={() => toggleCheck(item.key)}
-                    className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
+                    className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
                   >
                     <div>
                       <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -313,17 +314,17 @@ export default function CaptainInspectionPage() {
                       <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setChecks((prev) => ({ ...prev, [item.key]: true }));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition ${
+                        className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                           isSound
                             ? "bg-emerald-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
@@ -336,10 +337,10 @@ export default function CaptainInspectionPage() {
                           e.stopPropagation();
                           setChecks((prev) => ({ ...prev, [item.key]: false }));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition ${
+                        className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                           !isSound
                             ? "bg-rose-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
                         }`}
                       >
                         <XCircle className="w-3.5 h-3.5" />
@@ -375,7 +376,7 @@ export default function CaptainInspectionPage() {
                   <div
                     key={item.key}
                     onClick={() => toggleCheck(item.key)}
-                    className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
+                    className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
                   >
                     <div>
                       <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -387,17 +388,17 @@ export default function CaptainInspectionPage() {
                       <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setChecks((prev) => ({ ...prev, [item.key]: true }));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition ${
+                        className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                           isSound
                             ? "bg-emerald-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
@@ -410,10 +411,10 @@ export default function CaptainInspectionPage() {
                           e.stopPropagation();
                           setChecks((prev) => ({ ...prev, [item.key]: false }));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition ${
+                        className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                           !isSound
                             ? "bg-rose-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
                         }`}
                       >
                         <XCircle className="w-3.5 h-3.5" />
@@ -449,7 +450,7 @@ export default function CaptainInspectionPage() {
                   <div
                     key={item.key}
                     onClick={() => toggleCheck(item.key)}
-                    className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
+                    className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
                   >
                     <div>
                       <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -461,17 +462,17 @@ export default function CaptainInspectionPage() {
                       <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setChecks((prev) => ({ ...prev, [item.key]: true }));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition ${
+                        className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                           isSound
                             ? "bg-emerald-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
@@ -484,10 +485,10 @@ export default function CaptainInspectionPage() {
                           e.stopPropagation();
                           setChecks((prev) => ({ ...prev, [item.key]: false }));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition ${
+                        className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                           !isSound
                             ? "bg-rose-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
                         }`}
                       >
                         <XCircle className="w-3.5 h-3.5" />
@@ -537,17 +538,17 @@ export default function CaptainInspectionPage() {
           </div>
 
           {/* Submit Action */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
             <Link
               href="/captain"
-              className="px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
               إلغاء
             </Link>
             <button
               type="submit"
               disabled={isSubmitting || !driverDeclared}
-              className="px-7 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50"
+              className="w-full sm:w-auto justify-center px-7 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50"
             >
               <ClipboardCheck className="w-4 h-4" />
               {isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص اليومي"}

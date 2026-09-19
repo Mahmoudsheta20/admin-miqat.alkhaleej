@@ -88,8 +88,8 @@ interface SidebarHeaderProps {
 function SidebarHeader({ collapsed }: SidebarHeaderProps) {
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-4.5 border-b border-slate-200/80 dark:border-slate-800/80 ${
-        collapsed ? "justify-center" : ""
+      className={`flex items-center gap-3 px-4 pl-12 py-4.5 border-b border-slate-200/80 dark:border-slate-800/80 ${
+        collapsed ? "justify-center pl-4" : ""
       }`}
     >
       <div className="w-12 h-12 flex items-center justify-center shrink-0">

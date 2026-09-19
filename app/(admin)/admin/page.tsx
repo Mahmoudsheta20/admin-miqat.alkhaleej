@@ -222,60 +222,109 @@ export default function AdminDashboardPage() {
             لا توجد عقود مسجلة حتى الآن.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
-                <tr>
-                  <th className="px-5 py-3">رقم العقد</th>
-                  <th className="px-5 py-3">العميل</th>
-                  <th className="px-5 py-3">الكابتن</th>
-                  <th className="px-5 py-3">اللوحة</th>
-                  <th className="px-5 py-3">نوع العملية</th>
-                  <th className="px-5 py-3">التاريخ والوقت</th>
-                  <th className="px-5 py-3">الركاب</th>
-                  <th className="px-5 py-3 text-left">الإجراء</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
-                {stats.recentContracts.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
-                    <td className="px-5 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
-                      {c.referenceNumber}
-                    </td>
-                    <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white">
-                      {c.customerName}
-                    </td>
-                    <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">
-                      {c.captainName}
-                    </td>
-                    <td className="px-5 py-3.5 font-mono font-semibold">
-                      {c.vehiclePlate}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <StatusBadge type="operation" status={c.operationType} size="sm" />
-                    </td>
-                    <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono">
-                      {c.tripDate} {c.tripTime}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                        {c.passengersCount} ركاب
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-left">
-                      <button
-                        onClick={() => openPdf(c.id, c.referenceNumber)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-amber-500" />
-                        عرض العقد
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table (Visible on md and larger) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-right text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
+                  <tr>
+                    <th className="px-5 py-3">رقم العقد</th>
+                    <th className="px-5 py-3">العميل</th>
+                    <th className="px-5 py-3">الكابتن</th>
+                    <th className="px-5 py-3">اللوحة</th>
+                    <th className="px-5 py-3">نوع العملية</th>
+                    <th className="px-5 py-3">التاريخ والوقت</th>
+                    <th className="px-5 py-3">الركاب</th>
+                    <th className="px-5 py-3 text-left">الإجراء</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
+                  {stats.recentContracts.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                      <td className="px-5 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
+                        {c.referenceNumber}
+                      </td>
+                      <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white">
+                        {c.customerName}
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">
+                        {c.captainName}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono font-semibold">
+                        {c.vehiclePlate}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <StatusBadge type="operation" status={c.operationType} size="sm" />
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono">
+                        {c.tripDate} {c.tripTime}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
+                          {c.passengersCount} ركاب
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-left">
+                        <button
+                          onClick={() => openPdf(c.id, c.referenceNumber)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-amber-500" />
+                          عرض العقد
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards (Visible on screens smaller than md) */}
+            <div className="md:hidden divide-y theme-border">
+              {stats.recentContracts.map((c) => (
+                <div key={c.id} className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                      {c.referenceNumber}
+                    </span>
+                    <StatusBadge type="operation" status={c.operationType} size="sm" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">العميل:</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{c.customerName}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">الكابتن:</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-semibold">{c.captainName}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">المركبة / اللوحة:</span>
+                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{c.vehiclePlate}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">التاريخ والوقت:</span>
+                      <span className="font-mono text-slate-500 dark:text-slate-400">{c.tripDate} {c.tripTime}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t theme-border gap-2">
+                    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
+                      {c.passengersCount} ركاب
+                    </span>
+                    <button
+                      onClick={() => openPdf(c.id, c.referenceNumber)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-amber-500" />
+                      عرض العقد
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

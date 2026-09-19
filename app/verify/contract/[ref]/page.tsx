@@ -80,9 +80,9 @@ export default async function ContractVerificationPage({ params }: PageProps) {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans py-8 px-4 sm:px-6" dir="rtl">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header Branding */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 shrink-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="relative w-14 sm:w-16 h-14 sm:h-16 shrink-0">
               <Image
                 src="/logo.svg"
                 alt="ميقات الخليج"
@@ -92,28 +92,28 @@ export default async function ContractVerificationPage({ params }: PageProps) {
               />
             </div>
             <div>
-              <div className="text-xs font-bold text-amber-600 dark:text-amber-400">نظام توثيق العقود الرقمي</div>
-              <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+              <div className="text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400">نظام توثيق العقود الرقمي</div>
+              <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
                 شركة ميقات الخليج للنقل البري
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                ترخيص هيئة النقل: <span className="font-mono font-bold">35/00009318</span> • سجل تجاري: <span className="font-mono font-bold">7054842252</span>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                ترخيص هيئة النقل: <span className="font-mono font-bold">35/00009318</span> • سجل: <span className="font-mono font-bold">7054842252</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black">
-            <CheckCircle2 className="w-4 h-4" />
+          <div className="flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black w-full sm:w-auto">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
             عقد موثق ومعتمد رسمياً
           </div>
         </div>
 
         {/* Verification Certificate Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 sm:p-8 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800 gap-4">
             <div>
               <div className="text-xs text-slate-400 font-bold mb-1">الرقم المرجعي الموحد للعقد</div>
-              <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white tracking-wider">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-black font-mono text-slate-900 dark:text-white tracking-wider break-all sm:break-normal">
                 {contract.referenceNumber}
               </div>
             </div>
@@ -199,8 +199,8 @@ export default async function ContractVerificationPage({ params }: PageProps) {
                   كشف الركاب المعتمد في العقد ({contract.passengers.length} ضيوف)
                 </span>
               </div>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-                <table className="w-full text-right text-xs">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
+                <table className="w-full text-right text-xs min-w-[340px]">
                   <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500">
                     <tr>
                       <th className="p-2.5">م</th>

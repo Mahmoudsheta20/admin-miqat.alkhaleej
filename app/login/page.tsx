@@ -298,7 +298,7 @@ export default function LoginPage() {
 
           {/* Right Column: Login Card & Quick Roles */}
           <section className="lg:col-span-7">
-            <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/50 space-y-6">
+            <div className="p-5 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/50 space-y-6">
               {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div>
