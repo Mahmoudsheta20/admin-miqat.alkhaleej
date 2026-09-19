@@ -97,7 +97,7 @@ model VehicleInspection {
   notes            String?
   createdAt        DateTime  @default(now())
 
-  contract         Contract?
+  contracts        Contract[]
 }
 
 model Contract {
@@ -113,7 +113,7 @@ model Contract {
   customerName    String
   customerPhone   String?
   notes           String?
-  inspectionId    String?            @unique
+  inspectionId    String?
   inspection      VehicleInspection? @relation(fields: [inspectionId], references: [id])
   captainId       String
   captain         User               @relation(fields: [captainId], references: [id])

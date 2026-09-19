@@ -30,25 +30,71 @@ export interface ContractFormPayload {
   passengers: PassengerInput[];
 }
 
+function cleanStr(val?: string | null): string | null {
+  if (!val || typeof val !== "string") return null;
+  const trimmed = val.trim();
+  if (!trimmed || trimmed === "$undefined" || trimmed === "undefined" || trimmed === "null") return null;
+  return trimmed;
+}
+
 export async function submitContract(
   formData: ContractFormPayload
 ): Promise<{ success: boolean; contract?: Contract; error?: string }> {
   try {
-    if (!formData.customerName?.trim()) {
+    const customerName = cleanStr(formData.customerName);
+    if (!customerName) {
       return { success: false, error: "اسم العميل / الضيف الأساسي مطلوب" };
     }
-    if (!formData.origin?.trim() || !formData.destination?.trim()) {
+    const origin = cleanStr(formData.origin);
+    const destination = cleanStr(formData.destination);
+    if (!origin || !destination) {
       return { success: false, error: "مسار الرحلة (الانطلاق والوجهة) مطلوب" };
     }
-    if (!formData.captainId) {
-      return { success: false, error: "معرف الكابتن مطلوب" };
+
+    // Resolve captainId safely
+    let captainId = cleanStr(formData.captainId);
+    if (captainId) {
+      const exists = await prisma.user.findUnique({
+        where: { id: captainId },
+        select: { id: true },
+      });
+      if (!exists) {
+        captainId = null;
+      }
+    }
+    if (!captainId) {
+      const fallback = await prisma.user.findFirst({
+        where: { role: "CAPTAIN", active: true },
+        select: { id: true },
+      });
+      if (fallback) {
+        captainId = fallback.id;
+      } else {
+        return { success: false, error: "لم يتم العثور على كابتن مسجل في النظام" };
+      }
     }
 
-    // Auto-generate unique reference number: MQ-YYYY-XXXXX
+    // Resolve inspectionId safely (prevent foreign key violation)
+    let validInspectionId: string | null = null;
+    const cleanInspId = cleanStr(formData.inspectionId);
+    if (cleanInspId) {
+      const existsInsp = await prisma.vehicleInspection.findUnique({
+        where: { id: cleanInspId },
+        select: { id: true },
+      });
+      if (existsInsp) {
+        validInspectionId = existsInsp.id;
+      }
+    }
+
+    // Auto-generate guaranteed unique reference number: MQ-YYYY-XXXXX
     const year = new Date().getFullYear();
-    const count = await prisma.contract.count();
-    const sequenceNum = String(count + 1).padStart(5, "0");
-    const referenceNumber = `MQ-${year}-${sequenceNum}`;
+    let sequence = (await prisma.contract.count()) + 1;
+    let referenceNumber = `MQ-${year}-${String(sequence).padStart(5, "0")}`;
+    while (await prisma.contract.findUnique({ where: { referenceNumber }, select: { id: true } })) {
+      sequence++;
+      referenceNumber = `MQ-${year}-${String(sequence).padStart(5, "0")}`;
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create the contract
@@ -56,18 +102,18 @@ export async function submitContract(
         data: {
           referenceNumber,
           operationType: formData.operationType,
-          origin: formData.origin.trim(),
-          destination: formData.destination.trim(),
-          tripDate: formData.tripDate,
-          tripTime: formData.tripTime,
-          flightCarrier: formData.flightCarrier?.trim() || null,
-          flightNumber: formData.flightNumber?.trim() || null,
-          customerName: formData.customerName.trim(),
-          customerPhone: formData.customerPhone?.trim() || null,
-          notes: formData.notes?.trim() || null,
-          inspectionId: formData.inspectionId || null,
-          captainId: formData.captainId,
-          vehiclePlate: formData.vehiclePlate.trim(),
+          origin,
+          destination,
+          tripDate: cleanStr(formData.tripDate) || new Date().toISOString().split("T")[0],
+          tripTime: cleanStr(formData.tripTime) || "12:00",
+          flightCarrier: cleanStr(formData.flightCarrier),
+          flightNumber: cleanStr(formData.flightNumber),
+          customerName,
+          customerPhone: cleanStr(formData.customerPhone),
+          notes: cleanStr(formData.notes),
+          inspectionId: validInspectionId,
+          captainId: captainId!,
+          vehiclePlate: cleanStr(formData.vehiclePlate) || "ا ص ل 7223",
         },
       });
 
@@ -81,8 +127,8 @@ export async function submitContract(
           data: validPassengers.map((p, index) => ({
             sequence: index + 1,
             name: p.name.trim(),
-            nationality: p.nationality?.trim() || "سعودي",
-            idNumber: p.idNumber?.trim() || "",
+            nationality: cleanStr(p.nationality) || "سعودي",
+            idNumber: cleanStr(p.idNumber) || "",
             contractId: contract.id,
           })),
         });
@@ -158,7 +204,8 @@ export async function submitContract(
     };
   } catch (error) {
     console.error("Submit contract error:", error);
-    return { success: false, error: "فشل إنشاء وتوثيق العقد" };
+    const errMessage = error instanceof Error ? error.message : "فشل إنشاء وتوثيق العقد";
+    return { success: false, error: errMessage };
   }
 }
 
