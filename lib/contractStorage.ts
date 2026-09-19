@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import QRCode from "qrcode";
 import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { prisma } from "./prisma";
 import { generateContractHtml } from "./generateContractHtml";
 import { DEFAULT_CONTRACT_DATA, FullContractData } from "./contractConstants";
@@ -16,15 +17,21 @@ export const CONTRACTS_STORAGE_DIR = path.join(process.cwd(), "public", "storage
  * Ensure the contracts storage directory exists on disk.
  */
 export function ensureStorageDir(): void {
-  if (!fs.existsSync(CONTRACTS_STORAGE_DIR)) {
-    fs.mkdirSync(CONTRACTS_STORAGE_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(CONTRACTS_STORAGE_DIR)) {
+      fs.mkdirSync(CONTRACTS_STORAGE_DIR, { recursive: true });
+    }
+  } catch (err) {
+    // Vercel serverless functions have a read-only filesystem
+    console.warn("Storage dir creation skipped (read-only filesystem):", err);
   }
 }
 
 /**
  * Locate Chrome/Chromium executable across macOS and Linux environments.
+ * Returns null if no local Chrome installation is detected.
  */
-export function getChromeExecutablePath(): string {
+export function getChromeExecutablePath(): string | null {
   if (
     process.env.PUPPETEER_EXECUTABLE_PATH &&
     fs.existsSync(/*turbopackIgnore: true*/ process.env.PUPPETEER_EXECUTABLE_PATH)
@@ -45,9 +52,13 @@ export function getChromeExecutablePath(): string {
   ];
 
   for (const p of commonPaths) {
-    if (fs.existsSync(/*turbopackIgnore: true*/ p)) return p;
+    try {
+      if (fs.existsSync(/*turbopackIgnore: true*/ p)) return p;
+    } catch {
+      // continue search
+    }
   }
-  return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  return null;
 }
 
 /**
@@ -82,7 +93,7 @@ export async function generateContractQrCode(
 
 /**
  * Render A4 PDF buffer using Puppeteer.
- * Automatically injects the unique QR Code into the contract data if not already set.
+ * Supports both local development (macOS/Linux Chrome) and remote serverless environments (Vercel with @sparticuz/chromium).
  */
 export async function buildContractPdfBuffer(
   data: FullContractData,
@@ -99,30 +110,48 @@ export async function buildContractPdfBuffer(
   }
 
   const html = generateContractHtml(data);
-  const executablePath = getChromeExecutablePath();
+  const localExecutable = getChromeExecutablePath();
 
-  const browser = await puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--font-render-hinting=none",
-    ],
-  });
+  let browser;
+  if (localExecutable) {
+    // Local macOS/Linux machine with Chrome installed
+    browser = await puppeteer.launch({
+      executablePath: localExecutable,
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--font-render-hinting=none",
+      ],
+    });
+  } else {
+    // Remote / Vercel Serverless environment
+    const executablePath = await chromium.executablePath();
+    browser = await puppeteer.launch({
+      args: [
+        ...chromium.args,
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--font-render-hinting=none",
+      ],
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
+    });
+  }
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 15000 });
+    await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 25000 });
     // Ensure Google fonts (Cairo, Outfit) are rendered
     try {
       await page.evaluate(() => (document as any).fonts?.ready);
     } catch {
       // fallback
     }
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
 
     const pdfUint8Array = await page.pdf({
       format: "A4",
@@ -138,19 +167,35 @@ export async function buildContractPdfBuffer(
 
 /**
  * Save a contract PDF buffer to disk and record its public URL in Prisma.
+ * Resilient against Vercel read-only filesystem restrictions.
  */
 export async function saveContractPdf(
   referenceNumber: string,
   pdfBuffer: Buffer
 ): Promise<{ filePath: string; publicUrl: string }> {
-  ensureStorageDir();
-
   const fileName = `contract-${referenceNumber}.pdf`;
-  const filePath = path.join(CONTRACTS_STORAGE_DIR, fileName);
-  const publicUrl = `/storage/contracts/${fileName}`;
+  let filePath = path.join(CONTRACTS_STORAGE_DIR, fileName);
+  let publicUrl = `/storage/contracts/${fileName}`;
 
-  // Write file to disk
-  fs.writeFileSync(filePath, pdfBuffer);
+  try {
+    ensureStorageDir();
+    fs.writeFileSync(filePath, pdfBuffer);
+  } catch (fsErr) {
+    // Vercel serverless has a read-only root filesystem
+    console.warn("Could not save to public/storage (Vercel read-only filesystem). Saving to /tmp fallback:", fsErr);
+    try {
+      const tmpDir = path.join("/tmp", "contracts");
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      filePath = path.join(tmpDir, fileName);
+      fs.writeFileSync(filePath, pdfBuffer);
+    } catch (tmpErr) {
+      console.warn("Could not save to /tmp:", tmpErr);
+    }
+    // Dynamic endpoint fallback so the user can always view/download the PDF
+    publicUrl = `/api/contracts/pdf?contractId=${encodeURIComponent(referenceNumber)}`;
+  }
 
   // Update contract record in database with the storage path
   try {

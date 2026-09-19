@@ -7,6 +7,7 @@ import { DEFAULT_CONTRACT_DATA } from "@/lib/contractConstants";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const maxDuration = 60;
 
 function getBaseUrl(req: NextRequest): string {
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
@@ -20,7 +21,7 @@ function getBaseUrl(req: NextRequest): string {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const contractId = searchParams.get("contractId");
+    const contractId = searchParams.get("contractId") || searchParams.get("ref");
     const baseUrl = getBaseUrl(req);
 
     let pdfBuffer: Buffer;
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const contractId = body.contractId;
+    const contractId = body.contractId || body.ref;
     const baseUrl = getBaseUrl(req);
 
     let pdfBuffer: Buffer;

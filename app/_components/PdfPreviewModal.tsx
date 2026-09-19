@@ -22,6 +22,10 @@ export default function PdfPreviewModal({
     ? `/api/contracts/pdf?contractId=${contractId}`
     : `/api/contracts/pdf`;
 
+  const htmlUrl = contractId
+    ? `/api/contracts/html?contractId=${contractId}`
+    : `/api/contracts/html`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-2 sm:p-4">
       <div className="relative flex flex-col w-full max-w-5xl h-[95vh] sm:h-[90vh] theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
@@ -64,14 +68,16 @@ export default function PdfPreviewModal({
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>تحميل PDF</span>
             </a>
-            <button
-              onClick={() => window.open(pdfUrl, "_blank")}
+            <a
+              href={htmlUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
-              title="فتح في نافذة جديدة للطباعة"
+              title="معاينة فورية وطباعة سريعة بنقرة واحدة"
             >
-              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">طباعة</span>
-            </button>
+              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+              <span className="hidden sm:inline">طباعة / معاينة سريعة</span>
+            </a>
             <button
               onClick={onClose}
               className="hidden sm:flex p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl transition"
