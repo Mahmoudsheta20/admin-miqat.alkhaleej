@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="crBg" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#14734e" />
+      <stop offset="60%" stop-color="#095337" />
+      <stop offset="100%" stop-color="#043824" />
+    </radialGradient>
+    <!-- Gold/Green Border Gradient -->
+    <linearGradient id="crBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#52c98d" />
+      <stop offset="50%" stop-color="#1a7e53" />
+      <stop offset="100%" stop-color="#0d4e33" />
+    </linearGradient>
+    <filter id="crShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Pillow / Rounded Badge Background -->
+  <rect x="4" y="4" width="92" height="92" rx="18" fill="url(#crBg)" stroke="url(#crBorder)" stroke-width="2.5" filter="url(#crShadow)" />
+  <rect x="7" y="7" width="86" height="86" rx="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+
+  <!-- Saudi Palm Tree (White / Light Emerald) -->
+  <g fill="#ffffff" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Palm Trunk -->
+    <path d="M48 56 L47 38 Q48.5 35 50 35 Q51.5 35 53 38 L52 56 Z" fill="#ffffff" stroke-width="0.5" />
+    <path d="M46 54 L54 54 M46.5 50 L53.5 50 M47 46 L53 46 M47.5 42 L52.5 42" stroke="#095337" stroke-width="1" />
+
+    <!-- Palm Fronds (Center, Left, Right) -->
+    <!-- Center Top Frond -->
+    <path d="M50 36 C50 25, 50 18, 50 15 C50 18, 50 25, 50 36" stroke-width="2.5" />
+    <!-- Upper Fronds -->
+    <path d="M50 35 C47 24, 38 18, 30 20 C38 23, 44 28, 48 35" stroke-width="2" />
+    <path d="M50 35 C53 24, 62 18, 70 20 C62 23, 56 28, 52 35" stroke-width="2" />
+    <!-- Middle Fronds -->
+    <path d="M49 37 C42 28, 30 25, 23 30 C32 32, 40 35, 47 37" stroke-width="2" />
+    <path d="M51 37 C58 28, 70 25, 77 30 C68 32, 60 35, 53 37" stroke-width="2" />
+    <!-- Lower Hanging Fronds -->
+    <path d="M48 38 C39 34, 25 36, 20 44 C28 42, 38 40, 47 39" stroke-width="2" />
+    <path d="M52 38 C61 34, 75 36, 80 44 C72 42, 62 40, 53 39" stroke-width="2" />
+    <path d="M48 40 C38 42, 28 48, 25 56 C32 50, 40 45, 47 41" stroke-width="1.8" />
+    <path d="M52 40 C62 42, 72 48, 75 56 C68 50, 60 45, 53 41" stroke-width="1.8" />
+
+    <!-- Crossed Curved Swords (Scimitars) -->
+    <!-- Sword 1 (Bottom Left to Top Right) -->
+    <path d="M28 80 C36 78, 50 68, 68 55 C74 50, 78 45, 82 40 C77 46, 68 55, 52 64 C38 72, 30 76, 28 80 Z" fill="#ffffff" stroke-width="0.5" />
+    <!-- Sword 1 Hilt & Guard -->
+    <path d="M23 83 L28 78 M25 79 L29 83" stroke-width="2.5" stroke="#ffffff" />
+    <circle cx="22" cy="84" r="2.2" fill="#ffffff" />
+
+    <!-- Sword 2 (Bottom Right to Top Left) -->
+    <path d="M72 80 C64 78, 50 68, 32 55 C26 50, 22 45, 18 40 C23 46, 32 55, 48 64 C62 72, 70 76, 72 80 Z" fill="#ffffff" stroke-width="0.5" />
+    <!-- Sword 2 Hilt & Guard -->
+    <path d="M77 83 L72 78 M75 79 L71 83" stroke-width="2.5" stroke="#ffffff" />
+    <circle cx="78" cy="84" r="2.2" fill="#ffffff" />
+  </g>
+</svg>

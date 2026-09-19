@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Can be switched to "postgresql" for production Supabase / Neon
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CAPTAIN
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_TRIP
+  MAINTENANCE
+}
+
+enum OperationType {
+  AIRPORT_TRANSFER
+  CITY_TOUR
+  INTERCITY
+  HAJJ_UMRAH
+}
+
+model User {
+  id                   String              @id @default(uuid())
+  name                 String
+  email                String              @unique
+  passwordHash         String?
+  role                 Role                @default(CAPTAIN)
+  phone                String?
+  nationalId           String?             @unique
+  licenseNumber        String?
+  licenseExpiry        String?
+  assignedVehiclePlate String?
+  avatarUrl            String?
+  active               Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  contracts            Contract[]
+  inspections          VehicleInspection[]
+}
+
+model Vehicle {
+  id                 String        @id @default(uuid())
+  plateNumberAr      String        @unique
+  plateNumberEn      String
+  make               String
+  model              String
+  year               Int
+  category           String        @default("VIP_VAN")
+  capacity           Int           @default(7)
+  status             VehicleStatus @default(AVAILABLE)
+  registrationExpiry String
+  insuranceExpiry    String
+  currentMileage     Int?          @default(0)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model VehicleInspection {
+  id               String    @id @default(uuid())
+  captainId        String
+  captain          User      @relation(fields: [captainId], references: [id], onDelete: Cascade)
+  vehiclePlate     String
+  inspectionDate   DateTime  @default(now())
+
+  // Dashboard indicators
+  fuelGauge        Boolean   @default(false)
+  tempGauge        Boolean   @default(false)
+  oilPressure      Boolean   @default(false)
+  checkEngine      Boolean   @default(false)
+  absLight         Boolean   @default(false)
+  warningLights    Boolean   @default(false)
+
+  // External
+  tires            Boolean   @default(false)
+  headlights       Boolean   @default(false)
+  signals          Boolean   @default(false)
+  mirrors          Boolean   @default(false)
+  noLeaks          Boolean   @default(false)
+
+  // Safety
+  fireExtinguisher Boolean   @default(false)
+  warningTriangle  Boolean   @default(false)
+  firstAidKit      Boolean   @default(false)
+  glassHammer      Boolean   @default(false)
+  seatBelts        Boolean   @default(false)
+
+  // Meta
+  driverDeclared   Boolean   @default(false)
+  notes            String?
+  createdAt        DateTime  @default(now())
+
+  contract         Contract?
+}
+
+model Contract {
+  id              String             @id @default(uuid())
+  referenceNumber String             @unique // e.g. "MQ-2026-00841"
+  operationType   OperationType
+  origin          String
+  destination     String
+  tripDate        String
+  tripTime        String
+  flightCarrier   String?            // airline name
+  flightNumber    String?            // e.g. "SV841"
+  customerName    String
+  customerPhone   String?
+  notes           String?
+  inspectionId    String?            @unique
+  inspection      VehicleInspection? @relation(fields: [inspectionId], references: [id])
+  captainId       String
+  captain         User               @relation(fields: [captainId], references: [id])
+  vehiclePlate    String             // denormalized for PDF/display
+  pdfPath         String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  passengers      Passenger[]
+}
+
+model Passenger {
+  id          String   @id @default(uuid())
+  sequence    Int
+  name        String
+  nationality String   @default("سعودي")
+  idNumber    String   @default("")
+  contractId  String
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+}
