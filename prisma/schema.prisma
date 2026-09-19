@@ -27,23 +27,23 @@ enum OperationType {
 }
 
 model User {
-  id                   String              @id @default(uuid())
+  id                   String   @id @default(uuid())
   name                 String
-  email                String              @unique
+  email                String   @unique
   passwordHash         String?
-  role                 Role                @default(CAPTAIN)
+  role                 Role     @default(CAPTAIN)
   phone                String?
-  nationalId           String?             @unique
+  nationalId           String?  @unique
   licenseNumber        String?
   licenseExpiry        String?
   assignedVehiclePlate String?
   avatarUrl            String?
-  active               Boolean             @default(true)
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  contracts            Contract[]
-  inspections          VehicleInspection[]
+  contracts   Contract[]
+  inspections VehicleInspection[]
 }
 
 model Vehicle {
@@ -64,40 +64,40 @@ model Vehicle {
 }
 
 model VehicleInspection {
-  id               String    @id @default(uuid())
-  captainId        String
-  captain          User      @relation(fields: [captainId], references: [id], onDelete: Cascade)
-  vehiclePlate     String
-  inspectionDate   DateTime  @default(now())
+  id             String   @id @default(uuid())
+  captainId      String
+  captain        User     @relation(fields: [captainId], references: [id], onDelete: Cascade)
+  vehiclePlate   String
+  inspectionDate DateTime @default(now())
 
   // Dashboard indicators
-  fuelGauge        Boolean   @default(false)
-  tempGauge        Boolean   @default(false)
-  oilPressure      Boolean   @default(false)
-  checkEngine      Boolean   @default(false)
-  absLight         Boolean   @default(false)
-  warningLights    Boolean   @default(false)
+  fuelGauge     Boolean @default(false)
+  tempGauge     Boolean @default(false)
+  oilPressure   Boolean @default(false)
+  checkEngine   Boolean @default(false)
+  absLight      Boolean @default(false)
+  warningLights Boolean @default(false)
 
   // External
-  tires            Boolean   @default(false)
-  headlights       Boolean   @default(false)
-  signals          Boolean   @default(false)
-  mirrors          Boolean   @default(false)
-  noLeaks          Boolean   @default(false)
+  tires      Boolean @default(false)
+  headlights Boolean @default(false)
+  signals    Boolean @default(false)
+  mirrors    Boolean @default(false)
+  noLeaks    Boolean @default(false)
 
   // Safety
-  fireExtinguisher Boolean   @default(false)
-  warningTriangle  Boolean   @default(false)
-  firstAidKit      Boolean   @default(false)
-  glassHammer      Boolean   @default(false)
-  seatBelts        Boolean   @default(false)
+  fireExtinguisher Boolean @default(false)
+  warningTriangle  Boolean @default(false)
+  firstAidKit      Boolean @default(false)
+  glassHammer      Boolean @default(false)
+  seatBelts        Boolean @default(false)
 
   // Meta
-  driverDeclared   Boolean   @default(false)
-  notes            String?
-  createdAt        DateTime  @default(now())
+  driverDeclared Boolean  @default(false)
+  notes          String?
+  createdAt      DateTime @default(now())
 
-  contracts        Contract[]
+  contracts Contract[]
 }
 
 model Contract {
@@ -108,8 +108,8 @@ model Contract {
   destination     String
   tripDate        String
   tripTime        String
-  flightCarrier   String?            // airline name
-  flightNumber    String?            // e.g. "SV841"
+  flightCarrier   String? // airline name
+  flightNumber    String? // e.g. "SV841"
   customerName    String
   customerPhone   String?
   notes           String?
@@ -117,12 +117,12 @@ model Contract {
   inspection      VehicleInspection? @relation(fields: [inspectionId], references: [id])
   captainId       String
   captain         User               @relation(fields: [captainId], references: [id])
-  vehiclePlate    String             // denormalized for PDF/display
+  vehiclePlate    String // denormalized for PDF/display
   pdfPath         String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
-  passengers      Passenger[]
+  passengers Passenger[]
 }
 
 model Passenger {
