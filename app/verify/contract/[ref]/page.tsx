@@ -72,9 +72,11 @@ export default async function ContractVerificationPage({ params }: PageProps) {
 
   const pdfUrl = contract.pdfPath || `/api/contracts/pdf?contractId=${contract.id}`;
   const operationTypeAr = mapOperationType(contract.operationType);
-  const issueDate = contract.createdAt
-    ? new Date(contract.createdAt).toLocaleDateString("en-GB")
-    : contract.tripDate;
+  const issueDate = (contract as any).issueDate
+    ? (contract as any).issueDate
+    : (contract.createdAt
+      ? new Date(contract.createdAt).toLocaleDateString("en-GB")
+      : contract.tripDate);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans py-8 px-4 sm:px-6" dir="rtl">

@@ -1240,9 +1240,11 @@ export default function AdminContractsPage() {
                   <div className="space-y-2 text-xs">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
                       <div>
-                        <span className="text-slate-400 text-[10px] block">تاريخ الفحص</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                          {String(selectedContract.inspection.inspectionDate)}
+                        <span className="text-slate-400 text-[10px] block">تاريخ ووقت الفحص</span>
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                          {selectedContract.inspection.inspectionDate
+                            ? `${new Date(selectedContract.inspection.inspectionDate).toLocaleDateString("en-GB")} • ${new Date(selectedContract.inspection.inspectionDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                            : "—"}
                         </span>
                       </div>
                       <div>

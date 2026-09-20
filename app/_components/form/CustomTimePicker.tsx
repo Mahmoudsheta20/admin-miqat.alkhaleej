@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Clock, AlertCircle } from "lucide-react";
+import { Clock, AlertCircle, ChevronDown } from "lucide-react";
 
 export interface CustomTimePickerProps {
   label?: string;
@@ -111,13 +111,13 @@ export function CustomTimePicker({
   return (
     <div ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
       {label && (
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+        <div className="flex items-center justify-between gap-1.5 min-w-0">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
             <span>{label}</span>
             {required && <span className="text-rose-500 font-black">*</span>}
           </label>
           {value && (
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium font-mono">
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium font-mono shrink-0">
               ({formatTimeArabic12h(value)})
             </span>
           )}
@@ -128,7 +128,7 @@ export function CustomTimePicker({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-right
+        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-right cursor-pointer
           ${
             error
               ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
@@ -137,23 +137,27 @@ export function CustomTimePicker({
               : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white hover:border-amber-500/50"
           }`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Clock className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold font-mono tracking-wider">
-            {value || "حدد وقت الرحلة"}
+          <span className="text-xs font-bold font-mono tracking-wider truncate">
+            {value || "حدد الوقت"}
           </span>
         </div>
 
-        <span className="text-[11px] text-slate-400 font-normal">
-          {isOpen ? "إغلاق" : "اختيار الوقت"}
-        </span>
+        <div className="flex items-center gap-1 shrink-0 text-slate-400 mr-2">
+          <ChevronDown
+            className={`w-4 h-4 transition-transform duration-200 ${
+              isOpen ? "rotate-180 text-amber-500" : ""
+            }`}
+          />
+        </div>
       </button>
 
       {/* Popover Time Selector */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 right-0 w-80 rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute z-50 mt-1 right-0 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-150">
           {/* Quick Preset Buttons */}
           <div className="flex items-center gap-1.5 pb-3 border-b theme-border">
             <button

@@ -24,6 +24,7 @@ export interface InspectionInput {
   seatBelts: boolean;
   driverDeclared: boolean;
   notes?: string;
+  inspectionDate?: Date | string;
 }
 
 export async function getTodayInspection(
@@ -118,6 +119,7 @@ export async function submitInspection(
         seatBelts: data.seatBelts,
         driverDeclared: data.driverDeclared,
         notes: data.notes?.trim() || null,
+        ...(data.inspectionDate ? { inspectionDate: new Date(data.inspectionDate) } : {}),
       },
     });
 

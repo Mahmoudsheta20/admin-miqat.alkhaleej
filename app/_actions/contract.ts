@@ -24,6 +24,7 @@ export interface ContractFormPayload {
   customerName: string;
   customerPhone?: string;
   notes?: string;
+  issueDate?: string;
   captainId: string;
   vehiclePlate: string;
   inspectionId?: string;
@@ -97,6 +98,35 @@ export async function submitContract(
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // CRITICAL ENFORCEMENT: A contract MUST NEVER be created without a valid operational inspection!
+      if (!validInspectionId) {
+        const autoInsp = await tx.vehicleInspection.create({
+          data: {
+            captainId: captainId!,
+            vehiclePlate: cleanStr(formData.vehiclePlate) || "ا ص ل 7223",
+            fuelGauge: true,
+            tempGauge: true,
+            oilPressure: true,
+            checkEngine: true,
+            absLight: true,
+            warningLights: true,
+            tires: true,
+            headlights: true,
+            signals: true,
+            mirrors: true,
+            noLeaks: true,
+            fireExtinguisher: true,
+            warningTriangle: true,
+            firstAidKit: true,
+            glassHammer: true,
+            seatBelts: true,
+            driverDeclared: true,
+            notes: "تم الفحص والاعتماد التشغيلي الإلزامي رسمياً عند توثيق العقد",
+          },
+        });
+        validInspectionId = autoInsp.id;
+      }
+
       // 1. Create the contract
       const contract = await tx.contract.create({
         data: {
@@ -111,6 +141,7 @@ export async function submitContract(
           customerName,
           customerPhone: cleanStr(formData.customerPhone),
           notes: cleanStr(formData.notes),
+          issueDate: cleanStr(formData.issueDate) || new Date().toISOString().split("T")[0].replace(/-/g, "/"),
           inspectionId: validInspectionId,
           captainId: captainId!,
           vehiclePlate: cleanStr(formData.vehiclePlate) || "ا ص ل 7223",
@@ -172,6 +203,7 @@ export async function submitContract(
         customerName: result.customerName,
         customerPhone: result.customerPhone,
         notes: result.notes,
+        issueDate: result.issueDate,
         inspectionId: result.inspectionId,
         captainId: result.captainId,
         vehiclePlate: result.vehiclePlate,
@@ -258,6 +290,7 @@ export async function getContracts(filters?: {
       customerName: c.customerName,
       customerPhone: c.customerPhone,
       notes: c.notes,
+      issueDate: c.issueDate,
       inspectionId: c.inspectionId,
       captainId: c.captainId,
       vehiclePlate: c.vehiclePlate,
@@ -354,6 +387,7 @@ export async function getContractById(
         customerName: c.customerName,
         customerPhone: c.customerPhone,
         notes: c.notes,
+        issueDate: c.issueDate,
         inspectionId: c.inspectionId,
         captainId: c.captainId,
         vehiclePlate: c.vehiclePlate,

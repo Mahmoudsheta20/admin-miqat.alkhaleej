@@ -90,6 +90,7 @@ export interface Contract {
   customerName: string;
   customerPhone?: string | null;
   notes?: string | null;
+  issueDate?: string | null;
   inspectionId?: string | null;
   captainId: string;
   captain?: SystemUser;

@@ -23,6 +23,9 @@ import {
   ClipboardCheck,
   ChevronDown,
   ChevronUp,
+  Calendar,
+  Sparkles,
+  Edit3,
 } from "lucide-react";
 import { getCaptains } from "@/app/_actions/captain";
 import { getVehicles } from "@/app/_actions/fleet";
@@ -101,6 +104,9 @@ export default function AdminContractBuilderPage() {
   const [isSubmittingAdminInspection, setIsSubmittingAdminInspection] = useState(false);
   const [adminInspectionSuccessMsg, setAdminInspectionSuccessMsg] = useState("");
   const [showDetailedChecks, setShowDetailedChecks] = useState(false);
+  const [adminInspectionMode, setAdminInspectionMode] = useState<"AUTO" | "MANUAL">("AUTO");
+  const [adminInspectionDate, setAdminInspectionDate] = useState(() => new Date().toISOString().split("T")[0].replace(/-/g, "/"));
+  const [adminInspectionTime, setAdminInspectionTime] = useState(() => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
 
   // 16 technical check items (all default to true = 100% compliant)
   const [checks, setChecks] = useState<Record<string, boolean>>({
@@ -145,6 +151,8 @@ export default function AdminContractBuilderPage() {
       destination: "مطار الملك عبد العزيز بجدة",
       tripDate: todayStr,
       tripTime: timeNow,
+      issueDateMode: "AUTO",
+      issueDate: todayStr,
       flightCarrier: "الخطوط السعودية",
       flightNumber: "",
       captainId: "",
@@ -156,6 +164,7 @@ export default function AdminContractBuilderPage() {
 
   const selectedCaptainId = useWatch({ control, name: "captainId" });
   const selectedVehiclePlate = useWatch({ control, name: "vehiclePlate" });
+  const issueDateMode = useWatch({ control, name: "issueDateMode" }) || "AUTO";
   const currentCaptain = captains.find((c) => c.id === selectedCaptainId);
 
   const isCheckingInspection = Boolean(selectedCaptainId && checkedCaptainId !== selectedCaptainId);
@@ -236,6 +245,11 @@ export default function AdminContractBuilderPage() {
         currentCaptain?.assignedVehiclePlate ||
         (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
 
+      const effectiveInspectionDate =
+        adminInspectionMode === "MANUAL"
+          ? `${adminInspectionDate.replace(/\//g, "-")}T${adminInspectionTime}:00`
+          : new Date().toISOString();
+
       const res = await submitInspection({
         captainId: selectedCaptainId,
         vehiclePlate: plate,
@@ -257,14 +271,19 @@ export default function AdminContractBuilderPage() {
         seatBelts: checks.seatBelts ?? true,
         driverDeclared: true,
         notes: "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات",
+        inspectionDate: effectiveInspectionDate,
       });
 
       if (res.success && res.inspection) {
         setAdminInspectionId(res.inspection.id);
         setValue("inspectionId", res.inspection.id);
         setIsConfirmed(true);
+        const displayTime =
+          adminInspectionMode === "MANUAL"
+            ? `${adminInspectionDate} • ${adminInspectionTime}`
+            : `${new Date().toLocaleDateString("en-GB")} • ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
         setAdminInspectionSuccessMsg(
-          `تم إرسال وتوثيق الفحص التشغيلي بنجاح (كود الفحص #${res.inspection.id.slice(0, 8)}) وتم اعتماده للرحلة`
+          `تم إرسال وتوثيق الفحص التشغيلي بنجاح (كود الفحص #${res.inspection.id.slice(0, 8)}) بتوقيت ${displayTime} وتم اعتماده للرحلة`
         );
       } else {
         setConfirmError(res.error || "تعذر إرسال الفحص التشغيلي");
@@ -289,11 +308,14 @@ export default function AdminContractBuilderPage() {
     setServerError("");
 
     try {
-      let resolvedInspectionId =
-        adminInspectionId || effectiveCaptainInspection?.id || data.inspectionId;
+      let resolvedInspectionId: string | null = null;
+      if (adminInspectionMode === "AUTO") {
+        resolvedInspectionId = effectiveCaptainInspection?.id || adminInspectionId || null;
+      } else {
+        resolvedInspectionId = adminInspectionId || null;
+      }
 
-      // If captain hasn't sent inspection and admin hasn't clicked "send",
-      // automatically send and document the official inspection now from admin!
+      // If no resolved inspection ID yet, create and document it now based on mode!
       if (!resolvedInspectionId) {
         const plate =
           data.vehiclePlate ||
@@ -321,12 +343,33 @@ export default function AdminContractBuilderPage() {
           seatBelts: checks.seatBelts ?? true,
           driverDeclared: true,
           notes: "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات عند توثيق العقد",
+          inspectionDate:
+            adminInspectionMode === "MANUAL"
+              ? `${adminInspectionDate.replace(/\//g, "-")}T${adminInspectionTime}:00`
+              : new Date().toISOString(),
         });
 
         if (inspRes.success && inspRes.inspection) {
           resolvedInspectionId = inspRes.inspection.id;
           setAdminInspectionId(inspRes.inspection.id);
+        } else {
+          // CRITICAL: Abort submission if inspection could not be documented!
+          setIsSubmitting(false);
+          setConfirmError(
+            inspRes.error ||
+              "تعذر توثيق الفحص التشغيلي الإلزامي. لا يمكن إنشاء وتوثيق أي عقد بدون فحص تشغيلي وإقرار معتمد."
+          );
+          return;
         }
+      }
+
+      // Final guard: Guarantee that an inspection ID is present
+      if (!resolvedInspectionId) {
+        setIsSubmitting(false);
+        setConfirmError(
+          "لا يمكن إنشاء وتوثيق أي عقد دون إتمام الفحص والإقرار التشغيلي الإلزامي (التحقق قبل التوثيق)."
+        );
+        return;
       }
 
       // 1. Clean and normalize payload with resolved inspection ID
@@ -357,6 +400,7 @@ export default function AdminContractBuilderPage() {
     setConfirmError("");
     setAdminInspectionId(null);
     setAdminInspectionSuccessMsg("");
+    setAdminInspectionMode("AUTO");
     setShowDetailedChecks(false);
     const defaultCap = captains.length > 0 ? captains[0] : null;
     const defaultPlate =
@@ -371,6 +415,8 @@ export default function AdminContractBuilderPage() {
       destination: "مطار الملك عبد العزيز بجدة",
       tripDate: todayStr,
       tripTime: timeNow,
+      issueDateMode: "AUTO",
+      issueDate: todayStr,
       flightCarrier: "الخطوط السعودية",
       flightNumber: "",
       captainId: defaultCap ? defaultCap.id : "",
@@ -689,6 +735,90 @@ export default function AdminContractBuilderPage() {
               error={errors.flightNumber?.message}
             />
 
+            {/* Contract Release Date (تاريخ إصدار العقد المعتمد في الوثيقة) */}
+            <div className="sm:col-span-2 lg:col-span-3 p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border theme-border space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-500" />
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                      تاريخ إصدار العقد (Release Date في وثيقة PDF)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    اختر توثيق الإصدار بتاريخ اليوم الفعلي تلقائياً أو حدد تاريخاً مخصصاً (ويسجل النظام تاريخ التسجيل الفعلي في السجلات بدقة)
+                  </p>
+                </div>
+
+                {/* Mode Selector Toggle */}
+                <div className="inline-flex p-1 rounded-xl bg-slate-200/80 dark:bg-slate-800 border theme-border shrink-0 self-start sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => setValue("issueDateMode", "AUTO")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      issueDateMode === "AUTO"
+                        ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>تلقائي (اليوم الفعلي)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setValue("issueDateMode", "MANUAL")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      issueDateMode === "MANUAL"
+                        ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>يدوي (تاريخ مخصص)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Dynamic Content based on issueDateMode */}
+              {issueDateMode === "AUTO" ? (
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">تاريخ الإصدار المعتمد في ترويسة العقد:</span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {new Date().toLocaleDateString("en-GB")} (تاريخ اليوم الفعلي)
+                  </span>
+                  <span className="text-[11px] text-slate-400 mr-auto">
+                    * يسجل النظام تاريخ ووقت الإنشاء الفعلي تلقائياً في السجلات
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
+                  <div className="w-full sm:w-60">
+                    <Controller
+                      control={control}
+                      name="issueDate"
+                      render={({ field, fieldState }) => (
+                        <CustomDatePicker
+                          label="تاريخ الإصدار المعتمد في العقد"
+                          required
+                          value={field.value || todayStr}
+                          onChange={field.onChange}
+                          error={fieldState.error?.message}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                    <span>
+                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت "تاريخ الإصدار"، بينما يحتفظ النظام بتاريخ ووقت التسجيل الفعلي في قاعدة البيانات.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Contract Notes */}
             <div className="sm:col-span-2 lg:col-span-3">
               <CustomTextarea
@@ -768,82 +898,200 @@ export default function AdminContractBuilderPage() {
             </div>
           </div>
 
-          {/* Captain Inspection Status / Send from Admin Banner */}
-          {effectiveCaptainInspection ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-black block">
-                    تم استلام فحص المركبة اليومي مسبقاً من الكابتن ({currentCaptain?.name || "الكابتن"})
-                  </span>
-                  <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
-                    لوحة المركبة المفحوصة: <strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> • تاريخ الفحص: <strong className="font-mono">{new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB")}</strong>
-                  </span>
-                </div>
-              </div>
-              <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
-                كود الفحص #{effectiveCaptainInspection.id.slice(0, 8)}
+          {/* Inspection Mode Toggle: Auto vs Manual (Always Visible in Section 4) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border theme-border">
+            <div className="space-y-0.5">
+              <span className="text-xs font-black text-slate-900 dark:text-white block">
+                طريقة اعتماد وتوثيق الفحص التشغيلي:
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                اختر الاعتماد الآلي (فحص الكابتن اليومي أو اللحظة الحالية) أو التخصيص اليدوي للوقت والتاريخ
               </span>
             </div>
-          ) : adminInspectionId ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
+
+            <div className="inline-flex p-1 rounded-xl bg-white dark:bg-slate-800 border theme-border shrink-0 self-start sm:self-center shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setAdminInspectionMode("AUTO")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  adminInspectionMode === "AUTO"
+                    ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs border border-amber-500/30"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>تلقائي (فحص الكابتن / الآن)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAdminInspectionMode("MANUAL")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  adminInspectionMode === "MANUAL"
+                    ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs border border-amber-500/30"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>يدوي (تحديد موعد مخصص)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mode-dependent Content */}
+          {adminInspectionMode === "AUTO" ? (
+            effectiveCaptainInspection ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black block">
+                      تم استلام واعتماد فحص المركبة اليومي تلقائياً من الكابتن ({currentCaptain?.name || "الكابتن"})
+                    </span>
+                    <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
+                      لوحة المركبة المفحوصة: <strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> • تاريخ ووقت الفحص: <strong className="font-mono" dir="ltr">{new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB")} • {new Date(effectiveCaptainInspection.inspectionDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</strong>
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-xs font-black block">
-                    تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات
-                  </span>
-                  <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
-                    تم اعتماد الفحص الفني الشامل لمركبة الكابتن {currentCaptain?.name} وربطه بالعقد رسمياً
-                  </span>
+                <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
+                  كود الفحص #{effectiveCaptainInspection.id.slice(0, 8)}
+                </span>
+              </div>
+            ) : adminInspectionId ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black block">
+                      تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات
+                    </span>
+                    <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
+                      تم اعتماد الفحص الفني لمركبة الكابتن {currentCaptain?.name} وربطه بالعقد رسمياً • التوقيت: <strong className="font-mono" dir="ltr">{new Date().toLocaleDateString("en-GB")} • {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</strong>
+                    </span>
+                  </div>
+                </div>
+                <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
+                  كود الفحص #{adminInspectionId.slice(0, 8)}
+                </span>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-black block">
+                      الكابتن ({currentCaptain?.name || "المحدد"}) لم يرسل الفحص اليومي للمركبة لهذا اليوم
+                    </span>
+                    <span className="text-[11px] text-amber-800 dark:text-amber-300 block mt-0.5">
+                      في الوضع التلقائي، سيتم اعتماد وتوثيق الفحص التشغيلي باللحظة الحالية فوراً وربطه بالعقد، أو يمكنك توثيقه مسبقاً الآن:
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-amber-500/20">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="text-amber-800 dark:text-amber-300 font-medium">موعد الفحص الآلي:</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      الآن ({new Date().toLocaleDateString("en-GB")} • {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })})
+                    </span>
+                    <span className="text-[11px] text-amber-700/70 dark:text-amber-400/70">
+                      (تسجيل الفحص باللحظة الحالية فوراً)
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSendAdminInspection}
+                    disabled={isSubmittingAdminInspection || !selectedCaptainId}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 h-11 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer"
+                    title="إرسال وتوثيق الفحص التشغيلي من الإدارة الآن"
+                  >
+                    {isSubmittingAdminInspection ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                        <span>جاري التوثيق...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCheck className="w-4 h-4" />
+                        <span>توثيق الفحص الآن</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-              <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
-                كود الفحص #{adminInspectionId.slice(0, 8)}
-              </span>
-            </div>
+            )
           ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
-              <div className="flex items-start sm:items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                  <AlertTriangle className="w-4 h-4" />
+            /* MANUAL MODE */
+            <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/80 border theme-border space-y-3">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Edit3 className="w-4 h-4" />
                 </div>
-                <div>
-                  <span className="text-xs font-black block">
-                    الكابتن ({currentCaptain?.name || "المحدد"}) لم يرسل الفحص اليومي للمركبة لهذا اليوم
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    تخصيص تاريخ ووقت الفحص التشغيلي المعتمد (يدوي)
                   </span>
-                  <span className="text-[11px] text-amber-800 dark:text-amber-300 block">
-                    بصفتك مسؤول العمليات، يمكنك إرسال وتوثيق الفحص التشغيلي الآن نيابة عن الكابتن وربطه بالعقد فوراً
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                    حدد تاريخ ووقت الفحص التشغيلي الذي ترغب في اعتماده وربطه بمركبة الكابتن {currentCaptain?.name} في هذا العقد:
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2 border-t theme-border">
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 flex-1">
+                  <div className="w-full sm:w-44">
+                    <CustomDatePicker
+                      label="تاريخ الفحص"
+                      value={adminInspectionDate}
+                      onChange={setAdminInspectionDate}
+                    />
+                  </div>
+                  <div className="w-full sm:w-36">
+                    <CustomTimePicker
+                      label="وقت الفحص"
+                      value={adminInspectionTime}
+                      onChange={setAdminInspectionTime}
+                    />
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleSendAdminInspection}
                   disabled={isSubmittingAdminInspection || !selectedCaptainId}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50"
-                  title="إرسال وتوثيق الفحص التشغيلي من الإدارة الآن"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 h-11 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer sm:self-end"
+                  title="اعتماد وتوثيق الفحص التشغيلي بالتاريخ والوقت المحددين"
                 >
                   {isSubmittingAdminInspection ? (
                     <>
                       <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      <span>جاري الإرسال والتوثيق...</span>
+                      <span>جاري التوثيق...</span>
                     </>
                   ) : (
                     <>
-                      <ClipboardCheck className="w-3.5 h-3.5" />
-                      <span>إرسال وتوثيق الفحص من الإدارة الآن</span>
+                      <ClipboardCheck className="w-4 h-4" />
+                      <span>توثيق الفحص المخصص</span>
                     </>
                   )}
                 </button>
               </div>
+
+              {adminInspectionId && (
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>
+                    تم توثيق الفحص التشغيلي برقم #{adminInspectionId.slice(0, 8)} بالتوقيت المخصص: {adminInspectionDate} • {adminInspectionTime}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

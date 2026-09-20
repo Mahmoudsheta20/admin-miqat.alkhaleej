@@ -62,6 +62,8 @@ export const adminContractSchema = z.object({
     .trim()
     .min(2, "لوحة المركبة مطلوبة"),
   notes: z.string().trim().max(500, "الملاحظات لا تتجاوز 500 حرف").optional(),
+  issueDateMode: z.enum(["AUTO", "MANUAL"]).default("AUTO").optional(),
+  issueDate: z.string().trim().optional(),
   inspectionId: z.string().optional(),
   passengers: z
     .array(
@@ -160,6 +162,11 @@ export function sanitizeContractPayload(
     ? cleanOptional(overrideInspectionId)
     : cleanOptional(data.inspectionId);
 
+  const cleanIssueDate =
+    data.issueDateMode === "MANUAL" && data.issueDate
+      ? normalizeArabicNumerals(data.issueDate.trim())
+      : undefined;
+
   return {
     operationType: parseOperationType(data.operationType),
     origin: data.origin.trim(),
@@ -171,6 +178,7 @@ export function sanitizeContractPayload(
     customerName: data.customerName.trim(),
     customerPhone: normalizedPhone,
     notes: cleanOptional(data.notes),
+    issueDate: cleanIssueDate,
     captainId: data.captainId.trim(),
     vehiclePlate: data.vehiclePlate.trim() || "ا ص ل 7223",
     inspectionId: finalInspectionId,

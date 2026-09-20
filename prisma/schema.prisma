@@ -113,6 +113,7 @@ model Contract {
   customerName    String
   customerPhone   String?
   notes           String?
+  issueDate       String?
   inspectionId    String?
   inspection      VehicleInspection? @relation(fields: [inspectionId], references: [id])
   captainId       String

@@ -142,7 +142,7 @@ export const DEFAULT_CONTRACT_DATA: FullContractData = {
   ],
   inspection: {
     date: "08/09/2026",
-    time: "2:41:19 م",
+    time: "14:41",
     dashboard: [
       { id: "fuel", nameAr: "مؤشر الوقود", sound: true, notes: "" },
       { id: "temp", nameAr: "مؤشر الحرارة", sound: true, notes: "" },

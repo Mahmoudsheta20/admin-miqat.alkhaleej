@@ -147,7 +147,7 @@ export async function buildContractPdfBuffer(
     await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 25000 });
     // Ensure Google fonts (Cairo, Outfit) are rendered
     try {
-      await page.evaluate(() => (document as any).fonts?.ready);
+      await page.evaluate(() => document.fonts?.ready);
     } catch {
       // fallback
     }
@@ -228,6 +228,23 @@ export function mapOperationType(type: string): string {
   }
 }
 
+function formatIssueDate(val?: string | Date | null): string {
+  if (!val) return new Date().toLocaleDateString("en-GB");
+  if (typeof val === "string") {
+    const parts = val.replace(/-/g, "/").split("/");
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        // YYYY/MM/DD -> DD/MM/YYYY
+        return `${parts[2].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[0]}`;
+      } else if (parts[2].length === 4) {
+        // Already DD/MM/YYYY
+        return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[2]}`;
+      }
+    }
+  }
+  return new Date(val).toLocaleDateString("en-GB");
+}
+
 /**
  * Maps a Prisma Contract entity to FullContractData required by the HTML generator.
  */
@@ -235,9 +252,11 @@ export function mapOperationType(type: string): string {
 export function mapContractToPdfData(contract: any): FullContractData {
   const captain = contract.captain;
   const inspection = contract.inspection;
-  const issueDate = contract.createdAt
-    ? new Date(contract.createdAt).toLocaleDateString("en-GB")
-    : contract.tripDate || "08/09/2026";
+  const issueDate = contract.issueDate
+    ? formatIssueDate(contract.issueDate)
+    : (contract.createdAt
+      ? formatIssueDate(contract.createdAt)
+      : contract.tripDate || "08/09/2026");
 
   return {
     ...DEFAULT_CONTRACT_DATA,
@@ -271,11 +290,10 @@ export function mapContractToPdfData(contract: any): FullContractData {
       photoUrl: captain?.avatarUrl || "/taxi-driver.png",
       signatureUrl: "",
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     passengers: (contract.passengers && contract.passengers.length > 0)
-      ? contract.passengers.map((p: any) => ({
-          id: p.sequence,
-          name: p.name,
+      ? contract.passengers.map((p: { sequence?: number; name?: string; nationality?: string; idNumber?: string }) => ({
+          id: p.sequence ?? 1,
+          name: p.name || "",
           nationality: p.nationality || "سعودي",
           idNumber: p.idNumber || "",
         }))
@@ -286,7 +304,7 @@ export function mapContractToPdfData(contract: any): FullContractData {
             ? new Date(inspection.inspectionDate).toLocaleDateString("en-GB")
             : contract.tripDate || DEFAULT_CONTRACT_DATA.inspection.date,
           time: inspection.inspectionDate
-            ? new Date(inspection.inspectionDate).toLocaleTimeString("ar-SA", { hour: "numeric", minute: "2-digit", second: "2-digit" })
+            ? new Date(inspection.inspectionDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
             : DEFAULT_CONTRACT_DATA.inspection.time,
           dashboard: [
             { id: "fuel", nameAr: "مؤشر الوقود", sound: inspection.fuelGauge, notes: "" },
