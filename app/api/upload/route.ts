@@ -42,11 +42,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure directory exists
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
-
     // Determine extension
     let ext = "jpg";
     if (file.type === "image/png") ext = "png";
@@ -54,12 +49,13 @@ export async function POST(req: NextRequest) {
     else if (file.type === "image/jpeg" || file.type === "image/jpg") ext = "jpg";
 
     const fileName = `avatar_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
-    const filePath = path.join(UPLOAD_DIR, fileName);
 
+    // On Vercel, the filesystem is read-only. We convert the image to a Base64 Data URI
+    // to store it directly in the database, avoiding the need for external storage buckets for now.
     const arrayBuffer = await file.arrayBuffer();
-    fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
-
-    const publicUrl = `/storage/avatars/${fileName}`;
+    const buffer = Buffer.from(arrayBuffer);
+    const base64String = buffer.toString("base64");
+    const publicUrl = `data:${file.type};base64,${base64String}`;
 
     return NextResponse.json({
       success: true,
