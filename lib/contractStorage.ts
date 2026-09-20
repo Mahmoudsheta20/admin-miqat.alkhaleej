@@ -5,7 +5,7 @@ import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import { prisma } from "./prisma";
 import { generateContractHtml } from "./generateContractHtml";
-import { DEFAULT_CONTRACT_DATA, FullContractData } from "./contractConstants";
+import { DEFAULT_CONTRACT_DATA, FullContractData, formatOfficialDate } from "./contractConstants";
 
 /**
  * Storage Directory for Generated Contract PDFs
@@ -228,23 +228,6 @@ export function mapOperationType(type: string): string {
   }
 }
 
-function formatIssueDate(val?: string | Date | null): string {
-  if (!val) return new Date().toLocaleDateString("en-GB");
-  if (typeof val === "string") {
-    const parts = val.replace(/-/g, "/").split("/");
-    if (parts.length === 3) {
-      if (parts[0].length === 4) {
-        // YYYY/MM/DD -> DD/MM/YYYY
-        return `${parts[2].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[0]}`;
-      } else if (parts[2].length === 4) {
-        // Already DD/MM/YYYY
-        return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[2]}`;
-      }
-    }
-  }
-  return new Date(val).toLocaleDateString("en-GB");
-}
-
 /**
  * Maps a Prisma Contract entity to FullContractData required by the HTML generator.
  */
@@ -253,10 +236,10 @@ export function mapContractToPdfData(contract: any): FullContractData {
   const captain = contract.captain;
   const inspection = contract.inspection;
   const issueDate = contract.issueDate
-    ? formatIssueDate(contract.issueDate)
+    ? formatOfficialDate(contract.issueDate)
     : (contract.createdAt
-      ? formatIssueDate(contract.createdAt)
-      : contract.tripDate || "08/09/2026");
+      ? formatOfficialDate(contract.createdAt)
+      : (contract.tripDate ? formatOfficialDate(contract.tripDate) : "08/09/2026"));
 
   return {
     ...DEFAULT_CONTRACT_DATA,

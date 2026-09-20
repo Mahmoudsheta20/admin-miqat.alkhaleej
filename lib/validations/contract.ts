@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OperationType } from "@/lib/types";
 import { ContractFormPayload } from "@/app/_actions/contract";
+import { getSaudiTodayDateStr } from "@/lib/contractConstants";
 
 /**
  * Normalizes Eastern Arabic numerals (٠-٩) to Western Arabic (0-9)
@@ -165,7 +166,7 @@ export function sanitizeContractPayload(
   const cleanIssueDate =
     data.issueDateMode === "MANUAL" && data.issueDate
       ? normalizeArabicNumerals(data.issueDate.trim())
-      : undefined;
+      : getSaudiTodayDateStr();
 
   return {
     operationType: parseOperationType(data.operationType),

@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/authContext";
 import { getTodayInspection } from "@/app/_actions/inspection";
 import { submitContract, ContractFormPayload } from "@/app/_actions/contract";
 import { OperationType, VehicleInspection } from "@/lib/types";
+import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
 
 interface FormValues {
@@ -51,8 +52,8 @@ export default function CaptainContractBuilderPage() {
   const [createdContract, setCreatedContract] = useState<{ id: string; referenceNumber: string } | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
 
-  const todayStr = new Date().toISOString().split("T")[0].replace(/-/g, "/");
-  const timeNow = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const todayStr = getSaudiTodayDateStr();
+  const timeNow = getSaudiCurrentTimeStr();
 
   const {
     register,

@@ -30,6 +30,7 @@ import { getCaptains } from "@/app/_actions/captain";
 import { Contract, OperationType, SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import { formatOfficialDate } from "@/lib/contractConstants";
 
 export default function AdminContractsPage() {
   // Data states
@@ -1174,7 +1175,7 @@ export default function AdminContractsPage() {
                     تفاصيل العقد: {selectedContract.referenceNumber}
                   </h3>
                   <p className="text-[11px] sm:text-xs text-slate-400">
-                    العميل: {selectedContract.customerName} • التاريخ: {selectedContract.tripDate} {selectedContract.tripTime}
+                    العميل: {selectedContract.customerName} • تاريخ الإصدار: <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{formatOfficialDate(selectedContract.issueDate || selectedContract.createdAt)}</span> • الرحلة: {selectedContract.tripDate} {selectedContract.tripTime}
                   </p>
                 </div>
               </div>

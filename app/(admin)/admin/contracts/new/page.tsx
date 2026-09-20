@@ -37,6 +37,11 @@ import {
   AdminContractFormValues,
   sanitizeContractPayload,
 } from "@/lib/validations/contract";
+import {
+  getSaudiTodayDateStr,
+  getSaudiCurrentTimeStr,
+  formatOfficialDate,
+} from "@/lib/contractConstants";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
 import { CustomInput } from "@/app/_components/form/CustomInput";
 import { CustomTextarea } from "@/app/_components/form/CustomTextarea";
@@ -105,8 +110,8 @@ export default function AdminContractBuilderPage() {
   const [adminInspectionSuccessMsg, setAdminInspectionSuccessMsg] = useState("");
   const [showDetailedChecks, setShowDetailedChecks] = useState(false);
   const [adminInspectionMode, setAdminInspectionMode] = useState<"AUTO" | "MANUAL">("AUTO");
-  const [adminInspectionDate, setAdminInspectionDate] = useState(() => new Date().toISOString().split("T")[0].replace(/-/g, "/"));
-  const [adminInspectionTime, setAdminInspectionTime] = useState(() => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
+  const [adminInspectionDate, setAdminInspectionDate] = useState(() => getSaudiTodayDateStr());
+  const [adminInspectionTime, setAdminInspectionTime] = useState(() => getSaudiCurrentTimeStr());
 
   // 16 technical check items (all default to true = 100% compliant)
   const [checks, setChecks] = useState<Record<string, boolean>>({
@@ -128,11 +133,8 @@ export default function AdminContractBuilderPage() {
     seatBelts: true,
   });
 
-  const todayStr = new Date().toISOString().split("T")[0].replace(/-/g, "/");
-  const timeNow = new Date().toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const todayStr = getSaudiTodayDateStr();
+  const timeNow = getSaudiCurrentTimeStr();
 
   const {
     register,
@@ -786,7 +788,7 @@ export default function AdminContractBuilderPage() {
                   <span className="text-slate-500 dark:text-slate-400">تاريخ الإصدار المعتمد في ترويسة العقد:</span>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    {new Date().toLocaleDateString("en-GB")} (تاريخ اليوم الفعلي)
+                    {formatOfficialDate(todayStr)} (تاريخ اليوم الفعلي)
                   </span>
                   <span className="text-[11px] text-slate-400 mr-auto">
                     * يسجل النظام تاريخ ووقت الإنشاء الفعلي تلقائياً في السجلات

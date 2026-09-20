@@ -174,3 +174,70 @@ export const DEFAULT_CONTRACT_DATA: FullContractData = {
     accentColor: "#f1f5f9",
   },
 };
+
+/**
+ * Returns the current date in Saudi Arabia (Asia/Riyadh) as YYYY/MM/DD
+ */
+export function getSaudiTodayDateStr(date: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date); // en-CA gives YYYY-MM-DD
+  return parts.replace(/-/g, "/");
+}
+
+/**
+ * Returns the current time in Saudi Arabia (Asia/Riyadh) as HH:MM (24-hour format)
+ */
+export function getSaudiCurrentTimeStr(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Riyadh",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+/**
+ * Formats any date input into the official DD/MM/YYYY for Saudi transport contract display.
+ * Accurately handles YYYY/MM/DD, DD/MM/YYYY, ISO timestamp strings (with "T"), and Date objects in Asia/Riyadh.
+ */
+export function formatOfficialDate(val?: string | Date | null): string {
+  if (!val) {
+    return new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Riyadh",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date());
+  }
+
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    // If it is a plain date string without time ("T")
+    if (!trimmed.includes("T")) {
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+        return trimmed;
+      }
+      const parts = trimmed.replace(/-/g, "/").split("/");
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[0]}`;
+      }
+      if (parts.length === 3 && parts[2].length === 4) {
+        return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[2]}`;
+      }
+    }
+  }
+
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return String(val);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Riyadh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(d);
+}
+

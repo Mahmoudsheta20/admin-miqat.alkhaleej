@@ -6,6 +6,7 @@ import {
   generateAndSaveContractPdf,
   syncAllExistingContractsToStorage,
 } from "@/lib/contractStorage";
+import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 
 export interface PassengerInput {
   name: string;
@@ -134,14 +135,14 @@ export async function submitContract(
           operationType: formData.operationType,
           origin,
           destination,
-          tripDate: cleanStr(formData.tripDate) || new Date().toISOString().split("T")[0],
-          tripTime: cleanStr(formData.tripTime) || "12:00",
+          tripDate: cleanStr(formData.tripDate) || getSaudiTodayDateStr(),
+          tripTime: cleanStr(formData.tripTime) || getSaudiCurrentTimeStr(),
           flightCarrier: cleanStr(formData.flightCarrier),
           flightNumber: cleanStr(formData.flightNumber),
           customerName,
           customerPhone: cleanStr(formData.customerPhone),
           notes: cleanStr(formData.notes),
-          issueDate: cleanStr(formData.issueDate) || new Date().toISOString().split("T")[0].replace(/-/g, "/"),
+          issueDate: cleanStr(formData.issueDate) || getSaudiTodayDateStr(),
           inspectionId: validInspectionId,
           captainId: captainId!,
           vehiclePlate: cleanStr(formData.vehiclePlate) || "ا ص ل 7223",

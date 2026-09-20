@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { mapOperationType } from "@/lib/contractStorage";
+import { formatOfficialDate } from "@/lib/contractConstants";
 
 interface PageProps {
   params: Promise<{ ref: string }>;
@@ -73,10 +74,10 @@ export default async function ContractVerificationPage({ params }: PageProps) {
   const pdfUrl = contract.pdfPath || `/api/contracts/pdf?contractId=${contract.id}`;
   const operationTypeAr = mapOperationType(contract.operationType);
   const issueDate = (contract as any).issueDate
-    ? (contract as any).issueDate
+    ? formatOfficialDate((contract as any).issueDate)
     : (contract.createdAt
-      ? new Date(contract.createdAt).toLocaleDateString("en-GB")
-      : contract.tripDate);
+      ? formatOfficialDate(contract.createdAt)
+      : (contract.tripDate ? formatOfficialDate(contract.tripDate) : "08/09/2026"));
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans py-8 px-4 sm:px-6" dir="rtl">
