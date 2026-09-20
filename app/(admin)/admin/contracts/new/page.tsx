@@ -2,67 +2,143 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   FilePlus2,
-  Users,
-  Plus,
-  Trash2,
   Plane,
   MapPin,
   CheckCircle2,
   FileText,
   ArrowRight,
   ShieldAlert,
+  Car,
+  User,
+  Phone,
+  RotateCcw,
+  Briefcase,
+  ShieldCheck,
+  AlertCircle,
+  AlertTriangle,
+  ClipboardCheck,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { getCaptains } from "@/app/_actions/captain";
-import { submitContract, ContractFormPayload } from "@/app/_actions/contract";
-import { OperationType, SystemUser } from "@/lib/types";
+import { getVehicles } from "@/app/_actions/fleet";
+import { submitContract } from "@/app/_actions/contract";
+import { getTodayInspection, submitInspection } from "@/app/_actions/inspection";
+import { Vehicle, VehicleInspection } from "@/lib/types";
+import {
+  adminContractSchema,
+  AdminContractFormValues,
+  sanitizeContractPayload,
+} from "@/lib/validations/contract";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import { CustomInput } from "@/app/_components/form/CustomInput";
+import { CustomTextarea } from "@/app/_components/form/CustomTextarea";
+import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
+import { CustomTimePicker } from "@/app/_components/form/CustomTimePicker";
+import {
+  CaptainSelector,
+  CaptainWithMeta,
+} from "@/app/_components/form/CaptainSelector";
+import { VehicleSelector } from "@/app/_components/form/VehicleSelector";
+import { PassengerManifestManager } from "@/app/_components/form/PassengerManifestManager";
 
-interface FormValues {
-  operationType: OperationType;
-  customerName: string;
-  customerPhone: string;
-  origin: string;
-  destination: string;
-  tripDate: string;
-  tripTime: string;
-  flightCarrier: string;
-  flightNumber: string;
-  captainId: string;
-  vehiclePlate: string;
-  notes: string;
-  passengers: {
-    name: string;
-    nationality: string;
-    idNumber: string;
-  }[];
-}
+const INSPECTION_CATEGORIES = [
+  {
+    title: "لوحة العدادات والتنبيهات",
+    items: [
+      { key: "fuelGauge", label: "مؤشر الوقود" },
+      { key: "tempGauge", label: "مؤشر الحرارة" },
+      { key: "oilPressure", label: "ضغط الزيت" },
+      { key: "checkEngine", label: "فحص المحرك" },
+      { key: "absLight", label: "فرامل ABS" },
+      { key: "warningLights", label: "لمبات التحذير" },
+    ],
+  },
+  {
+    title: "الفحص الخارجي والمركبة",
+    items: [
+      { key: "tires", label: "الإطارات والضغط" },
+      { key: "headlights", label: "الأنوار الأمامية والخلفية" },
+      { key: "signals", label: "إشارات الطوارئ" },
+      { key: "mirrors", label: "الزجاج والمرايا" },
+      { key: "noLeaks", label: "خلو التسريبات" },
+    ],
+  },
+  {
+    title: "معدات السلامة والطوارئ",
+    items: [
+      { key: "fireExtinguisher", label: "طفاية الحريق" },
+      { key: "warningTriangle", label: "مثلث الطوارئ" },
+      { key: "firstAidKit", label: "حقيبة الإسعافات" },
+      { key: "glassHammer", label: "مطرقة الزجاج" },
+      { key: "seatBelts", label: "أحزمة الأمان" },
+    ],
+  },
+];
 
 export default function AdminContractBuilderPage() {
-  const router = useRouter();
-
-  const [captains, setCaptains] = useState<SystemUser[]>([]);
+  const [captains, setCaptains] = useState<CaptainWithMeta[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoadingCaptains, setIsLoadingCaptains] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [createdContract, setCreatedContract] = useState<{ id: string; referenceNumber: string } | null>(null);
+  const [serverError, setServerError] = useState("");
+  const [createdContract, setCreatedContract] = useState<{
+    id: string;
+    referenceNumber: string;
+  } | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [confirmError, setConfirmError] = useState("");
+
+  // Captain & Admin Inspection States
+  const [captainInspection, setCaptainInspection] = useState<VehicleInspection | null>(null);
+  const [checkedCaptainId, setCheckedCaptainId] = useState<string | null>(null);
+  const [adminInspectionId, setAdminInspectionId] = useState<string | null>(null);
+  const [isSubmittingAdminInspection, setIsSubmittingAdminInspection] = useState(false);
+  const [adminInspectionSuccessMsg, setAdminInspectionSuccessMsg] = useState("");
+  const [showDetailedChecks, setShowDetailedChecks] = useState(false);
+
+  // 16 technical check items (all default to true = 100% compliant)
+  const [checks, setChecks] = useState<Record<string, boolean>>({
+    fuelGauge: true,
+    tempGauge: true,
+    oilPressure: true,
+    checkEngine: true,
+    absLight: true,
+    warningLights: true,
+    tires: true,
+    headlights: true,
+    signals: true,
+    mirrors: true,
+    noLeaks: true,
+    fireExtinguisher: true,
+    warningTriangle: true,
+    firstAidKit: true,
+    glassHammer: true,
+    seatBelts: true,
+  });
 
   const todayStr = new Date().toISOString().split("T")[0].replace(/-/g, "/");
-  const timeNow = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const timeNow = new Date().toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const {
     register,
     control,
     handleSubmit,
     setValue,
-    watch,
-  } = useForm<FormValues>({
+    reset,
+    formState: { errors },
+  } = useForm<AdminContractFormValues>({
+    resolver: zodResolver(adminContractSchema),
     defaultValues: {
-      operationType: "AIRPORT_TRANSFER",
+      operationType: "توصيل واستقبال مطار",
       customerName: "",
       customerPhone: "",
       origin: "مكة المكرمة",
@@ -74,140 +150,285 @@ export default function AdminContractBuilderPage() {
       captainId: "",
       vehiclePlate: "",
       notes: "",
-      passengers: [
-        { name: "", nationality: "سعودي", idNumber: "" },
-      ],
+      passengers: [{ name: "", nationality: "سعودي", idNumber: "" }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "passengers",
-  });
+  const selectedCaptainId = useWatch({ control, name: "captainId" });
+  const selectedVehiclePlate = useWatch({ control, name: "vehiclePlate" });
+  const currentCaptain = captains.find((c) => c.id === selectedCaptainId);
 
+  const isCheckingInspection = Boolean(selectedCaptainId && checkedCaptainId !== selectedCaptainId);
+  const effectiveCaptainInspection =
+    selectedCaptainId && captainInspection?.captainId === selectedCaptainId ? captainInspection : null;
+
+  // Check today's inspection status whenever selected captain changes
   useEffect(() => {
-    getCaptains().then((res) => {
-      if (res.success && res.captains) {
-        setCaptains(res.captains);
-        if (res.captains.length > 0) {
-          setValue("captainId", res.captains[0].id);
-          setValue("vehiclePlate", res.captains[0].assignedVehiclePlate || "");
+    let isCurrent = true;
+
+    if (selectedCaptainId) {
+      getTodayInspection(selectedCaptainId).then((res) => {
+        if (!isCurrent) return;
+        setCheckedCaptainId(selectedCaptainId);
+        setAdminInspectionId(null);
+        setAdminInspectionSuccessMsg("");
+
+        if (res.success && res.inspection) {
+          setCaptainInspection(res.inspection);
+          setValue("inspectionId", res.inspection.id);
+        } else {
+          setCaptainInspection(null);
+          setValue("inspectionId", undefined);
         }
+      });
+    }
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedCaptainId, setValue]);
+
+  // Fetch registered captains and fleet vehicles in parallel
+  useEffect(() => {
+    Promise.all([getCaptains(), getVehicles()]).then(([capRes, vehRes]) => {
+      let loadedCaptains: CaptainWithMeta[] = [];
+      let loadedVehicles: Vehicle[] = [];
+
+      if (capRes.success && capRes.captains) {
+        loadedCaptains = capRes.captains;
+        setCaptains(capRes.captains);
       }
+      if (vehRes.success && vehRes.vehicles) {
+        loadedVehicles = vehRes.vehicles;
+        setVehicles(vehRes.vehicles);
+      }
+
+      if (loadedCaptains.length > 0) {
+        const firstCap = loadedCaptains[0];
+        setValue("captainId", firstCap.id);
+        if (firstCap.assignedVehiclePlate) {
+          setValue("vehiclePlate", firstCap.assignedVehiclePlate);
+        } else if (loadedVehicles.length > 0) {
+          setValue("vehiclePlate", loadedVehicles[0].plateNumberAr);
+        }
+      } else if (loadedVehicles.length > 0) {
+        setValue("vehiclePlate", loadedVehicles[0].plateNumberAr);
+      }
+
       setIsLoadingCaptains(false);
     });
   }, [setValue]);
 
-  // When captainId changes, automatically update the vehicle plate
-  const selectedCaptainId = watch("captainId");
-  useEffect(() => {
-    if (selectedCaptainId && captains.length > 0) {
-      const cap = captains.find(c => c.id === selectedCaptainId);
-      if (cap && cap.assignedVehiclePlate) {
-        setValue("vehiclePlate", cap.assignedVehiclePlate);
-      }
-    }
-  }, [selectedCaptainId, captains, setValue]);
-
-
-  const onFormSubmit = async (data: FormValues) => {
-    if (!data.customerName.trim()) {
-      setFormError("اسم الضيف الأساسي مطلوب");
-      return;
-    }
-    if (!data.captainId) {
-      setFormError("يجب اختيار كابتن للرحلة");
+  // Explicitly Send & Document Inspection from Admin
+  const handleSendAdminInspection = async () => {
+    if (!selectedCaptainId) {
+      setConfirmError("يجب اختيار كابتن للرحلة أولاً قبل توثيق الفحص التشغيلي");
       return;
     }
 
-    setIsSubmitting(true);
-    setFormError("");
+    setIsSubmittingAdminInspection(true);
+    setConfirmError("");
+    setAdminInspectionSuccessMsg("");
 
-    const payload: ContractFormPayload = {
-      operationType: data.operationType,
-      origin: data.origin.trim(),
-      destination: data.destination.trim(),
-      tripDate: data.tripDate,
-      tripTime: data.tripTime,
-      flightCarrier: data.flightCarrier?.trim() || undefined,
-      flightNumber: data.flightNumber?.trim() || undefined,
-      customerName: data.customerName.trim(),
-      customerPhone: data.customerPhone?.trim() || undefined,
-      notes: data.notes?.trim() || undefined,
-      captainId: data.captainId,
-      vehiclePlate: data.vehiclePlate.trim() || "ا ص ل 7223",
-      // Note: Admin bypasses the inspection requirement
-      inspectionId: undefined, 
-      passengers: data.passengers.map((p) => ({
-        name: p.name.trim(),
-        nationality: p.nationality.trim() || "سعودي",
-        idNumber: p.idNumber.trim(),
-      })),
-    };
+    try {
+      const plate =
+        selectedVehiclePlate ||
+        currentCaptain?.assignedVehiclePlate ||
+        (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
 
-    const res = await submitContract(payload);
-    setIsSubmitting(false);
-
-    if (res.success && res.contract) {
-      setCreatedContract({
-        id: res.contract.id,
-        referenceNumber: res.contract.referenceNumber,
+      const res = await submitInspection({
+        captainId: selectedCaptainId,
+        vehiclePlate: plate,
+        fuelGauge: checks.fuelGauge ?? true,
+        tempGauge: checks.tempGauge ?? true,
+        oilPressure: checks.oilPressure ?? true,
+        checkEngine: checks.checkEngine ?? true,
+        absLight: checks.absLight ?? true,
+        warningLights: checks.warningLights ?? true,
+        tires: checks.tires ?? true,
+        headlights: checks.headlights ?? true,
+        signals: checks.signals ?? true,
+        mirrors: checks.mirrors ?? true,
+        noLeaks: checks.noLeaks ?? true,
+        fireExtinguisher: checks.fireExtinguisher ?? true,
+        warningTriangle: checks.warningTriangle ?? true,
+        firstAidKit: checks.firstAidKit ?? true,
+        glassHammer: checks.glassHammer ?? true,
+        seatBelts: checks.seatBelts ?? true,
+        driverDeclared: true,
+        notes: "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات",
       });
-    } else {
-      setFormError(res.error || "فشل إنشاء العقد");
+
+      if (res.success && res.inspection) {
+        setAdminInspectionId(res.inspection.id);
+        setValue("inspectionId", res.inspection.id);
+        setIsConfirmed(true);
+        setAdminInspectionSuccessMsg(
+          `تم إرسال وتوثيق الفحص التشغيلي بنجاح (كود الفحص #${res.inspection.id.slice(0, 8)}) وتم اعتماده للرحلة`
+        );
+      } else {
+        setConfirmError(res.error || "تعذر إرسال الفحص التشغيلي");
+      }
+    } catch (err) {
+      console.error("Admin inspection error:", err);
+      setConfirmError("حدث خطأ غير متوقع أثناء إرسال الفحص التشغيلي");
+    } finally {
+      setIsSubmittingAdminInspection(false);
     }
   };
 
-  const addFivePassengers = () => {
-    for (let i = 0; i < 5; i++) {
-      append({ name: "", nationality: "سعودي", idNumber: "" });
+  // Handle Form Submission
+  const onFormSubmit = async (data: AdminContractFormValues) => {
+    if (!isConfirmed) {
+      setConfirmError("يجب إتمام وتأكيد الفحص التشغيلي أدناه قبل إنشاء وتوثيق العقد");
+      return;
     }
+
+    setConfirmError("");
+    setIsSubmitting(true);
+    setServerError("");
+
+    try {
+      let resolvedInspectionId =
+        adminInspectionId || effectiveCaptainInspection?.id || data.inspectionId;
+
+      // If captain hasn't sent inspection and admin hasn't clicked "send",
+      // automatically send and document the official inspection now from admin!
+      if (!resolvedInspectionId) {
+        const plate =
+          data.vehiclePlate ||
+          currentCaptain?.assignedVehiclePlate ||
+          (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
+
+        const inspRes = await submitInspection({
+          captainId: data.captainId,
+          vehiclePlate: plate,
+          fuelGauge: checks.fuelGauge ?? true,
+          tempGauge: checks.tempGauge ?? true,
+          oilPressure: checks.oilPressure ?? true,
+          checkEngine: checks.checkEngine ?? true,
+          absLight: checks.absLight ?? true,
+          warningLights: checks.warningLights ?? true,
+          tires: checks.tires ?? true,
+          headlights: checks.headlights ?? true,
+          signals: checks.signals ?? true,
+          mirrors: checks.mirrors ?? true,
+          noLeaks: checks.noLeaks ?? true,
+          fireExtinguisher: checks.fireExtinguisher ?? true,
+          warningTriangle: checks.warningTriangle ?? true,
+          firstAidKit: checks.firstAidKit ?? true,
+          glassHammer: checks.glassHammer ?? true,
+          seatBelts: checks.seatBelts ?? true,
+          driverDeclared: true,
+          notes: "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات عند توثيق العقد",
+        });
+
+        if (inspRes.success && inspRes.inspection) {
+          resolvedInspectionId = inspRes.inspection.id;
+          setAdminInspectionId(inspRes.inspection.id);
+        }
+      }
+
+      // 1. Clean and normalize payload with resolved inspection ID
+      const payload = sanitizeContractPayload(data, resolvedInspectionId);
+
+      // 2. Submit contract action
+      const res = await submitContract(payload);
+      setIsSubmitting(false);
+
+      if (res.success && res.contract) {
+        setCreatedContract({
+          id: res.contract.id,
+          referenceNumber: res.contract.referenceNumber,
+        });
+      } else {
+        setServerError(res.error || "فشل إنشاء وتوثيق العقد الرسمي");
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      setServerError("حدث خطأ غير متوقع أثناء معالجة الطلب");
+      console.error(err);
+    }
+  };
+
+  const handleResetForm = () => {
+    setCreatedContract(null);
+    setIsConfirmed(false);
+    setConfirmError("");
+    setAdminInspectionId(null);
+    setAdminInspectionSuccessMsg("");
+    setShowDetailedChecks(false);
+    const defaultCap = captains.length > 0 ? captains[0] : null;
+    const defaultPlate =
+      defaultCap?.assignedVehiclePlate ||
+      (vehicles.length > 0 ? vehicles[0].plateNumberAr : "");
+
+    reset({
+      operationType: "توصيل واستقبال مطار",
+      customerName: "",
+      customerPhone: "",
+      origin: "مكة المكرمة",
+      destination: "مطار الملك عبد العزيز بجدة",
+      tripDate: todayStr,
+      tripTime: timeNow,
+      flightCarrier: "الخطوط السعودية",
+      flightNumber: "",
+      captainId: defaultCap ? defaultCap.id : "",
+      vehiclePlate: defaultPlate,
+      notes: "",
+      passengers: [{ name: "", nationality: "سعودي", idNumber: "" }],
+    });
   };
 
   if (isLoadingCaptains) {
     return (
-      <div className="flex items-center justify-center p-16">
+      <div className="flex items-center justify-center p-20">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs text-slate-400">جاري تحميل البيانات...</p>
+          <p className="text-xs text-slate-400">جاري تحميل بيانات الأسطول والكباتن...</p>
         </div>
       </div>
     );
   }
 
-  // Created Success View
+  // Contract Success View
   if (createdContract) {
     return (
-      <div className="theme-card rounded-3xl p-6 sm:p-8 border theme-border text-center space-y-4 max-w-xl mx-auto my-8">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
-          <CheckCircle2 className="w-8 h-8" />
+      <div className="theme-card rounded-3xl p-6 sm:p-10 border theme-border text-center space-y-5 max-w-xl mx-auto my-8 shadow-xl">
+        <div className="w-20 h-20 rounded-3xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+          <CheckCircle2 className="w-10 h-10" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-          تم توثيق العقد بنجاح!
-        </h2>
-        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 inline-block font-mono font-black text-amber-600 dark:text-amber-400 text-lg">
+
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+            تم توثيق العقد بنجاح!
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            تم تسجيل العقد وإسناده للكابتن وتوليد وثيقة الـ PDF المعتمدة
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 inline-block font-mono font-black text-amber-600 dark:text-amber-400 text-xl tracking-wider">
           {createdContract.referenceNumber}
         </div>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          تم إنشاء العقد الرسمي وإسناده للكابتن. يمكنك الآن تحميل أو طباعة نسخة الـ PDF.
-        </p>
+
         <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
           <button
+            type="button"
             onClick={() => setIsPdfOpen(true)}
             className="w-full sm:w-auto px-6 py-3 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
           >
             <FileText className="w-4 h-4" />
             معاينة وتحميل العقد (PDF)
           </button>
+
           <button
-            onClick={() => {
-              setCreatedContract(null);
-              setValue("customerName", "");
-              setValue("customerPhone", "");
-            }}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            type="button"
+            onClick={handleResetForm}
+            className="w-full sm:w-auto px-5 py-3 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-2"
           >
-            + إنشاء عقد جديد آخر
+            <RotateCcw className="w-3.5 h-3.5" />
+            إنشاء عقد إضافي آخر
           </button>
         </div>
 
@@ -224,360 +445,561 @@ export default function AdminContractBuilderPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b theme-border pb-4">
         <div>
           <div className="flex items-center gap-2">
             <Link
               href="/admin/contracts"
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              title="رجوع لقائمة العقود"
             >
               <ArrowRight className="w-5 h-5" />
             </Link>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              إنشاء عقد نقل جديد (صلاحيات الإدارة)
+              إنشاء وتوثيق عقد نقل رسمي
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 mr-7">
-            إنشاء وإسناد عقد رحلة بشكل مباشر لأحد الكباتن بدون اشتراط الفحص اليومي
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 mr-9">
+            إصدار عقود الرحلات الفورية وإسنادها للكباتن بصلاحيات الإدارة المباشرة
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 text-xs font-bold flex items-center gap-1.5">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            نمط الإدارة الاستثنائي
+          <span className="px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 text-xs font-bold flex items-center gap-1.5">
+            <ShieldAlert className="w-4 h-4" />
+            صلاحيات الإدارة (تخطي الفحص)
           </span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        {formError && (
-          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
-            {formError}
+        {serverError && (
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2 animate-shake">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>{serverError}</span>
           </div>
         )}
 
-        {/* Section 1: Trip & Operations Details */}
-        <div className="theme-card p-6 rounded-2xl border theme-border space-y-4">
-          <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b theme-border pb-3">
-            <MapPin className="w-4 h-4 text-amber-500" />
-            بيانات الرحلة وإسناد الكابتن
-          </h3>
+        {/* Section 1: Captain & Vehicle Assignment */}
+        <div className="theme-card p-5 sm:p-6 rounded-3xl border theme-border space-y-4">
+          <div className="flex items-center justify-between border-b theme-border pb-3">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Car className="w-4 h-4 text-amber-500" />
+              إسناد الرحلة والمركبة
+            </h3>
+            <span className="text-[11px] text-slate-400">
+              اختر الكابتن المتاح للرحلة وسيتم ربط مركبته تلقائياً
+            </span>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            
-            {/* Captain Selection */}
-            <div className="space-y-1 sm:col-span-2 lg:col-span-1">
-              <label className="text-xs font-bold text-amber-700 dark:text-amber-500">
-                إسناد الرحلة للكابتن *
-              </label>
-              <select
-                {...register("captainId", { required: true })}
-                className="w-full px-3 py-2 text-xs rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-100 font-bold focus:border-amber-500 focus:outline-hidden"
-              >
-                {captains.map((cap) => (
-                  <option key={cap.id} value={cap.id}>
-                    {cap.name} ({cap.assignedVehiclePlate || "بدون مركبة"})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Vehicle Plate */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                لوحة المركبة *
-              </label>
-              <input
-                type="text"
-                {...register("vehiclePlate", { required: true })}
-                placeholder="ا ص ل 7223"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono font-bold"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Custom Captain Selector */}
+            <div>
+              <Controller
+                control={control}
+                name="captainId"
+                render={({ field, fieldState }) => (
+                  <CaptainSelector
+                    label="الكابتن المسؤول عن التنفيذ"
+                    required
+                    captains={captains}
+                    selectedCaptainId={field.value}
+                    onSelectCaptain={(cap) => {
+                      field.onChange(cap.id);
+                      if (cap.assignedVehiclePlate) {
+                        setValue("vehiclePlate", cap.assignedVehiclePlate, {
+                          shouldValidate: true,
+                        });
+                      } else if (vehicles.length > 0) {
+                        setValue("vehiclePlate", vehicles[0].plateNumberAr, {
+                          shouldValidate: true,
+                        });
+                      }
+                    }}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
             </div>
 
-            {/* Operation Type */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                نوع العملية التشغيلية *
-              </label>
-              <select
-                {...register("operationType", { required: true })}
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-              >
-                <option value="AIRPORT_TRANSFER">توصيل مطار (Airport Transfer)</option>
-                <option value="CITY_TOUR">جولة سياحية (City Tour)</option>
-                <option value="INTERCITY">نقل بين المدن (Intercity)</option>
-                <option value="HAJJ_UMRAH">نقل زوار ومعتمرين (Hajj & Umrah)</option>
-              </select>
-            </div>
-
-            {/* Customer Name */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                اسم الضيف الأساسي (الطرف الثاني) *
-              </label>
-              <input
-                type="text"
-                {...register("customerName", { required: true })}
-                placeholder="مثال: ماجد بن فيصل الحربي"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
-              />
-            </div>
-
-            {/* Customer Phone */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                رقم جوال الضيف
-              </label>
-              <input
-                type="tel"
-                {...register("customerPhone")}
-                placeholder="0559871234"
-                dir="ltr"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right font-mono"
-              />
-            </div>
-
-            {/* Origin */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                موقع الانطلاق (النقل من) *
-              </label>
-              <input
-                type="text"
-                {...register("origin", { required: true })}
-                placeholder="مكة المكرمة (فندق العنوان جبل عمر)"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-              />
-            </div>
-
-            {/* Destination */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                الجهة والوصول (وصولاً إلى) *
-              </label>
-              <input
-                type="text"
-                {...register("destination", { required: true })}
-                placeholder="مطار الملك عبد العزيز بجدة (صالة 1)"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-              />
-            </div>
-
-            {/* Trip Date */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                تاريخ الرحلة *
-              </label>
-              <input
-                type="text"
-                {...register("tripDate", { required: true })}
-                placeholder="2026/09/08"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono"
-              />
-            </div>
-
-            {/* Trip Time */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                وقت الرحلة *
-              </label>
-              <input
-                type="text"
-                {...register("tripTime", { required: true })}
-                placeholder="14:30"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono"
-              />
-            </div>
-
-            {/* Flight Carrier */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <Plane className="w-3.5 h-3.5 text-blue-500" />
-                شركة الطيران (اختياري)
-              </label>
-              <input
-                type="text"
-                {...register("flightCarrier")}
-                placeholder="الخطوط السعودية"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-              />
-            </div>
-
-            {/* Flight Number */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <Plane className="w-3.5 h-3.5 text-blue-500" />
-                رقم الرحلة الجوية (اختياري)
-              </label>
-              <input
-                type="text"
-                {...register("flightNumber")}
-                placeholder="SV841"
-                dir="ltr"
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right font-mono"
-              />
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-1 sm:col-span-2 lg:col-span-3">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                ملاحظات إضافية على العقد
-              </label>
-              <input
-                type="text"
-                {...register("notes")}
-                placeholder="استقبال VIP، مياه زمزم، نقل أمتعة..."
-                className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+            {/* Custom Vehicle Selector (Retrieved from registered Fleet) */}
+            <div>
+              <Controller
+                control={control}
+                name="vehiclePlate"
+                render={({ field, fieldState }) => (
+                  <VehicleSelector
+                    label="المركبة المسندة للرحلة"
+                    required
+                    vehicles={vehicles}
+                    selectedPlate={field.value}
+                    captainPlate={currentCaptain?.assignedVehiclePlate}
+                    onSelectVehicle={(veh) => {
+                      field.onChange(veh.plateNumberAr);
+                    }}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
             </div>
           </div>
         </div>
 
-        {/* Section 2: Dynamic Passenger Manifest */}
-        <div className="theme-card p-4 sm:p-6 rounded-2xl border theme-border space-y-4">
+        {/* Section 2: Trip & Client Details */}
+        <div className="theme-card p-5 sm:p-6 rounded-3xl border theme-border space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-3">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-amber-500" />
-                كشف الركاب المرافقين
+                <MapPin className="w-4 h-4 text-amber-500" />
+                بيانات الرحلة والعميل الأساسي
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                إدخال بيانات الضيوف بدقة لمطابقة هوياتهم الرسمية وتفادي المخالفات
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                تحديد المسار والمواعيد وفق التذاكر أو الحجوزات
               </p>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={addFivePassengers}
-                className="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition"
-              >
-                + إضافة 5 ركاب
-              </button>
-              <button
-                type="button"
-                onClick={() => append({ name: "", nationality: "سعودي", idNumber: "" })}
-                className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                إضافة راكب
-              </button>
+            {/* Quick Template Chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-slate-400 font-bold ml-1">قوالب العمليات:</span>
+              {[
+                "توصيل واستقبال مطار",
+                "جولة سياحية",
+                "نقل بين المدن",
+                "نقل معتمرين وزوار",
+              ].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() =>
+                    setValue("operationType", tag, { shouldValidate: true })
+                  }
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-500/15 dark:bg-slate-800 dark:hover:bg-amber-500/20 text-slate-600 dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
+                >
+                  + {tag}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="space-y-3">
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border flex flex-col gap-3 transition"
-              >
-                {/* Mobile row header */}
-                <div className="flex items-center justify-between sm:hidden pb-2 border-b border-slate-200/70 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 font-mono font-bold text-xs flex items-center justify-center">
-                      {index + 1}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {index === 0 ? "الضيف الأساسي" : `الراكب ${index + 1}`}
-                    </span>
-                  </div>
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition flex items-center gap-1 text-[11px] font-bold"
-                      title="حذف هذا الراكب"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>حذف</span>
-                    </button>
-                  )}
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Operation Type - Clean and Simple Text Input */}
+            <CustomInput
+              label="نوع العملية التشغيلية"
+              required
+              icon={<Briefcase className="w-3.5 h-3.5 text-amber-500" />}
+              placeholder="توصيل مطار، جولة سياحية، نقل بين المدن..."
+              clearable
+              onClear={() => setValue("operationType", "", { shouldValidate: true })}
+              {...register("operationType")}
+              error={errors.operationType?.message}
+            />
 
-                {/* Fields layout */}
-                <div className="flex items-center gap-3">
-                  <div className="hidden sm:flex w-7 h-7 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 font-mono font-bold text-xs items-center justify-center shrink-0">
-                    {index + 1}
-                  </div>
+            {/* Customer Name */}
+            <CustomInput
+              label="اسم الضيف الأساسي (الطرف الثاني)"
+              required
+              icon={<User className="w-3.5 h-3.5" />}
+              placeholder="مثال: فهد بن عبد العزيز الحربي"
+              {...register("customerName")}
+              error={errors.customerName?.message}
+            />
 
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-bold block sm:hidden mb-1">
-                        الاسم الكامل
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`passengers.${index}.name` as const)}
-                        placeholder={index === 0 ? "اسم الضيف الأساسي" : `اسم الراكب ${index + 1}`}
-                        className="w-full px-3 py-2 sm:py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
-                      />
-                    </div>
+            {/* Customer Phone */}
+            <CustomInput
+              label="رقم جوال الضيف للتواصل"
+              icon={<Phone className="w-3.5 h-3.5" />}
+              placeholder="0551234567"
+              dir="ltr"
+              className="text-right font-mono"
+              clearable
+              onClear={() => setValue("customerPhone", "")}
+              {...register("customerPhone")}
+              error={errors.customerPhone?.message}
+            />
 
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-bold block sm:hidden mb-1">
-                        الجنسية
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`passengers.${index}.nationality` as const)}
-                        placeholder="الجنسية (مثال: سعودي)"
-                        className="w-full px-3 py-2 sm:py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-                      />
-                    </div>
+            {/* Origin */}
+            <CustomInput
+              label="موقع الانطلاق (من)"
+              required
+              icon={<MapPin className="w-3.5 h-3.5 text-amber-500" />}
+              placeholder="مكة المكرمة (فندق العنوان جبل عمر)"
+              {...register("origin")}
+              error={errors.origin?.message}
+            />
 
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-bold block sm:hidden mb-1">
-                        رقم الهوية أو الجواز
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`passengers.${index}.idNumber` as const)}
-                        placeholder="رقم الهوية / الجواز"
-                        dir="ltr"
-                        className="w-full px-3 py-2 sm:py-1.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right font-mono"
-                      />
-                    </div>
-                  </div>
+            {/* Destination */}
+            <CustomInput
+              label="الجهة والوصول (إلى)"
+              required
+              icon={<MapPin className="w-3.5 h-3.5 text-emerald-500" />}
+              placeholder="مطار الملك عبد العزيز بجدة (الصالة 1)"
+              {...register("destination")}
+              error={errors.destination?.message}
+            />
 
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="hidden sm:flex p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0"
-                      title="حذف هذا الراكب"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+            {/* Trip Date using CustomDatePicker */}
+            <Controller
+              control={control}
+              name="tripDate"
+              render={({ field, fieldState }) => (
+                <CustomDatePicker
+                  label="تاريخ الرحلة"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
 
-          <div className="text-xs text-slate-400 font-bold text-left pt-1">
-            إجمالي ركاب الرحلة: {fields.length}
+            {/* Trip Time using CustomTimePicker */}
+            <Controller
+              control={control}
+              name="tripTime"
+              render={({ field, fieldState }) => (
+                <CustomTimePicker
+                  label="وقت الرحلة"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+
+            {/* Flight Carrier */}
+            <CustomInput
+              label="شركة الطيران (اختياري)"
+              icon={<Plane className="w-3.5 h-3.5 text-blue-500" />}
+              placeholder="الخطوط السعودية"
+              {...register("flightCarrier")}
+              error={errors.flightCarrier?.message}
+            />
+
+            {/* Flight Number */}
+            <CustomInput
+              label="رقم الرحلة الجوية (اختياري)"
+              icon={<Plane className="w-3.5 h-3.5 text-blue-500" />}
+              placeholder="SV841"
+              dir="ltr"
+              className="text-right font-mono"
+              {...register("flightNumber")}
+              error={errors.flightNumber?.message}
+            />
+
+            {/* Contract Notes */}
+            <div className="sm:col-span-2 lg:col-span-3">
+              <CustomTextarea
+                label="ملاحظات وتوجيهات خاصة بالعقد"
+                placeholder="تعليمات الاستقبال VIP، نقطة التجمع، أو تفاصيل إضافية..."
+                rows={2}
+                maxLength={500}
+                showCount
+                {...register("notes")}
+                error={errors.notes?.message}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Submit Actions */}
+        {/* Section 3: Passenger Manifest List */}
+        <PassengerManifestManager
+          control={control}
+          register={register}
+          errors={errors}
+        />
+
+        {/* Section 4: Mandatory Operational & Technical Inspection Check */}
+        <div
+          className={`p-5 rounded-3xl border transition-all duration-200 space-y-4 ${
+            isConfirmed
+              ? "bg-emerald-500/5 border-emerald-500/30 dark:bg-emerald-950/10"
+              : confirmError
+              ? "bg-rose-500/5 border-rose-500/40"
+              : "theme-card theme-border"
+          }`}
+        >
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b theme-border">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  isConfirmed
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                    : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                  الفحص والإقرار التشغيلي الإلزامي (التحقق قبل التوثيق)
+                </h4>
+                <p className="text-[11px] text-slate-400">
+                  تأكيد رسمي بمطابقة الفحص الفني للمركبة وسلامة المسار والركاب
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0">
+              {isCheckingInspection ? (
+                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold flex items-center gap-1.5">
+                  <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                  جاري التحقق من الفحص...
+                </span>
+              ) : effectiveCaptainInspection ? (
+                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  تم الفحص مسبقاً من الكابتن
+                </span>
+              ) : adminInspectionId ? (
+                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  تم الاعتماد والإرسال من الإدارة
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  بانتظار الاعتماد التشغيلي
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Captain Inspection Status / Send from Admin Banner */}
+          {effectiveCaptainInspection ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-black block">
+                    تم استلام فحص المركبة اليومي مسبقاً من الكابتن ({currentCaptain?.name || "الكابتن"})
+                  </span>
+                  <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
+                    لوحة المركبة المفحوصة: <strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> • تاريخ الفحص: <strong className="font-mono">{new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB")}</strong>
+                  </span>
+                </div>
+              </div>
+              <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
+                كود الفحص #{effectiveCaptainInspection.id.slice(0, 8)}
+              </span>
+            </div>
+          ) : adminInspectionId ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-black block">
+                    تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات
+                  </span>
+                  <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
+                    تم اعتماد الفحص الفني الشامل لمركبة الكابتن {currentCaptain?.name} وربطه بالعقد رسمياً
+                  </span>
+                </div>
+              </div>
+              <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
+                كود الفحص #{adminInspectionId.slice(0, 8)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
+              <div className="flex items-start sm:items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-black block">
+                    الكابتن ({currentCaptain?.name || "المحدد"}) لم يرسل الفحص اليومي للمركبة لهذا اليوم
+                  </span>
+                  <span className="text-[11px] text-amber-800 dark:text-amber-300 block">
+                    بصفتك مسؤول العمليات، يمكنك إرسال وتوثيق الفحص التشغيلي الآن نيابة عن الكابتن وربطه بالعقد فوراً
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={handleSendAdminInspection}
+                  disabled={isSubmittingAdminInspection || !selectedCaptainId}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50"
+                  title="إرسال وتوثيق الفحص التشغيلي من الإدارة الآن"
+                >
+                  {isSubmittingAdminInspection ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span>جاري الإرسال والتوثيق...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCheck className="w-3.5 h-3.5" />
+                      <span>إرسال وتوثيق الفحص من الإدارة الآن</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {adminInspectionSuccessMsg && (
+            <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>{adminInspectionSuccessMsg}</span>
+            </div>
+          )}
+
+          {/* High-level verification summary cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">سلامة الإطارات والفرامل</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">الأنوار وأجهزة الطوارئ</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">مطابقة كشف الركاب</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">جاهزية الكابتن المعتمد</span>
+            </div>
+          </div>
+
+          {/* Toggle Detailed 16-check Inspection Drawer */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowDetailedChecks(!showDetailedChecks)}
+              className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1.5 transition"
+            >
+              {showDetailedChecks ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>إخفاء تفاصيل بنود الفحص الفني (16 بنداً)</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>عرض وتخصيص بنود الفحص الفني (16 بنداً)</span>
+                </>
+              )}
+            </button>
+
+            {showDetailedChecks && (
+              <div className="mt-3 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-900/70 border theme-border space-y-3">
+                <div className="flex items-center justify-between border-b theme-border pb-2">
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                    بنود الفحص الفني المعتمدة وفق اشتراطات هيئة النقل
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const allPassed = Object.keys(checks).reduce((acc, k) => ({ ...acc, [k]: true }), {});
+                      setChecks(allPassed);
+                    }}
+                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                  >
+                    تحديد الكل سليم (100%)
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {INSPECTION_CATEGORIES.map((cat) => (
+                    <div key={cat.title} className="space-y-1.5">
+                      <span className="text-[11px] font-black text-slate-500 block mb-1">
+                        {cat.title}
+                      </span>
+                      <div className="space-y-1">
+                        {cat.items.map((item) => (
+                          <label
+                            key={item.key}
+                            className="flex items-center gap-2 p-1.5 rounded-lg bg-white dark:bg-slate-800 border theme-border cursor-pointer hover:border-amber-500/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 transition"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checks[item.key] ?? true}
+                              onChange={(e) =>
+                                setChecks((prev) => ({
+                                  ...prev,
+                                  [item.key]: e.target.checked,
+                                }))
+                              }
+                              className="w-3.5 h-3.5 rounded text-amber-500 accent-amber-500"
+                            />
+                            <span>{item.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Declaration Checkbox */}
+          <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border theme-border cursor-pointer hover:border-amber-500/60 transition shadow-2xs">
+            <input
+              type="checkbox"
+              checked={isConfirmed}
+              onChange={(e) => {
+                setIsConfirmed(e.target.checked);
+                if (e.target.checked) setConfirmError("");
+              }}
+              className="w-5 h-5 rounded-md text-amber-600 focus:ring-amber-500 focus:ring-2 mt-0.5 cursor-pointer accent-amber-500 shrink-0"
+            />
+            <div className="space-y-0.5">
+              <span className="text-xs font-black text-slate-900 dark:text-white block leading-relaxed">
+                أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل، وكافة بيانات الرحلة والمسار والركاب مدخلة بدقة ومسؤولية تشغيلية كاملة.
+              </span>
+              <span className="text-[11px] text-slate-400 block">
+                * في حال لم يكن الكابتن قد أرسل الفحص اليومي، سيتم توثيق الفحص التشغيلي المعتمد آلياً من إدارة العمليات وربطه بالعقد فوراً.
+              </span>
+            </div>
+          </label>
+
+          {confirmError && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 font-bold flex items-center gap-2 animate-shake">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{confirmError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Form Bottom Submission Bar */}
         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-3">
           <Link
             href="/admin/contracts"
-            className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="w-full sm:w-auto text-center px-6 py-3.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-2xs"
           >
-            إلغاء
+            إلغاء والعودة
           </Link>
+
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full sm:w-auto justify-center px-8 py-3 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50"
+            disabled={isSubmitting || !isConfirmed}
+            className="w-full sm:w-auto justify-center px-9 py-3.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <FilePlus2 className="w-4 h-4" />
-            {isSubmitting ? "جاري الإنشاء..." : "اعتماد وتوثيق العقد الرسمي"}
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>جاري معالجة وتوثيق العقد...</span>
+              </>
+            ) : (
+              <>
+                <FilePlus2 className="w-4 h-4" />
+                <span>اعتماد وتوثيق العقد الرسمي (PDF)</span>
+              </>
+            )}
           </button>
         </div>
       </form>

@@ -2,18 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import {
   FilePlus2,
   Users,
   Plus,
   Trash2,
-  Car,
   Plane,
   MapPin,
-  Calendar,
-  Clock,
   CheckCircle2,
   AlertTriangle,
   FileText,
@@ -47,7 +43,6 @@ interface FormValues {
 
 export default function CaptainContractBuilderPage() {
   const { user } = useAuth();
-  const router = useRouter();
 
   const [todayInspection, setTodayInspection] = useState<VehicleInspection | null>(null);
   const [checkingInspection, setCheckingInspection] = useState(true);
@@ -64,8 +59,6 @@ export default function CaptainContractBuilderPage() {
     control,
     handleSubmit,
     setValue,
-    watch,
-    formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
       operationType: "AIRPORT_TRANSFER",
@@ -89,8 +82,6 @@ export default function CaptainContractBuilderPage() {
     control,
     name: "passengers",
   });
-
-  const selectedOperationType = watch("operationType");
 
   useEffect(() => {
     if (user?.id) {
@@ -150,9 +141,22 @@ export default function CaptainContractBuilderPage() {
     }
   };
 
-  const addFivePassengers = () => {
-    for (let i = 0; i < 5; i++) {
-      append({ name: "", nationality: "سعودي", idNumber: "" });
+  const setTotalPassengers = (target: number) => {
+    const nextCount = Math.max(1, Math.min(50, Math.floor(target)));
+    const currentCount = fields.length;
+
+    if (nextCount > currentCount) {
+      const diff = nextCount - currentCount;
+      const newItems = Array.from({ length: diff }, () => ({
+        name: "",
+        nationality: "سعودي",
+        idNumber: "",
+      }));
+      append(newItems);
+    } else if (nextCount < currentCount) {
+      for (let i = currentCount - 1; i >= nextCount; i--) {
+        remove(i);
+      }
     }
   };
 
@@ -465,18 +469,33 @@ export default function CaptainContractBuilderPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/60 p-1 rounded-xl border theme-border">
+                {[1, 4, 7, 12, 25, 45, 50].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setTotalPassengers(num)}
+                    className={`px-2 py-0.5 rounded-lg text-xs font-bold transition font-mono ${
+                      fields.length === num
+                        ? "bg-amber-500 text-white shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-amber-500"
+                    }`}
+                    title={`${num} راكب`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
-                onClick={addFivePassengers}
-                className="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition"
-              >
-                + إضافة 5 ركاب
-              </button>
-              <button
-                type="button"
-                onClick={() => append({ name: "", nationality: "سعودي", idNumber: "" })}
-                className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
+                onClick={() => {
+                  if (fields.length < 50) {
+                    append({ name: "", nationality: "سعودي", idNumber: "" });
+                  }
+                }}
+                disabled={fields.length >= 50}
+                className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-40"
               >
                 <Plus className="w-3.5 h-3.5" />
                 إضافة راكب

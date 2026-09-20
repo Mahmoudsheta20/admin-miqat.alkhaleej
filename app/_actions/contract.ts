@@ -284,6 +284,33 @@ export async function getContracts(filters?: {
             active: c.captain.active,
           }
         : undefined,
+      inspection: c.inspection
+        ? {
+            id: c.inspection.id,
+            captainId: c.inspection.captainId,
+            vehiclePlate: c.inspection.vehiclePlate,
+            inspectionDate: c.inspection.inspectionDate.toISOString().split("T")[0],
+            fuelGauge: c.inspection.fuelGauge,
+            tempGauge: c.inspection.tempGauge,
+            oilPressure: c.inspection.oilPressure,
+            checkEngine: c.inspection.checkEngine,
+            absLight: c.inspection.absLight,
+            warningLights: c.inspection.warningLights,
+            tires: c.inspection.tires,
+            headlights: c.inspection.headlights,
+            signals: c.inspection.signals,
+            mirrors: c.inspection.mirrors,
+            noLeaks: c.inspection.noLeaks,
+            fireExtinguisher: c.inspection.fireExtinguisher,
+            warningTriangle: c.inspection.warningTriangle,
+            firstAidKit: c.inspection.firstAidKit,
+            glassHammer: c.inspection.glassHammer,
+            seatBelts: c.inspection.seatBelts,
+            driverDeclared: c.inspection.driverDeclared,
+            notes: c.inspection.notes,
+            createdAt: c.inspection.createdAt.toISOString(),
+          }
+        : null,
     }));
 
     return { success: true, contracts };
