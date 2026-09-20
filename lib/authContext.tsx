@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: userData.role,
         nationalId: userData.nationalId,
         assignedVehiclePlate: userData.assignedVehiclePlate,
-        avatarUrl: userData.avatarUrl,
+        // avatarUrl removed from cookie to prevent 4KB overflow
       })
     );
     const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24;

@@ -40,7 +40,7 @@ export async function loginAction(
       phone: user.phone,
       nationalId: user.nationalId,
       assignedVehiclePlate: user.assignedVehiclePlate,
-      avatarUrl: user.avatarUrl,
+      // avatarUrl removed from cookie to prevent 4KB overflow
     };
 
     const cookieStore = await cookies();
@@ -143,7 +143,7 @@ export async function updateUserProfileAction(
       phone: updated.phone,
       nationalId: updated.nationalId,
       assignedVehiclePlate: updated.assignedVehiclePlate,
-      avatarUrl: updated.avatarUrl,
+      // avatarUrl removed from cookie to prevent 4KB overflow
     };
 
     cookieStore.set("miqat_session", JSON.stringify(sessionData), {
