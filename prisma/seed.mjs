@@ -24,6 +24,17 @@ async function main() {
     },
   });
 
+  const adminUser2 = await prisma.user.create({
+    data: {
+      id: "usr_admin_mahmoud",
+      name: "محمود شتة (مدير النظام)",
+      email: "shetamahmoud463@gmail.com",
+      role: "ADMIN",
+      phone: "+966500000001",
+      active: true,
+    },
+  });
+
   const captain1 = await prisma.user.create({
     data: {
       id: "usr_captain_1",
