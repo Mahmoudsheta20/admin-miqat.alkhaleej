@@ -217,9 +217,9 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <FileText className="w-6 h-6 text-amber-500" />
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
               <span>مراجعة وتدقيق العقد:</span>
               <span className="font-mono text-amber-600 dark:text-amber-400">
                 {contract.referenceNumber}
@@ -227,7 +227,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             </h1>
 
             <div
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
             >
               <StatusIcon className="w-3.5 h-3.5" />
               <span>{statusInfo.label}</span>
@@ -235,13 +235,13 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {contract.pdfPath && (
             <a
               href={contract.pdfPath}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+              className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
             >
               <Printer className="w-4 h-4 text-slate-500" />
               <span>طباعة / معاينة PDF</span>
@@ -250,7 +250,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
 
           <Link
             href="/admin/contracts"
-            className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight className="w-4 h-4" />
             <span>العودة للسجل</span>
@@ -284,7 +284,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
             {currentStatus !== "APPROVED" && (
               <button
                 type="button"
@@ -471,30 +471,58 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         </h3>
 
         {contract.passengers && contract.passengers.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-                  <th className="py-2.5 px-3 font-bold">#</th>
-                  <th className="py-2.5 px-3 font-bold">اسم الراكب</th>
-                  <th className="py-2.5 px-3 font-bold">الجنسية</th>
-                  <th className="py-2.5 px-3 font-bold">رقم الهوية / الجواز</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {contract.passengers.map((p, idx) => (
-                  <tr key={p.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
-                    <td className="py-2.5 px-3 font-mono font-bold text-slate-400">{p.sequence || idx + 1}</td>
-                    <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{p.name}</td>
-                    <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">{p.nationality || "—"}</td>
-                    <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300" dir="ltr">
-                      {p.idNumber || "—"}
-                    </td>
+          <>
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-right text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+                    <th className="py-2.5 px-3 font-bold">#</th>
+                    <th className="py-2.5 px-3 font-bold">اسم الراكب</th>
+                    <th className="py-2.5 px-3 font-bold">الجنسية</th>
+                    <th className="py-2.5 px-3 font-bold">رقم الهوية / الجواز</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {contract.passengers.map((p, idx) => (
+                    <tr key={p.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
+                      <td className="py-2.5 px-3 font-mono font-bold text-slate-400">{p.sequence || idx + 1}</td>
+                      <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{p.name}</td>
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">{p.nationality || "—"}</td>
+                      <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300" dir="ltr">
+                        {p.idNumber || "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Passenger Cards */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+              {contract.passengers.map((p, idx) => (
+                <div key={p.id || idx} className="py-3 space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-mono flex items-center justify-center text-slate-500 font-bold">
+                        {p.sequence || idx + 1}
+                      </span>
+                      <span>{p.name}</span>
+                    </span>
+                    {p.nationality && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                        {p.nationality}
+                      </span>
+                    )}
+                  </div>
+                  {p.idNumber && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono pr-6" dir="ltr">
+                      <span>ID: {p.idNumber}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <p className="text-xs text-slate-400 py-4 text-center">لا يوجد ركاب إضافيون مسجلون في هذا العقد.</p>
         )}

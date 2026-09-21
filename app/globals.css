@@ -156,3 +156,38 @@ html.dark ::-webkit-scrollbar-thumb {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Mobile & Touch Optimizations */
+@media (max-width: 640px) {
+  /* Prevent iOS Safari automatic zoom on focus while maintaining typography */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch manipulation & momentum scrolling */
+@media (pointer: coarse) {
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area insets for notched mobile devices */
+.pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+.bottom-safe {
+  bottom: env(safe-area-inset-bottom, 0px);
+}

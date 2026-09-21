@@ -450,38 +450,38 @@ export default function EditContractPage({ params }: PageProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
           <a
             href={`/api/contracts/pdf?contractId=${id}&download=1`}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-amber-600 transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-amber-600 transition shadow-2xs"
             title="توليد وتحميل وثيقة الـ PDF الرسمية مباشرة من السيرفر"
           >
             <Download className="w-3.5 h-3.5 text-amber-500" />
-            <span>تنزيل من السيرفر</span>
+            <span>تنزيل PDF</span>
           </a>
           <button
             type="button"
             onClick={() => setIsPdfOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs"
           >
             <Eye className="w-3.5 h-3.5 text-amber-500" />
-            <span>معاينة العقد</span>
+            <span>معاينة</span>
           </button>
           <button
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 transition shadow-2xs"
             title="حذف هذا العقد نهائياً"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>حذف العقد</span>
+            <span>حذف</span>
           </button>
           <Link
             href="/admin/contracts"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-slate-400 text-xs font-bold text-slate-600 dark:text-slate-400 transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-slate-400 text-xs font-bold text-slate-600 dark:text-slate-400 transition shadow-2xs"
           >
             <ArrowRight className="w-3.5 h-3.5" />
-            <span>العودة للقائمة</span>
+            <span>العودة</span>
           </Link>
         </div>
       </div>
@@ -1017,7 +1017,7 @@ export default function EditContractPage({ params }: PageProps) {
         </div>
 
         {/* Bottom Submission Bar */}
-        <div className="sticky bottom-4 z-20 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="sticky bottom-20 lg:bottom-4 z-20 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>

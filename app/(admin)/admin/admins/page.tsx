@@ -284,7 +284,8 @@ export default function AdminManagementPage() {
         ) : error ? (
           <div className="p-8 text-center text-rose-500 text-xs font-semibold">{error}</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-right text-xs">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50">
@@ -401,6 +402,116 @@ export default function AdminManagementPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Admin Cards */}
+          <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+            {admins.map((adm) => (
+              <div key={adm.id} className="p-4 space-y-3">
+                {/* Top: Initial, Name, SuperAdmin, Status */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                      {adm.name.slice(0, 1)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                        <span className="truncate">{adm.name}</span>
+                        {adm.isSuperAdmin && (
+                          <span title="المدير العام الأساسي" className="shrink-0">
+                            <Crown className="w-4 h-4 text-amber-500" />
+                          </span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {adm.isSuperAdmin ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-[10px] font-bold">
+                            المدير الأساسي
+                          </span>
+                        ) : (
+                          <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+                            مسؤول نظام
+                          </span>
+                        )}
+                        {adm.mustChangePassword && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold truncate">
+                            (كلمة مرور مؤقتة)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="shrink-0">
+                    {adm.active ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>نشط</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[11px] font-bold border border-rose-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        <span>معطل</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Middle: Email & Phone */}
+                <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 space-y-1 text-xs">
+                  <div className="flex items-center gap-2 font-mono text-slate-600 dark:text-slate-300 truncate" dir="ltr">
+                    <Mail className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span className="truncate">{adm.email}</span>
+                  </div>
+                  {adm.phone && (
+                    <div className="flex items-center gap-2 font-mono text-slate-600 dark:text-slate-300" dir="ltr">
+                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{adm.phone}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Actions */}
+                {isSuper && !adm.isSuperAdmin ? (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => handleResetAdminPassword(adm)}
+                      disabled={resetLoadingAdminId === adm.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs font-bold transition cursor-pointer"
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-amber-500" />
+                      <span>إعادة كلمة المرور</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleStatus(adm)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                        adm.active
+                          ? "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                          : "border-emerald-200 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20"
+                      }`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      <span>{adm.active ? "تعطيل الحساب" : "تفعيل الحساب"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setDeleteTarget(adm)}
+                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer shrink-0"
+                      title="حذف المسؤول"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-left text-[11px] text-slate-400 font-medium">
+                    حساب محمي بصلاحيات المدير الأساسي
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
 

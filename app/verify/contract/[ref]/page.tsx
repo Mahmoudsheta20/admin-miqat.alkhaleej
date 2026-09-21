@@ -202,27 +202,55 @@ export default async function ContractVerificationPage({ params }: PageProps) {
                   كشف الركاب المعتمد في العقد ({contract.passengers.length} ضيوف)
                 </span>
               </div>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
-                <table className="w-full text-right text-xs min-w-[340px]">
-                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500">
-                    <tr>
-                      <th className="p-2.5">م</th>
-                      <th className="p-2.5">إسم الضيف</th>
-                      <th className="p-2.5">الجنسية</th>
-                      <th className="p-2.5">الهوية / الجواز</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {contract.passengers.map((p) => (
-                      <tr key={p.id}>
-                        <td className="p-2.5 font-mono text-slate-400">{p.sequence}</td>
-                        <td className="p-2.5 font-bold text-slate-800 dark:text-slate-200">{p.name}</td>
-                        <td className="p-2.5 text-slate-600 dark:text-slate-400">{p.nationality}</td>
-                        <td className="p-2.5 font-mono text-slate-600 dark:text-slate-400" dir="ltr">{p.idNumber || "—"}</td>
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-right text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500">
+                      <tr>
+                        <th className="p-2.5">م</th>
+                        <th className="p-2.5">إسم الضيف</th>
+                        <th className="p-2.5">الجنسية</th>
+                        <th className="p-2.5">الهوية / الجواز</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {contract.passengers.map((p) => (
+                        <tr key={p.id}>
+                          <td className="p-2.5 font-mono text-slate-400">{p.sequence}</td>
+                          <td className="p-2.5 font-bold text-slate-800 dark:text-slate-200">{p.name}</td>
+                          <td className="p-2.5 text-slate-600 dark:text-slate-400">{p.nationality}</td>
+                          <td className="p-2.5 font-mono text-slate-600 dark:text-slate-400" dir="ltr">{p.idNumber || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards for Verification */}
+                <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800 p-3 space-y-2">
+                  {contract.passengers.map((p) => (
+                    <div key={p.id} className="pt-2 first:pt-0 space-y-1 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-mono flex items-center justify-center text-slate-500 font-bold">
+                            {p.sequence}
+                          </span>
+                          <span>{p.name}</span>
+                        </span>
+                        {p.nationality && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            {p.nationality}
+                          </span>
+                        )}
+                      </div>
+                      {p.idNumber && (
+                        <div className="text-[11px] text-slate-400 font-mono pr-6" dir="ltr">
+                          ID: {p.idNumber}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

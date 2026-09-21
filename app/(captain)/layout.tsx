@@ -64,18 +64,21 @@ export default function CaptainLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header onMenuToggle={() => setMobileSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8 touch-scroll">
           <div className="max-w-5xl mx-auto w-full">{children}</div>
         </main>
 
         {/* Mobile Bottom Navigation Bar for Captains */}
-        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-t theme-border py-2 px-4 sm:px-6 flex items-center justify-around z-40">
+        <nav
+          aria-label="التنقل السريع للكابتن"
+          className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 py-2 px-4 sm:px-6 pb-safe flex items-center justify-around z-40 select-none shadow-lg"
+        >
           <Link
             href="/captain"
-            className={`flex flex-col items-center gap-1 text-xs font-bold transition ${
+            className={`flex flex-col items-center gap-1 text-xs font-bold transition py-1 px-3 rounded-xl ${
               pathname === "/captain"
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900"
+                ? "text-amber-600 dark:text-amber-400 font-black"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <Home className="w-5 h-5" />
@@ -84,10 +87,10 @@ export default function CaptainLayout({
 
           <Link
             href="/captain/inspection"
-            className={`flex flex-col items-center gap-1 text-xs font-bold transition ${
+            className={`flex flex-col items-center gap-1 text-xs font-bold transition py-1 px-3 rounded-xl ${
               pathname === "/captain/inspection"
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900"
+                ? "text-amber-600 dark:text-amber-400 font-black"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <ClipboardCheck className="w-5 h-5" />
@@ -96,16 +99,16 @@ export default function CaptainLayout({
 
           <Link
             href="/captain/contract"
-            className={`flex flex-col items-center gap-1 text-xs font-bold transition ${
+            className={`flex flex-col items-center gap-1 text-xs font-bold transition py-1 px-3 rounded-xl ${
               pathname === "/captain/contract"
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900"
+                ? "text-amber-600 dark:text-amber-400 font-black"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <FilePlus2 className="w-5 h-5" />
             <span>عقد جديد</span>
           </Link>
-        </div>
+        </nav>
       </div>
     </div>
   );

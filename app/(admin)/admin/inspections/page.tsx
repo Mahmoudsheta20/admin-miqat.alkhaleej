@@ -514,17 +514,17 @@ export default function AdminInspectionsPage() {
       <div className="theme-card p-3 sm:p-4 rounded-2xl border theme-border space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Tab buttons */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 max-w-fit">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 w-full sm:w-auto overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab("captains")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
                 activeTab === "captains"
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <UserCheck className="w-3.5 h-3.5" />
-              كباتن اليوم وحالة الفحص
+              <UserCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>كباتن اليوم وحالة الفحص</span>
               <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-amber-500/10 text-amber-700 dark:text-amber-400">
                 {captains.length}
               </span>
@@ -532,14 +532,14 @@ export default function AdminInspectionsPage() {
 
             <button
               onClick={() => setActiveTab("history")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
                 activeTab === "history"
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
-              سجل الفحوصات التشغيلية
+              <FileText className="w-3.5 h-3.5 shrink-0" />
+              <span>سجل الفحوصات التشغيلية</span>
               <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-purple-500/10 text-purple-700 dark:text-purple-400">
                 {inspections.length}
               </span>
@@ -726,35 +726,230 @@ export default function AdminInspectionsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-right border-collapse">
-                <thead>
-                  <tr className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-xs font-bold">
-                    <th className="py-3 px-4">الكابتن</th>
-                    <th className="py-3 px-4">رقم الجوال</th>
-                    <th className="py-3 px-4">المركبة المسندة</th>
-                    <th className="py-3 px-4">حالة فحص اليوم</th>
-                    <th className="py-3 px-4">توقيت الفحص</th>
-                    <th className="py-3 px-4 text-center">الإجراءات المباشرة</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border text-xs">
+            <>
+              {/* Header Bar with Count */}
+              <div className="p-3 sm:p-4 border-b theme-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  قائمة الكباتن ({filteredCaptains.length})
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {stats.inspectedToday} تم الفحص / {stats.pendingToday} بانتظار
+                </span>
+              </div>
+
+              {/* Desktop Table View (Hidden on mobile, visible on md and up) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-right border-collapse">
+                      <thead>
+                        <tr className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-xs font-bold whitespace-nowrap">
+                          <th className="py-3 px-4 min-w-[200px]">الكابتن</th>
+                          <th className="py-3 px-4 min-w-[120px]">رقم الجوال</th>
+                          <th className="py-3 px-4 min-w-[130px]">المركبة المسندة</th>
+                          <th className="py-3 px-4 min-w-[160px]">حالة فحص اليوم</th>
+                          <th className="py-3 px-4 min-w-[120px]">توقيت الفحص</th>
+                          <th className="py-3 px-4 text-center min-w-[190px]">الإجراءات المباشرة</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y theme-border text-xs">
+                        {filteredCaptains.map((c) => {
+                          const isExecutingThis = executingCaptainId === c.id;
+
+                          return (
+                            <tr
+                              key={c.id}
+                              className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150 ${
+                                !c.hasTodayInspection
+                                  ? "bg-amber-500/[0.02] dark:bg-amber-500/[0.02]"
+                                  : ""
+                              }`}
+                            >
+                              {/* Captain details */}
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative w-9 h-9 rounded-full overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-bold text-amber-700 dark:text-amber-300">
+                                    {c.avatarUrl ? (
+                                      <Image
+                                        src={c.avatarUrl}
+                                        alt={c.name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    ) : (
+                                      c.name.charAt(0)
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                      {c.name}
+                                      {!c.active && (
+                                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500/10 text-rose-600">
+                                          معطل
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[11px] text-slate-400 font-mono">
+                                      {c.nationalId ? `هوية: ${c.nationalId}` : c.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Phone */}
+                              <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap" dir="ltr">
+                                {c.phone || "—"}
+                              </td>
+
+                              {/* Assigned Vehicle */}
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {c.assignedVehiclePlate ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border theme-border font-mono font-bold">
+                                    <Car className="w-3.5 h-3.5 text-amber-500" />
+                                    {c.assignedVehiclePlate}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 text-[11px]">غير محددة</span>
+                                )}
+                              </td>
+
+                              {/* Inspection Status */}
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {c.hasTodayInspection ? (
+                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[11px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    تم الفحص ومؤهل للرحلات
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold text-[11px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    لم يتم الفحص اليوم
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Inspection Date/Time */}
+                              <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                {c.todayInspection ? (
+                                  <div className="flex flex-col">
+                                    <span className="text-slate-900 dark:text-white font-bold" dir="ltr">
+                                      {new Date(c.todayInspection.createdAt || c.todayInspection.inspectionDate).toLocaleTimeString("ar-SA", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400" dir="ltr">
+                                      {new Date(c.todayInspection.inspectionDate).toLocaleDateString("en-GB")}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </td>
+
+                              {/* Actions */}
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                <div className="flex items-center justify-center gap-2">
+                                  {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button + Manual Date Option */}
+                                  {!c.hasTodayInspection ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        onClick={() => handleDirectPass(c)}
+                                        disabled={isExecutingThis}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+                                        title="إتمام واعتماد الفحص المباشر فوراً بضغطة زر"
+                                      >
+                                        {isExecutingThis ? (
+                                          <>
+                                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                            جاري الاعتماد...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Zap className="w-3.5 h-3.5 fill-current" />
+                                            إتمام الفحص المباشر
+                                          </>
+                                        )}
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          resetCustomForm();
+                                          setCustomCaptainId(c.id);
+                                          if (c.assignedVehiclePlate) {
+                                            setCustomVehiclePlate(c.assignedVehiclePlate);
+                                          }
+                                          setCustomInspectionDateMode("MANUAL");
+                                          setIsCustomModalOpen(true);
+                                        }}
+                                        className="p-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+                                        title="إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن"
+                                      >
+                                        <Calendar className="w-4 h-4 text-amber-500" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => setSelectedInspectionForView(c.todayInspection)}
+                                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition shadow-xs cursor-pointer"
+                                        title="عرض تفاصيل كشف الفحص التشغيلي"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 text-amber-500" />
+                                        تفاصيل الفحص
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          if (c.todayInspection?.id) {
+                                            setPreviewPdfInspection({
+                                              id: c.todayInspection.id,
+                                              captainName: c.name,
+                                              vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                            });
+                                          }
+                                        }}
+                                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition shadow-xs cursor-pointer"
+                                        title="توليد ومعاينة مستند PDF الرسمي للفحص"
+                                      >
+                                        <FileText className="w-3.5 h-3.5" />
+                                        <span>PDF</span>
+                                      </button>
+
+                                      <button
+                                        onClick={() => handleDirectPass(c)}
+                                        disabled={isExecutingThis}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                                        title="إعادة الفحص المباشر وتحديث التوقيت"
+                                      >
+                                        <RefreshCw className={`w-3.5 h-3.5 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+              </div>
+
+              {/* Mobile Captains Inspection Cards (Shown on mobile screens < md) */}
+              <div className="md:hidden divide-y theme-border">
                   {filteredCaptains.map((c) => {
                     const isExecutingThis = executingCaptainId === c.id;
-
                     return (
-                      <tr
+                      <div
                         key={c.id}
-                        className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150 ${
+                        className={`p-4 space-y-3 transition duration-150 ${
                           !c.hasTodayInspection
-                            ? "bg-amber-500/[0.02] dark:bg-amber-500/[0.02]"
+                            ? "bg-amber-500/[0.03] dark:bg-amber-500/[0.03]"
                             : ""
                         }`}
                       >
-                        {/* Captain details */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-9 h-9 rounded-full overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-bold text-amber-700 dark:text-amber-300">
+                        {/* Top: Avatar, Name, Status */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative w-11 h-11 rounded-2xl overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-black text-amber-700 dark:text-amber-300">
                               {c.avatarUrl ? (
                                 <Image
                                   src={c.avatarUrl}
@@ -766,160 +961,148 @@ export default function AdminInspectionsPage() {
                                 c.name.charAt(0)
                               )}
                             </div>
-                            <div>
-                              <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                {c.name}
+                            <div className="min-w-0">
+                              <div className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                                <span className="truncate">{c.name}</span>
                                 {!c.active && (
-                                  <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500/10 text-rose-600">
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-600 font-bold shrink-0">
                                     معطل
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[11px] text-slate-400 font-mono">
-                                {c.nationalId ? `هوية: ${c.nationalId}` : c.email}
+                              <div className="text-xs text-slate-400 font-mono mt-0.5 flex items-center gap-2">
+                                {c.phone && (
+                                  <span dir="ltr" className="text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                                    <Phone className="w-3 h-3 text-amber-500" />
+                                    {c.phone}
+                                  </span>
+                                )}
+                                {c.nationalId && <span>هوية: {c.nationalId}</span>}
                               </div>
                             </div>
                           </div>
-                        </td>
 
-                        {/* Phone */}
-                        <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300" dir="ltr">
-                          {c.phone || "—"}
-                        </td>
+                          {/* Status Badge */}
+                          <div className="shrink-0">
+                            {c.hasTodayInspection ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[11px]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                تم الفحص
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold text-[11px]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                غير مفحوص
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-                        {/* Assigned Vehicle */}
-                        <td className="py-3.5 px-4">
-                          {c.assignedVehiclePlate ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border theme-border font-mono font-bold">
-                              <Car className="w-3.5 h-3.5 text-amber-500" />
-                              {c.assignedVehiclePlate}
+                        {/* Middle: Vehicle & Time info */}
+                        <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border theme-border text-xs">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Car className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="text-slate-400 text-[11px]">المركبة:</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate">
+                              {c.assignedVehiclePlate || "غير محددة"}
                             </span>
-                          ) : (
-                            <span className="text-slate-400 text-[11px]">غير محددة</span>
-                          )}
-                        </td>
-
-                        {/* Inspection Status */}
-                        <td className="py-3.5 px-4">
-                          {c.hasTodayInspection ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[11px]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              تم الفحص ومؤهل للرحلات
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold text-[11px]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                              لم يتم الفحص اليوم
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Inspection Date/Time */}
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                          {c.todayInspection ? (
-                            <div className="flex flex-col">
-                              <span className="text-slate-900 dark:text-white font-bold" dir="ltr">
+                          </div>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="text-slate-400 text-[11px]">التوقيت:</span>
+                            {c.todayInspection ? (
+                              <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]" dir="ltr">
                                 {new Date(c.todayInspection.createdAt || c.todayInspection.inspectionDate).toLocaleTimeString("ar-SA", {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                 })}
                               </span>
-                              <span className="text-[10px] text-slate-400" dir="ltr">
-                                {new Date(c.todayInspection.inspectionDate).toLocaleDateString("en-GB")}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center justify-center gap-2">
-                            {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button + Manual Date Option */}
-                            {!c.hasTodayInspection ? (
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  onClick={() => handleDirectPass(c)}
-                                  disabled={isExecutingThis}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50"
-                                  title="إتمام واعتماد الفحص المباشر فوراً بضغطة زر"
-                                >
-                                  {isExecutingThis ? (
-                                    <>
-                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                      جاري الاعتماد...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Zap className="w-3.5 h-3.5 fill-current" />
-                                      إتمام الفحص المباشر
-                                    </>
-                                  )}
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    resetCustomForm();
-                                    setCustomCaptainId(c.id);
-                                    if (c.assignedVehiclePlate) {
-                                      setCustomVehiclePlate(c.assignedVehiclePlate);
-                                    }
-                                    setCustomInspectionDateMode("MANUAL");
-                                    setIsCustomModalOpen(true);
-                                  }}
-                                  className="p-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition shadow-2xs"
-                                  title="إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن"
-                                >
-                                  <Calendar className="w-4 h-4 text-amber-500" />
-                                </button>
-                              </div>
                             ) : (
-                              <>
-                                <button
-                                  onClick={() => setSelectedInspectionForView(c.todayInspection)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition shadow-xs"
-                                  title="عرض تفاصيل كشف الفحص التشغيلي"
-                                >
-                                  <Eye className="w-3.5 h-3.5 text-amber-500" />
-                                  تفاصيل الفحص
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    if (c.todayInspection?.id) {
-                                      setPreviewPdfInspection({
-                                        id: c.todayInspection.id,
-                                        captainName: c.name,
-                                        vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                      });
-                                    }
-                                  }}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition shadow-xs"
-                                  title="توليد ومعاينة مستند PDF الرسمي للفحص"
-                                >
-                                  <FileText className="w-3.5 h-3.5" />
-                                  <span>PDF</span>
-                                </button>
-
-                                <button
-                                  onClick={() => handleDirectPass(c)}
-                                  disabled={isExecutingThis}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                                  title="إعادة الفحص المباشر وتحديث التوقيت"
-                                >
-                                  <RefreshCw className={`w-3.5 h-3.5 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} />
-                                </button>
-                              </>
+                              <span className="text-slate-400 text-[11px]">—</span>
                             )}
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+
+                        {/* Bottom Actions */}
+                        <div className="pt-1">
+                          {!c.hasTodayInspection ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleDirectPass(c)}
+                                disabled={isExecutingThis}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl gold-gradient-btn text-xs font-black shadow-xs active:scale-98 disabled:opacity-50 cursor-pointer"
+                              >
+                                {isExecutingThis ? (
+                                  <>
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                    جاري الاعتماد...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Zap className="w-4 h-4 fill-current" />
+                                    إتمام الفحص المباشر
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  resetCustomForm();
+                                  setCustomCaptainId(c.id);
+                                  if (c.assignedVehiclePlate) {
+                                    setCustomVehiclePlate(c.assignedVehiclePlate);
+                                  }
+                                  setCustomInspectionDateMode("MANUAL");
+                                  setIsCustomModalOpen(true);
+                                }}
+                                className="p-2.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shrink-0 cursor-pointer"
+                                title="تحديد تاريخ يدوي"
+                              >
+                                <Calendar className="w-4 h-4 text-amber-500" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setSelectedInspectionForView(c.todayInspection)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+                              >
+                                <Eye className="w-4 h-4 text-amber-500" />
+                                <span>تفاصيل الفحص</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  if (c.todayInspection?.id) {
+                                    setPreviewPdfInspection({
+                                      id: c.todayInspection.id,
+                                      captainName: c.name,
+                                      vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                    });
+                                  }
+                                }}
+                                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
+                              >
+                                <FileText className="w-4 h-4" />
+                                <span>PDF</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDirectPass(c)}
+                                disabled={isExecutingThis}
+                                className="p-2 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer"
+                                title="إعادة الفحص"
+                              >
+                                <RefreshCw className={`w-4 h-4 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </div>
+            </>
           )}
         </div>
       ) : (
@@ -936,121 +1119,232 @@ export default function AdminInspectionsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-right border-collapse">
-                <thead>
-                  <tr className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-xs font-bold">
-                    <th className="py-3 px-4">كود الفحص</th>
-                    <th className="py-3 px-4">الكابتن</th>
-                    <th className="py-3 px-4">المركبة</th>
-                    <th className="py-3 px-4">التاريخ والوقت</th>
-                    <th className="py-3 px-4">حالة البنود</th>
-                    <th className="py-3 px-4">العقود المرتبطة</th>
-                    <th className="py-3 px-4 text-center">الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border text-xs">
+            <>
+              {/* Header Bar with Count */}
+              <div className="p-3 sm:p-4 border-b theme-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  سجلات الفحص التشغيلي ({filteredInspections.length})
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  إجمالي السجلات: {stats.totalInspections}
+                </span>
+              </div>
+
+              {/* Desktop Table View (Hidden on mobile, visible on md and up) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-right border-collapse">
+                      <thead>
+                        <tr className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-xs font-bold whitespace-nowrap">
+                          <th className="py-3 px-4 min-w-[100px]">كود الفحص</th>
+                          <th className="py-3 px-4 min-w-[180px]">الكابتن</th>
+                          <th className="py-3 px-4 min-w-[120px]">المركبة</th>
+                          <th className="py-3 px-4 min-w-[140px]">التاريخ والوقت</th>
+                          <th className="py-3 px-4 min-w-[130px]">حالة البنود</th>
+                          <th className="py-3 px-4 min-w-[110px]">العقود المرتبطة</th>
+                          <th className="py-3 px-4 text-center min-w-[160px]">الإجراءات</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y theme-border text-xs">
+                        {filteredInspections.map((insp) => (
+                          <tr
+                            key={insp.id}
+                            className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150"
+                          >
+                            {/* Code */}
+                            <td className="py-3.5 px-4 font-mono font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                              #{insp.id.slice(0, 8)}
+                            </td>
+
+                            {/* Captain */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="font-bold text-slate-900 dark:text-white">
+                                {insp.captainName || "كابتن غير محدد"}
+                              </div>
+                              {insp.captainPhone && (
+                                <div className="text-[11px] text-slate-400 font-mono" dir="ltr">
+                                  {insp.captainPhone}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Vehicle */}
+                            <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                              {insp.vehiclePlate}
+                            </td>
+
+                            {/* Date & Time */}
+                            <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                                  {new Date(insp.inspectionDate || insp.createdAt || Date.now()).toLocaleDateString("en-GB")}
+                                </span>
+                                <span className="text-[10px]" dir="ltr">
+                                  {new Date(insp.createdAt || insp.inspectionDate || Date.now()).toLocaleTimeString("ar-SA", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Pass status (16/16) */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
+                                <CheckCircle2 className="w-3 h-3" />
+                                16/16 مكتمل
+                              </span>
+                            </td>
+
+                            {/* Linked Contracts Count */}
+                            <td className="py-3.5 px-4 font-mono text-center whitespace-nowrap">
+                              {insp.contractCount > 0 ? (
+                                <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold text-xs">
+                                  {insp.contractCount} عقد
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-[11px]">لا يوجد</span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => setSelectedInspectionForView(insp)}
+                                  className="p-1.5 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                                  title="عرض تفاصيل الفحص"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
+                                  onClick={() =>
+                                    setPreviewPdfInspection({
+                                      id: insp.id,
+                                      captainName: insp.captainName,
+                                      vehiclePlate: insp.vehiclePlate,
+                                    })
+                                  }
+                                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
+                                  title="توليد وتحميل مستند PDF الرسمي للفحص"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  <span>PDF</span>
+                                </button>
+
+                                <button
+                                  onClick={() => setDeleteConfirmId(insp.id)}
+                                  className="p-1.5 rounded-lg border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
+                                  title="حذف سجل الفحص"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile History Record Cards (Shown on mobile screens < md) */}
+                  <div className="md:hidden divide-y theme-border">
                   {filteredInspections.map((insp) => (
-                    <tr
-                      key={insp.id}
-                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150"
-                    >
-                      {/* Code */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-amber-600 dark:text-amber-400">
-                        #{insp.id.slice(0, 8)}
-                      </td>
+                    <div key={insp.id} className="p-4 space-y-3">
+                      {/* Top: Code, Safe Badge */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono font-bold text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                          #{insp.id.slice(0, 8)}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          16/16 مكتمل
+                        </span>
+                      </div>
 
-                      {/* Captain */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {insp.captainName || "كابتن غير محدد"}
+                      {/* Middle: Captain & Vehicle */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-slate-400 text-[11px] block">الكابتن:</span>
+                          <strong className="text-slate-900 dark:text-white truncate block">
+                            {insp.captainName || "كابتن غير محدد"}
+                          </strong>
+                          {insp.captainPhone && (
+                            <span className="text-[11px] text-slate-400 font-mono" dir="ltr">
+                              {insp.captainPhone}
+                            </span>
+                          )}
                         </div>
-                        {insp.captainPhone && (
-                          <div className="text-[11px] text-slate-400 font-mono" dir="ltr">
-                            {insp.captainPhone}
-                          </div>
-                        )}
-                      </td>
+                        <div>
+                          <span className="text-slate-400 text-[11px] block">المركبة:</span>
+                          <strong className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {insp.vehiclePlate}
+                          </strong>
+                        </div>
+                      </div>
 
-                      {/* Vehicle */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {insp.vehiclePlate}
-                      </td>
-
-                      {/* Date & Time */}
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                      {/* Date & Linked Contracts */}
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border theme-border text-xs">
+                        <div className="flex items-center gap-1.5 font-mono text-slate-600 dark:text-slate-300">
+                          <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span dir="ltr">
                             {new Date(insp.inspectionDate || insp.createdAt || Date.now()).toLocaleDateString("en-GB")}
                           </span>
-                          <span className="text-[10px]" dir="ltr">
+                          <span className="text-slate-400 text-[10px]" dir="ltr">
                             {new Date(insp.createdAt || insp.inspectionDate || Date.now()).toLocaleTimeString("ar-SA", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
                           </span>
                         </div>
-                      </td>
 
-                      {/* Pass status (16/16) */}
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
-                          <CheckCircle2 className="w-3 h-3" />
-                          16/16 مكتمل
-                        </span>
-                      </td>
-
-                      {/* Linked Contracts Count */}
-                      <td className="py-3.5 px-4 font-mono text-center">
-                        {insp.contractCount > 0 ? (
-                          <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold text-xs">
-                            {insp.contractCount} عقد
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 text-[11px]">لا يوجد</span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setSelectedInspectionForView(insp)}
-                            className="p-1.5 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
-                            title="عرض تفاصيل الفحص"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              setPreviewPdfInspection({
-                                id: insp.id,
-                                captainName: insp.captainName,
-                                vehiclePlate: insp.vehiclePlate,
-                              })
-                            }
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition"
-                            title="توليد وتحميل مستند PDF الرسمي للفحص"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>PDF</span>
-                          </button>
-
-                          <button
-                            onClick={() => setDeleteConfirmId(insp.id)}
-                            className="p-1.5 rounded-lg border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition"
-                            title="حذف سجل الفحص"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        <div>
+                          {insp.contractCount > 0 ? (
+                            <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold text-[11px]">
+                              {insp.contractCount} عقد مرتبط
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">لا عقود</span>
+                          )}
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+
+                      {/* Bottom Actions */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => setSelectedInspectionForView(insp)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4 text-amber-500" />
+                          <span>تفاصيل</span>
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            setPreviewPdfInspection({
+                              id: insp.id,
+                              captainName: insp.captainName,
+                              vehiclePlate: insp.vehiclePlate,
+                            })
+                          }
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span>وثيقة PDF</span>
+                        </button>
+
+                        <button
+                          onClick={() => setDeleteConfirmId(insp.id)}
+                          className="p-2 rounded-xl border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition shrink-0 cursor-pointer"
+                          title="حذف"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+            </>
           )}
         </div>
       )}

@@ -1431,35 +1431,63 @@ export default function AdminContractsPage() {
                     لا يوجد ركاب مرافقين مضافين لهذا العقد (تم قيد الضيف الرئيسي فقط)
                   </p>
                 ) : (
-                  <div className="rounded-xl border theme-border overflow-x-auto">
-                    <table className="w-full text-right text-xs min-w-[340px]">
-                      <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 font-bold">
-                        <tr>
-                          <th className="px-3 py-2 text-center w-10">#</th>
-                          <th className="px-3 py-2">اسم الضيف / الراكب</th>
-                          <th className="px-3 py-2">الجنسية</th>
-                          <th className="px-3 py-2">الهوية / الجواز</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y theme-border">
-                        {selectedContract.passengers.map((p, idx) => (
-                          <tr key={p.id || idx}>
-                            <td className="px-3 py-2 text-center font-mono font-bold text-slate-400">
-                              {p.sequence || idx + 1}
-                            </td>
-                            <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">
-                              {p.name}
-                            </td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                              {p.nationality}
-                            </td>
-                            <td className="px-3 py-2 font-mono text-slate-700 dark:text-slate-300" dir="ltr">
-                              {p.idNumber || "—"}
-                            </td>
+                  <div className="rounded-xl border theme-border overflow-hidden">
+                    <div className="hidden sm:block overflow-x-auto">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 font-bold">
+                          <tr>
+                            <th className="px-3 py-2 text-center w-10">#</th>
+                            <th className="px-3 py-2">اسم الضيف / الراكب</th>
+                            <th className="px-3 py-2">الجنسية</th>
+                            <th className="px-3 py-2">الهوية / الجواز</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y theme-border">
+                          {selectedContract.passengers.map((p, idx) => (
+                            <tr key={p.id || idx}>
+                              <td className="px-3 py-2 text-center font-mono font-bold text-slate-400">
+                                {p.sequence || idx + 1}
+                              </td>
+                              <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">
+                                {p.name}
+                              </td>
+                              <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                                {p.nationality}
+                              </td>
+                              <td className="px-3 py-2 font-mono text-slate-700 dark:text-slate-300" dir="ltr">
+                                {p.idNumber || "—"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Cards for Modal */}
+                    <div className="sm:hidden divide-y theme-border p-3 space-y-2">
+                      {selectedContract.passengers.map((p, idx) => (
+                        <div key={p.id || idx} className="pt-2 first:pt-0 space-y-1 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-mono flex items-center justify-center text-slate-500 font-bold">
+                                {p.sequence || idx + 1}
+                              </span>
+                              <span>{p.name}</span>
+                            </span>
+                            {p.nationality && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                {p.nationality}
+                              </span>
+                            )}
+                          </div>
+                          {p.idNumber && (
+                            <div className="text-[11px] text-slate-400 font-mono pr-6" dir="ltr">
+                              ID: {p.idNumber}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

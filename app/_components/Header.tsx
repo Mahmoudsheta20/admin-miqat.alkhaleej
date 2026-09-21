@@ -308,7 +308,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {/* Notifications Dropdown Card */}
               {isNotifOpen && (
                 <div
-                  className="absolute left-0 sm:-left-12 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
+                  className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 sm:-left-12 top-16 sm:top-full mt-1.5 sm:mt-2 sm:w-96 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
                   role="menu"
                 >
                   {/* Dropdown Header */}
@@ -450,7 +450,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {/* Profile Dropdown Menu Card */}
               {isProfileMenuOpen && (
                 <div
-                  className="absolute left-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
+                  className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full mt-1.5 sm:mt-2 sm:w-80 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
                   role="menu"
                   aria-orientation="vertical"
                 >
