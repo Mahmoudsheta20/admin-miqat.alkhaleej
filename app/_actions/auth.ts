@@ -538,7 +538,7 @@ export async function requestPasswordResetAction(
     const resetUrl = `${siteUrl}/reset-password?token=${resetCode}&email=${encodeURIComponent(user.email)}`;
 
     // Dispatch official email via Gmail SMTP
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: user.email,
       subject: "إعادة تعيين كلمة المرور - نظام ميقات الخليج",
       text: `مرحباً ${user.name}،\nلقد تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في نظام ميقات الخليج.\nرمز التحقق الخاص بك هو: ${resetCode}\nأو يمكنك زيارة الرابط التالي مباشرة:\n${resetUrl}\nهذا الرمز صالح لمدة 60 دقيقة فقط.`,
@@ -579,13 +579,25 @@ export async function requestPasswordResetAction(
       `,
     });
 
+    if (!emailResult.success) {
+      console.error("[requestPasswordResetAction] sendEmail failed:", emailResult.error);
+      return {
+        success: false,
+        error: "تعذر إرسال البريد الإلكتروني، يرجى التحقق من إعدادات خادم البريد والمحاولة مرة أخرى.",
+      };
+    }
+
     return {
       success: true,
       message: "تم إرسال رابط ورمز إعادة تعيين كلمة المرور إلى بريدك الإلكتروني بنجاح. يُرجى فحص صندوق الوارد.",
     };
   } catch (error) {
-    console.error("requestPasswordResetAction error:", error);
-    return { success: false, error: "تعذر إرسال رابط إعادة التعيين، يرجى المحاولة لاحقاً." };
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("requestPasswordResetAction CRITICAL error:", errMsg, error);
+    return {
+      success: false,
+      error: `تعذر إرسال رابط إعادة التعيين: ${errMsg.includes("ECONNREFUSED") || errMsg.includes("ENOTFOUND") ? "تعذر الاتصال بخادم البريد" : errMsg.includes("auth") || errMsg.includes("535") ? "فشل مصادقة خادم البريد - يرجى التحقق من كلمة مرور التطبيق" : errMsg.includes("findFirst") || errMsg.includes("prisma") ? "خطأ في قاعدة البيانات" : "خطأ غير متوقع، يرجى المحاولة لاحقاً"}`,
+    };
   }
 }
 
