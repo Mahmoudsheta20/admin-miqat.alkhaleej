@@ -1,7 +1,10 @@
 "use server";
 
+import fs from "fs";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { VehicleInspection } from "@/lib/types";
+import { generateAndSaveInspectionPdf, INSPECTIONS_STORAGE_DIR } from "@/lib/inspectionStorage";
 
 export interface InspectionInput {
   captainId: string;
@@ -119,9 +122,36 @@ export async function submitInspection(
         seatBelts: data.seatBelts,
         driverDeclared: data.driverDeclared,
         notes: data.notes?.trim() || null,
-        ...(data.inspectionDate ? { inspectionDate: new Date(data.inspectionDate) } : {}),
+        ...(data.inspectionDate
+          ? {
+              inspectionDate: new Date(
+                typeof data.inspectionDate === "string" && !data.inspectionDate.includes("T")
+                  ? `${data.inspectionDate.replace(/\//g, "-")}T10:00:00`
+                  : data.inspectionDate
+              ),
+            }
+          : {}),
       },
     });
+
+    // Ensure captain's assignedVehiclePlate is stored if not assigned yet
+    if (data.vehiclePlate && (!captain.assignedVehiclePlate || captain.assignedVehiclePlate.trim() === "")) {
+      try {
+        await prisma.user.update({
+          where: { id: data.captainId },
+          data: { assignedVehiclePlate: data.vehiclePlate.trim() },
+        });
+      } catch (syncErr) {
+        console.warn("Could not sync captain vehicle plate:", syncErr);
+      }
+    }
+
+    // Automatically generate and save inspection PDF to storage
+    try {
+      await generateAndSaveInspectionPdf(created.id);
+    } catch (pdfErr) {
+      console.warn("Could not generate inspection PDF immediately upon creation:", pdfErr);
+    }
 
     return {
       success: true,
@@ -312,7 +342,8 @@ export async function getCaptainsInspectionOverview(): Promise<{
 export async function directPassInspection(
   captainId: string,
   vehiclePlate?: string,
-  customNotes?: string
+  customNotes?: string,
+  inspectionDate?: string
 ): Promise<{
   success: boolean;
   inspection?: VehicleInspection;
@@ -333,6 +364,16 @@ export async function directPassInspection(
       captain.assignedVehiclePlate ||
       "ا ص ل 7223"
     ).trim();
+
+    let targetDate = new Date();
+    if (inspectionDate) {
+      const dStr =
+        typeof inspectionDate === "string" && !inspectionDate.includes("T")
+          ? `${inspectionDate.replace(/\//g, "-")}T10:00:00`
+          : inspectionDate;
+      const d = new Date(dStr);
+      if (!isNaN(d.getTime())) targetDate = d;
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -377,7 +418,7 @@ export async function directPassInspection(
         where: { id: existingToday.id },
         data: {
           ...allPassedData,
-          inspectionDate: new Date(),
+          inspectionDate: targetDate,
         },
         include: {
           captain: { select: { name: true } },
@@ -388,12 +429,31 @@ export async function directPassInspection(
         data: {
           captainId,
           ...allPassedData,
-          inspectionDate: new Date(),
+          inspectionDate: targetDate,
         },
         include: {
           captain: { select: { name: true } },
         },
       });
+    }
+
+    // Ensure captain's assignedVehiclePlate is stored if not assigned yet
+    if (effectivePlate && (!captain.assignedVehiclePlate || captain.assignedVehiclePlate.trim() === "")) {
+      try {
+        await prisma.user.update({
+          where: { id: captainId },
+          data: { assignedVehiclePlate: effectivePlate },
+        });
+      } catch (syncErr) {
+        console.warn("Could not sync captain vehicle plate on direct pass:", syncErr);
+      }
+    }
+
+    // Automatically generate and save inspection PDF to storage
+    try {
+      await generateAndSaveInspectionPdf(savedRecord.id);
+    } catch (pdfErr) {
+      console.warn("Could not generate inspection PDF immediately upon direct pass:", pdfErr);
     }
 
     return {
@@ -490,6 +550,17 @@ export async function deleteInspection(id: string): Promise<{
       where: { id },
     });
 
+    // Remove PDF from disk storage if exists
+    try {
+      const shortCode = id.replace(/-/g, "").slice(0, 8).toUpperCase();
+      const filePath = path.join(INSPECTIONS_STORAGE_DIR, `inspection-${shortCode}.pdf`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (fsErr) {
+      console.warn("Could not delete inspection PDF file:", fsErr);
+    }
+
     return { success: true };
   } catch (error) {
     console.error("deleteInspection error:", error);
@@ -583,6 +654,13 @@ export async function updateInspection(
         captain: { select: { name: true } },
       },
     });
+
+    // Automatically regenerate and save inspection PDF to storage
+    try {
+      await generateAndSaveInspectionPdf(updated.id);
+    } catch (pdfErr) {
+      console.warn("Could not regenerate inspection PDF upon update:", pdfErr);
+    }
 
     return {
       success: true,

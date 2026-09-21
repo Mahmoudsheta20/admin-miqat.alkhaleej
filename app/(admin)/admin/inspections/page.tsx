@@ -31,6 +31,7 @@ import {
   Flame,
   ShieldAlert,
   Sparkles,
+  Edit3,
 } from "lucide-react";
 import {
   getCaptainsInspectionOverview,
@@ -45,6 +46,8 @@ import {
 import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
 import InspectionPdfPreviewModal from "@/app/_components/InspectionPdfPreviewModal";
+import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
+import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
 
 // Checklist Definitions
 interface CheckItemConfig {
@@ -100,6 +103,8 @@ export default function AdminInspectionsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "INSPECTED">("ALL");
+  const [historyDateFilter, setHistoryDateFilter] = useState("");
+  const [captainFilter, setCaptainFilter] = useState("");
 
   // Direct pass action loading indicator per captain ID
   const [executingCaptainId, setExecutingCaptainId] = useState<string | null>(null);
@@ -122,6 +127,8 @@ export default function AdminInspectionsPage() {
   const [customCaptainId, setCustomCaptainId] = useState("");
   const [customVehiclePlate, setCustomVehiclePlate] = useState("");
   const [customNotes, setCustomNotes] = useState("");
+  const [customInspectionDateMode, setCustomInspectionDateMode] = useState<"AUTO" | "MANUAL">("AUTO");
+  const [customInspectionDate, setCustomInspectionDate] = useState(() => getSaudiTodayDateStr());
   const [isSubmittingCustom, setIsSubmittingCustom] = useState(false);
   const [customChecks, setCustomChecks] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
@@ -240,12 +247,18 @@ export default function AdminInspectionsPage() {
     const effectivePlate =
       customVehiclePlate.trim() || selectedCap?.assignedVehiclePlate || "ا ص ل 7223";
 
+    const effectiveDate =
+      customInspectionDateMode === "MANUAL" && customInspectionDate
+        ? customInspectionDate
+        : getSaudiTodayDateStr();
+
     setIsSubmittingCustom(true);
 
     try {
       const res = await submitInspection({
         captainId: customCaptainId,
         vehiclePlate: effectivePlate,
+        inspectionDate: effectiveDate,
         fuelGauge: Boolean(customChecks.fuelGauge),
         tempGauge: Boolean(customChecks.tempGauge),
         oilPressure: Boolean(customChecks.oilPressure),
@@ -286,6 +299,8 @@ export default function AdminInspectionsPage() {
     setCustomCaptainId("");
     setCustomVehiclePlate("");
     setCustomNotes("");
+    setCustomInspectionDateMode("AUTO");
+    setCustomInspectionDate(getSaudiTodayDateStr());
     const init: Record<string, boolean> = {};
     ALL_CHECK_ITEMS.forEach((item) => {
       init[item.key] = true;
@@ -328,9 +343,11 @@ export default function AdminInspectionsPage() {
         (statusFilter === "INSPECTED" && c.hasTodayInspection) ||
         (statusFilter === "PENDING" && !c.hasTodayInspection);
 
-      return matchesSearch && matchesStatus;
+      const matchesCaptain = !captainFilter || c.id === captainFilter;
+
+      return matchesSearch && matchesStatus && matchesCaptain;
     });
-  }, [captains, search, statusFilter]);
+  }, [captains, search, statusFilter, captainFilter]);
 
   // Filtered history inspections
   const filteredInspections = useMemo(() => {
@@ -342,9 +359,14 @@ export default function AdminInspectionsPage() {
         (insp.notes && insp.notes.toLowerCase().includes(search.toLowerCase())) ||
         insp.id.toLowerCase().includes(search.toLowerCase());
 
-      return matchesSearch;
+      const rawDate = String(insp.inspectionDate || insp.createdAt || "").replace(/\//g, "-");
+      const matchesDate = !historyDateFilter || rawDate.startsWith(historyDateFilter);
+
+      const matchesCaptain = !captainFilter || insp.captainId === captainFilter;
+
+      return matchesSearch && matchesDate && matchesCaptain;
     });
-  }, [inspections, search]);
+  }, [inspections, search, historyDateFilter, captainFilter]);
 
   return (
     <div className="space-y-6">
@@ -524,28 +546,60 @@ export default function AdminInspectionsPage() {
             </button>
           </div>
 
-          {/* Quick Search */}
-          <div className="relative flex-1 md:max-w-xs">
-            <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={
-                activeTab === "captains"
-                  ? "بحث باسم الكابتن أو الجوال أو اللوحة..."
-                  : "بحث في السجل أو الكابتن أو الملاحظات..."
-              }
-              className="theme-input w-full pr-9 pl-4 py-1.5 text-xs rounded-xl"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          {/* Quick Search & Captain Filter */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 md:max-w-lg">
+            {/* Captain Selector */}
+            <div className="relative min-w-[170px] sm:w-52 shrink-0">
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <UserCheck className="w-3.5 h-3.5" />
+              </div>
+              <select
+                value={captainFilter}
+                onChange={(e) => setCaptainFilter(e.target.value)}
+                className="theme-input w-full pr-8 pl-6 py-1.5 text-xs rounded-xl cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+                <option value="">جميع الكباتن ({captains.length})</option>
+                {captains.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {captainFilter && (
+                <button
+                  type="button"
+                  onClick={() => setCaptainFilter("")}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                  title="إلغاء تصفية الكابتن"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Quick Search */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={
+                  activeTab === "captains"
+                    ? "بحث باسم الكابتن أو الجوال أو اللوحة..."
+                    : "بحث في السجل أو الكابتن أو الملاحظات..."
+                }
+                className="theme-input w-full pr-9 pl-7 py-1.5 text-xs rounded-xl"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -585,6 +639,67 @@ export default function AdminInspectionsPage() {
               <CheckCircle2 className="w-3.5 h-3.5" />
               تم الفحص اليوم ({stats.inspectedToday})
             </button>
+
+            {captainFilter && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-xs font-bold animate-in fade-in">
+                <UserCheck className="w-3.5 h-3.5" />
+                الكابتن: {captains.find((c) => c.id === captainFilter)?.name || captainFilter}
+                <button
+                  type="button"
+                  onClick={() => setCaptainFilter("")}
+                  className="hover:text-rose-600 dark:hover:text-rose-400 p-0.5 transition cursor-pointer"
+                  title="إلغاء تصفية الكابتن"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Date Filter Bar (for history tab) */}
+        {activeTab === "history" && (
+          <div className="flex items-center justify-between gap-3 pt-2 border-t theme-border flex-wrap text-xs">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-slate-400 font-medium ml-1 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                تصفية التاريخ:
+              </span>
+              <input
+                type="date"
+                value={historyDateFilter}
+                onChange={(e) => setHistoryDateFilter(e.target.value)}
+                className="theme-input px-2.5 py-1 text-xs rounded-xl font-mono cursor-pointer"
+              />
+              {historyDateFilter && (
+                <button
+                  type="button"
+                  onClick={() => setHistoryDateFilter("")}
+                  className="px-2.5 py-1 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 transition cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                  إلغاء تصفية التاريخ ({historyDateFilter})
+                </button>
+              )}
+
+              {captainFilter && (
+                <button
+                  type="button"
+                  onClick={() => setCaptainFilter("")}
+                  className="px-2.5 py-1 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/20 transition cursor-pointer"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  الكابتن: {captains.find((c) => c.id === captainFilter)?.name || captainFilter}
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {(historyDateFilter || captainFilter) && (
+              <span className="text-[11px] text-slate-400 font-mono">
+                عدد النتائج: {filteredInspections.length} سجل
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -721,26 +836,44 @@ export default function AdminInspectionsPage() {
                         {/* Actions */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center justify-center gap-2">
-                            {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button! */}
+                            {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button + Manual Date Option */}
                             {!c.hasTodayInspection ? (
-                              <button
-                                onClick={() => handleDirectPass(c)}
-                                disabled={isExecutingThis}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50"
-                                title="إتمام واعتماد الفحص المباشر فوراً بضغطة زر"
-                              >
-                                {isExecutingThis ? (
-                                  <>
-                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                    جاري الاعتماد...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Zap className="w-3.5 h-3.5 fill-current" />
-                                    إتمام الفحص المباشر
-                                  </>
-                                )}
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => handleDirectPass(c)}
+                                  disabled={isExecutingThis}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50"
+                                  title="إتمام واعتماد الفحص المباشر فوراً بضغطة زر"
+                                >
+                                  {isExecutingThis ? (
+                                    <>
+                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                      جاري الاعتماد...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Zap className="w-3.5 h-3.5 fill-current" />
+                                      إتمام الفحص المباشر
+                                    </>
+                                  )}
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    resetCustomForm();
+                                    setCustomCaptainId(c.id);
+                                    if (c.assignedVehiclePlate) {
+                                      setCustomVehiclePlate(c.assignedVehiclePlate);
+                                    }
+                                    setCustomInspectionDateMode("MANUAL");
+                                    setIsCustomModalOpen(true);
+                                  }}
+                                  className="p-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition shadow-2xs"
+                                  title="إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن"
+                                >
+                                  <Calendar className="w-4 h-4 text-amber-500" />
+                                </button>
+                              </div>
                             ) : (
                               <>
                                 <button
@@ -848,10 +981,10 @@ export default function AdminInspectionsPage() {
                       <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">
-                            {new Date(insp.createdAt || insp.inspectionDate).toLocaleDateString("en-GB")}
+                            {new Date(insp.inspectionDate || insp.createdAt || Date.now()).toLocaleDateString("en-GB")}
                           </span>
                           <span className="text-[10px]" dir="ltr">
-                            {new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString("ar-SA", {
+                            {new Date(insp.createdAt || insp.inspectionDate || Date.now()).toLocaleTimeString("ar-SA", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -1188,9 +1321,16 @@ export default function AdminInspectionsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                      لوحة المركبة <span className="text-rose-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        لوحة المركبة <span className="text-rose-500">*</span>
+                      </label>
+                      {vehicles.length > 0 && (
+                        <span className="text-[10px] text-slate-400">
+                          {vehicles.length} مركبة بالأسطول
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={customVehiclePlate}
@@ -1199,7 +1339,111 @@ export default function AdminInspectionsPage() {
                       required
                       className="theme-input w-full p-2.5 text-xs rounded-xl font-mono"
                     />
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      {vehicles.length > 0 && (
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value) setCustomVehiclePlate(e.target.value);
+                          }}
+                          value=""
+                          className="text-[11px] py-1 px-2 rounded-lg border theme-border bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer hover:border-amber-500/40"
+                        >
+                          <option value="">اختيار سريع من مركبات الأسطول...</option>
+                          {vehicles.map((v) => (
+                            <option key={v.id} value={v.plateNumberAr}>
+                              {v.plateNumberAr} - {v.make} {v.model}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {customCaptainId && (() => {
+                        const cap = captains.find((c) => c.id === customCaptainId);
+                        if (cap?.assignedVehiclePlate && cap.assignedVehiclePlate !== customVehiclePlate) {
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => setCustomVehiclePlate(cap.assignedVehiclePlate!)}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer"
+                            >
+                              مركبة الكابتن ({cap.assignedVehiclePlate})
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
                   </div>
+                </div>
+
+                {/* Inspection Date Mode & Manual Date Selection */}
+                <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border theme-border space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                        تاريخ الفحص التشغيلي
+                      </label>
+                      <p className="text-[11px] text-slate-400">
+                        يمكن اعتماد تاريخ اليوم الفعلي تلقائياً أو اختيار تاريخ يدوي مخصص
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-1 rounded-xl border theme-border self-start sm:self-auto shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setCustomInspectionDateMode("AUTO")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                          customInspectionDateMode === "AUTO"
+                            ? "gold-gradient-btn text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        اليوم (تلقائي)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCustomInspectionDateMode("MANUAL")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                          customInspectionDateMode === "MANUAL"
+                            ? "gold-gradient-btn text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        يدوي (تاريخ مخصص)
+                      </button>
+                    </div>
+                  </div>
+
+                  {customInspectionDateMode === "AUTO" ? (
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">
+                        تاريخ الفحص المعتمد في السجلات والوثيقة:
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {formatOfficialDate(getSaudiTodayDateStr())} (تاريخ اليوم الفعلي بتوقيت المملكة)
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
+                      <div className="w-full sm:w-64">
+                        <CustomDatePicker
+                          label="تاريخ الفحص المعتمد"
+                          required
+                          value={customInspectionDate}
+                          onChange={setCustomInspectionDate}
+                        />
+                      </div>
+                      <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                        <span>
+                          سيتم توثيق الفحص واعتماده بهذا التاريخ المخصص في السجلات وتقارير الفحص ووثيقة الـ PDF الرسمية.
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Quick Toggle All Button */}
@@ -1332,9 +1576,30 @@ export default function AdminInspectionsPage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    ملاحظات الفحص التشغيلي (اختياري)
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      ملاحظات الفحص التشغيلي (اختياري)
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      اقتراحات سريعة
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    {[
+                      "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات",
+                      "المركبة جاهزة ومكتملة التجهيزات التشغيلية والرحلات",
+                      "فحص دوري معتمد - الحالة الفنية ممتازة",
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setCustomNotes(preset)}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border theme-border text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
                   <textarea
                     value={customNotes}
                     onChange={(e) => setCustomNotes(e.target.value)}
@@ -1346,32 +1611,39 @@ export default function AdminInspectionsPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 border-t theme-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
-                <button
-                  type="button"
-                  onClick={() => setIsCustomModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
-                >
-                  إلغاء
-                </button>
+              <div className="p-4 border-t theme-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
+                <div className="flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400">
+                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                  <span>يتم حفظ البيانات وتوليد وتخزين وثيقة PDF فورياً في النظام</span>
+                </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmittingCustom}
-                  className="flex items-center gap-1.5 px-6 py-2 rounded-xl gold-gradient-btn text-xs font-black shadow-md transition disabled:opacity-50"
-                >
-                  {isSubmittingCustom ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      جاري حفظ الفحص...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      اعتماد وتوثيق الفحص التشغيلي
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomModalOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                  >
+                    إلغاء
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingCustom}
+                    className="flex items-center gap-1.5 px-6 py-2 rounded-xl gold-gradient-btn text-xs font-black shadow-md transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmittingCustom ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        جاري حفظ وتخزين الفحص...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        اعتماد وتوثيق الفحص التشغيلي
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
