@@ -594,9 +594,15 @@ export async function requestPasswordResetAction(
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error("requestPasswordResetAction CRITICAL error:", errMsg, error);
+    let friendlyMsg = "تعذر إرسال رابط إعادة التعيين، يرجى المحاولة لاحقاً.";
+    if (errMsg.includes("ECONNREFUSED") || errMsg.includes("ENOTFOUND")) {
+      friendlyMsg = "تعذر الاتصال بخادم البريد الإلكتروني، يرجى المحاولة لاحقاً.";
+    } else if (errMsg.includes("auth") || errMsg.includes("535")) {
+      friendlyMsg = "فشل في مصادقة خادم البريد، يرجى مراجعة الإدارة.";
+    }
     return {
       success: false,
-      error: `تعذر إرسال رابط إعادة التعيين: ${errMsg.includes("ECONNREFUSED") || errMsg.includes("ENOTFOUND") ? "تعذر الاتصال بخادم البريد" : errMsg.includes("auth") || errMsg.includes("535") ? "فشل مصادقة خادم البريد - يرجى التحقق من كلمة مرور التطبيق" : errMsg.includes("findFirst") || errMsg.includes("prisma") ? "خطأ في قاعدة البيانات" : "خطأ غير متوقع، يرجى المحاولة لاحقاً"}`,
+      error: friendlyMsg,
     };
   }
 }
