@@ -6,8 +6,6 @@ import ImageUpload from "@/app/_components/ImageUpload";
 import {
   UserPlus,
   Search,
-  Phone,
-  CreditCard,
   Car,
   Calendar,
   CheckCircle2,
@@ -43,7 +41,9 @@ export default function CaptainsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(null);
+  const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
+    null,
+  );
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -209,7 +209,9 @@ export default function CaptainsManagementPage() {
             className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50"
             title="تحديث البيانات"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+            />
           </button>
           <button
             onClick={openAddModal}
@@ -246,7 +248,9 @@ export default function CaptainsManagementPage() {
         {isLoading ? (
           <div className="p-12 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-slate-400">جاري تحميل قائمة الكباتن...</p>
+            <p className="text-xs text-slate-400">
+              جاري تحميل قائمة الكباتن...
+            </p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-sm">
@@ -270,7 +274,10 @@ export default function CaptainsManagementPage() {
                 </thead>
                 <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
                   {filtered.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                    <tr
+                      key={c.id}
+                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition"
+                    >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-xs shrink-0">
@@ -293,7 +300,10 @@ export default function CaptainsManagementPage() {
                             <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
                               <span>{c.email}</span>
                               {c.phone && (
-                                <span className="font-mono text-slate-400" dir="ltr">
+                                <span
+                                  className="font-mono text-slate-400"
+                                  dir="ltr"
+                                >
                                   {c.phone}
                                 </span>
                               )}
@@ -325,7 +335,9 @@ export default function CaptainsManagementPage() {
                             {c.assignedVehiclePlate}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">غير مسندة</span>
+                          <span className="text-slate-400 text-xs">
+                            غير مسندة
+                          </span>
                         )}
                       </td>
                       <td className="px-5 py-4">
@@ -345,7 +357,9 @@ export default function CaptainsManagementPage() {
                         <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
                           {c.contractCount}
                         </span>
-                        <span className="text-[11px] text-slate-400 mr-1">عقد</span>
+                        <span className="text-[11px] text-slate-400 mr-1">
+                          عقد
+                        </span>
                       </td>
                       <td className="px-5 py-4">
                         <StatusBadge
@@ -361,7 +375,9 @@ export default function CaptainsManagementPage() {
                             className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 transition"
                             title="توليد كلمة مرور مؤقتة جديدة للكابتن"
                           >
-                            <KeyRound className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`} />
+                            <KeyRound
+                              className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
+                            />
                           </button>
                           <button
                             onClick={() => openEditModal(c)}
@@ -388,7 +404,10 @@ export default function CaptainsManagementPage() {
             {/* Mobile Captain Cards */}
             <div className="md:hidden divide-y theme-border">
               {filtered.map((c) => (
-                <div key={c.id} className="p-4 space-y-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                <div
+                  key={c.id}
+                  className="p-4 space-y-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
+                >
                   {/* Top Bar: Avatar, Name, and Status */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -409,7 +428,10 @@ export default function CaptainsManagementPage() {
                         <div className="font-bold text-slate-900 dark:text-white text-sm truncate">
                           {c.name}
                         </div>
-                        <div className="text-[11px] text-slate-500 font-mono truncate" dir="ltr">
+                        <div
+                          className="text-[11px] text-slate-500 font-mono truncate"
+                          dir="ltr"
+                        >
                           {c.email}
                         </div>
                       </div>
@@ -423,21 +445,30 @@ export default function CaptainsManagementPage() {
                   {/* Details Grid */}
                   <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border">
                     <div>
-                      <span className="text-slate-400 text-[11px] block">الهوية الوطنية</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                      <span className="text-slate-400 text-[11px] block">
+                        الهوية الوطنية
+                      </span>
+                      <span
+                        className="font-mono font-bold text-slate-800 dark:text-slate-200"
+                        dir="ltr"
+                      >
                         {c.nationalId || "—"}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-slate-400 text-[11px] block">المركبة المسندة</span>
+                      <span className="text-slate-400 text-[11px] block">
+                        المركبة المسندة
+                      </span>
                       <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                         {c.assignedVehiclePlate || "غير مسندة"}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-slate-400 text-[11px] block">فحص اليوم</span>
+                      <span className="text-slate-400 text-[11px] block">
+                        فحص اليوم
+                      </span>
                       <span className="mt-0.5 inline-block">
                         {c.hasTodayInspection ? (
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] flex items-center gap-1">
@@ -452,7 +483,9 @@ export default function CaptainsManagementPage() {
                     </div>
 
                     <div>
-                      <span className="text-slate-400 text-[11px] block">إجمالي العقود</span>
+                      <span className="text-slate-400 text-[11px] block">
+                        إجمالي العقود
+                      </span>
                       <span className="font-mono font-bold text-slate-900 dark:text-white">
                         {c.contractCount} عقد
                       </span>
@@ -467,7 +500,9 @@ export default function CaptainsManagementPage() {
                       className="px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold transition text-xs flex items-center gap-1.5"
                       title="توليد كلمة مرور مؤقتة"
                     >
-                      <KeyRound className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`} />
+                      <KeyRound
+                        className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
+                      />
                       <span>كلمة مؤقتة</span>
                     </button>
                     <button
@@ -498,7 +533,9 @@ export default function CaptainsManagementPage() {
           <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {editingCaptain ? "تعديل بيانات الكابتن" : "إضافة كابتن جديد للنظام"}
+                {editingCaptain
+                  ? "تعديل بيانات الكابتن"
+                  : "إضافة كابتن جديد للنظام"}
               </h3>
               <button
                 onClick={() => {
@@ -511,7 +548,10 @@ export default function CaptainsManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+            <form
+              onSubmit={handleSave}
+              className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1"
+            >
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
                   {formError}
@@ -522,7 +562,9 @@ export default function CaptainsManagementPage() {
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border">
                 <ImageUpload
                   value={formData.avatarUrl}
-                  onChange={(url) => setFormData({ ...formData, avatarUrl: url })}
+                  onChange={(url) =>
+                    setFormData({ ...formData, avatarUrl: url })
+                  }
                   onRemove={() => setFormData({ ...formData, avatarUrl: "" })}
                   label="صورة الكابتن الرسمية (تظهر في عقد النقل والبطاقة)"
                   shape="rounded"
@@ -539,7 +581,9 @@ export default function CaptainsManagementPage() {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     placeholder="مثال: علي أحمد غلام أحمد"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -553,7 +597,9 @@ export default function CaptainsManagementPage() {
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     placeholder="captain@miqat.com"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -566,7 +612,9 @@ export default function CaptainsManagementPage() {
                   <input
                     type="tel"
                     value={formData.phone || ""}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
                     placeholder="0542273515"
                     dir="ltr"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
@@ -580,7 +628,9 @@ export default function CaptainsManagementPage() {
                   <input
                     type="text"
                     value={formData.nationalId || ""}
-                    onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nationalId: e.target.value })
+                    }
                     placeholder="2553660073"
                     dir="ltr"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
@@ -594,7 +644,12 @@ export default function CaptainsManagementPage() {
                   <input
                     type="text"
                     value={formData.licenseNumber || ""}
-                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        licenseNumber: e.target.value,
+                      })
+                    }
                     placeholder="SA-39482910"
                     dir="ltr"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
@@ -608,7 +663,12 @@ export default function CaptainsManagementPage() {
                   <input
                     type="text"
                     value={formData.licenseExpiry || ""}
-                    onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        licenseExpiry: e.target.value,
+                      })
+                    }
                     placeholder="2028/04/22"
                     dir="ltr"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
@@ -622,7 +682,12 @@ export default function CaptainsManagementPage() {
                   <input
                     type="text"
                     value={formData.assignedVehiclePlate || ""}
-                    onChange={(e) => setFormData({ ...formData, assignedVehiclePlate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        assignedVehiclePlate: e.target.value,
+                      })
+                    }
                     placeholder="ا ص ل 7223"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -645,7 +710,11 @@ export default function CaptainsManagementPage() {
                   disabled={isSubmitting}
                   className="px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
                 >
-                  {isSubmitting ? "جاري الحفظ..." : editingCaptain ? "حفظ التعديلات" : "إضافة الكابتن"}
+                  {isSubmitting
+                    ? "جاري الحفظ..."
+                    : editingCaptain
+                      ? "حفظ التعديلات"
+                      : "إضافة الكابتن"}
                 </button>
               </div>
             </form>
@@ -694,31 +763,46 @@ export default function CaptainsManagementPage() {
             </div>
 
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
-              <p className="font-bold">يرجى تزويد الكابتن ببيانات الدخول التالية:</p>
+              <p className="font-bold">
+                يرجى تزويد الكابتن ببيانات الدخول التالية:
+              </p>
               <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
-                سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.
+                سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم
+                تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.
               </p>
             </div>
 
             <div className="space-y-2 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border theme-border flex items-center justify-between">
-                <span className="text-slate-500 text-[11px]">البريد الإلكتروني:</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white" dir="ltr">
+                <span className="text-slate-500 text-[11px]">
+                  البريد الإلكتروني:
+                </span>
+                <span
+                  className="font-mono font-bold text-slate-900 dark:text-white"
+                  dir="ltr"
+                >
                   {tempPasswordModal.email}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-amber-500/40 flex items-center justify-between">
                 <div>
-                  <span className="text-slate-400 text-[10px] block font-bold">كلمة المرور المؤقتة:</span>
-                  <span className="font-mono text-xl font-black text-amber-600 dark:text-amber-400 tracking-wider select-all" dir="ltr">
+                  <span className="text-slate-400 text-[10px] block font-bold">
+                    كلمة المرور المؤقتة:
+                  </span>
+                  <span
+                    className="font-mono text-xl font-black text-amber-600 dark:text-amber-400 tracking-wider select-all"
+                    dir="ltr"
+                  >
                     {tempPasswordModal.tempPassword}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(tempPasswordModal.tempPassword);
+                    navigator.clipboard.writeText(
+                      tempPasswordModal.tempPassword,
+                    );
                     setCopied(true);
                     setTimeout(() => setCopied(false), 3000);
                   }}
