@@ -40,15 +40,25 @@ export function getChromeExecutablePath(): string | null {
   }
 
   const commonPaths = [
+    // macOS
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    // Linux
     "/usr/bin/google-chrome",
     "/usr/bin/google-chrome-stable",
     "/usr/bin/chromium",
     "/usr/bin/chromium-browser",
     "/snap/bin/chromium",
+    // Windows
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    ...(process.env.LOCALAPPDATA ? [path.join(process.env.LOCALAPPDATA, "Google\\Chrome\\Application\\chrome.exe")] : []),
+    ...(process.env.PROGRAMFILES ? [path.join(process.env.PROGRAMFILES, "Google\\Chrome\\Application\\chrome.exe")] : []),
+    ...(process.env["PROGRAMFILES(X86)"] ? [path.join(process.env["PROGRAMFILES(X86)"], "Google\\Chrome\\Application\\chrome.exe")] : []),
   ];
 
   for (const p of commonPaths) {
@@ -114,7 +124,7 @@ export async function buildContractPdfBuffer(
 
   let browser;
   if (localExecutable) {
-    // Local macOS/Linux machine with Chrome installed
+    // Local macOS/Linux/Windows machine with Chrome installed
     browser = await puppeteer.launch({
       executablePath: localExecutable,
       headless: true,
@@ -125,6 +135,11 @@ export async function buildContractPdfBuffer(
         "--disable-gpu",
         "--font-render-hinting=none",
       ],
+      defaultViewport: {
+        width: 1200,
+        height: 1600,
+        deviceScaleFactor: 2,
+      },
     });
   } else {
     // Remote / Vercel Serverless environment
@@ -136,7 +151,11 @@ export async function buildContractPdfBuffer(
         "--disable-gpu",
         "--font-render-hinting=none",
       ],
-      defaultViewport: chromium.defaultViewport,
+      defaultViewport: chromium.defaultViewport || {
+        width: 1200,
+        height: 1600,
+        deviceScaleFactor: 2,
+      },
       executablePath,
       headless: chromium.headless,
     });
@@ -144,14 +163,25 @@ export async function buildContractPdfBuffer(
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 25000 });
-    // Ensure Google fonts (Cairo, Outfit) are rendered
+    // Wait for "load" so all web fonts (Tajawal, Zain, Outfit) and assets are 100% downloaded
     try {
-      await page.evaluate(() => document.fonts?.ready);
+      await page.setContent(html, { waitUntil: "load", timeout: 20000 });
+    } catch {
+      // Fallback if load takes longer
+      await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 25000 });
+    }
+
+    // Explicitly ensure fonts are ready
+    try {
+      await page.evaluate(async () => {
+        if (document.fonts) {
+          await document.fonts.ready;
+        }
+      });
     } catch {
       // fallback
     }
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 400));
 
     const pdfUint8Array = await page.pdf({
       format: "A4",
@@ -277,7 +307,7 @@ export function mapContractToPdfData(contract: any): FullContractData {
       ? contract.passengers.map((p: { sequence?: number; name?: string; nationality?: string; idNumber?: string }) => ({
           id: p.sequence ?? 1,
           name: p.name || "",
-          nationality: p.nationality || "سعودي",
+          nationality: p.nationality || "",
           idNumber: p.idNumber || "",
         }))
       : DEFAULT_CONTRACT_DATA.passengers,
@@ -290,26 +320,26 @@ export function mapContractToPdfData(contract: any): FullContractData {
             ? new Date(inspection.inspectionDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
             : DEFAULT_CONTRACT_DATA.inspection.time,
           dashboard: [
-            { id: "fuel", nameAr: "مؤشر الوقود", sound: inspection.fuelGauge, notes: "" },
-            { id: "temp", nameAr: "مؤشر الحرارة", sound: inspection.tempGauge, notes: "" },
-            { id: "oil_pressure", nameAr: "مؤشر ضغط الزيت", sound: inspection.oilPressure, notes: "" },
-            { id: "check_engine", nameAr: "لمبة فحص المحرك", sound: inspection.checkEngine, notes: "" },
-            { id: "abs", nameAr: "ABS", sound: inspection.absLight, notes: "" },
-            { id: "warning_light", nameAr: "لمبات التحذير", sound: inspection.warningLights, notes: "" },
+            { id: "fuel", nameAr: "مؤشر الوقود", sound: Boolean(inspection.fuelGauge), notes: "" },
+            { id: "temp", nameAr: "مؤشر الحرارة", sound: Boolean(inspection.tempGauge), notes: "" },
+            { id: "oil_pressure", nameAr: "مؤشر ضغط الزيت", sound: Boolean(inspection.oilPressure), notes: "" },
+            { id: "check_engine", nameAr: "لمبة فحص المحرك", sound: Boolean(inspection.checkEngine), notes: "" },
+            { id: "abs", nameAr: "ABS", sound: Boolean(inspection.absLight), notes: "" },
+            { id: "warning_light", nameAr: "لمبات التحذير", sound: Boolean(inspection.warningLights), notes: "" },
           ],
           external: [
-            { id: "tires", nameAr: "الإطارات وضغط الهواء", sound: inspection.tires, notes: "" },
-            { id: "lights", nameAr: "الأنوار الأمامية و الخلفية", sound: inspection.headlights, notes: "" },
-            { id: "signals", nameAr: "الإشارات التحذيرية", sound: inspection.signals, notes: "" },
-            { id: "glass", nameAr: "الزجاج والمرايا", sound: inspection.mirrors, notes: "" },
-            { id: "leaks", nameAr: "عدم وجود تسريبات", sound: inspection.noLeaks, notes: "" },
+            { id: "tires", nameAr: "الإطارات وضغط الهواء", sound: Boolean(inspection.tires), notes: "" },
+            { id: "lights", nameAr: "الأنوار الأمامية و الخلفية", sound: Boolean(inspection.headlights), notes: "" },
+            { id: "signals", nameAr: "الإشارات التحذيرية", sound: Boolean(inspection.signals), notes: "" },
+            { id: "glass", nameAr: "الزجاج والمرايا", sound: Boolean(inspection.mirrors), notes: "" },
+            { id: "leaks", nameAr: "عدم وجود تسريبات", sound: Boolean(inspection.noLeaks), notes: "" },
           ],
           safety: [
-            { id: "extinguisher", nameAr: "طفاية حريق", sound: inspection.fireExtinguisher, notes: "" },
-            { id: "triangle", nameAr: "مثلث تحذيري", sound: inspection.warningTriangle, notes: "" },
-            { id: "first_aid", nameAr: "حقيبة اسعافات أولية", sound: inspection.firstAidKit, notes: "" },
-            { id: "hammer", nameAr: "مطرقة كسر الزجاج", sound: inspection.glassHammer, notes: "" },
-            { id: "belts", nameAr: "أحزمة الأمان", sound: inspection.seatBelts, notes: "" },
+            { id: "extinguisher", nameAr: "طفاية حريق", sound: Boolean(inspection.fireExtinguisher), notes: "" },
+            { id: "triangle", nameAr: "مثلث تحذيري", sound: Boolean(inspection.warningTriangle), notes: "" },
+            { id: "first_aid", nameAr: "حقيبة اسعافات أولية", sound: Boolean(inspection.firstAidKit), notes: "" },
+            { id: "hammer", nameAr: "مطرقة كسر الزجاج", sound: Boolean(inspection.glassHammer), notes: "" },
+            { id: "belts", nameAr: "أحزمة الأمان", sound: Boolean(inspection.seatBelts), notes: "" },
           ],
           declarationText: DEFAULT_CONTRACT_DATA.inspection.declarationText,
         }

@@ -58,6 +58,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["ADMIN"],
   },
   {
+    href: "/admin/inspections",
+    label: "فحص الكباتن والمركبات",
+    icon: <ClipboardCheck className="w-4 h-4" />,
+    badge: "يومي",
+    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
+    roles: ["ADMIN"],
+  },
+  {
     href: "/admin/fleet",
     label: "أسطول المركبات",
     icon: <Car className="w-4 h-4" />,

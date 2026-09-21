@@ -74,7 +74,7 @@ export default function CaptainContractBuilderPage() {
       vehiclePlate: user?.assignedVehiclePlate || "ا ص ل 7223",
       notes: "",
       passengers: [
-        { name: "", nationality: "سعودي", idNumber: "" },
+        { name: "", nationality: "", idNumber: "" },
       ],
     },
   });
@@ -124,7 +124,7 @@ export default function CaptainContractBuilderPage() {
       inspectionId: todayInspection?.id,
       passengers: data.passengers.map((p) => ({
         name: p.name.trim(),
-        nationality: p.nationality.trim() || "سعودي",
+        nationality: p.nationality.trim() || "",
         idNumber: p.idNumber.trim(),
       })),
     };
@@ -150,7 +150,7 @@ export default function CaptainContractBuilderPage() {
       const diff = nextCount - currentCount;
       const newItems = Array.from({ length: diff }, () => ({
         name: "",
-        nationality: "سعودي",
+        nationality: "",
         idNumber: "",
       }));
       append(newItems);
@@ -492,7 +492,7 @@ export default function CaptainContractBuilderPage() {
                 type="button"
                 onClick={() => {
                   if (fields.length < 50) {
-                    append({ name: "", nationality: "سعودي", idNumber: "" });
+                    append({ name: "", nationality: "", idNumber: "" });
                   }
                 }}
                 disabled={fields.length >= 50}

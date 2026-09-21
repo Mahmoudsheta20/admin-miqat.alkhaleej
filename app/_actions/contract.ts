@@ -1,10 +1,13 @@
 "use server";
 
+import fs from "fs";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { Contract, OperationType } from "@/lib/types";
 import {
   generateAndSaveContractPdf,
   syncAllExistingContractsToStorage,
+  CONTRACTS_STORAGE_DIR,
 } from "@/lib/contractStorage";
 import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 
@@ -159,7 +162,7 @@ export async function submitContract(
           data: validPassengers.map((p, index) => ({
             sequence: index + 1,
             name: p.name.trim(),
-            nationality: cleanStr(p.nationality) || "سعودي",
+            nationality: cleanStr(p.nationality) || "",
             idNumber: cleanStr(p.idNumber) || "",
             contractId: contract.id,
           })),
@@ -241,6 +244,226 @@ export async function submitContract(
     return { success: false, error: errMessage };
   }
 }
+
+export async function updateContract(
+  contractId: string,
+  formData: ContractFormPayload
+): Promise<{ success: boolean; contract?: Contract; error?: string }> {
+  try {
+    const cleanId = cleanStr(contractId);
+    if (!cleanId) {
+      return { success: false, error: "معرف العقد مطلوب" };
+    }
+
+    const existing = await prisma.contract.findUnique({
+      where: { id: cleanId },
+      include: { passengers: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "العقد المطلوب تعديله غير موجود" };
+    }
+
+    const customerName = cleanStr(formData.customerName);
+    if (!customerName) {
+      return { success: false, error: "اسم العميل / الضيف الأساسي مطلوب" };
+    }
+    const origin = cleanStr(formData.origin);
+    const destination = cleanStr(formData.destination);
+    if (!origin || !destination) {
+      return { success: false, error: "مسار الرحلة (الانطلاق والوجهة) مطلوب" };
+    }
+
+    // Resolve captainId safely
+    let captainId = cleanStr(formData.captainId);
+    if (captainId) {
+      const exists = await prisma.user.findUnique({
+        where: { id: captainId },
+        select: { id: true },
+      });
+      if (!exists) {
+        captainId = existing.captainId;
+      }
+    } else {
+      captainId = existing.captainId;
+    }
+
+    // Resolve inspectionId safely
+    let validInspectionId = existing.inspectionId;
+    const cleanInspId = cleanStr(formData.inspectionId);
+    if (cleanInspId) {
+      const existsInsp = await prisma.vehicleInspection.findUnique({
+        where: { id: cleanInspId },
+        select: { id: true },
+      });
+      if (existsInsp) {
+        validInspectionId = existsInsp.id;
+      }
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update contract details
+      await tx.contract.update({
+        where: { id: cleanId },
+        data: {
+          operationType: formData.operationType,
+          origin,
+          destination,
+          tripDate: cleanStr(formData.tripDate) || existing.tripDate,
+          tripTime: cleanStr(formData.tripTime) || existing.tripTime,
+          flightCarrier: cleanStr(formData.flightCarrier),
+          flightNumber: cleanStr(formData.flightNumber),
+          customerName,
+          customerPhone: cleanStr(formData.customerPhone),
+          notes: cleanStr(formData.notes),
+          issueDate: cleanStr(formData.issueDate) || existing.issueDate || getSaudiTodayDateStr(),
+          inspectionId: validInspectionId,
+          captainId: captainId!,
+          vehiclePlate: cleanStr(formData.vehiclePlate) || existing.vehiclePlate,
+        },
+      });
+
+      // 2. Sync passenger manifest
+      const validPassengers = (formData.passengers || []).filter(
+        (p) => p.name && p.name.trim().length > 0
+      );
+
+      // Delete existing passengers and re-insert updated list
+      await tx.passenger.deleteMany({
+        where: { contractId: cleanId },
+      });
+
+      if (validPassengers.length > 0) {
+        await tx.passenger.createMany({
+          data: validPassengers.map((p, index) => ({
+            sequence: index + 1,
+            name: p.name.trim(),
+            nationality: cleanStr(p.nationality) || "",
+            idNumber: cleanStr(p.idNumber) || "",
+            contractId: cleanId,
+          })),
+        });
+      }
+
+      return tx.contract.findUnique({
+        where: { id: cleanId },
+        include: {
+          passengers: { orderBy: { sequence: "asc" } },
+          captain: true,
+          inspection: true,
+        },
+      });
+    });
+
+    if (!result) {
+      return { success: false, error: "تعذر تحديث العقد في قاعدة البيانات" };
+    }
+
+    // Automatically regenerate and overwrite the official PDF with updated data
+    let storedPdfPath = result.pdfPath;
+    try {
+      const savedPdf = await generateAndSaveContractPdf(result.id);
+      storedPdfPath = savedPdf.publicUrl;
+    } catch (pdfErr) {
+      console.warn("Could not regenerate PDF immediately upon contract update:", pdfErr);
+    }
+
+    return {
+      success: true,
+      contract: {
+        id: result.id,
+        referenceNumber: result.referenceNumber,
+        operationType: result.operationType as OperationType,
+        origin: result.origin,
+        destination: result.destination,
+        tripDate: result.tripDate,
+        tripTime: result.tripTime,
+        flightCarrier: result.flightCarrier,
+        flightNumber: result.flightNumber,
+        customerName: result.customerName,
+        customerPhone: result.customerPhone,
+        notes: result.notes,
+        issueDate: result.issueDate,
+        inspectionId: result.inspectionId,
+        captainId: result.captainId,
+        vehiclePlate: result.vehiclePlate,
+        pdfPath: storedPdfPath,
+        createdAt: result.createdAt.toISOString(),
+        updatedAt: result.updatedAt.toISOString(),
+        passengers: result.passengers.map((p) => ({
+          id: p.id,
+          sequence: p.sequence,
+          name: p.name,
+          nationality: p.nationality,
+          idNumber: p.idNumber,
+          contractId: p.contractId,
+        })),
+        captain: result.captain
+          ? {
+              id: result.captain.id,
+              name: result.captain.name,
+              email: result.captain.email,
+              role: result.captain.role as "CAPTAIN",
+              phone: result.captain.phone,
+              nationalId: result.captain.nationalId,
+              licenseNumber: result.captain.licenseNumber,
+              licenseExpiry: result.captain.licenseExpiry,
+              assignedVehiclePlate: result.captain.assignedVehiclePlate,
+              active: result.captain.active,
+            }
+          : undefined,
+      },
+    };
+  } catch (error) {
+    console.error("Update contract error:", error);
+    const errMessage = error instanceof Error ? error.message : "فشل تحديث العقد";
+    return { success: false, error: errMessage };
+  }
+}
+
+export async function deleteContract(
+  contractId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cleanId = cleanStr(contractId);
+    if (!cleanId) {
+      return { success: false, error: "معرف العقد مطلوب" };
+    }
+
+    const existing = await prisma.contract.findUnique({
+      where: { id: cleanId },
+      select: { id: true, referenceNumber: true, pdfPath: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "العقد المطلوب حذفه غير موجود" };
+    }
+
+    // 1. Delete associated PDF file from disk if it exists
+    try {
+      const fileName = `contract-${existing.referenceNumber}.pdf`;
+      const filePath = path.join(CONTRACTS_STORAGE_DIR, fileName);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (fsErr) {
+      console.warn("Could not delete contract PDF file from disk:", fsErr);
+    }
+
+    // 2. Delete contract record from database (passengers cascade automatically)
+    await prisma.contract.delete({
+      where: { id: cleanId },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Delete contract error:", error);
+    const errMessage = error instanceof Error ? error.message : "فشل حذف العقد";
+    return { success: false, error: errMessage };
+  }
+}
+
+
 
 export async function getContracts(filters?: {
   captainId?: string;

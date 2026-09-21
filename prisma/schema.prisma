@@ -130,7 +130,7 @@ model Passenger {
   id          String   @id @default(uuid())
   sequence    Int
   name        String
-  nationality String   @default("سعودي")
+  nationality String   @default("")
   idNumber    String   @default("")
   contractId  String
   contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)

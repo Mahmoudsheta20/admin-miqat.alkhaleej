@@ -111,7 +111,6 @@ export default function AdminContractBuilderPage() {
   const [showDetailedChecks, setShowDetailedChecks] = useState(false);
   const [adminInspectionMode, setAdminInspectionMode] = useState<"AUTO" | "MANUAL">("AUTO");
   const [adminInspectionDate, setAdminInspectionDate] = useState(() => getSaudiTodayDateStr());
-  const [adminInspectionTime, setAdminInspectionTime] = useState(() => getSaudiCurrentTimeStr());
 
   // 16 technical check items (all default to true = 100% compliant)
   const [checks, setChecks] = useState<Record<string, boolean>>({
@@ -160,7 +159,7 @@ export default function AdminContractBuilderPage() {
       captainId: "",
       vehiclePlate: "",
       notes: "",
-      passengers: [{ name: "", nationality: "سعودي", idNumber: "" }],
+      passengers: [{ name: "", nationality: "", idNumber: "" }],
     },
   });
 
@@ -247,9 +246,10 @@ export default function AdminContractBuilderPage() {
         currentCaptain?.assignedVehiclePlate ||
         (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
 
+      const nowTime = getSaudiCurrentTimeStr();
       const effectiveInspectionDate =
         adminInspectionMode === "MANUAL"
-          ? `${adminInspectionDate.replace(/\//g, "-")}T${adminInspectionTime}:00`
+          ? `${adminInspectionDate.replace(/\//g, "-")}T${nowTime}:00`
           : new Date().toISOString();
 
       const res = await submitInspection({
@@ -280,12 +280,12 @@ export default function AdminContractBuilderPage() {
         setAdminInspectionId(res.inspection.id);
         setValue("inspectionId", res.inspection.id);
         setIsConfirmed(true);
-        const displayTime =
+        const displayDate =
           adminInspectionMode === "MANUAL"
-            ? `${adminInspectionDate} • ${adminInspectionTime}`
-            : `${new Date().toLocaleDateString("en-GB")} • ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
+            ? adminInspectionDate
+            : new Date().toLocaleDateString("en-GB");
         setAdminInspectionSuccessMsg(
-          `تم إرسال وتوثيق الفحص التشغيلي بنجاح (كود الفحص #${res.inspection.id.slice(0, 8)}) بتوقيت ${displayTime} وتم اعتماده للرحلة`
+          `تم إرسال وتوثيق الفحص التشغيلي بنجاح (كود الفحص #${res.inspection.id.slice(0, 8)}) بتاريخ ${displayDate} وتم اعتماده للرحلة`
         );
       } else {
         setConfirmError(res.error || "تعذر إرسال الفحص التشغيلي");
@@ -347,7 +347,7 @@ export default function AdminContractBuilderPage() {
           notes: "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات عند توثيق العقد",
           inspectionDate:
             adminInspectionMode === "MANUAL"
-              ? `${adminInspectionDate.replace(/\//g, "-")}T${adminInspectionTime}:00`
+              ? `${adminInspectionDate.replace(/\//g, "-")}T${getSaudiCurrentTimeStr()}:00`
               : new Date().toISOString(),
         });
 
@@ -424,7 +424,7 @@ export default function AdminContractBuilderPage() {
       captainId: defaultCap ? defaultCap.id : "",
       vehiclePlate: defaultPlate,
       notes: "",
-      passengers: [{ name: "", nationality: "سعودي", idNumber: "" }],
+      passengers: [{ name: "", nationality: "", idNumber: "" }],
     });
   };
 
@@ -953,7 +953,7 @@ export default function AdminContractBuilderPage() {
                       تم استلام واعتماد فحص المركبة اليومي تلقائياً من الكابتن ({currentCaptain?.name || "الكابتن"})
                     </span>
                     <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
-                      لوحة المركبة المفحوصة: <strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> • تاريخ ووقت الفحص: <strong className="font-mono" dir="ltr">{new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB")} • {new Date(effectiveCaptainInspection.inspectionDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</strong>
+                      لوحة المركبة المفحوصة: <strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> • تاريخ الفحص: <strong className="font-mono" dir="ltr">{new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB")}</strong>
                     </span>
                   </div>
                 </div>
@@ -972,7 +972,7 @@ export default function AdminContractBuilderPage() {
                       تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات
                     </span>
                     <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
-                      تم اعتماد الفحص الفني لمركبة الكابتن {currentCaptain?.name} وربطه بالعقد رسمياً • التوقيت: <strong className="font-mono" dir="ltr">{new Date().toLocaleDateString("en-GB")} • {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</strong>
+                      تم اعتماد الفحص الفني لمركبة الكابتن {currentCaptain?.name} وربطه بالعقد رسمياً • تاريخ الفحص: <strong className="font-mono" dir="ltr">{new Date().toLocaleDateString("en-GB")}</strong>
                     </span>
                   </div>
                 </div>
@@ -1039,30 +1039,21 @@ export default function AdminContractBuilderPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="text-xs font-black text-slate-900 dark:text-white block">
-                    تخصيص تاريخ ووقت الفحص التشغيلي المعتمد (يدوي)
+                    تخصيص تاريخ الفحص التشغيلي المعتمد (يدوي)
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    حدد تاريخ ووقت الفحص التشغيلي الذي ترغب في اعتماده وربطه بمركبة الكابتن {currentCaptain?.name} في هذا العقد:
+                    حدد تاريخ الفحص التشغيلي الذي ترغب في اعتماده وربطه بمركبة الكابتن {currentCaptain?.name} في هذا العقد:
                   </span>
                 </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2 border-t theme-border">
-                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 flex-1">
-                  <div className="w-full sm:w-44">
-                    <CustomDatePicker
-                      label="تاريخ الفحص"
-                      value={adminInspectionDate}
-                      onChange={setAdminInspectionDate}
-                    />
-                  </div>
-                  <div className="w-full sm:w-36">
-                    <CustomTimePicker
-                      label="وقت الفحص"
-                      value={adminInspectionTime}
-                      onChange={setAdminInspectionTime}
-                    />
-                  </div>
+                <div className="flex-1 sm:max-w-xs">
+                  <CustomDatePicker
+                    label="تاريخ الفحص"
+                    value={adminInspectionDate}
+                    onChange={setAdminInspectionDate}
+                  />
                 </div>
 
                 <button
@@ -1070,7 +1061,7 @@ export default function AdminContractBuilderPage() {
                   onClick={handleSendAdminInspection}
                   disabled={isSubmittingAdminInspection || !selectedCaptainId}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 h-11 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer sm:self-end"
-                  title="اعتماد وتوثيق الفحص التشغيلي بالتاريخ والوقت المحددين"
+                  title="اعتماد وتوثيق الفحص التشغيلي بالتاريخ المحدد"
                 >
                   {isSubmittingAdminInspection ? (
                     <>
@@ -1090,7 +1081,7 @@ export default function AdminContractBuilderPage() {
                 <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>
-                    تم توثيق الفحص التشغيلي برقم #{adminInspectionId.slice(0, 8)} بالتوقيت المخصص: {adminInspectionDate} • {adminInspectionTime}
+                    تم توثيق الفحص التشغيلي برقم #{adminInspectionId.slice(0, 8)} بتاريخ: {adminInspectionDate}
                   </span>
                 </div>
               )}

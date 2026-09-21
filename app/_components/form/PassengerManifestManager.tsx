@@ -59,7 +59,7 @@ export function PassengerManifestManager({
       const diff = nextCount - currentCount;
       const newItems = Array.from({ length: diff }, () => ({
         name: "",
-        nationality: "سعودي",
+        nationality: "",
         idNumber: "",
       }));
       append(newItems);
@@ -81,7 +81,7 @@ export function PassengerManifestManager({
 
   const addOne = () => {
     if (fields.length < 50) {
-      append({ name: "", nationality: "سعودي", idNumber: "" });
+      append({ name: "", nationality: "", idNumber: "" });
     }
   };
 

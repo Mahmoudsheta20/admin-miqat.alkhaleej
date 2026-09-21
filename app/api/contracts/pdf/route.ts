@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const contractId = searchParams.get("contractId") || searchParams.get("ref");
+    const isDownload = searchParams.get("download") === "1" || searchParams.get("download") === "true";
     const baseUrl = getBaseUrl(req);
 
     let pdfBuffer: Buffer;
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     let storageUrl = "";
 
     if (contractId) {
-      // Generates with UNIQUE QR code, saves to storage, updates DB
+      // Generates with UNIQUE QR code on server, saves to storage, updates DB
       const result = await generateAndSaveContractPdf(contractId, baseUrl);
       pdfBuffer = result.pdfBuffer;
       fileName = result.fileName;
@@ -39,12 +40,18 @@ export async function GET(req: NextRequest) {
       pdfBuffer = await buildContractPdfBuffer(DEFAULT_CONTRACT_DATA, baseUrl);
     }
 
+    const dispositionType = isDownload ? "attachment" : "inline";
+    const encodedFileName = encodeURIComponent(fileName);
+
     return new Response(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${fileName}"`,
-        "Cache-Control": "no-store, no-cache, must-revalidate",
+        "Content-Disposition": `${dispositionType}; filename="${fileName}"; filename*=UTF-8''${encodedFileName}`,
+        "Content-Length": String(pdfBuffer.length),
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
         "X-Contract-Storage-Url": storageUrl,
       },
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { X, Download, Printer, FileText, CheckCircle2 } from "lucide-react";
 
 interface PdfPreviewModalProps {
@@ -16,11 +16,17 @@ export default function PdfPreviewModal({
   contractId,
   referenceNumber = "MQ-2026-00841",
 }: PdfPreviewModalProps) {
+  const [viewMode, setViewMode] = useState<"document" | "pdf">("document");
+
   if (!isOpen) return null;
 
   const pdfUrl = contractId
     ? `/api/contracts/pdf?contractId=${contractId}`
     : `/api/contracts/pdf`;
+
+  const downloadUrl = contractId
+    ? `/api/contracts/pdf?contractId=${contractId}&download=1`
+    : `/api/contracts/pdf?download=1`;
 
   const htmlUrl = contractId
     ? `/api/contracts/html?contractId=${contractId}`
@@ -60,23 +66,52 @@ export default function PdfPreviewModal({
           </div>
 
           <div className="flex items-center gap-2 self-stretch sm:self-auto">
+            {/* View Mode Toggle */}
+            <div className="flex items-center p-1 rounded-xl border theme-border bg-slate-100 dark:bg-slate-800/80 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("document")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                  viewMode === "document"
+                    ? "bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+                title="عرض المستند عالي الدقة (متوافق مع جميع الأجهزة والجوال)"
+              >
+                معاينة الوثيقة
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("pdf")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                  viewMode === "pdf"
+                    ? "bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+                title="عرض قارئ الـ PDF"
+              >
+                قارئ PDF
+              </button>
+            </div>
+
             <a
-              href={pdfUrl}
+              href={downloadUrl}
               download={`Miqat_Contract_${referenceNumber}.pdf`}
               className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-xl gold-gradient-btn transition shadow-sm"
+              title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
             >
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>تحميل PDF</span>
+              <span>تحميل من السيرفر</span>
             </a>
             <a
               href={htmlUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
-              title="معاينة فورية وطباعة سريعة بنقرة واحدة"
+              className="hidden sm:flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
+              title="طباعة سريعة وفتح في نافذة كاملة"
             >
               <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-              <span className="hidden sm:inline">طباعة / معاينة سريعة</span>
+              <span>طباعة</span>
             </a>
             <button
               onClick={onClose}
@@ -88,17 +123,12 @@ export default function PdfPreviewModal({
           </div>
         </div>
 
-        {/* Mobile notice banner for direct PDF opening */}
-        <div className="sm:hidden bg-amber-500/10 border-b border-amber-500/20 px-3 py-1.5 text-center text-[11px] font-bold text-amber-800 dark:text-amber-300">
-          على الجوال، يمكنك النقر على &quot;تحميل PDF&quot; لفتحه أو حفظه مباشرة.
-        </div>
-
-        {/* PDF Frame */}
+        {/* View Frame */}
         <div className="flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950">
           <iframe
-            src={`${pdfUrl}#toolbar=1&navpanes=0`}
+            src={viewMode === "document" ? htmlUrl : `${pdfUrl}#toolbar=1&navpanes=0`}
             className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
-            title="العقد الرسمي"
+            title="معاينة العقد الرسمي"
           />
         </div>
 

@@ -154,7 +154,7 @@ export function sanitizeContractPayload(
   const validPassengers = (data.passengers || [])
     .map((p) => ({
       name: p.name.trim(),
-      nationality: p.nationality?.trim() || "سعودي",
+      nationality: p.nationality?.trim() || "",
       idNumber: normalizeArabicNumerals(p.idNumber?.trim() || ""),
     }))
     .filter((p) => p.name.length > 0 || p.idNumber.length > 0);

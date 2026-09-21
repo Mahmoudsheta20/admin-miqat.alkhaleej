@@ -157,3 +157,376 @@ export async function submitInspection(
     return { success: false, error: "فشل حفظ فحص المركبة اليومي" };
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN ACTIONS & DIRECT PASS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CaptainInspectionItem {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  nationalId?: string | null;
+  assignedVehiclePlate?: string | null;
+  avatarUrl?: string | null;
+  active: boolean;
+  hasTodayInspection: boolean;
+  todayInspection: VehicleInspection | null;
+  lastInspectionDate?: string | null;
+  totalInspections: number;
+}
+
+export interface InspectionWithMeta extends VehicleInspection {
+  captainPhone?: string | null;
+  captainAvatar?: string | null;
+  contractCount: number;
+}
+
+/**
+ * Helper to map Prisma record to typed VehicleInspection
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapPrismaToInspection(r: any): VehicleInspection {
+  return {
+    id: r.id,
+    captainId: r.captainId,
+    captainName: r.captain?.name,
+    vehiclePlate: r.vehiclePlate,
+    inspectionDate: r.inspectionDate instanceof Date ? r.inspectionDate.toISOString().split("T")[0] : String(r.inspectionDate),
+    fuelGauge: Boolean(r.fuelGauge),
+    tempGauge: Boolean(r.tempGauge),
+    oilPressure: Boolean(r.oilPressure),
+    checkEngine: Boolean(r.checkEngine),
+    absLight: Boolean(r.absLight),
+    warningLights: Boolean(r.warningLights),
+    tires: Boolean(r.tires),
+    headlights: Boolean(r.headlights),
+    signals: Boolean(r.signals),
+    mirrors: Boolean(r.mirrors),
+    noLeaks: Boolean(r.noLeaks),
+    fireExtinguisher: Boolean(r.fireExtinguisher),
+    warningTriangle: Boolean(r.warningTriangle),
+    firstAidKit: Boolean(r.firstAidKit),
+    glassHammer: Boolean(r.glassHammer),
+    seatBelts: Boolean(r.seatBelts),
+    driverDeclared: Boolean(r.driverDeclared),
+    notes: r.notes || null,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+  };
+}
+
+/**
+ * Get all captains with their inspection status for today
+ */
+export async function getCaptainsInspectionOverview(): Promise<{
+  success: boolean;
+  captains?: CaptainInspectionItem[];
+  stats?: {
+    totalCaptains: number;
+    inspectedToday: number;
+    pendingToday: number;
+    totalInspections: number;
+  };
+  error?: string;
+}> {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [captainsList, totalInspectionsCount] = await Promise.all([
+      prisma.user.findMany({
+        where: { role: "CAPTAIN" },
+        include: {
+          inspections: {
+            orderBy: { createdAt: "desc" },
+            take: 2,
+            include: {
+              captain: { select: { name: true } },
+            },
+          },
+          _count: {
+            select: { inspections: true },
+          },
+        },
+        orderBy: { name: "asc" },
+      }),
+      prisma.vehicleInspection.count(),
+    ]);
+
+    let inspectedTodayCount = 0;
+
+    const mappedCaptains: CaptainInspectionItem[] = captainsList.map((u) => {
+      // Find if any inspection is from today
+      const todayInspRecord = u.inspections.find(
+        (insp) => new Date(insp.createdAt) >= today
+      );
+
+      const hasToday = Boolean(todayInspRecord);
+      if (hasToday) inspectedTodayCount++;
+
+      const latestRecord = u.inspections[0] || null;
+
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        nationalId: u.nationalId,
+        assignedVehiclePlate: u.assignedVehiclePlate,
+        avatarUrl: u.avatarUrl,
+        active: u.active,
+        hasTodayInspection: hasToday,
+        todayInspection: todayInspRecord ? mapPrismaToInspection(todayInspRecord) : null,
+        lastInspectionDate: latestRecord ? latestRecord.createdAt.toISOString() : null,
+        totalInspections: u._count.inspections,
+      };
+    });
+
+    // Sort: Uninspected captains first, then inspected
+    mappedCaptains.sort((a, b) => {
+      if (a.hasTodayInspection === b.hasTodayInspection) return 0;
+      return a.hasTodayInspection ? 1 : -1;
+    });
+
+    return {
+      success: true,
+      captains: mappedCaptains,
+      stats: {
+        totalCaptains: mappedCaptains.length,
+        inspectedToday: inspectedTodayCount,
+        pendingToday: mappedCaptains.length - inspectedTodayCount,
+        totalInspections: totalInspectionsCount,
+      },
+    };
+  } catch (error) {
+    console.error("getCaptainsInspectionOverview error:", error);
+    return { success: false, error: "تعذر تحميل بيانات فحص الكباتن" };
+  }
+}
+
+/**
+ * Direct 1-Click Inspection Completion for a Captain ("إنهاء الفحص المباشر")
+ * Sets all 16 safety and operational points to true and approves instantly.
+ */
+export async function directPassInspection(
+  captainId: string,
+  vehiclePlate?: string,
+  customNotes?: string
+): Promise<{
+  success: boolean;
+  inspection?: VehicleInspection;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const captain = await prisma.user.findUnique({
+      where: { id: captainId },
+    });
+
+    if (!captain) {
+      return { success: false, error: "الكابتن غير موجود في النظام" };
+    }
+
+    const effectivePlate = (
+      vehiclePlate ||
+      captain.assignedVehiclePlate ||
+      "ا ص ل 7223"
+    ).trim();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const allPassedData = {
+      fuelGauge: true,
+      tempGauge: true,
+      oilPressure: true,
+      checkEngine: true,
+      absLight: true,
+      warningLights: true,
+      tires: true,
+      headlights: true,
+      signals: true,
+      mirrors: true,
+      noLeaks: true,
+      fireExtinguisher: true,
+      warningTriangle: true,
+      firstAidKit: true,
+      glassHammer: true,
+      seatBelts: true,
+      driverDeclared: true,
+      notes:
+        customNotes?.trim() ||
+        "تم الفحص والاعتماد المباشر من قبل إدارة العمليات (اجتياز كامل الفحص التشغيلي)",
+      vehiclePlate: effectivePlate,
+    };
+
+    // Check if captain already has an inspection today
+    const existingToday = await prisma.vehicleInspection.findFirst({
+      where: {
+        captainId,
+        createdAt: { gte: today },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    let savedRecord;
+
+    if (existingToday) {
+      savedRecord = await prisma.vehicleInspection.update({
+        where: { id: existingToday.id },
+        data: {
+          ...allPassedData,
+          inspectionDate: new Date(),
+        },
+        include: {
+          captain: { select: { name: true } },
+        },
+      });
+    } else {
+      savedRecord = await prisma.vehicleInspection.create({
+        data: {
+          captainId,
+          ...allPassedData,
+          inspectionDate: new Date(),
+        },
+        include: {
+          captain: { select: { name: true } },
+        },
+      });
+    }
+
+    return {
+      success: true,
+      inspection: mapPrismaToInspection(savedRecord),
+      message: `تم إتمام وتوثيق الفحص المباشر للكابتن ${captain.name} بنجاح`,
+    };
+  } catch (error) {
+    console.error("directPassInspection error:", error);
+    return { success: false, error: "حدث خطأ أثناء إجراء الفحص المباشر" };
+  }
+}
+
+/**
+ * Get full history of inspections with filter options
+ */
+export async function getAllInspectionsList(params?: {
+  search?: string;
+  captainId?: string;
+  limit?: number;
+}): Promise<{
+  success: boolean;
+  inspections?: InspectionWithMeta[];
+  error?: string;
+}> {
+  try {
+    const limit = params?.limit || 100;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {};
+
+    if (params?.captainId) {
+      where.captainId = params.captainId;
+    }
+
+    if (params?.search) {
+      const q = params.search.trim();
+      where.OR = [
+        { vehiclePlate: { contains: q } },
+        { captain: { name: { contains: q } } },
+        { notes: { contains: q } },
+      ];
+    }
+
+    const records = await prisma.vehicleInspection.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        captain: {
+          select: {
+            name: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        },
+        _count: {
+          select: { contracts: true },
+        },
+      },
+    });
+
+    const inspections: InspectionWithMeta[] = records.map((r) => ({
+      ...mapPrismaToInspection(r),
+      captainPhone: r.captain?.phone,
+      captainAvatar: r.captain?.avatarUrl,
+      contractCount: r._count.contracts,
+    }));
+
+    return {
+      success: true,
+      inspections,
+    };
+  } catch (error) {
+    console.error("getAllInspectionsList error:", error);
+    return { success: false, error: "تعذر جلب سجل الفحوصات التشغيلية" };
+  }
+}
+
+/**
+ * Delete inspection record
+ */
+export async function deleteInspection(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    // Unlink any contracts referencing this inspection first
+    await prisma.contract.updateMany({
+      where: { inspectionId: id },
+      data: { inspectionId: null },
+    });
+
+    await prisma.vehicleInspection.delete({
+      where: { id },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("deleteInspection error:", error);
+    return { success: false, error: "تعذر حذف سجل الفحص التشغيلي" };
+  }
+}
+
+/**
+ * Get inspection details by ID
+ */
+export async function getInspectionById(id: string): Promise<{
+  success: boolean;
+  inspection?: VehicleInspection & { contracts?: { id: string; referenceNumber: string }[] };
+  error?: string;
+}> {
+  try {
+    const record = await prisma.vehicleInspection.findUnique({
+      where: { id },
+      include: {
+        captain: { select: { name: true } },
+        contracts: { select: { id: true, referenceNumber: true } },
+      },
+    });
+
+    if (!record) {
+      return { success: false, error: "سجل الفحص غير موجود" };
+    }
+
+    return {
+      success: true,
+      inspection: {
+        ...mapPrismaToInspection(record),
+        contracts: record.contracts,
+      },
+    };
+  } catch (error) {
+    console.error("getInspectionById error:", error);
+    return { success: false, error: "تعذر جلب تفاصيل الفحص" };
+  }
+}

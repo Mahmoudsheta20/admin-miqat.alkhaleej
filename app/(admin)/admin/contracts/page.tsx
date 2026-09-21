@@ -24,12 +24,19 @@ import {
   Copy,
   Check,
   Phone,
+  Edit2,
+  Trash2,
 } from "lucide-react";
-import { getContracts, syncAllContractsToStorageAction } from "@/app/_actions/contract";
+import {
+  getContracts,
+  syncAllContractsToStorageAction,
+  deleteContract,
+} from "@/app/_actions/contract";
 import { getCaptains } from "@/app/_actions/captain";
 import { Contract, OperationType, SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import { formatOfficialDate } from "@/lib/contractConstants";
 
 export default function AdminContractsPage() {
@@ -61,6 +68,33 @@ export default function AdminContractsPage() {
 
   // Quick copy reference state
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
+
+  // Deletion states
+  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!contractToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteContract(contractToDelete.id);
+      setIsDeleting(false);
+      if (res.success) {
+        setContracts((prev) => prev.filter((c) => c.id !== contractToDelete.id));
+        if (selectedContract?.id === contractToDelete.id) {
+          setSelectedContract(null);
+        }
+        setSyncStatus(`تم حذف العقد ${contractToDelete.referenceNumber} بنجاح`);
+        setContractToDelete(null);
+      } else {
+        alert(res.error || "فشل حذف العقد");
+      }
+    } catch (err) {
+      setIsDeleting(false);
+      console.error("Delete contract error:", err);
+      alert("حدث خطأ أثناء محاولة حذف العقد");
+    }
+  };
 
   const handleCopyRef = (ref: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -924,18 +958,46 @@ export default function AdminContractsPage() {
                             <button
                               type="button"
                               onClick={() => setSelectedContract(c)}
-                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 transition"
+                              className="p-1.5 rounded-xl border theme-card hover:border-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition"
                               title="عرض تفاصيل العقد والفحص"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
+
+                            {/* Edit Contract */}
+                            <Link
+                              href={`/admin/contracts/${c.id}/edit`}
+                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
+                              title="تعديل بيانات العقد"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Link>
+
+                            {/* Delete Contract */}
+                            <button
+                              type="button"
+                              onClick={() => setContractToDelete(c)}
+                              className="p-1.5 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
+                              title="حذف العقد"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+
+                            {/* Direct Download from Server */}
+                            <a
+                              href={`/api/contracts/pdf?contractId=${c.id}&download=1`}
+                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
+                              title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
 
                             {/* PDF Preview & Download */}
                             <button
                               type="button"
                               onClick={() => openPdf(c)}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs hover:shadow-md active:scale-95"
-                              title="تحميل وطباعة العقد الرسمي"
+                              title="معاينة وطباعة العقد الرسمي"
                             >
                               <FileText className="w-3.5 h-3.5" />
                               <span>PDF</span>
@@ -1058,11 +1120,33 @@ export default function AdminContractsPage() {
                         </a>
                         <button
                           onClick={() => setSelectedContract(c)}
-                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 transition"
+                          className="p-2 rounded-xl border theme-card hover:border-slate-400 text-slate-600 dark:text-slate-400 transition"
                           title="عرض تفاصيل العقد والفحص"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
+                        <Link
+                          href={`/admin/contracts/${c.id}/edit`}
+                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
+                          title="تعديل بيانات العقد"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setContractToDelete(c)}
+                          className="p-2 rounded-xl border theme-card hover:border-rose-500 text-slate-600 dark:text-slate-400 hover:text-rose-600 transition"
+                          title="حذف العقد"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <a
+                          href={`/api/contracts/pdf?contractId=${c.id}&download=1`}
+                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
+                          title="توليد وتنزيل PDF مباشرة من السيرفر"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
                         <button
                           onClick={() => openPdf(c)}
                           className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
@@ -1241,10 +1325,10 @@ export default function AdminContractsPage() {
                   <div className="space-y-2 text-xs">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
                       <div>
-                        <span className="text-slate-400 text-[10px] block">تاريخ ووقت الفحص</span>
+                        <span className="text-slate-400 text-[10px] block">تاريخ الفحص</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                           {selectedContract.inspection.inspectionDate
-                            ? `${new Date(selectedContract.inspection.inspectionDate).toLocaleDateString("en-GB")} • ${new Date(selectedContract.inspection.inspectionDate).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                            ? new Date(selectedContract.inspection.inspectionDate).toLocaleDateString("en-GB")
                             : "—"}
                         </span>
                       </div>
@@ -1376,11 +1460,39 @@ export default function AdminContractsPage() {
                   صفحة التحقق بالـ QR
                 </a>
                 <button
+                  type="button"
+                  onClick={() => {
+                    const c = selectedContract;
+                    setSelectedContract(null);
+                    setContractToDelete(c);
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-rose-500 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition"
+                  title="حذف العقد نهائياً"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>حذف العقد</span>
+                </button>
+                <Link
+                  href={`/admin/contracts/${selectedContract.id}/edit`}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>تعديل العقد</span>
+                </Link>
+                <a
+                  href={`/api/contracts/pdf?contractId=${selectedContract.id}&download=1`}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 hover:text-amber-600 transition"
+                  title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
+                >
+                  <Download className="w-3.5 h-3.5 text-amber-500" />
+                  <span>تنزيل من السيرفر</span>
+                </a>
+                <button
                   onClick={() => openPdf(selectedContract)}
                   className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-sm"
                 >
                   <FileText className="w-4 h-4" />
-                  استعراض وتحميل PDF
+                  استعراض الـ PDF
                 </button>
               </div>
             </div>
@@ -1397,6 +1509,24 @@ export default function AdminContractsPage() {
           referenceNumber={previewPdfRef}
         />
       )}
+
+      {/* Confirm Deletion Dialog */}
+      <ConfirmDialog
+        isOpen={!!contractToDelete}
+        title="تأكيد حذف العقد"
+        message={
+          contractToDelete
+            ? `هل أنت متأكد من رغبتك في حذف العقد رقم (${contractToDelete.referenceNumber}) نهائياً؟ سيتم حذف بيانات الركاب وملف الـ PDF المرتبط به ولا يمكن التراجع عن هذا الإجراء.`
+            : ""
+        }
+        confirmLabel={isDeleting ? "جاري الحذف..." : "نعم، احذف العقد"}
+        cancelLabel="إلغاء"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          if (!isDeleting) setContractToDelete(null);
+        }}
+      />
     </div>
   );
 }
