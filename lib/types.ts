@@ -12,6 +12,7 @@ export interface SystemUser {
   assignedVehiclePlate?: string | null;
   avatarUrl?: string | null;
   active: boolean;
+  mustChangePassword?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -77,6 +78,26 @@ export interface VehicleInspection {
   createdAt?: string | Date;
 }
 
+export type ContractStatus =
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "ACTIVE"
+  | "EXPIRED"
+  | "CANCELLED";
+
+export interface SystemNotification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  contractId?: string | null;
+  isRead: boolean;
+  createdAt: string | Date;
+  readAt?: string | Date | null;
+}
+
 export interface Contract {
   id: string;
   referenceNumber: string;
@@ -96,6 +117,8 @@ export interface Contract {
   captain?: SystemUser;
   vehiclePlate: string;
   pdfPath?: string | null;
+  status?: ContractStatus;
+  reviewNotes?: string | null;
   createdAt: string | Date;
   updatedAt?: string | Date;
   passengers?: Passenger[];

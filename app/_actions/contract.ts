@@ -3,7 +3,9 @@
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
-import { Contract, OperationType } from "@/lib/types";
+import { Contract, OperationType, ContractStatus } from "@/lib/types";
+import { NotificationService } from "@/lib/services/notification.service";
+import { getCurrentSession } from "@/app/_actions/auth";
 import {
   generateAndSaveContractPdf,
   syncAllExistingContractsToStorage,
@@ -131,7 +133,7 @@ export async function submitContract(
         validInspectionId = autoInsp.id;
       }
 
-      // 1. Create the contract
+      // 1. Create the contract with PENDING_REVIEW status
       const contract = await tx.contract.create({
         data: {
           referenceNumber,
@@ -149,6 +151,7 @@ export async function submitContract(
           inspectionId: validInspectionId,
           captainId: captainId!,
           vehiclePlate: cleanStr(formData.vehiclePlate) || "ا ص ل 7223",
+          status: "PENDING_REVIEW",
         },
       });
 
@@ -192,6 +195,13 @@ export async function submitContract(
       console.warn("Could not generate PDF immediately upon contract creation:", pdfErr);
     }
 
+    // Trigger non-blocking business notification & Gmail SMTP alert for reviewers
+    try {
+      await NotificationService.notifyContractCreated(result.id);
+    } catch (notifErr) {
+      console.warn("Could not dispatch contract creation notifications:", notifErr);
+    }
+
     return {
       success: true,
       contract: {
@@ -212,6 +222,8 @@ export async function submitContract(
         captainId: result.captainId,
         vehiclePlate: result.vehiclePlate,
         pdfPath: storedPdfPath,
+        status: (result.status as ContractStatus) || "PENDING_REVIEW",
+        reviewNotes: result.reviewNotes,
         createdAt: result.createdAt.toISOString(),
         updatedAt: result.updatedAt.toISOString(),
         passengers: result.passengers.map((p) => ({
@@ -388,6 +400,8 @@ export async function updateContract(
         captainId: result.captainId,
         vehiclePlate: result.vehiclePlate,
         pdfPath: storedPdfPath,
+        status: (result.status as ContractStatus) || "PENDING_REVIEW",
+        reviewNotes: result.reviewNotes,
         createdAt: result.createdAt.toISOString(),
         updatedAt: result.updatedAt.toISOString(),
         passengers: result.passengers.map((p) => ({
@@ -519,6 +533,8 @@ export async function getContracts(filters?: {
       captainId: c.captainId,
       vehiclePlate: c.vehiclePlate,
       pdfPath: c.pdfPath,
+      status: (c.status as ContractStatus) || "PENDING_REVIEW",
+      reviewNotes: c.reviewNotes,
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
       passengers: c.passengers.map((p) => ({
@@ -616,6 +632,8 @@ export async function getContractById(
         captainId: c.captainId,
         vehiclePlate: c.vehiclePlate,
         pdfPath: c.pdfPath,
+        status: (c.status as ContractStatus) || "PENDING_REVIEW",
+        reviewNotes: c.reviewNotes,
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
         passengers: c.passengers.map((p) => ({
@@ -690,3 +708,112 @@ export async function syncAllContractsToStorageAction(): Promise<{
     return { success: false, error };
   }
 }
+
+/**
+ * Update the review status of a contract (Approve / Reject / etc.)
+ * Strictly protected: Only ADMIN can perform review status updates.
+ */
+export async function updateContractStatusAction(params: {
+  contractId: string;
+  status: ContractStatus;
+  reviewNotes?: string;
+}): Promise<{ success: boolean; contract?: Contract; error?: string }> {
+  try {
+    const session = await getCurrentSession();
+    if (!session || session.role !== "ADMIN") {
+      return { success: false, error: "غير مصرح لك بتحديث حالة العقد، الصلاحية محصورة للإدارة" };
+    }
+
+    const cleanId = cleanStr(params.contractId);
+    if (!cleanId) return { success: false, error: "معرف العقد مطلوب" };
+
+    const existing = await prisma.contract.findUnique({
+      where: { id: cleanId },
+      include: { captain: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "العقد غير موجود في النظام" };
+    }
+
+    const updated = await prisma.contract.update({
+      where: { id: cleanId },
+      data: {
+        status: params.status,
+        reviewNotes: cleanStr(params.reviewNotes),
+      },
+      include: {
+        passengers: { orderBy: { sequence: "asc" } },
+        captain: true,
+        inspection: true,
+      },
+    });
+
+    // Notify captain of status change if approved/rejected
+    if (params.status === "APPROVED" || params.status === "REJECTED") {
+      try {
+        await NotificationService.notifyContractStatusChanged({
+          contractId: updated.id,
+          newStatus: params.status,
+          targetUserId: updated.captainId,
+          notes: cleanStr(params.reviewNotes) || undefined,
+        });
+      } catch (notifErr) {
+        console.warn("Status change notification warning:", notifErr);
+      }
+    }
+
+    return {
+      success: true,
+      contract: {
+        id: updated.id,
+        referenceNumber: updated.referenceNumber,
+        operationType: updated.operationType as OperationType,
+        origin: updated.origin,
+        destination: updated.destination,
+        tripDate: updated.tripDate,
+        tripTime: updated.tripTime,
+        flightCarrier: updated.flightCarrier,
+        flightNumber: updated.flightNumber,
+        customerName: updated.customerName,
+        customerPhone: updated.customerPhone,
+        notes: updated.notes,
+        issueDate: updated.issueDate,
+        inspectionId: updated.inspectionId,
+        captainId: updated.captainId,
+        vehiclePlate: updated.vehiclePlate,
+        pdfPath: updated.pdfPath,
+        status: updated.status as ContractStatus,
+        reviewNotes: updated.reviewNotes,
+        createdAt: updated.createdAt.toISOString(),
+        updatedAt: updated.updatedAt.toISOString(),
+        passengers: updated.passengers.map((p) => ({
+          id: p.id,
+          sequence: p.sequence,
+          name: p.name,
+          nationality: p.nationality,
+          idNumber: p.idNumber,
+          contractId: p.contractId,
+        })),
+        captain: updated.captain
+          ? {
+              id: updated.captain.id,
+              name: updated.captain.name,
+              email: updated.captain.email,
+              role: updated.captain.role as "CAPTAIN",
+              phone: updated.captain.phone,
+              nationalId: updated.captain.nationalId,
+              licenseNumber: updated.captain.licenseNumber,
+              licenseExpiry: updated.captain.licenseExpiry,
+              assignedVehiclePlate: updated.captain.assignedVehiclePlate,
+              active: updated.captain.active,
+            }
+          : undefined,
+      },
+    };
+  } catch (error) {
+    console.error("updateContractStatusAction error:", error);
+    return { success: false, error: "فشل تحديث حالة العقد" };
+  }
+}
+

@@ -2,12 +2,31 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { UserRole, SystemUser } from "./types";
-import { loginAction, quickLoginAction, logoutAction } from "@/app/_actions/auth";
+import { loginAction, quickLoginAction, logoutAction, completePasswordChangeAction } from "@/app/_actions/auth";
 
 interface AuthContextType {
   user: SystemUser | null;
   isLoading: boolean;
-  login: (email: string, role?: UserRole, rememberMe?: boolean) => Promise<boolean>;
+  login: (
+    email: string,
+    password?: string,
+    rememberMe?: boolean
+  ) => Promise<{
+    success: boolean;
+    mustChangePassword?: boolean;
+    user?: SystemUser;
+    error?: string;
+  }>;
+  completePasswordChange: (
+    userId: string,
+    newPassword: string,
+    confirmPassword: string,
+    rememberMe?: boolean
+  ) => Promise<{
+    success: boolean;
+    user?: SystemUser;
+    error?: string;
+  }>;
   quickLogin: (role: UserRole, rememberMe?: boolean) => Promise<boolean>;
   logout: () => Promise<void>;
   updateUser: (userData: SystemUser) => void;
@@ -54,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: userData.role,
         nationalId: userData.nationalId,
         assignedVehiclePlate: userData.assignedVehiclePlate,
-        // avatarUrl removed from cookie to prevent 4KB overflow
+        mustChangePassword: userData.mustChangePassword,
       })
     );
     const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
@@ -68,24 +87,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (
     email: string,
-    explicitRole?: UserRole,
+    password?: string,
     rememberMe: boolean = true
-  ): Promise<boolean> => {
-    const res = await loginAction(email, rememberMe);
+  ): Promise<{
+    success: boolean;
+    mustChangePassword?: boolean;
+    user?: SystemUser;
+    error?: string;
+  }> => {
+    const res = await loginAction(email, password, rememberMe);
+    if (res.success && res.user && !res.mustChangePassword) {
+      setUser(res.user);
+      saveUserSession(res.user, rememberMe);
+    }
+    return res;
+  };
+
+  const completePasswordChange = async (
+    userId: string,
+    newPassword: string,
+    confirmPassword: string,
+    rememberMe: boolean = true
+  ): Promise<{
+    success: boolean;
+    user?: SystemUser;
+    error?: string;
+  }> => {
+    const res = await completePasswordChangeAction({
+      userId,
+      newPassword,
+      confirmPassword,
+      rememberMe,
+    });
     if (res.success && res.user) {
       setUser(res.user);
       saveUserSession(res.user, rememberMe);
-      return true;
     }
-    if (explicitRole) {
-      const qRes = await quickLoginAction(explicitRole, rememberMe);
-      if (qRes.success && qRes.user) {
-        setUser(qRes.user);
-        saveUserSession(qRes.user, rememberMe);
-        return true;
-      }
-    }
-    return false;
+    return res;
   };
 
   const quickLogin = async (
@@ -93,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     rememberMe: boolean = true
   ): Promise<boolean> => {
     const res = await quickLoginAction(role, rememberMe);
-    if (res.success && res.user) {
+    if (res.success && res.user && !res.mustChangePassword) {
       setUser(res.user);
       saveUserSession(res.user, rememberMe);
       return true;
@@ -111,7 +149,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, quickLogin, logout, updateUser }}
+      value={{
+        user,
+        isLoading,
+        login,
+        completePasswordChange,
+        quickLogin,
+        logout,
+        updateUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

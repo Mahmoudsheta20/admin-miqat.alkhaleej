@@ -26,6 +26,7 @@ import {
   Phone,
   Edit2,
   Trash2,
+  ShieldCheck,
 } from "lucide-react";
 import {
   getContracts,
@@ -830,6 +831,23 @@ export default function AdminContractsPage() {
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5 mt-1">
                             <StatusBadge type="operation" status={c.operationType} size="sm" />
+                            {c.status && (
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${
+                                  c.status === "APPROVED"
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                    : c.status === "REJECTED"
+                                    ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                }`}
+                              >
+                                {c.status === "APPROVED"
+                                  ? "معتمد"
+                                  : c.status === "REJECTED"
+                                  ? "مرفوض"
+                                  : "قيد المراجعة"}
+                              </span>
+                            )}
                             {c.flightNumber && (
                               <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono text-[10px] font-bold">
                                 <Plane className="w-2.5 h-2.5 text-blue-500" />
@@ -963,6 +981,15 @@ export default function AdminContractsPage() {
                             >
                               <Eye className="w-4 h-4" />
                             </button>
+
+                            {/* Review & Approve Contract */}
+                            <Link
+                              href={`/admin/contracts/${c.id}`}
+                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
+                              title="مراجعة واعتماد العقد رسمياً"
+                            >
+                              <ShieldCheck className="w-4 h-4 text-amber-500" />
+                            </Link>
 
                             {/* Edit Contract */}
                             <Link
@@ -1125,6 +1152,13 @@ export default function AdminContractsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
+                        <Link
+                          href={`/admin/contracts/${c.id}`}
+                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
+                          title="مراجعة واعتماد العقد"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-amber-500" />
+                        </Link>
                         <Link
                           href={`/admin/contracts/${c.id}/edit`}
                           className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
@@ -1450,6 +1484,13 @@ export default function AdminContractsPage() {
                 إغلاق
               </button>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <Link
+                  href={`/admin/contracts/${selectedContract.id}`}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl gold-gradient-btn text-white transition shadow-xs"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>صفحة المراجعة والاعتماد</span>
+                </Link>
                 <a
                   href={`/verify/contract/${selectedContract.referenceNumber}`}
                   target="_blank"

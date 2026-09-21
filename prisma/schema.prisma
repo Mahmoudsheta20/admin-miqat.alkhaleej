@@ -26,11 +26,21 @@ enum OperationType {
   HAJJ_UMRAH
 }
 
+enum ContractStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
 model User {
   id                   String   @id @default(uuid())
   name                 String
   email                String   @unique
   passwordHash         String?
+  mustChangePassword   Boolean  @default(false)
   role                 Role     @default(CAPTAIN)
   phone                String?
   nationalId           String?  @unique
@@ -38,12 +48,15 @@ model User {
   licenseExpiry        String?
   assignedVehiclePlate String?
   avatarUrl            String?
-  active               Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  active               Boolean   @default(true)
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  contracts   Contract[]
-  inspections VehicleInspection[]
+  contracts     Contract[]
+  inspections   VehicleInspection[]
+  notifications Notification[]
 }
 
 model Vehicle {
@@ -120,10 +133,13 @@ model Contract {
   captain         User               @relation(fields: [captainId], references: [id])
   vehiclePlate    String // denormalized for PDF/display
   pdfPath         String?
+  status          ContractStatus     @default(PENDING_REVIEW)
+  reviewNotes     String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
-  passengers Passenger[]
+  passengers    Passenger[]
+  notifications Notification[]
 }
 
 model Passenger {
@@ -134,4 +150,21 @@ model Passenger {
   idNumber    String   @default("")
   contractId  String
   contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String    @default("CONTRACT_PENDING_REVIEW")
+  title      String
+  message    String
+  contractId String?
+  contract   Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  readAt     DateTime?
+
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

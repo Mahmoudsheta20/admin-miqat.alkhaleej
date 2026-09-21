@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
@@ -17,42 +18,55 @@ import {
   Check,
   Building2,
   FileCheck2,
-  UserCheck,
+  KeyRound,
   ShieldAlert,
+  RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useTheme } from "@/lib/themeContext";
-import { UserRole } from "@/lib/types";
+import { SystemUser } from "@/lib/types";
 
 interface FormErrors {
   email?: string;
   password?: string;
   general?: string;
+  newPassword?: string;
+  confirmPassword?: string;
 }
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, login, quickLogin } = useAuth();
+  const { user, login, completePasswordChange } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  // Form State
-  const [email, setEmail] = useState("admin@miqat.com");
-  const [password, setPassword] = useState("123456");
+  // Form State (No static hardcoded users)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saveSession, setSaveSession] = useState(true);
+
+  // Mandatory Password Change State (When logging in with a temporary password)
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [pendingUser, setPendingUser] = useState<SystemUser | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Validation & UI State
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<{
     email?: boolean;
     password?: boolean;
+    newPassword?: boolean;
+    confirmPassword?: boolean;
   }>({});
   const [loading, setLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // If already logged in, redirect based on role
+  // If already logged in and no password change is needed, redirect based on role
   useEffect(() => {
-    if (user) {
+    if (user && !user.mustChangePassword) {
       if (user.role === "ADMIN") {
         router.push("/admin");
       } else if (user.role === "CAPTAIN") {
@@ -61,7 +75,7 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  // Restore saved session preferences on mount
+  // Restore saved email preference on mount if user checked "Remember Me" previously
   useEffect(() => {
     try {
       const savedEmail = localStorage.getItem("miqat_remembered_email");
@@ -126,7 +140,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleBlur = (field: "email" | "password") => {
+  const handleBlur = (field: "email" | "password" | "newPassword" | "confirmPassword") => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     if (field === "email") {
       const err = validateEmail(email);
@@ -137,6 +151,7 @@ export default function LoginPage() {
     }
   };
 
+  // Step 1: Standard Login Form Submission
   const handleStandardLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -156,9 +171,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const ok = await login(email, undefined, saveSession);
+      const res = await login(email, password, saveSession);
 
-      if (ok) {
+      if (res.success && res.mustChangePassword && res.user) {
+        // User logged in with temporary password -> Switch to mandatory password change step
+        setPendingUser(res.user);
+        setIsChangingPassword(true);
+        setNewPassword("");
+        setConfirmPassword("");
+        setTouched({});
+        setErrors({});
+      } else if (res.success && res.user) {
+        // Normal successful login
         if (saveSession) {
           localStorage.setItem("miqat_remembered_email", email.trim().toLowerCase());
           localStorage.setItem("miqat_save_session", "true");
@@ -168,9 +192,16 @@ export default function LoginPage() {
         }
 
         setLoginSuccess(true);
+        setTimeout(() => {
+          if (res.user?.role === "ADMIN") {
+            router.push("/admin");
+          } else {
+            router.push("/captain");
+          }
+        }, 600);
       } else {
         setErrors({
-          general: "بيانات الدخول غير صحيحة أو الحساب غير مسجل في النظام.",
+          general: res.error || "بيانات الدخول غير صحيحة، يرجى التأكد من البريد وكلمة المرور.",
         });
       }
     } catch {
@@ -182,18 +213,62 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = async (role: UserRole) => {
-    setLoading(true);
+  // Step 2: Mandatory Password Change Submission
+  const handlePasswordChangeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingUser) return;
+
+    if (!newPassword || newPassword.length < 6) {
+      setErrors({ newPassword: "كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف أو أرقام" });
+      setTouched({ newPassword: true });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrors({ confirmPassword: "تأكيد كلمة المرور غير متطابق مع كلمة المرور الجديدة" });
+      setTouched({ confirmPassword: true });
+      return;
+    }
+
     setErrors({});
-    const ok = await quickLogin(role, saveSession);
-    if (ok) {
-      setLoginSuccess(true);
-    } else {
+    setLoading(true);
+
+    try {
+      const res = await completePasswordChange(
+        pendingUser.id,
+        newPassword,
+        confirmPassword,
+        saveSession
+      );
+
+      if (res.success && res.user) {
+        setLoginSuccess(true);
+        setTimeout(() => {
+          if (res.user?.role === "ADMIN") {
+            router.push("/admin");
+          } else {
+            router.push("/captain");
+          }
+        }, 800);
+      } else {
+        setErrors({
+          general: res.error || "تعذر حفظ كلمة المرور الجديدة، يرجى المحاولة ثانية.",
+        });
+      }
+    } catch {
       setErrors({
-        general: `تعذر الدخول السريع بحساب ${role === "ADMIN" ? "المدير العام" : "الكابتن"}`,
+        general: "حدث خطأ في حفظ كلمة المرور الجديدة.",
       });
+    } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setPendingUser(null);
+    setPassword("");
+    setErrors({});
   };
 
   return (
@@ -240,7 +315,7 @@ export default function LoginPage() {
       {/* Main Content Grid */}
       <main className="max-w-6xl w-full mx-auto my-auto py-6 sm:py-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Column: Brand Overview */}
+          {/* Left Column: Brand Overview & Official Credentials */}
           <section className="lg:col-span-5 space-y-6 text-right">
             <div className="space-y-3">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-[1.3]">
@@ -251,7 +326,7 @@ export default function LoginPage() {
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                هندسة برمجية متطورة بنظام الصلاحيتين المزدوج (المدير العام والكابتن). إدارة الأسطول، الفحص اليومي الإلزامي، وتوثيق عقود النقل البري المعتمدة وفقاً للائحة هيئة النقل.
+                بوابة الدخول المركزية الموحدة لإدارة الأسطول، الفحص اليومي الإلزامي للكباتن، وتوثيق عقود النقل البري المعتمدة وفقاً للائحة الهيئة العامة للنقل.
               </p>
             </div>
 
@@ -290,29 +365,42 @@ export default function LoginPage() {
                   <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  إصدار فوري للعقد الموحد (3 صفحات مع كشف الركاب والفحص)
+                  توثيق فوري للعقود وفحص المركبات التشغيلي اليومي
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Right Column: Login Card & Quick Roles */}
+          {/* Right Column: Secure Login / Change Password Card */}
           <section className="lg:col-span-7">
             <div className="p-5 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/50 space-y-6">
+              
               {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                    تسجيل الدخول للنظام
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    {isChangingPassword ? (
+                      <>
+                        <KeyRound className="w-5 h-5 text-amber-500" />
+                        تعيين كلمة مرور جديدة للحساب
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5 text-amber-500" />
+                        تسجيل الدخول للنظام
+                      </>
+                    )}
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
-                    أدخل بيانات حسابك المعتمد أو استخدم الدخول السريع
+                    {isChangingPassword
+                      ? "يجب تغيير كلمة المرور المؤقتة لتعيين كلمة مرور خاصة بك قبل المتابعة"
+                      : "أدخل البريد الإلكتروني وكلمة المرور المعتمدة للولوج إلى مساحة العمل"}
                   </p>
                 </div>
 
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>اتصال مشفر</span>
+                  <span>اتصال آمن ومشفر</span>
                 </div>
               </div>
 
@@ -320,7 +408,7 @@ export default function LoginPage() {
               {errors.general && (
                 <div
                   role="alert"
-                  className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2.5"
+                  className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2.5 animate-in fade-in"
                 >
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
                   <div className="flex-1">{errors.general}</div>
@@ -331,183 +419,290 @@ export default function LoginPage() {
               {loginSuccess && (
                 <div
                   role="status"
-                  className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2.5"
+                  className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2.5 animate-in fade-in"
                 >
                   <Check className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                  <span>تم التحقق بنجاح! جاري التوجيه لمساحة العمل...</span>
+                  <span>
+                    {isChangingPassword
+                      ? "تم تعيين كلمة المرور بنجاح! جاري التوجيه إلى مساحة العمل..."
+                      : "تم التحقق بنجاح! جاري التوجيه لمساحة العمل..."}
+                  </span>
                 </div>
               )}
 
-              {/* Quick Login Role Cards */}
-              <div className="space-y-2">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  دخول سريع حسب الصلاحية:
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin("ADMIN")}
-                    disabled={loading || loginSuccess}
-                    className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition text-right group flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="font-bold text-xs text-amber-700 dark:text-amber-400">
-                        المدير العام (Main Admin)
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono mt-0.5">
-                        admin@miqat.com
-                      </div>
+              {/* VIEW 1: MANDATORY PASSWORD CHANGE FORM */}
+              {isChangingPassword && pendingUser ? (
+                <form onSubmit={handlePasswordChangeSubmit} noValidate className="space-y-4 pt-1">
+                  {/* Notice Pill */}
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs space-y-1">
+                    <div className="flex items-center gap-2 font-black">
+                      <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>تنبيه أمني إلزامي ({pendingUser.name})</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-amber-500 group-hover:-translate-x-1 transition" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin("CAPTAIN")}
-                    disabled={loading || loginSuccess}
-                    className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 transition text-right group flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="font-bold text-xs text-emerald-700 dark:text-emerald-400">
-                        كابتن الميدان (Captain)
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono mt-0.5">
-                        captain@miqat.com
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-emerald-500 group-hover:-translate-x-1 transition" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Standard Login Form */}
-              <form onSubmit={handleStandardLogin} noValidate className="space-y-4 pt-2 border-t theme-border">
-                {/* Email Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="email"
-                      className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
-                    >
-                      <Mail className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
-                      <span>البريد الإلكتروني</span>
-                    </label>
-                  </div>
-
-                  <div
-                    className={`relative flex items-center rounded-xl border transition-all duration-200 ${
-                      errors.email && touched.email
-                        ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
-                        : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
-                    }`}
-                  >
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      dir="ltr"
-                      value={email}
-                      onChange={handleEmailChange}
-                      onBlur={() => handleBlur("email")}
-                      placeholder="admin@miqat.com"
-                      className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
-                    />
-                  </div>
-
-                  {errors.email && touched.email && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{errors.email}</span>
+                    <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                      لقد سجلت الدخول باستخدام كلمة مرور مؤقتة ({pendingUser.email}). يُرجى إنشاء كلمة مرور جديدة خاصة بك تتكون من 6 خانات على الأقل للمتابعة.
                     </p>
-                  )}
-                </div>
-
-                {/* Password Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="current-password"
-                      className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
-                    >
-                      <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
-                      <span>كلمة المرور</span>
-                    </label>
-                    <span className="text-[11px] text-slate-400 font-mono">(123456)</span>
                   </div>
 
-                  <div
-                    className={`relative flex items-center rounded-xl border transition-all duration-200 ${
-                      errors.password && touched.password
-                        ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
-                        : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
-                    }`}
-                  >
-                    <input
-                      id="current-password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      dir="ltr"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      onBlur={() => handleBlur("password")}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
-                    />
+                  {/* New Password Input */}
+                  <div>
+                    <label
+                      htmlFor="new-password"
+                      className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
+                    >
+                      كلمة المرور الجديدة <span className="text-rose-500">*</span>
+                    </label>
+                    <div
+                      className={`relative flex items-center rounded-xl border transition-all duration-200 ${
+                        errors.newPassword && touched.newPassword
+                          ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
+                          : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
+                      }`}
+                    >
+                      <input
+                        id="new-password"
+                        name="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        required
+                        dir="ltr"
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          if (errors.newPassword) setErrors((prev) => ({ ...prev, newPassword: undefined }));
+                        }}
+                        onBlur={() => handleBlur("newPassword")}
+                        placeholder="أدخل 6 أحرف/أرقام على الأقل"
+                        className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 transition"
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.newPassword && (
+                      <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.newPassword}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Confirm New Password Input */}
+                  <div>
+                    <label
+                      htmlFor="confirm-password"
+                      className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
+                    >
+                      تأكيد كلمة المرور الجديدة <span className="text-rose-500">*</span>
+                    </label>
+                    <div
+                      className={`relative flex items-center rounded-xl border transition-all duration-200 ${
+                        errors.confirmPassword && touched.confirmPassword
+                          ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
+                          : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
+                      }`}
+                    >
+                      <input
+                        id="confirm-password"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        dir="ltr"
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                        }}
+                        onBlur={() => handleBlur("confirmPassword")}
+                        placeholder="أعد إدخال كلمة المرور للتأكيد"
+                        className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 transition"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.confirmPassword}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-2 space-y-2">
+                    <button
+                      type="submit"
+                      disabled={loading || loginSuccess}
+                      className="w-full py-3 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-sm font-black shadow-md transition disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>جاري حفظ كلمة المرور...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>حفظ كلمة المرور والدخول للنظام</span>
+                        </>
+                      )}
+                    </button>
 
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 transition"
+                      onClick={handleCancelPasswordChange}
+                      disabled={loading}
+                      className="w-full py-2.5 rounded-xl border theme-border text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-1.5"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      الرجوع لشاشة تسجيل الدخول
                     </button>
                   </div>
+                </form>
+              ) : (
+                /* VIEW 2: STANDARD LOGIN FORM (NO STATIC/HARDCODED DEFAULTS) */
+                <form onSubmit={handleStandardLogin} noValidate className="space-y-4 pt-1">
+                  {/* Email Input */}
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
+                        البريد الإلكتروني المعتمد
+                      </span>
+                    </label>
 
-                  {errors.password && touched.password && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{errors.password}</span>
-                    </p>
-                  )}
-                </div>
+                    <div
+                      className={`relative flex items-center rounded-xl border transition-all duration-200 ${
+                        errors.email && touched.email
+                          ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
+                          : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
+                      }`}
+                    >
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        dir="ltr"
+                        value={email}
+                        onChange={handleEmailChange}
+                        onBlur={() => handleBlur("email")}
+                        placeholder="example@miqat.com"
+                        className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      />
+                    </div>
 
-                {/* Save Session */}
-                <div className="flex items-center justify-between pt-1">
-                  <label htmlFor="save-session" className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      id="save-session"
-                      checked={saveSession}
-                      onChange={(e) => setSaveSession(e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-500"
-                    />
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      حفظ تسجيل الدخول على هذا الجهاز
-                    </span>
-                  </label>
-                </div>
+                    {errors.email && touched.email && (
+                      <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.email}</span>
+                      </p>
+                    )}
+                  </div>
 
-                {/* Submit Action */}
-                <button
-                  type="submit"
-                  disabled={loading || loginSuccess}
-                  className="w-full py-3 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-sm font-black shadow-md transition disabled:opacity-50 cursor-pointer active:scale-[0.99]"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>جاري التحقق والولوج...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>تسجيل الدخول</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
+                  {/* Password Input */}
+                  <div>
+                    <label
+                      htmlFor="current-password"
+                      className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
+                        كلمة المرور
+                      </span>
+                    </label>
+
+                    <div
+                      className={`relative flex items-center rounded-xl border transition-all duration-200 ${
+                        errors.password && touched.password
+                          ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
+                          : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
+                      }`}
+                    >
+                      <input
+                        id="current-password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        dir="ltr"
+                        value={password}
+                        onChange={handlePasswordChange}
+                        onBlur={() => handleBlur("password")}
+                        placeholder="••••••••"
+                        className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 transition"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {errors.password && touched.password && (
+                      <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.password}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Save Session & Forgot Password */}
+                  <div className="flex items-center justify-between pt-1">
+                    <label htmlFor="save-session" className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        id="save-session"
+                        checked={saveSession}
+                        onChange={(e) => setSaveSession(e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-500"
+                      />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        تذكرني على هذا الجهاز
+                      </span>
+                    </label>
+
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition"
+                    >
+                      نسيت كلمة المرور؟
+                    </Link>
+                  </div>
+
+                  {/* Submit Action */}
+                  <button
+                    type="submit"
+                    disabled={loading || loginSuccess}
+                    className="w-full py-3 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-sm font-black shadow-md transition disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>جاري التحقق والولوج...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>تسجيل الدخول</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
             </div>
           </section>
         </div>

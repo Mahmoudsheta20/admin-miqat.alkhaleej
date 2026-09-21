@@ -16,9 +16,11 @@ import {
   ChevronLeft,
   X,
   Shield,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { UserRole, SystemUser } from "@/lib/types";
+import { isSuperAdmin } from "@/lib/adminConstants";
 
 interface NavItem {
   href: string;
@@ -27,6 +29,7 @@ interface NavItem {
   badge?: string;
   badgeColor?: string;
   roles: UserRole[];
+  superAdminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -36,6 +39,15 @@ const NAV_ITEMS: NavItem[] = [
     label: "لوحة التحكم",
     icon: <LayoutDashboard className="w-4 h-4" />,
     roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/admins",
+    label: "إدارة المسؤولين",
+    icon: <ShieldCheck className="w-4 h-4" />,
+    badge: "خاص",
+    badgeColor: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30",
+    roles: ["ADMIN"],
+    superAdminOnly: true,
   },
   {
     href: "/admin/contracts/new",
@@ -222,15 +234,28 @@ interface SidebarFooterProps {
 }
 
 function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
+  const isSuper = user?.role === "ADMIN" && isSuperAdmin(user?.email);
+
+  const roleTitle =
+    user?.role === "ADMIN"
+      ? isSuper
+        ? "المدير العام الأساسي"
+        : "مسؤول إداري"
+      : "كابتن معتمد";
+
   return (
     <div className="p-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-2">
       {user && (
         <>
           {!collapsed ? (
             <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70 flex items-center gap-2.5 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs shrink-0 border border-amber-500/20">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                isSuper
+                  ? "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20"
+                  : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
+              }`}>
                 {user.role === "ADMIN" ? (
-                  <Shield className="w-4 h-4" />
+                  isSuper ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />
                 ) : (
                   <Car className="w-4 h-4" />
                 )}
@@ -239,18 +264,26 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
                 <p className="text-xs font-black text-slate-900 dark:text-white truncate">
                   {user.name}
                 </p>
-                <span className="inline-block text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded mt-0.5">
-                  {user.role === "ADMIN" ? "المدير العام" : "كابتن معتمد"}
+                <span className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
+                  isSuper
+                    ? "text-purple-700 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20"
+                    : "text-amber-700 dark:text-amber-400 bg-amber-500/10"
+                }`}>
+                  {roleTitle}
                 </span>
               </div>
             </div>
           ) : (
             <div
-              className="w-10 h-10 mx-auto rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs shrink-0 border border-amber-500/20"
-              title={`${user.name} (${user.role === "ADMIN" ? "المدير العام" : "كابتن معتمد"})`}
+              className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                isSuper
+                  ? "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20"
+                  : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
+              }`}
+              title={`${user.name} (${roleTitle})`}
             >
               {user.role === "ADMIN" ? (
-                <Shield className="w-4 h-4" />
+                isSuper ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />
               ) : (
                 <Car className="w-4 h-4" />
               )}
@@ -298,9 +331,14 @@ export default function Sidebar({
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const filteredItems = NAV_ITEMS.filter(
-    (item) => user && item.roles.includes(user.role)
-  );
+  const isSuper = isSuperAdmin(user?.email);
+
+  const filteredItems = NAV_ITEMS.filter((item) => {
+    if (!user) return false;
+    if (!item.roles.includes(user.role)) return false;
+    if (item.superAdminOnly && !isSuper) return false;
+    return true;
+  });
 
   const homePath = user?.role === "ADMIN" ? "/admin" : "/captain";
 

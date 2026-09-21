@@ -17,12 +17,16 @@ import {
   RefreshCw,
   X,
   FileCheck,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react";
 import {
   getCaptains,
   createCaptain,
   updateCaptain,
   deleteCaptain,
+  resetCaptainTemporaryPassword,
   CaptainFormData,
 } from "@/app/_actions/captain";
 import { SystemUser } from "@/lib/types";
@@ -43,6 +47,16 @@ export default function CaptainsManagementPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Temporary password display modal
+  const [tempPasswordModal, setTempPasswordModal] = useState<{
+    open: boolean;
+    captainName: string;
+    email: string;
+    tempPassword: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [isResettingId, setIsResettingId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<CaptainFormData>({
@@ -119,15 +133,42 @@ export default function CaptainsManagementPage() {
       }
     } else {
       const res = await createCaptain(formData);
-      if (res.success) {
+      if (res.success && res.captain) {
         setIsAddModalOpen(false);
         await loadCaptains();
+        if (res.temporaryPassword) {
+          setTempPasswordModal({
+            open: true,
+            captainName: res.captain.name,
+            email: res.captain.email,
+            tempPassword: res.temporaryPassword,
+          });
+        }
       } else {
         setFormError(res.error || "فشل الإضافة");
       }
     }
 
     setIsSubmitting(false);
+  };
+
+  const handleResetPassword = async (c: CaptainItem) => {
+    setIsResettingId(c.id);
+    try {
+      const res = await resetCaptainTemporaryPassword(c.id);
+      if (res.success && res.temporaryPassword) {
+        setTempPasswordModal({
+          open: true,
+          captainName: c.name,
+          email: c.email,
+          tempPassword: res.temporaryPassword,
+        });
+      } else {
+        alert(res.error || "تعذر توليد كلمة المرور المؤقتة");
+      }
+    } finally {
+      setIsResettingId(null);
+    }
   };
 
   const handleDelete = async () => {
@@ -315,6 +356,14 @@ export default function CaptainsManagementPage() {
                       <td className="px-5 py-4 text-left">
                         <div className="inline-flex items-center gap-1.5">
                           <button
+                            onClick={() => handleResetPassword(c)}
+                            disabled={isResettingId === c.id}
+                            className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 transition"
+                            title="توليد كلمة مرور مؤقتة جديدة للكابتن"
+                          >
+                            <KeyRound className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`} />
+                          </button>
+                          <button
                             onClick={() => openEditModal(c)}
                             className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 transition"
                             title="تعديل بيانات الكابتن"
@@ -413,6 +462,15 @@ export default function CaptainsManagementPage() {
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 pt-1">
                     <button
+                      onClick={() => handleResetPassword(c)}
+                      disabled={isResettingId === c.id}
+                      className="px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold transition text-xs flex items-center gap-1.5"
+                      title="توليد كلمة مرور مؤقتة"
+                    >
+                      <KeyRound className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`} />
+                      <span>كلمة مؤقتة</span>
+                    </button>
+                    <button
                       onClick={() => openEditModal(c)}
                       className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
                     >
@@ -421,7 +479,7 @@ export default function CaptainsManagementPage() {
                     </button>
                     <button
                       onClick={() => setDeleteId(c.id)}
-                      className="px-3.5 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-xs"
+                      className="px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-xs"
                       title="حذف / تعطيل الكابتن"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -605,6 +663,101 @@ export default function CaptainsManagementPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
       />
+
+      {/* Temporary Password Display Modal */}
+      {tempPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="theme-card w-full max-w-md rounded-3xl border theme-border shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b theme-border pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    كلمة المرور المؤقتة للحساب
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {tempPasswordModal.captainName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setTempPasswordModal(null);
+                  setCopied(false);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+              <p className="font-bold">يرجى تزويد الكابتن ببيانات الدخول التالية:</p>
+              <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border theme-border flex items-center justify-between">
+                <span className="text-slate-500 text-[11px]">البريد الإلكتروني:</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white" dir="ltr">
+                  {tempPasswordModal.email}
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-amber-500/40 flex items-center justify-between">
+                <div>
+                  <span className="text-slate-400 text-[10px] block font-bold">كلمة المرور المؤقتة:</span>
+                  <span className="font-mono text-xl font-black text-amber-600 dark:text-amber-400 tracking-wider select-all" dir="ltr">
+                    {tempPasswordModal.tempPassword}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(tempPasswordModal.tempPassword);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 3000);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                    copied
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "gold-gradient-btn text-slate-900 font-black shadow-xs hover:shadow-md"
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      تم النسخ!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      نسخ
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setTempPasswordModal(null);
+                  setCopied(false);
+                }}
+                className="w-full py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
+              >
+                تم، إغلاق النافذة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

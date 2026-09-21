@@ -17,7 +17,7 @@ async function main() {
     data: {
       id: "usr_admin",
       name: "م. فهد القرشي",
-      email: "admin@miqat.com",
+      email: "miqatalkhaleej@gmail.com",
       role: "ADMIN",
       phone: "+966552293398",
       active: true,

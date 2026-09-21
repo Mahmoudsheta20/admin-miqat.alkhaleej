@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { SystemUser } from "@/lib/types";
+import { hashPassword, generateTemporaryPassword } from "@/lib/passwordUtils";
 
 export interface CaptainFormData {
   name: string;
@@ -69,7 +70,12 @@ export async function getCaptains(): Promise<{
 
 export async function createCaptain(
   data: CaptainFormData
-): Promise<{ success: boolean; captain?: SystemUser; error?: string }> {
+): Promise<{
+  success: boolean;
+  captain?: SystemUser;
+  temporaryPassword?: string;
+  error?: string;
+}> {
   try {
     const existing = await prisma.user.findFirst({
       where: {
@@ -87,10 +93,14 @@ export async function createCaptain(
       };
     }
 
+    const tempPassword = generateTemporaryPassword("MQ");
+
     const created = await prisma.user.create({
       data: {
         name: data.name.trim(),
         email: data.email.trim().toLowerCase(),
+        passwordHash: hashPassword(tempPassword),
+        mustChangePassword: true,
         role: "CAPTAIN",
         phone: data.phone?.trim() || null,
         nationalId: data.nationalId?.trim() || null,
@@ -116,11 +126,51 @@ export async function createCaptain(
         assignedVehiclePlate: created.assignedVehiclePlate,
         avatarUrl: created.avatarUrl,
         active: created.active,
+        mustChangePassword: true,
       },
+      temporaryPassword: tempPassword,
     };
   } catch (error) {
     console.error("Create captain error:", error);
     return { success: false, error: "فشل إضافة الكابتن الجديد" };
+  }
+}
+
+export async function resetCaptainTemporaryPassword(
+  captainId: string
+): Promise<{
+  success: boolean;
+  temporaryPassword?: string;
+  captainName?: string;
+  error?: string;
+}> {
+  try {
+    const captain = await prisma.user.findUnique({
+      where: { id: captainId },
+    });
+
+    if (!captain) {
+      return { success: false, error: "الكابتن غير مسجل في النظام" };
+    }
+
+    const tempPassword = generateTemporaryPassword("MQ");
+
+    await prisma.user.update({
+      where: { id: captainId },
+      data: {
+        passwordHash: hashPassword(tempPassword),
+        mustChangePassword: true,
+      },
+    });
+
+    return {
+      success: true,
+      temporaryPassword: tempPassword,
+      captainName: captain.name,
+    };
+  } catch (error) {
+    console.error("Reset captain temporary password error:", error);
+    return { success: false, error: "تعذر توليد كلمة مرور مؤقتة للكابتن" };
   }
 }
 
