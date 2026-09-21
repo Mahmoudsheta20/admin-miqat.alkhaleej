@@ -44,6 +44,7 @@ import {
 } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
+import InspectionPdfPreviewModal from "@/app/_components/InspectionPdfPreviewModal";
 
 // Checklist Definitions
 interface CheckItemConfig {
@@ -111,6 +112,11 @@ export default function AdminInspectionsPage() {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previewPdfInspection, setPreviewPdfInspection] = useState<{
+    id: string;
+    captainName?: string;
+    vehiclePlate?: string;
+  } | null>(null);
 
   // Custom Form state
   const [customCaptainId, setCustomCaptainId] = useState("");
@@ -747,6 +753,23 @@ export default function AdminInspectionsPage() {
                                 </button>
 
                                 <button
+                                  onClick={() => {
+                                    if (c.todayInspection?.id) {
+                                      setPreviewPdfInspection({
+                                        id: c.todayInspection.id,
+                                        captainName: c.name,
+                                        vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                      });
+                                    }
+                                  }}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition shadow-xs"
+                                  title="توليد ومعاينة مستند PDF الرسمي للفحص"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  <span>PDF</span>
+                                </button>
+
+                                <button
                                   onClick={() => handleDirectPass(c)}
                                   disabled={isExecutingThis}
                                   className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
@@ -867,6 +890,21 @@ export default function AdminInspectionsPage() {
                           </button>
 
                           <button
+                            onClick={() =>
+                              setPreviewPdfInspection({
+                                id: insp.id,
+                                captainName: insp.captainName,
+                                vehiclePlate: insp.vehiclePlate,
+                              })
+                            }
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition"
+                            title="توليد وتحميل مستند PDF الرسمي للفحص"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>PDF</span>
+                          </button>
+
+                          <button
                             onClick={() => setDeleteConfirmId(insp.id)}
                             className="p-1.5 rounded-lg border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition"
                             title="حذف سجل الفحص"
@@ -931,7 +969,7 @@ export default function AdminInspectionsPage() {
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">تاريخ وتوقيت الفحص:</span>
+                  <span className="text-slate-400 block text-[11px]">تاريخ الفحص:</span>
                   <strong className="font-mono text-slate-900 dark:text-white" dir="ltr">
                     {new Date(selectedInspectionForView.inspectionDate).toLocaleDateString("en-GB")}
                   </strong>
@@ -1054,17 +1092,35 @@ export default function AdminInspectionsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t theme-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+            <div className="p-4 border-t theme-border flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
               <span className="text-xs text-slate-400 flex items-center gap-1.5 font-bold">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" />
                 معتمد رسمياً في نظام ميقات الخليج
               </span>
-              <button
-                onClick={() => setSelectedInspectionForView(null)}
-                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
-              >
-                إغلاق
-              </button>
+              <div className="flex items-center gap-2 self-stretch sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewPdfInspection({
+                      id: selectedInspectionForView.id,
+                      captainName: selectedInspectionForView.captainName,
+                      vehiclePlate: selectedInspectionForView.vehiclePlate,
+                    });
+                  }}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs hover:shadow-md transition"
+                  title="معاينة وتحميل ملف PDF الرسمي"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>معاينة وتحميل PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedInspectionForView(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                >
+                  إغلاق
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1369,6 +1425,19 @@ export default function AdminInspectionsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────────────────────
+          MODAL 4: OFFICIAL VEHICLE INSPECTION PDF PREVIEW & DOWNLOAD MODAL
+      ───────────────────────────────────────────────────────────────────────────── */}
+      {previewPdfInspection && (
+        <InspectionPdfPreviewModal
+          isOpen={!!previewPdfInspection}
+          onClose={() => setPreviewPdfInspection(null)}
+          inspectionId={previewPdfInspection.id}
+          captainName={previewPdfInspection.captainName}
+          vehiclePlate={previewPdfInspection.vehiclePlate}
+        />
       )}
     </div>
   );
