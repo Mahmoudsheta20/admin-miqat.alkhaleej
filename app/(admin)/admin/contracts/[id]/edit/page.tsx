@@ -16,6 +16,8 @@ import {
   Sparkles,
   Eye,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   ClipboardCheck,
   Calendar,
   Car,
@@ -54,6 +56,40 @@ const OPERATION_TYPES = [
   "جولة سياحية وزيارات",
   "نقل بين المدن",
   "خدمات الحج والعمرة",
+];
+
+const INSPECTION_CATEGORIES = [
+  {
+    title: "لوحة العدادات والتنبيهات",
+    items: [
+      { key: "fuelGauge", label: "مؤشر الوقود" },
+      { key: "tempGauge", label: "مؤشر الحرارة" },
+      { key: "oilPressure", label: "ضغط الزيت" },
+      { key: "checkEngine", label: "فحص المحرك" },
+      { key: "absLight", label: "فرامل ABS" },
+      { key: "warningLights", label: "لمبات التحذير" },
+    ],
+  },
+  {
+    title: "الفحص الخارجي وهيكل المركبة",
+    items: [
+      { key: "tires", label: "الإطارات والضغط" },
+      { key: "headlights", label: "الأنوار الأمامية والخلفية" },
+      { key: "signals", label: "إشارات الطوارئ" },
+      { key: "mirrors", label: "الزجاج والمرايا" },
+      { key: "noLeaks", label: "خلو التسريبات" },
+    ],
+  },
+  {
+    title: "أدوات ومعدات السلامة الإلزامية",
+    items: [
+      { key: "fireExtinguisher", label: "طفاية الحريق" },
+      { key: "warningTriangle", label: "مثلث الطوارئ" },
+      { key: "firstAidKit", label: "حقيبة الإسعافات" },
+      { key: "glassHammer", label: "مطرقة الزجاج" },
+      { key: "seatBelts", label: "أحزمة الأمان" },
+    ],
+  },
 ];
 
 function mapOperationToLabel(type: string): string {
@@ -112,6 +148,32 @@ export default function EditContractPage({ params }: PageProps) {
 
   const todayStr = getSaudiTodayDateStr();
   const timeNow = getSaudiCurrentTimeStr();
+
+  // Vehicle Inspection State
+  const [inspectionDate, setInspectionDate] = useState(() => todayStr);
+  const [checks, setChecks] = useState<Record<string, boolean>>({
+    fuelGauge: true,
+    tempGauge: true,
+    oilPressure: true,
+    checkEngine: true,
+    absLight: true,
+    warningLights: true,
+    tires: true,
+    headlights: true,
+    signals: true,
+    mirrors: true,
+    noLeaks: true,
+    fireExtinguisher: true,
+    warningTriangle: true,
+    firstAidKit: true,
+    glassHammer: true,
+    seatBelts: true,
+  });
+  const [driverDeclared, setDriverDeclared] = useState(true);
+  const [inspectionNotes, setInspectionNotes] = useState("");
+  const [showDetailedChecks, setShowDetailedChecks] = useState(true);
+
+  const passedChecksCount = Object.values(checks).filter(Boolean).length;
 
   const {
     register,
@@ -203,6 +265,37 @@ export default function EditContractPage({ params }: PageProps) {
             notes: c.notes || "",
             passengers: rawPassengers,
           });
+
+          if (c.inspection) {
+            const insp = c.inspection;
+            if (insp.inspectionDate) {
+              const dStr =
+                typeof insp.inspectionDate === "string"
+                  ? insp.inspectionDate.split("T")[0]
+                  : new Date(insp.inspectionDate).toISOString().split("T")[0];
+              setInspectionDate(dStr);
+            }
+            setChecks({
+              fuelGauge: insp.fuelGauge ?? true,
+              tempGauge: insp.tempGauge ?? true,
+              oilPressure: insp.oilPressure ?? true,
+              checkEngine: insp.checkEngine ?? true,
+              absLight: insp.absLight ?? true,
+              warningLights: insp.warningLights ?? true,
+              tires: insp.tires ?? true,
+              headlights: insp.headlights ?? true,
+              signals: insp.signals ?? true,
+              mirrors: insp.mirrors ?? true,
+              noLeaks: insp.noLeaks ?? true,
+              fireExtinguisher: insp.fireExtinguisher ?? true,
+              warningTriangle: insp.warningTriangle ?? true,
+              firstAidKit: insp.firstAidKit ?? true,
+              glassHammer: insp.glassHammer ?? true,
+              seatBelts: insp.seatBelts ?? true,
+            });
+            setDriverDeclared(insp.driverDeclared ?? true);
+            setInspectionNotes(insp.notes || "");
+          }
         } else {
           setServerError(contractRes.error || "لم يتم العثور على العقد المطلوب");
         }
@@ -229,12 +322,48 @@ export default function EditContractPage({ params }: PageProps) {
       setSuccessMessage("");
 
       const payload = sanitizeContractPayload(data, contract?.inspectionId);
+      payload.inspectionData = {
+        inspectionDate,
+        ...checks,
+        driverDeclared,
+        notes: inspectionNotes || null,
+      };
       const res = await updateContract(id, payload);
 
       setIsSubmitting(false);
 
       if (res.success && res.contract) {
         setContract(res.contract);
+        if (res.contract.inspection) {
+          const insp = res.contract.inspection;
+          if (insp.inspectionDate) {
+            const dStr =
+              typeof insp.inspectionDate === "string"
+                ? insp.inspectionDate.split("T")[0]
+                : new Date(insp.inspectionDate).toISOString().split("T")[0];
+            setInspectionDate(dStr);
+          }
+          setChecks({
+            fuelGauge: insp.fuelGauge ?? true,
+            tempGauge: insp.tempGauge ?? true,
+            oilPressure: insp.oilPressure ?? true,
+            checkEngine: insp.checkEngine ?? true,
+            absLight: insp.absLight ?? true,
+            warningLights: insp.warningLights ?? true,
+            tires: insp.tires ?? true,
+            headlights: insp.headlights ?? true,
+            signals: insp.signals ?? true,
+            mirrors: insp.mirrors ?? true,
+            noLeaks: insp.noLeaks ?? true,
+            fireExtinguisher: insp.fireExtinguisher ?? true,
+            warningTriangle: insp.warningTriangle ?? true,
+            firstAidKit: insp.firstAidKit ?? true,
+            glassHammer: insp.glassHammer ?? true,
+            seatBelts: insp.seatBelts ?? true,
+          });
+          setDriverDeclared(insp.driverDeclared ?? true);
+          setInspectionNotes(insp.notes || "");
+        }
         setSuccessMessage("تم حفظ وتحديث بيانات العقد والوثيقة الرسمية بنجاح!");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
@@ -694,25 +823,197 @@ export default function EditContractPage({ params }: PageProps) {
           <PassengerManifestManager control={control} register={register} errors={errors} />
         </div>
 
-        {/* Section 5: Inspection Notice */}
-        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-3 bg-slate-50/50 dark:bg-slate-900/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ClipboardCheck className="w-5 h-5 text-emerald-500" />
+        {/* Section 5: Vehicle Inspection & Operational Declaration */}
+        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-5">
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+                <ClipboardCheck className="w-5 h-5" />
+              </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                  الفحص والإقرار التشغيلي المعتمد للعقد
-                </h3>
-                <p className="text-[11px] text-slate-400">
-                  تم توثيق الفحص التشغيلي المعتمد مسبقاً لهذا العقد برقم معتمد في السجلات
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                    الفحص الفني والإقرار التشغيلي للمركبة
+                  </h2>
+                  {(contract?.inspection?.id || contract?.inspectionId) && (
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border theme-border">
+                      #{((contract.inspection?.id || contract.inspectionId) as string).slice(0, 8)}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  تعديل واعتماد بنود الفحص الفني، تاريخ الفحص، والملاحظات التشغيلية التي تظهر في وثيقة العقد الرسمية
                 </p>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              فحص معتمد ومكتمل
-            </span>
+
+            {/* Compliance Badge & Quick Select Button */}
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border ${
+                  passedChecksCount === 16
+                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{passedChecksCount} من 16 بند سليم</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const allPassed = Object.keys(checks).reduce(
+                    (acc, k) => ({ ...acc, [k]: true }),
+                    {}
+                  );
+                  setChecks(allPassed);
+                }}
+                className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition border theme-border cursor-pointer"
+                title="تحديد كافة البنود الـ 16 كسليمة ومطابقة"
+              >
+                تحديد الكل سليم (100%)
+              </button>
+            </div>
           </div>
+
+          {/* Date Picker & Vehicle Context */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end bg-slate-50/60 dark:bg-slate-900/40 p-4 rounded-2xl border theme-border">
+            <div>
+              <CustomDatePicker
+                label="تاريخ الفحص التشغيلي المعتمد"
+                required
+                value={inspectionDate}
+                onChange={setInspectionDate}
+              />
+            </div>
+
+            <div className="sm:col-span-1 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                <p className="font-semibold text-slate-700 dark:text-slate-300">
+                  لوحة المركبة المفحوصة:{" "}
+                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+                    {selectedVehiclePlate || "غير محددة"}
+                  </span>
+                </p>
+                <p>
+                  يتم توثيق بنود الفحص في الصفحة الثالثة من وثيقة عقد التشغيل الرسمية.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowDetailedChecks(!showDetailedChecks)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-border bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer self-stretch sm:self-auto justify-center"
+              >
+                {showDetailedChecks ? (
+                  <>
+                    <ChevronUp className="w-4 h-4 text-amber-500" />
+                    <span>طي بنود الفحص</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4 text-amber-500" />
+                    <span>تعديل بنود الفحص (16 بنداً)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Detailed 16 Checklist Items */}
+          {showDetailedChecks && (
+            <div className="space-y-4 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {INSPECTION_CATEGORIES.map((category) => (
+                  <div
+                    key={category.title}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border theme-border space-y-2.5 shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between border-b theme-border pb-2">
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                        {category.title}
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                        {category.items.filter((it) => checks[it.key]).length}/{category.items.length}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {category.items.map((item) => {
+                        const isPassed = checks[item.key] ?? true;
+                        return (
+                          <label
+                            key={item.key}
+                            className={`flex items-center justify-between gap-2 p-2 rounded-xl border text-xs font-medium cursor-pointer transition ${
+                              isPassed
+                                ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-slate-800 dark:text-slate-200"
+                                : "bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isPassed}
+                                onChange={(e) =>
+                                  setChecks((prev) => ({
+                                    ...prev,
+                                    [item.key]: e.target.checked,
+                                  }))
+                                }
+                                className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 cursor-pointer"
+                              />
+                              <span>{item.label}</span>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                                isPassed
+                                  ? "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
+                                  : "text-rose-700 dark:text-rose-400 bg-rose-500/10"
+                              }`}
+                            >
+                              {isPassed ? "سليم" : "غير سليم"}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Operational Notes */}
+          <div>
+            <CustomTextarea
+              label="ملاحظات الفاحص التشغيلية (المسجلة في صفحة الفحص بالعقد)"
+              placeholder="مثال: تم فحص المركبة والتأكد من مطابقتها لكافة معايير السلامة التشغيلية المعتمدة..."
+              rows={2}
+              value={inspectionNotes}
+              onChange={(e) => setInspectionNotes(e.target.value)}
+              hint="تظهر هذه الملاحظات في خانة ملاحظات الفاحص في الصفحة الثالثة من ملف الـ PDF الرسمي"
+            />
+          </div>
+
+          {/* Driver Declaration Checkbox */}
+          <label className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border theme-border cursor-pointer hover:border-amber-500/50 transition">
+            <input
+              type="checkbox"
+              checked={driverDeclared}
+              onChange={(e) => setDriverDeclared(e.target.checked)}
+              className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 mt-0.5 cursor-pointer shrink-0"
+            />
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                إقرار وتأكيد الفحص التشغيلي المعتمد للعقد
+              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل وفق الشروط والمعايير المحددة أعلاه، والمركبة جاهزة تماماً للتشغيل لنقل الركاب.
+              </p>
+            </div>
+          </label>
         </div>
 
         {/* Bottom Submission Bar */}

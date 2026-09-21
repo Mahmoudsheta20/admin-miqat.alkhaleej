@@ -530,3 +530,66 @@ export async function getInspectionById(id: string): Promise<{
     return { success: false, error: "تعذر جلب تفاصيل الفحص" };
   }
 }
+
+/**
+ * Update an existing inspection record
+ */
+export async function updateInspection(
+  id: string,
+  data: Partial<InspectionInput>
+): Promise<{ success: boolean; inspection?: VehicleInspection; error?: string }> {
+  try {
+    const existing = await prisma.vehicleInspection.findUnique({ where: { id } });
+    if (!existing) {
+      return { success: false, error: "سجل الفحص غير موجود" };
+    }
+
+    let parsedDate: Date | undefined;
+    if (data.inspectionDate) {
+      const dStr = typeof data.inspectionDate === "string" && !data.inspectionDate.includes("T")
+        ? `${data.inspectionDate.replace(/\//g, "-")}T10:00:00`
+        : data.inspectionDate;
+      const d = new Date(dStr);
+      if (!isNaN(d.getTime())) {
+        parsedDate = d;
+      }
+    }
+
+    const updated = await prisma.vehicleInspection.update({
+      where: { id },
+      data: {
+        ...(data.vehiclePlate !== undefined && { vehiclePlate: data.vehiclePlate }),
+        ...(parsedDate && { inspectionDate: parsedDate }),
+        ...(data.fuelGauge !== undefined && { fuelGauge: data.fuelGauge }),
+        ...(data.tempGauge !== undefined && { tempGauge: data.tempGauge }),
+        ...(data.oilPressure !== undefined && { oilPressure: data.oilPressure }),
+        ...(data.checkEngine !== undefined && { checkEngine: data.checkEngine }),
+        ...(data.absLight !== undefined && { absLight: data.absLight }),
+        ...(data.warningLights !== undefined && { warningLights: data.warningLights }),
+        ...(data.tires !== undefined && { tires: data.tires }),
+        ...(data.headlights !== undefined && { headlights: data.headlights }),
+        ...(data.signals !== undefined && { signals: data.signals }),
+        ...(data.mirrors !== undefined && { mirrors: data.mirrors }),
+        ...(data.noLeaks !== undefined && { noLeaks: data.noLeaks }),
+        ...(data.fireExtinguisher !== undefined && { fireExtinguisher: data.fireExtinguisher }),
+        ...(data.warningTriangle !== undefined && { warningTriangle: data.warningTriangle }),
+        ...(data.firstAidKit !== undefined && { firstAidKit: data.firstAidKit }),
+        ...(data.glassHammer !== undefined && { glassHammer: data.glassHammer }),
+        ...(data.seatBelts !== undefined && { seatBelts: data.seatBelts }),
+        ...(data.driverDeclared !== undefined && { driverDeclared: data.driverDeclared }),
+        ...(data.notes !== undefined && { notes: data.notes }),
+      },
+      include: {
+        captain: { select: { name: true } },
+      },
+    });
+
+    return {
+      success: true,
+      inspection: mapPrismaToInspection(updated),
+    };
+  } catch (error) {
+    console.error("updateInspection error:", error);
+    return { success: false, error: "تعذر تحديث بيانات الفحص" };
+  }
+}

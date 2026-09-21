@@ -19,6 +19,28 @@ export interface PassengerInput {
   idNumber: string;
 }
 
+export interface InspectionPayload {
+  inspectionDate?: string;
+  fuelGauge?: boolean;
+  tempGauge?: boolean;
+  oilPressure?: boolean;
+  checkEngine?: boolean;
+  absLight?: boolean;
+  warningLights?: boolean;
+  tires?: boolean;
+  headlights?: boolean;
+  signals?: boolean;
+  mirrors?: boolean;
+  noLeaks?: boolean;
+  fireExtinguisher?: boolean;
+  warningTriangle?: boolean;
+  firstAidKit?: boolean;
+  glassHammer?: boolean;
+  seatBelts?: boolean;
+  driverDeclared?: boolean;
+  notes?: string | null;
+}
+
 export interface ContractFormPayload {
   operationType: OperationType;
   origin: string;
@@ -35,6 +57,7 @@ export interface ContractFormPayload {
   vehiclePlate: string;
   inspectionId?: string;
   passengers: PassengerInput[];
+  inspectionData?: InspectionPayload;
 }
 
 function cleanStr(val?: string | null): string | null {
@@ -314,6 +337,78 @@ export async function updateContract(
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // 0. Update or create inspection if inspectionData is provided
+      let finalInspectionId = validInspectionId;
+      if (formData.inspectionData) {
+        const inspData = formData.inspectionData;
+        let parsedDate: Date | undefined;
+        if (inspData.inspectionDate) {
+          const dStr = typeof inspData.inspectionDate === "string" && !inspData.inspectionDate.includes("T")
+            ? `${inspData.inspectionDate.replace(/\//g, "-")}T10:00:00`
+            : inspData.inspectionDate;
+          const d = new Date(dStr);
+          if (!isNaN(d.getTime())) {
+            parsedDate = d;
+          }
+        }
+
+        if (validInspectionId) {
+          await tx.vehicleInspection.update({
+            where: { id: validInspectionId },
+            data: {
+              ...(parsedDate && { inspectionDate: parsedDate }),
+              vehiclePlate: cleanStr(formData.vehiclePlate) || existing.vehiclePlate,
+              captainId: captainId!,
+              ...(inspData.fuelGauge !== undefined && { fuelGauge: inspData.fuelGauge }),
+              ...(inspData.tempGauge !== undefined && { tempGauge: inspData.tempGauge }),
+              ...(inspData.oilPressure !== undefined && { oilPressure: inspData.oilPressure }),
+              ...(inspData.checkEngine !== undefined && { checkEngine: inspData.checkEngine }),
+              ...(inspData.absLight !== undefined && { absLight: inspData.absLight }),
+              ...(inspData.warningLights !== undefined && { warningLights: inspData.warningLights }),
+              ...(inspData.tires !== undefined && { tires: inspData.tires }),
+              ...(inspData.headlights !== undefined && { headlights: inspData.headlights }),
+              ...(inspData.signals !== undefined && { signals: inspData.signals }),
+              ...(inspData.mirrors !== undefined && { mirrors: inspData.mirrors }),
+              ...(inspData.noLeaks !== undefined && { noLeaks: inspData.noLeaks }),
+              ...(inspData.fireExtinguisher !== undefined && { fireExtinguisher: inspData.fireExtinguisher }),
+              ...(inspData.warningTriangle !== undefined && { warningTriangle: inspData.warningTriangle }),
+              ...(inspData.firstAidKit !== undefined && { firstAidKit: inspData.firstAidKit }),
+              ...(inspData.glassHammer !== undefined && { glassHammer: inspData.glassHammer }),
+              ...(inspData.seatBelts !== undefined && { seatBelts: inspData.seatBelts }),
+              ...(inspData.driverDeclared !== undefined && { driverDeclared: inspData.driverDeclared }),
+              ...(inspData.notes !== undefined && { notes: cleanStr(inspData.notes) }),
+            },
+          });
+        } else {
+          const createdInsp = await tx.vehicleInspection.create({
+            data: {
+              captainId: captainId!,
+              vehiclePlate: cleanStr(formData.vehiclePlate) || existing.vehiclePlate || "ا ص ل 7223",
+              inspectionDate: parsedDate || new Date(),
+              fuelGauge: inspData.fuelGauge ?? true,
+              tempGauge: inspData.tempGauge ?? true,
+              oilPressure: inspData.oilPressure ?? true,
+              checkEngine: inspData.checkEngine ?? true,
+              absLight: inspData.absLight ?? true,
+              warningLights: inspData.warningLights ?? true,
+              tires: inspData.tires ?? true,
+              headlights: inspData.headlights ?? true,
+              signals: inspData.signals ?? true,
+              mirrors: inspData.mirrors ?? true,
+              noLeaks: inspData.noLeaks ?? true,
+              fireExtinguisher: inspData.fireExtinguisher ?? true,
+              warningTriangle: inspData.warningTriangle ?? true,
+              firstAidKit: inspData.firstAidKit ?? true,
+              glassHammer: inspData.glassHammer ?? true,
+              seatBelts: inspData.seatBelts ?? true,
+              driverDeclared: inspData.driverDeclared ?? true,
+              notes: cleanStr(inspData.notes) || "تم الاعتماد التشغيلي رسمياً",
+            },
+          });
+          finalInspectionId = createdInsp.id;
+        }
+      }
+
       // 1. Update contract details
       await tx.contract.update({
         where: { id: cleanId },
@@ -329,7 +424,7 @@ export async function updateContract(
           customerPhone: cleanStr(formData.customerPhone),
           notes: cleanStr(formData.notes),
           issueDate: cleanStr(formData.issueDate) || existing.issueDate || getSaudiTodayDateStr(),
-          inspectionId: validInspectionId,
+          inspectionId: finalInspectionId,
           captainId: captainId!,
           vehiclePlate: cleanStr(formData.vehiclePlate) || existing.vehiclePlate,
         },
@@ -426,6 +521,33 @@ export async function updateContract(
               active: result.captain.active,
             }
           : undefined,
+        inspection: result.inspection
+          ? {
+              id: result.inspection.id,
+              captainId: result.inspection.captainId,
+              vehiclePlate: result.inspection.vehiclePlate,
+              inspectionDate: result.inspection.inspectionDate.toISOString().split("T")[0],
+              fuelGauge: result.inspection.fuelGauge,
+              tempGauge: result.inspection.tempGauge,
+              oilPressure: result.inspection.oilPressure,
+              checkEngine: result.inspection.checkEngine,
+              absLight: result.inspection.absLight,
+              warningLights: result.inspection.warningLights,
+              tires: result.inspection.tires,
+              headlights: result.inspection.headlights,
+              signals: result.inspection.signals,
+              mirrors: result.inspection.mirrors,
+              noLeaks: result.inspection.noLeaks,
+              fireExtinguisher: result.inspection.fireExtinguisher,
+              warningTriangle: result.inspection.warningTriangle,
+              firstAidKit: result.inspection.firstAidKit,
+              glassHammer: result.inspection.glassHammer,
+              seatBelts: result.inspection.seatBelts,
+              driverDeclared: result.inspection.driverDeclared,
+              notes: result.inspection.notes,
+              createdAt: result.inspection.createdAt.toISOString(),
+            }
+          : null,
       },
     };
   } catch (error) {
