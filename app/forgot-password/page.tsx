@@ -14,7 +14,6 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
 import { useTheme } from "@/lib/themeContext";
 import { requestPasswordResetAction } from "@/app/_actions/auth";
 

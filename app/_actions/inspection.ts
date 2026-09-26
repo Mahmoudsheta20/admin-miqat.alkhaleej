@@ -146,12 +146,10 @@ export async function submitInspection(
       }
     }
 
-    // Automatically generate and save inspection PDF to storage
-    try {
-      await generateAndSaveInspectionPdf(created.id);
-    } catch (pdfErr) {
-      console.warn("Could not generate inspection PDF immediately upon creation:", pdfErr);
-    }
+    // Generate inspection PDF in the background without blocking the UI response
+    generateAndSaveInspectionPdf(created.id).catch((pdfErr) => {
+      console.warn("Background inspection PDF generation notice:", pdfErr);
+    });
 
     return {
       success: true,
@@ -267,13 +265,18 @@ export async function getCaptainsInspectionOverview(): Promise<{
     const [captainsList, totalInspectionsCount] = await Promise.all([
       prisma.user.findMany({
         where: { role: "CAPTAIN" },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          nationalId: true,
+          assignedVehiclePlate: true,
+          avatarUrl: true,
+          active: true,
           inspections: {
             orderBy: { createdAt: "desc" },
-            take: 2,
-            include: {
-              captain: { select: { name: true } },
-            },
+            take: 1,
           },
           _count: {
             select: { inspections: true },
@@ -449,12 +452,10 @@ export async function directPassInspection(
       }
     }
 
-    // Automatically generate and save inspection PDF to storage
-    try {
-      await generateAndSaveInspectionPdf(savedRecord.id);
-    } catch (pdfErr) {
-      console.warn("Could not generate inspection PDF immediately upon direct pass:", pdfErr);
-    }
+    // Generate inspection PDF in the background without blocking the direct pass response
+    generateAndSaveInspectionPdf(savedRecord.id).catch((pdfErr) => {
+      console.warn("Background inspection PDF generation notice on direct pass:", pdfErr);
+    });
 
     return {
       success: true,

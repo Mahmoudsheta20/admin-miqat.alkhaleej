@@ -19,10 +19,8 @@ import {
   Mail,
   Send,
 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
 import { useTheme } from "@/lib/themeContext";
 import {
-  syncPasswordAfterSupabaseResetAction,
   verifyResetTokenAction,
   resetPasswordWithTokenAction,
   requestPasswordResetAction,

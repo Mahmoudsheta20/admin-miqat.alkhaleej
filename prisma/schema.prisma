@@ -57,6 +57,8 @@ model User {
   contracts     Contract[]
   inspections   VehicleInspection[]
   notifications Notification[]
+
+  @@index([role])
 }
 
 model Vehicle {
@@ -111,6 +113,10 @@ model VehicleInspection {
   createdAt      DateTime @default(now())
 
   contracts Contract[]
+
+  @@index([captainId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([inspectionDate])
 }
 
 model Contract {
@@ -140,6 +146,11 @@ model Contract {
 
   passengers    Passenger[]
   notifications Notification[]
+
+  @@index([inspectionId])
+  @@index([captainId])
+  @@index([status])
+  @@index([tripDate])
 }
 
 model Passenger {
