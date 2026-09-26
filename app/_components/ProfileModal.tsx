@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/lib/authContext";
 import { updateUserProfileAction, changeUserPasswordAction } from "@/app/_actions/auth";
 import ImageUpload from "./ImageUpload";
+import { invalidateClientCache } from "@/lib/clientCache";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -96,6 +97,9 @@ export default function ProfileModal({
 
     if (res.success && res.user) {
       updateUser(res.user);
+      invalidateClientCache("captains_list");
+      invalidateClientCache("admins_list");
+      invalidateClientCache("dashboard_stats");
       setSuccessMsg("تم تحديث وحفظ بيانات الملف الشخصي بنجاح!");
       setTimeout(() => {
         setSuccessMsg(null);

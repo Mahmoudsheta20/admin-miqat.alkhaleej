@@ -44,7 +44,14 @@ export default async function ContractVerificationPage({ params }: PageProps) {
     },
     include: {
       passengers: { orderBy: { sequence: "asc" } },
-      captain: true,
+      captain: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          assignedVehiclePlate: true,
+        },
+      },
       inspection: true,
     },
   });

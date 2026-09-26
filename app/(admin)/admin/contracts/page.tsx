@@ -39,13 +39,16 @@ import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import { formatOfficialDate } from "@/lib/contractConstants";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function AdminContractsPage() {
   // Data states
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [captains, setCaptains] = useState<(SystemUser & { contractCount?: number; hasTodayInspection?: boolean })[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingCaptains, setIsLoadingCaptains] = useState(true);
+  const [contracts, setContracts] = useState<Contract[]>(() => getCachedData("contracts_ALL_ALL_") || []);
+  const [captains, setCaptains] = useState<(SystemUser & { contractCount?: number; hasTodayInspection?: boolean })[]>(
+    () => getCachedData("captains_list") || []
+  );
+  const [isLoading, setIsLoading] = useState(() => !getCachedData("contracts_ALL_ALL_"));
+  const [isLoadingCaptains, setIsLoadingCaptains] = useState(() => !getCachedData("captains_list"));
 
   // Filters
   const [search, setSearch] = useState("");
@@ -81,6 +84,8 @@ export default function AdminContractsPage() {
       const res = await deleteContract(contractToDelete.id);
       setIsDeleting(false);
       if (res.success) {
+        invalidateClientCache("contracts_");
+        invalidateClientCache("dashboard_stats");
         setContracts((prev) => prev.filter((c) => c.id !== contractToDelete.id));
         if (selectedContract?.id === contractToDelete.id) {
           setSelectedContract(null);
@@ -107,22 +112,33 @@ export default function AdminContractsPage() {
   };
 
   // Load contracts helper for manual refresh / sync
-  const fetchContractsData = async (opts?: {
-    type?: string;
-    captain?: string;
-    query?: string;
-  }) => {
-    setIsLoading(true);
-    try {
-      const activeType = opts?.type ?? typeFilter;
-      const activeCaptain = opts?.captain ?? captainFilter;
-      const activeQuery = opts?.query ?? submittedSearch;
+  const fetchContractsData = async (
+    opts?: {
+      type?: string;
+      captain?: string;
+      query?: string;
+    },
+    forceRefresh = false
+  ) => {
+    const activeType = opts?.type ?? typeFilter;
+    const activeCaptain = opts?.captain ?? captainFilter;
+    const activeQuery = (opts?.query ?? submittedSearch).trim();
+    const cacheKey = `contracts_${activeType}_${activeCaptain}_${activeQuery}`;
 
-      const res = await getContracts({
-        operationType: activeType !== "ALL" ? (activeType as OperationType) : undefined,
-        captainId: activeCaptain !== "ALL" ? activeCaptain : undefined,
-        search: activeQuery.trim() || undefined,
-      });
+    if (forceRefresh || contracts.length === 0) {
+      setIsLoading(true);
+    }
+    try {
+      const res = await fetchCached(
+        cacheKey,
+        () =>
+          getContracts({
+            operationType: activeType !== "ALL" ? (activeType as OperationType) : undefined,
+            captainId: activeCaptain !== "ALL" ? activeCaptain : undefined,
+            search: activeQuery || undefined,
+          }),
+        { ttlMs: 45_000, forceRefresh }
+      );
       if (res.success && res.contracts) {
         setContracts(res.contracts);
       }
@@ -133,12 +149,12 @@ export default function AdminContractsPage() {
     }
   };
 
-  // Initial load of captains
+  // Initial load of captains with caching
   useEffect(() => {
     let isCancelled = false;
     const loadCaptains = async () => {
       try {
-        const res = await getCaptains();
+        const res = await fetchCached("captains_list", getCaptains, { ttlMs: 120_000 });
         if (!isCancelled && res.success && res.captains) {
           setCaptains(res.captains);
         }
@@ -160,12 +176,18 @@ export default function AdminContractsPage() {
   useEffect(() => {
     let isCancelled = false;
     const executeFetch = async () => {
+      const cacheKey = `contracts_${typeFilter}_${captainFilter}_${submittedSearch.trim()}`;
       try {
-        const res = await getContracts({
-          operationType: typeFilter !== "ALL" ? (typeFilter as OperationType) : undefined,
-          captainId: captainFilter !== "ALL" ? captainFilter : undefined,
-          search: submittedSearch.trim() || undefined,
-        });
+        const res = await fetchCached(
+          cacheKey,
+          () =>
+            getContracts({
+              operationType: typeFilter !== "ALL" ? (typeFilter as OperationType) : undefined,
+              captainId: captainFilter !== "ALL" ? captainFilter : undefined,
+              search: submittedSearch.trim() || undefined,
+            }),
+          { ttlMs: 45_000 }
+        );
         if (!isCancelled && res.success && res.contracts) {
           setContracts(res.contracts);
         }
@@ -221,7 +243,8 @@ export default function AdminContractsPage() {
     const res = await syncAllContractsToStorageAction();
     if (res.success) {
       setSyncStatus(`تم بنجاح حفظ ومزامنة ${res.saved} من أصل ${res.total} عقد في التخزين!`);
-      fetchContractsData();
+      invalidateClientCache("contracts_");
+      fetchContractsData(undefined, true);
       setTimeout(() => setSyncStatus(null), 6000);
     } else {
       setSyncStatus(`فشل المزامنة: ${res.error}`);

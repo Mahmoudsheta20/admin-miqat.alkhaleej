@@ -25,10 +25,11 @@ import {
 import { Vehicle, VehicleStatus } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function FleetManagementPage() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => getCachedData("fleet_vehicles") || []);
+  const [isLoading, setIsLoading] = useState(() => !getCachedData("fleet_vehicles"));
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -52,13 +53,23 @@ export default function FleetManagementPage() {
     currentMileage: 0,
   });
 
-  const loadVehicles = async () => {
-    setIsLoading(true);
-    const res = await getVehicles();
-    if (res.success && res.vehicles) {
-      setVehicles(res.vehicles);
+  const loadVehicles = async (forceRefresh = false) => {
+    if (forceRefresh || vehicles.length === 0) {
+      setIsLoading(true);
     }
-    setIsLoading(false);
+    try {
+      const res = await fetchCached("fleet_vehicles", getVehicles, {
+        ttlMs: 120_000,
+        forceRefresh,
+      });
+      if (res.success && res.vehicles) {
+        setVehicles(res.vehicles);
+      }
+    } catch (err) {
+      console.error("Failed to load vehicles:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -115,7 +126,9 @@ export default function FleetManagementPage() {
       const res = await updateVehicle(editingVehicle.id, formData);
       if (res.success) {
         setEditingVehicle(null);
-        await loadVehicles();
+        invalidateClientCache("fleet_vehicles");
+        invalidateClientCache("dashboard_stats");
+        await loadVehicles(true);
       } else {
         setFormError(res.error || "فشل التحديث");
       }
@@ -123,7 +136,9 @@ export default function FleetManagementPage() {
       const res = await createVehicle(formData);
       if (res.success) {
         setIsAddModalOpen(false);
-        await loadVehicles();
+        invalidateClientCache("fleet_vehicles");
+        invalidateClientCache("dashboard_stats");
+        await loadVehicles(true);
       } else {
         setFormError(res.error || "فشل الإضافة");
       }
@@ -136,7 +151,9 @@ export default function FleetManagementPage() {
     if (!deleteId) return;
     await deleteVehicle(deleteId);
     setDeleteId(null);
-    await loadVehicles();
+    invalidateClientCache("fleet_vehicles");
+    invalidateClientCache("dashboard_stats");
+    await loadVehicles(true);
   };
 
   const filtered = vehicles.filter((v) => {
@@ -165,7 +182,7 @@ export default function FleetManagementPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={loadVehicles}
+            onClick={() => loadVehicles(true)}
             disabled={isLoading}
             className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50"
             title="تحديث البيانات"

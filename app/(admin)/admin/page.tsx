@@ -18,23 +18,34 @@ import {
 import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
 import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import { fetchCached, getCachedData } from "@/lib/clientCache";
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(() => getCachedData("dashboard_stats"));
+  const [isLoading, setIsLoading] = useState(() => !getCachedData("dashboard_stats"));
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedRefNum, setSelectedRefNum] = useState<string>("");
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [, startTransition] = useTransition();
 
-  const loadStats = () => {
-    setIsLoading(true);
+  const loadStats = (forceRefresh = false) => {
+    if (forceRefresh) {
+      setIsLoading(true);
+    }
     startTransition(async () => {
-      const res = await getDashboardStats();
-      if (res.success && res.stats) {
-        setStats(res.stats);
+      try {
+        const res = await fetchCached("dashboard_stats", getDashboardStats, {
+          ttlMs: 60_000,
+          forceRefresh,
+        });
+        if (res.success && res.stats) {
+          setStats(res.stats);
+        }
+      } catch (err) {
+        console.error("Dashboard stats error:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
   };
 
@@ -62,7 +73,7 @@ export default function AdminDashboardPage() {
         </div>
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
-            onClick={loadStats}
+            onClick={() => loadStats(true)}
             disabled={isLoading}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 min-h-[42px] shadow-2xs"
           >

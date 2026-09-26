@@ -30,6 +30,7 @@ import {
 import { SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 type CaptainItem = SystemUser & {
   contractCount: number;
@@ -37,8 +38,8 @@ type CaptainItem = SystemUser & {
 };
 
 export default function CaptainsManagementPage() {
-  const [captains, setCaptains] = useState<CaptainItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [captains, setCaptains] = useState<CaptainItem[]>(() => getCachedData("captains_list") || []);
+  const [isLoading, setIsLoading] = useState(() => !getCachedData("captains_list"));
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
@@ -70,13 +71,23 @@ export default function CaptainsManagementPage() {
     avatarUrl: "",
   });
 
-  const loadCaptains = async () => {
-    setIsLoading(true);
-    const res = await getCaptains();
-    if (res.success && res.captains) {
-      setCaptains(res.captains);
+  const loadCaptains = async (forceRefresh = false) => {
+    if (forceRefresh || captains.length === 0) {
+      setIsLoading(true);
     }
-    setIsLoading(false);
+    try {
+      const res = await fetchCached("captains_list", getCaptains, {
+        ttlMs: 120_000,
+        forceRefresh,
+      });
+      if (res.success && res.captains) {
+        setCaptains(res.captains);
+      }
+    } catch (err) {
+      console.error("Failed to load captains:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -127,7 +138,9 @@ export default function CaptainsManagementPage() {
       const res = await updateCaptain(editingCaptain.id, formData);
       if (res.success) {
         setEditingCaptain(null);
-        await loadCaptains();
+        invalidateClientCache("captains_list");
+        invalidateClientCache("dashboard_stats");
+        await loadCaptains(true);
       } else {
         setFormError(res.error || "فشل التحديث");
       }
@@ -135,7 +148,9 @@ export default function CaptainsManagementPage() {
       const res = await createCaptain(formData);
       if (res.success && res.captain) {
         setIsAddModalOpen(false);
-        await loadCaptains();
+        invalidateClientCache("captains_list");
+        invalidateClientCache("dashboard_stats");
+        await loadCaptains(true);
         if (res.temporaryPassword) {
           setTempPasswordModal({
             open: true,
@@ -175,7 +190,9 @@ export default function CaptainsManagementPage() {
     if (!deleteId) return;
     await deleteCaptain(deleteId);
     setDeleteId(null);
-    await loadCaptains();
+    invalidateClientCache("captains_list");
+    invalidateClientCache("dashboard_stats");
+    await loadCaptains(true);
   };
 
   const filtered = captains.filter((c) => {
@@ -204,7 +221,7 @@ export default function CaptainsManagementPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={loadCaptains}
+            onClick={() => loadCaptains(true)}
             disabled={isLoading}
             className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50"
             title="تحديث البيانات"

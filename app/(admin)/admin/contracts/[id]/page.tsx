@@ -24,6 +24,7 @@ import {
 import { Contract, ContractStatus } from "@/lib/types";
 import { getContractById, updateContractStatusAction } from "@/app/_actions/contract";
 import { useAuth } from "@/lib/authContext";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 interface ContractReviewPageProps {
   params: Promise<{ id: string }>;
@@ -34,8 +35,12 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
   const router = useRouter();
   const { user } = useAuth();
 
-  const [contract, setContract] = useState<Contract | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [contract, setContract] = useState<Contract | null>(
+    () => getCachedData<any>(`contract_${resolvedParams.id}`)?.contract || null
+  );
+  const [loading, setLoading] = useState(
+    () => !getCachedData<any>(`contract_${resolvedParams.id}`)
+  );
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,11 +52,17 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
     text: string;
   } | null>(null);
 
-  const fetchContract = async () => {
-    setLoading(true);
+  const fetchContract = async (forceRefresh = false) => {
+    if (forceRefresh || !contract) {
+      setLoading(true);
+    }
     setError(null);
     try {
-      const res = await getContractById(resolvedParams.id);
+      const res = await fetchCached(
+        `contract_${resolvedParams.id}`,
+        () => getContractById(resolvedParams.id),
+        { ttlMs: 60_000, forceRefresh }
+      );
       if (res.success && res.contract) {
         setContract(res.contract);
       } else {
@@ -82,6 +93,9 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
 
       if (res.success && res.contract) {
         setContract(res.contract);
+        invalidateClientCache(`contract_${contract.id}`);
+        invalidateClientCache("contracts_");
+        invalidateClientCache("dashboard_stats");
         setRejectModalOpen(false);
         setRejectNotes("");
         setNotificationMsg({

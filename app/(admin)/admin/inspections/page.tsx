@@ -48,6 +48,7 @@ import { Vehicle, VehicleInspection } from "@/lib/types";
 import InspectionPdfPreviewModal from "@/app/_components/InspectionPdfPreviewModal";
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 // Checklist Definitions
 interface CheckItemConfig {
@@ -88,18 +89,25 @@ const SAFETY_ITEMS: CheckItemConfig[] = [
 const ALL_CHECK_ITEMS = [...DASHBOARD_ITEMS, ...EXTERNAL_ITEMS, ...SAFETY_ITEMS];
 
 export default function AdminInspectionsPage() {
-  const [activeTab, setActiveTab] = useState<"captains" | "history">("captains");
-  const [captains, setCaptains] = useState<CaptainInspectionItem[]>([]);
-  const [inspections, setInspections] = useState<InspectionWithMeta[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [stats, setStats] = useState({
-    totalCaptains: 0,
-    inspectedToday: 0,
-    pendingToday: 0,
-    totalInspections: 0,
-  });
+  const cachedOverview = getCachedData<{ success: boolean; captains?: CaptainInspectionItem[]; stats?: { totalCaptains: number; inspectedToday: number; pendingToday: number; totalInspections: number } }>("inspections_overview");
+  const cachedHistory = getCachedData<{ success: boolean; inspections?: InspectionWithMeta[] }>("inspections_history");
+  const cachedVehicles = getCachedData<{ success: boolean; vehicles?: Vehicle[] }>("fleet_vehicles");
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"captains" | "history">("captains");
+  const [captains, setCaptains] = useState<CaptainInspectionItem[]>(() => cachedOverview?.captains || []);
+  const [inspections, setInspections] = useState<InspectionWithMeta[]>(() => cachedHistory?.inspections || []);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => cachedVehicles?.vehicles || []);
+  const [stats, setStats] = useState(
+    () =>
+      cachedOverview?.stats || {
+        totalCaptains: 0,
+        inspectedToday: 0,
+        pendingToday: 0,
+        totalInspections: 0,
+      }
+  );
+
+  const [isLoading, setIsLoading] = useState(() => !cachedOverview);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "INSPECTED">("ALL");
@@ -138,16 +146,29 @@ export default function AdminInspectionsPage() {
     return init;
   });
 
-  // Load Data
+  // Load Data with caching and deduplication
   const loadData = async (showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
-    else setIsLoading(true);
+    else if (captains.length === 0) setIsLoading(true);
 
     try {
       const [overviewRes, historyRes, vehiclesRes] = await Promise.all([
-        getCaptainsInspectionOverview(),
-        getAllInspectionsList({ limit: 150 }),
-        getVehicles(),
+        fetchCached("inspections_overview", getCaptainsInspectionOverview, {
+          ttlMs: 60_000,
+          forceRefresh: showRefresh,
+        }),
+        fetchCached(
+          "inspections_history",
+          () => getAllInspectionsList({ limit: 40 }),
+          {
+            ttlMs: 60_000,
+            forceRefresh: showRefresh,
+          }
+        ),
+        fetchCached("fleet_vehicles", getVehicles, {
+          ttlMs: 120_000,
+          forceRefresh: showRefresh,
+        }),
       ]);
 
       if (overviewRes.success && overviewRes.captains) {
@@ -218,8 +239,12 @@ export default function AdminInspectionsPage() {
           totalInspections: prev.totalInspections + (captain.hasTodayInspection ? 0 : 1),
         }));
 
+        // Invalidate inspections cache
+        invalidateClientCache("inspections_");
+        invalidateClientCache("dashboard_stats");
+
         // Silently reload history in background
-        getAllInspectionsList({ limit: 150 }).then((hRes) => {
+        getAllInspectionsList({ limit: 40 }).then((hRes) => {
           if (hRes.success && hRes.inspections) {
             setInspections(hRes.inspections);
           }
@@ -283,6 +308,8 @@ export default function AdminInspectionsPage() {
         showBanner("success", "تم حفظ وتوثيق الفحص التشغيلي بنجاح");
         setIsCustomModalOpen(false);
         resetCustomForm();
+        invalidateClientCache("inspections_");
+        invalidateClientCache("dashboard_stats");
         loadData(true);
       } else {
         showBanner("error", res.error || "تعذر حفظ الفحص");
@@ -317,6 +344,8 @@ export default function AdminInspectionsPage() {
         showBanner("success", "تم حذف سجل الفحص التشغيلي بنجاح");
         setInspections((prev) => prev.filter((i) => i.id !== deleteConfirmId));
         setDeleteConfirmId(null);
+        invalidateClientCache("inspections_");
+        invalidateClientCache("dashboard_stats");
         loadData(true);
       } else {
         showBanner("error", res.error || "تعذر حذف سجل الفحص");

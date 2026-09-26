@@ -29,9 +29,11 @@ import { SystemNotification } from "@/lib/types";
 import { isSuperAdmin } from "@/lib/adminConstants";
 import {
   getUserNotificationsAction,
+  getUnreadNotificationsCountAction,
   markNotificationAsReadAction,
   markAllNotificationsAsReadAction,
 } from "@/app/_actions/notification";
+import { fetchCached, invalidateClientCache } from "@/lib/clientCache";
 
 import ProfileModal from "./ProfileModal";
 
@@ -75,10 +77,13 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Load and refresh notifications
-  const loadNotifications = async () => {
+  // Load full notifications list with caching (called when dropdown opens or updated)
+  const loadNotifications = async (forceRefresh = false) => {
     try {
-      const res = await getUserNotificationsAction();
+      const res = await fetchCached("user_notifications", getUserNotificationsAction, {
+        ttlMs: 30_000,
+        forceRefresh,
+      });
       if (res.success && res.notifications) {
         setNotifications(res.notifications);
         setUnreadCount(res.unreadCount || 0);
@@ -88,18 +93,38 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     }
   };
 
+  // Lightweight poll: Only checks unread count integer every 60s
+  const pollUnreadCount = async () => {
+    try {
+      const res = await getUnreadNotificationsCountAction();
+      if (res.success && typeof res.count === "number") {
+        setUnreadCount(res.count);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      loadNotifications();
-      const interval = setInterval(loadNotifications, 20000); // 20s poll
+      pollUnreadCount();
+      const interval = setInterval(pollUnreadCount, 60000); // 60s lightweight count poll
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  // Load full notifications list when user opens the notification dropdown
+  useEffect(() => {
+    if (isNotifOpen) {
+      loadNotifications(true);
+    }
+  }, [isNotifOpen]);
 
   // Handle single notification click
   const handleNotificationClick = async (notif: SystemNotification) => {
     if (!notif.isRead) {
       await markNotificationAsReadAction(notif.id);
+      invalidateClientCache("user_notifications");
       setNotifications((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
@@ -115,6 +140,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   // Handle mark all notifications as read
   const handleMarkAllRead = async () => {
     await markAllNotificationsAsReadAction();
+    invalidateClientCache("user_notifications");
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
   };

@@ -22,6 +22,7 @@ import { submitContract, ContractFormPayload } from "@/app/_actions/contract";
 import { OperationType, VehicleInspection } from "@/lib/types";
 import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 interface FormValues {
   operationType: OperationType;
@@ -45,8 +46,12 @@ interface FormValues {
 export default function CaptainContractBuilderPage() {
   const { user } = useAuth();
 
-  const [todayInspection, setTodayInspection] = useState<VehicleInspection | null>(null);
-  const [checkingInspection, setCheckingInspection] = useState(true);
+  const [todayInspection, setTodayInspection] = useState<VehicleInspection | null>(() => {
+    return user ? getCachedData<any>(`captain_inspection_${user.id}`)?.inspection || null : null;
+  });
+  const [checkingInspection, setCheckingInspection] = useState(() => {
+    return !user || !getCachedData<any>(`captain_inspection_${user.id}`);
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [createdContract, setCreatedContract] = useState<{ id: string; referenceNumber: string } | null>(null);
@@ -86,7 +91,7 @@ export default function CaptainContractBuilderPage() {
 
   useEffect(() => {
     if (user?.id) {
-      getTodayInspection(user.id).then((res) => {
+      fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then((res) => {
         if (res.success && res.inspection) {
           setTodayInspection(res.inspection);
           if (res.inspection.vehiclePlate) {
@@ -133,6 +138,10 @@ export default function CaptainContractBuilderPage() {
     setIsSubmitting(false);
 
     if (res.success && res.contract) {
+      invalidateClientCache("captain_contracts_");
+      invalidateClientCache("contracts_");
+      invalidateClientCache("dashboard_stats");
+      invalidateClientCache("inspections_");
       setCreatedContract({
         id: res.contract.id,
         referenceNumber: res.contract.referenceNumber,

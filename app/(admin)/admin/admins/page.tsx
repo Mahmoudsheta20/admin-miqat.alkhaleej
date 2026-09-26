@@ -30,12 +30,13 @@ import {
   resetAdminTemporaryPasswordAction,
 } from "@/app/_actions/adminManagement";
 import { AdminUserItem, SUPER_ADMIN_EMAIL } from "@/lib/adminConstants";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function AdminManagementPage() {
   const { user } = useAuth();
 
-  const [admins, setAdmins] = useState<AdminUserItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [admins, setAdmins] = useState<AdminUserItem[]>(() => getCachedData("admins_list") || []);
+  const [loading, setLoading] = useState(() => !getCachedData("admins_list"));
   const [isSuper, setIsSuper] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,11 +60,16 @@ export default function AdminManagementPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [resetLoadingAdminId, setResetLoadingAdminId] = useState<string | null>(null);
 
-  const fetchAdmins = async () => {
-    setLoading(true);
+  const fetchAdmins = async (forceRefresh = false) => {
+    if (forceRefresh || admins.length === 0) {
+      setLoading(true);
+    }
     setError(null);
     try {
-      const res = await getAdminsListAction();
+      const res = await fetchCached("admins_list", getAdminsListAction, {
+        ttlMs: 120_000,
+        forceRefresh,
+      });
       if (res.success && res.admins) {
         setAdmins(res.admins);
         setIsSuper(Boolean(res.isCallerSuperAdmin));
@@ -98,10 +104,11 @@ export default function AdminManagementPage() {
           admin: res.admin,
           temporaryPassword: res.temporaryPassword,
         });
+        invalidateClientCache("admins_list");
         setName("");
         setEmail("");
         setPhone("");
-        fetchAdmins();
+        fetchAdmins(true);
       } else {
         setFormError(res.error || "فشل إنشاء حساب المسؤول");
       }
@@ -117,6 +124,7 @@ export default function AdminManagementPage() {
     try {
       const res = await toggleAdminStatusAction(admin.id);
       if (res.success) {
+        invalidateClientCache("admins_list");
         setAdmins((prev) =>
           prev.map((a) => (a.id === admin.id ? { ...a, active: Boolean(res.active) } : a))
         );
@@ -134,6 +142,7 @@ export default function AdminManagementPage() {
     try {
       const res = await deleteAdminUserAction(deleteTarget.id);
       if (res.success) {
+        invalidateClientCache("admins_list");
         setAdmins((prev) => prev.filter((a) => a.id !== deleteTarget.id));
         setDeleteTarget(null);
       } else {
@@ -160,11 +169,12 @@ export default function AdminManagementPage() {
     try {
       const res = await resetAdminTemporaryPasswordAction(adm.id);
       if (res.success && res.temporaryPassword) {
+        invalidateClientCache("admins_list");
         setCreatedAdmin({
           admin: adm,
           temporaryPassword: res.temporaryPassword,
         });
-        fetchAdmins();
+        fetchAdmins(true);
       } else {
         alert(res.error || "فشل إعادة تعيين كلمة المرور");
       }

@@ -43,6 +43,7 @@ import {
   formatOfficialDate,
 } from "@/lib/contractConstants";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { CustomInput } from "@/app/_components/form/CustomInput";
 import { CustomTextarea } from "@/app/_components/form/CustomTextarea";
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
@@ -89,9 +90,11 @@ const INSPECTION_CATEGORIES = [
 ];
 
 export default function AdminContractBuilderPage() {
-  const [captains, setCaptains] = useState<CaptainWithMeta[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [isLoadingCaptains, setIsLoadingCaptains] = useState(true);
+  const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => getCachedData("captains_list") || []);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => getCachedData("fleet_vehicles") || []);
+  const [isLoadingCaptains, setIsLoadingCaptains] = useState(
+    () => !getCachedData("captains_list") || !getCachedData("fleet_vehicles")
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
   const [createdContract, setCreatedContract] = useState<{
@@ -198,9 +201,12 @@ export default function AdminContractBuilderPage() {
     };
   }, [selectedCaptainId, setValue]);
 
-  // Fetch registered captains and fleet vehicles in parallel
+  // Fetch registered captains and fleet vehicles in parallel with client-side caching
   useEffect(() => {
-    Promise.all([getCaptains(), getVehicles()]).then(([capRes, vehRes]) => {
+    Promise.all([
+      fetchCached("captains_list", getCaptains, { ttlMs: 120_000 }),
+      fetchCached("fleet_vehicles", getVehicles, { ttlMs: 120_000 }),
+    ]).then(([capRes, vehRes]) => {
       let loadedCaptains: CaptainWithMeta[] = [];
       let loadedVehicles: Vehicle[] = [];
 
@@ -382,6 +388,9 @@ export default function AdminContractBuilderPage() {
       setIsSubmitting(false);
 
       if (res.success && res.contract) {
+        invalidateClientCache("contracts_");
+        invalidateClientCache("dashboard_stats");
+        invalidateClientCache("inspections_");
         setCreatedContract({
           id: res.contract.id,
           referenceNumber: res.contract.referenceNumber,

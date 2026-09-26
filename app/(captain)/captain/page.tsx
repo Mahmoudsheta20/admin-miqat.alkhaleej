@@ -26,33 +26,50 @@ import { Contract, VehicleInspection } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
 import ProfileModal from "@/app/_components/ProfileModal";
+import { fetchCached, getCachedData } from "@/lib/clientCache";
 
 export default function CaptainHomePage() {
   const { user } = useAuth();
-  const [inspection, setInspection] = useState<VehicleInspection | null>(null);
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [inspection, setInspection] = useState<VehicleInspection | null>(() => {
+    return user ? getCachedData<any>(`captain_inspection_${user.id}`)?.inspection || null : null;
+  });
+  const [contracts, setContracts] = useState<Contract[]>(() => {
+    return user ? getCachedData<any>(`captain_contracts_${user.id}`)?.contracts || [] : [];
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    return !user || !getCachedData<any>(`captain_contracts_${user.id}`);
+  });
   const [previewPdfId, setPreviewPdfId] = useState<string | null>(null);
   const [previewPdfRef, setPreviewPdfRef] = useState<string>("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (forceRefresh = false) => {
     if (!user) return;
-    setIsLoading(true);
-
-    const [inspRes, contrRes] = await Promise.all([
-      getTodayInspection(user.id),
-      getContracts({ captainId: user.id }),
-    ]);
-
-    if (inspRes.success) {
-      setInspection(inspRes.inspection || null);
-    }
-    if (contrRes.success && contrRes.contracts) {
-      setContracts(contrRes.contracts);
+    if (forceRefresh || contracts.length === 0) {
+      setIsLoading(true);
     }
 
-    setIsLoading(false);
+    try {
+      const [inspRes, contrRes] = await Promise.all([
+        fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), {
+          ttlMs: 60_000,
+          forceRefresh,
+        }),
+        fetchCached(`captain_contracts_${user.id}`, () => getContracts({ captainId: user.id }), {
+          ttlMs: 60_000,
+          forceRefresh,
+        }),
+      ]);
+
+      if (inspRes.success) {
+        setInspection(inspRes.inspection || null);
+      }
+      if (contrRes.success && contrRes.contracts) {
+        setContracts(contrRes.contracts);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -110,7 +127,7 @@ export default function CaptainHomePage() {
           </div>
 
           <button
-            onClick={loadData}
+            onClick={() => loadData(true)}
             disabled={isLoading}
             className="self-start sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-50"
           >

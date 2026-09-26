@@ -33,6 +33,7 @@ import {
   AdminContractFormValues,
   sanitizeContractPayload,
 } from "@/lib/validations/contract";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import {
   getSaudiTodayDateStr,
   getSaudiCurrentTimeStr,
@@ -117,8 +118,20 @@ export default function EditContractPage({ params }: PageProps) {
 
   // Loading & State
   const [contract, setContract] = useState<Contract | null>(null);
-  const [captains, setCaptains] = useState<CaptainWithMeta[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => {
+    const cached = getCachedData<any>("captains_list");
+    if (cached?.captains) {
+      return cached.captains.map((c: any) => ({
+        ...c,
+        contractCount: c.contractCount || 0,
+        hasTodayInspection: c.hasTodayInspection || false,
+      }));
+    }
+    return [];
+  });
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    return getCachedData<any>("fleet_vehicles")?.vehicles || [];
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -134,6 +147,10 @@ export default function EditContractPage({ params }: PageProps) {
       const res = await deleteContract(contract.id);
       setIsDeleting(false);
       if (res.success) {
+        invalidateClientCache("contracts_");
+        invalidateClientCache("dashboard_stats");
+        invalidateClientCache("inspections_");
+        invalidateClientCache("captains_list");
         setIsDeleteDialogOpen(false);
         router.push("/admin/contracts");
       } else {
@@ -216,8 +233,8 @@ export default function EditContractPage({ params }: PageProps) {
       try {
         const [contractRes, capsRes, vehsRes] = await Promise.all([
           getContractById(id),
-          getCaptains(),
-          getVehicles(),
+          fetchCached("captains_list", getCaptains, { ttlMs: 120_000 }),
+          fetchCached("fleet_vehicles", getVehicles, { ttlMs: 120_000 }),
         ]);
 
         if (!isMounted) return;
@@ -364,6 +381,10 @@ export default function EditContractPage({ params }: PageProps) {
           setDriverDeclared(insp.driverDeclared ?? true);
           setInspectionNotes(insp.notes || "");
         }
+        invalidateClientCache("contracts_");
+        invalidateClientCache("dashboard_stats");
+        invalidateClientCache("inspections_");
+        invalidateClientCache("captains_list");
         setSuccessMessage("تم حفظ وتحديث بيانات العقد والوثيقة الرسمية بنجاح!");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {

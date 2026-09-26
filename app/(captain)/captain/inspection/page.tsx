@@ -21,6 +21,7 @@ import {
   getTodayInspection,
   InspectionInput,
 } from "@/app/_actions/inspection";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 interface CheckItemConfig {
   key: keyof Omit<
@@ -69,7 +70,9 @@ export default function CaptainInspectionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [alreadyInspected, setAlreadyInspected] = useState(false);
+  const [alreadyInspected, setAlreadyInspected] = useState(() => {
+    return Boolean(user && getCachedData<any>(`captain_inspection_${user.id}`)?.inspection);
+  });
 
   // 16 boolean flags
   const [checks, setChecks] = useState<Record<string, boolean>>({
@@ -93,7 +96,7 @@ export default function CaptainInspectionPage() {
 
   useEffect(() => {
     if (user?.id) {
-      getTodayInspection(user.id).then((res) => {
+      fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then((res) => {
         if (res.success && res.inspection) {
           setAlreadyInspected(true);
         }
@@ -151,6 +154,10 @@ export default function CaptainInspectionPage() {
     setIsSubmitting(false);
 
     if (res.success) {
+      invalidateClientCache("captain_inspection_");
+      invalidateClientCache("inspections_");
+      invalidateClientCache("captains_list");
+      invalidateClientCache("dashboard_stats");
       setSubmittedSuccess(true);
       setAlreadyInspected(true);
     } else {
