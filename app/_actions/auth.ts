@@ -41,9 +41,18 @@ export async function loginAction(
       return { success: false, error: "يرجى إدخال كلمة المرور" };
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-    });
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+      });
+    } catch (connErr) {
+      console.warn("Retrying database query after connection wake-up...", connErr);
+      await new Promise((r) => setTimeout(r, 600));
+      user = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+      });
+    }
 
     if (!user) {
       return { success: false, error: "بيانات الدخول غير صحيحة أو الحساب غير مسجل" };

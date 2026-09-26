@@ -93,25 +93,34 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     }
   };
 
-  // Lightweight poll: Only checks unread count integer every 60s
+  // Lightweight poll: Only checks unread count integer every 60s with 45s client cache
+  const isPollingRef = useRef(false);
   const pollUnreadCount = async () => {
+    if (isPollingRef.current) return;
+    isPollingRef.current = true;
     try {
-      const res = await getUnreadNotificationsCountAction();
-      if (res.success && typeof res.count === "number") {
+      const res = await fetchCached(
+        "unread_notifications_count",
+        getUnreadNotificationsCountAction,
+        { ttlMs: 45_000 }
+      );
+      if (res?.success && typeof res.count === "number") {
         setUnreadCount(res.count);
       }
     } catch {
       // ignore
+    } finally {
+      isPollingRef.current = false;
     }
   };
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       pollUnreadCount();
       const interval = setInterval(pollUnreadCount, 60000); // 60s lightweight count poll
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user?.id]);
 
   // Load full notifications list when user opens the notification dropdown
   useEffect(() => {
@@ -125,6 +134,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     if (!notif.isRead) {
       await markNotificationAsReadAction(notif.id);
       invalidateClientCache("user_notifications");
+      invalidateClientCache("unread_notifications_count");
       setNotifications((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
@@ -141,6 +151,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const handleMarkAllRead = async () => {
     await markAllNotificationsAsReadAction();
     invalidateClientCache("user_notifications");
+    invalidateClientCache("unread_notifications_count");
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
   };
@@ -449,6 +460,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                       src={user.avatarUrl}
                       alt={user.name}
                       fill
+                      sizes="32px"
                       className="object-cover"
                       unoptimized
                     />
@@ -489,6 +501,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                             src={user.avatarUrl}
                             alt={user.name}
                             fill
+                            sizes="48px"
                             className="object-cover"
                             unoptimized
                           />

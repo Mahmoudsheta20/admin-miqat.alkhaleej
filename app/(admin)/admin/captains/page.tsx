@@ -38,8 +38,15 @@ type CaptainItem = SystemUser & {
 };
 
 export default function CaptainsManagementPage() {
-  const [captains, setCaptains] = useState<CaptainItem[]>(() => getCachedData("captains_list") || []);
-  const [isLoading, setIsLoading] = useState(() => !getCachedData("captains_list"));
+  const cachedCaptains = getCachedData<any>("captains_list");
+  const [captains, setCaptains] = useState<CaptainItem[]>(() => {
+    if (Array.isArray(cachedCaptains)) return cachedCaptains;
+    if (cachedCaptains && typeof cachedCaptains === "object" && Array.isArray(cachedCaptains.captains)) {
+      return cachedCaptains.captains;
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => !cachedCaptains);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
@@ -72,7 +79,7 @@ export default function CaptainsManagementPage() {
   });
 
   const loadCaptains = async (forceRefresh = false) => {
-    if (forceRefresh || captains.length === 0) {
+    if (forceRefresh || (Array.isArray(captains) ? captains.length : 0) === 0) {
       setIsLoading(true);
     }
     try {
@@ -80,7 +87,7 @@ export default function CaptainsManagementPage() {
         ttlMs: 120_000,
         forceRefresh,
       });
-      if (res.success && res.captains) {
+      if (res?.success && Array.isArray(res?.captains)) {
         setCaptains(res.captains);
       }
     } catch (err) {
@@ -195,7 +202,8 @@ export default function CaptainsManagementPage() {
     await loadCaptains(true);
   };
 
-  const filtered = captains.filter((c) => {
+  const safeCaptains = Array.isArray(captains) ? captains : [];
+  const filtered = safeCaptains.filter((c) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -303,6 +311,7 @@ export default function CaptainsManagementPage() {
                                 src={c.avatarUrl}
                                 alt={c.name}
                                 fill
+                                sizes="36px"
                                 className="object-cover"
                                 unoptimized
                               />
@@ -434,6 +443,7 @@ export default function CaptainsManagementPage() {
                             src={c.avatarUrl}
                             alt={c.name}
                             fill
+                            sizes="40px"
                             className="object-cover"
                             unoptimized
                           />

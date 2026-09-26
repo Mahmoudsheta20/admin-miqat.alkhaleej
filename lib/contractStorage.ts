@@ -406,6 +406,72 @@ export async function generateAndSaveContractPdf(
 }
 
 /**
+ * Retrieves existing contract PDF from storage if already generated,
+ * or generates it on-demand via Puppeteer if not found.
+ */
+export async function getOrGenerateContractPdf(
+  contractIdOrRef: string,
+  baseUrl?: string,
+  options?: { forceRegenerate?: boolean }
+): Promise<{
+  pdfBuffer: Buffer;
+  filePath: string;
+  publicUrl: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  contract: any;
+  fileName: string;
+  isExisting: boolean;
+}> {
+  const contract = await prisma.contract.findFirst({
+    where: {
+      OR: [{ id: contractIdOrRef }, { referenceNumber: contractIdOrRef }],
+    },
+    include: {
+      passengers: { orderBy: { sequence: "asc" } },
+      captain: true,
+      inspection: true,
+    },
+  });
+
+  if (!contract) {
+    throw new Error(`العقد غير موجود: ${contractIdOrRef}`);
+  }
+
+  const fileName = `contract-${contract.referenceNumber}.pdf`;
+  const filePath = path.join(CONTRACTS_STORAGE_DIR, fileName);
+  const publicUrl = `/storage/contracts/${fileName}`;
+
+  // Check if PDF already exists and is valid on disk
+  if (!options?.forceRegenerate) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const stat = fs.statSync(filePath);
+        if (stat.size > 1000) {
+          const pdfBuffer = fs.readFileSync(filePath);
+          return {
+            pdfBuffer,
+            filePath,
+            publicUrl,
+            contract,
+            fileName,
+            isExisting: true,
+          };
+        }
+      }
+    } catch (fsErr) {
+      console.warn("Could not read cached PDF from disk, falling back to generate:", fsErr);
+    }
+  }
+
+  // Not found or forced regeneration: Generate via Puppeteer and save
+  const generated = await generateAndSaveContractPdf(contract.referenceNumber, baseUrl);
+  return {
+    ...generated,
+    isExisting: false,
+  };
+}
+
+/**
  * Synchronize and generate saved PDFs for ALL existing contracts in the database.
  */
 export async function syncAllExistingContractsToStorage(

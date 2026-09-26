@@ -90,10 +90,25 @@ const INSPECTION_CATEGORIES = [
 ];
 
 export default function AdminContractBuilderPage() {
-  const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => getCachedData("captains_list") || []);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => getCachedData("fleet_vehicles") || []);
+  const cachedCaptains = getCachedData<any>("captains_list");
+  const cachedVehicles = getCachedData<any>("fleet_vehicles");
+
+  const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => {
+    if (Array.isArray(cachedCaptains)) return cachedCaptains;
+    if (cachedCaptains && typeof cachedCaptains === "object" && Array.isArray(cachedCaptains.captains)) {
+      return cachedCaptains.captains;
+    }
+    return [];
+  });
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    if (Array.isArray(cachedVehicles)) return cachedVehicles;
+    if (cachedVehicles && typeof cachedVehicles === "object" && Array.isArray(cachedVehicles.vehicles)) {
+      return cachedVehicles.vehicles;
+    }
+    return [];
+  });
   const [isLoadingCaptains, setIsLoadingCaptains] = useState(
-    () => !getCachedData("captains_list") || !getCachedData("fleet_vehicles")
+    () => !cachedCaptains || !cachedVehicles
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -169,7 +184,9 @@ export default function AdminContractBuilderPage() {
   const selectedCaptainId = useWatch({ control, name: "captainId" });
   const selectedVehiclePlate = useWatch({ control, name: "vehiclePlate" });
   const issueDateMode = useWatch({ control, name: "issueDateMode" }) || "AUTO";
-  const currentCaptain = captains.find((c) => c.id === selectedCaptainId);
+  const safeCaptains = Array.isArray(captains) ? captains : [];
+  const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
+  const currentCaptain = safeCaptains.find((c) => c.id === selectedCaptainId);
 
   const isCheckingInspection = Boolean(selectedCaptainId && checkedCaptainId !== selectedCaptainId);
   const effectiveCaptainInspection =
@@ -210,11 +227,11 @@ export default function AdminContractBuilderPage() {
       let loadedCaptains: CaptainWithMeta[] = [];
       let loadedVehicles: Vehicle[] = [];
 
-      if (capRes.success && capRes.captains) {
+      if (capRes?.success && Array.isArray(capRes?.captains)) {
         loadedCaptains = capRes.captains;
         setCaptains(capRes.captains);
       }
-      if (vehRes.success && vehRes.vehicles) {
+      if (vehRes?.success && Array.isArray(vehRes?.vehicles)) {
         loadedVehicles = vehRes.vehicles;
         setVehicles(vehRes.vehicles);
       }
@@ -413,10 +430,10 @@ export default function AdminContractBuilderPage() {
     setAdminInspectionSuccessMsg("");
     setAdminInspectionMode("AUTO");
     setShowDetailedChecks(false);
-    const defaultCap = captains.length > 0 ? captains[0] : null;
+    const defaultCap = safeCaptains.length > 0 ? safeCaptains[0] : null;
     const defaultPlate =
       defaultCap?.assignedVehiclePlate ||
-      (vehicles.length > 0 ? vehicles[0].plateNumberAr : "");
+      (safeVehicles.length > 0 ? safeVehicles[0].plateNumberAr : "");
 
     reset({
       operationType: "توصيل واستقبال مطار",
@@ -561,7 +578,7 @@ export default function AdminContractBuilderPage() {
                   <CaptainSelector
                     label="الكابتن المسؤول عن التنفيذ"
                     required
-                    captains={captains}
+                    captains={safeCaptains}
                     selectedCaptainId={field.value}
                     onSelectCaptain={(cap) => {
                       field.onChange(cap.id);

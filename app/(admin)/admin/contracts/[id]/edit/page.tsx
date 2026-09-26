@@ -120,7 +120,8 @@ export default function EditContractPage({ params }: PageProps) {
   const [contract, setContract] = useState<Contract | null>(null);
   const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => {
     const cached = getCachedData<any>("captains_list");
-    if (cached?.captains) {
+    if (Array.isArray(cached)) return cached;
+    if (cached && typeof cached === "object" && Array.isArray(cached.captains)) {
       return cached.captains.map((c: any) => ({
         ...c,
         contractCount: c.contractCount || 0,
@@ -130,7 +131,12 @@ export default function EditContractPage({ params }: PageProps) {
     return [];
   });
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    return getCachedData<any>("fleet_vehicles")?.vehicles || [];
+    const cached = getCachedData<any>("fleet_vehicles");
+    if (Array.isArray(cached)) return cached;
+    if (cached && typeof cached === "object" && Array.isArray(cached.vehicles)) {
+      return cached.vehicles;
+    }
+    return [];
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -239,11 +245,11 @@ export default function EditContractPage({ params }: PageProps) {
 
         if (!isMounted) return;
 
-        if (vehsRes.success && vehsRes.vehicles) {
+        if (vehsRes?.success && Array.isArray(vehsRes?.vehicles)) {
           setVehicles(vehsRes.vehicles);
         }
 
-        if (capsRes.success && capsRes.captains) {
+        if (capsRes?.success && Array.isArray(capsRes?.captains)) {
           const mapped: CaptainWithMeta[] = capsRes.captains.map((c) => ({
             ...c,
             contractCount: c.contractCount || 0,
@@ -827,7 +833,7 @@ export default function EditContractPage({ params }: PageProps) {
                     required
                     vehicles={vehicles}
                     selectedPlate={field.value}
-                    captainPlate={captains.find((c) => c.id === selectedCaptainId)?.assignedVehiclePlate}
+                    captainPlate={(Array.isArray(captains) ? captains : []).find((c) => c.id === selectedCaptainId)?.assignedVehiclePlate}
                     onSelectVehicle={(veh) => {
                       field.onChange(veh.plateNumberAr);
                     }}

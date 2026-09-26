@@ -28,8 +28,15 @@ import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function FleetManagementPage() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => getCachedData("fleet_vehicles") || []);
-  const [isLoading, setIsLoading] = useState(() => !getCachedData("fleet_vehicles"));
+  const cachedFleet = getCachedData<any>("fleet_vehicles");
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    if (Array.isArray(cachedFleet)) return cachedFleet;
+    if (cachedFleet && typeof cachedFleet === "object" && Array.isArray(cachedFleet.vehicles)) {
+      return cachedFleet.vehicles;
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => !cachedFleet);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -54,7 +61,7 @@ export default function FleetManagementPage() {
   });
 
   const loadVehicles = async (forceRefresh = false) => {
-    if (forceRefresh || vehicles.length === 0) {
+    if (forceRefresh || (Array.isArray(vehicles) ? vehicles.length : 0) === 0) {
       setIsLoading(true);
     }
     try {
@@ -62,7 +69,7 @@ export default function FleetManagementPage() {
         ttlMs: 120_000,
         forceRefresh,
       });
-      if (res.success && res.vehicles) {
+      if (res?.success && Array.isArray(res?.vehicles)) {
         setVehicles(res.vehicles);
       }
     } catch (err) {
@@ -156,7 +163,8 @@ export default function FleetManagementPage() {
     await loadVehicles(true);
   };
 
-  const filtered = vehicles.filter((v) => {
+  const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
+  const filtered = safeVehicles.filter((v) => {
     if (statusFilter !== "ALL" && v.status !== statusFilter) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;

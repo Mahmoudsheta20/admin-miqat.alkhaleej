@@ -89,23 +89,43 @@ const SAFETY_ITEMS: CheckItemConfig[] = [
 const ALL_CHECK_ITEMS = [...DASHBOARD_ITEMS, ...EXTERNAL_ITEMS, ...SAFETY_ITEMS];
 
 export default function AdminInspectionsPage() {
-  const cachedOverview = getCachedData<{ success: boolean; captains?: CaptainInspectionItem[]; stats?: { totalCaptains: number; inspectedToday: number; pendingToday: number; totalInspections: number } }>("inspections_overview");
-  const cachedHistory = getCachedData<{ success: boolean; inspections?: InspectionWithMeta[] }>("inspections_history");
-  const cachedVehicles = getCachedData<{ success: boolean; vehicles?: Vehicle[] }>("fleet_vehicles");
+  const cachedOverview = getCachedData<any>("inspections_overview");
+  const cachedHistory = getCachedData<any>("inspections_history");
+  const cachedVehicles = getCachedData<any>("fleet_vehicles");
 
   const [activeTab, setActiveTab] = useState<"captains" | "history">("captains");
-  const [captains, setCaptains] = useState<CaptainInspectionItem[]>(() => cachedOverview?.captains || []);
-  const [inspections, setInspections] = useState<InspectionWithMeta[]>(() => cachedHistory?.inspections || []);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => cachedVehicles?.vehicles || []);
-  const [stats, setStats] = useState(
-    () =>
-      cachedOverview?.stats || {
-        totalCaptains: 0,
-        inspectedToday: 0,
-        pendingToday: 0,
-        totalInspections: 0,
-      }
-  );
+  const [captains, setCaptains] = useState<CaptainInspectionItem[]>(() => {
+    if (Array.isArray(cachedOverview)) return cachedOverview;
+    if (cachedOverview && typeof cachedOverview === "object" && Array.isArray(cachedOverview.captains)) {
+      return cachedOverview.captains;
+    }
+    return [];
+  });
+  const [inspections, setInspections] = useState<InspectionWithMeta[]>(() => {
+    if (Array.isArray(cachedHistory)) return cachedHistory;
+    if (cachedHistory && typeof cachedHistory === "object" && Array.isArray(cachedHistory.inspections)) {
+      return cachedHistory.inspections;
+    }
+    return [];
+  });
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    if (Array.isArray(cachedVehicles)) return cachedVehicles;
+    if (cachedVehicles && typeof cachedVehicles === "object" && Array.isArray(cachedVehicles.vehicles)) {
+      return cachedVehicles.vehicles;
+    }
+    return [];
+  });
+  const [stats, setStats] = useState<{
+    totalCaptains: number;
+    inspectedToday: number;
+    pendingToday: number;
+    totalInspections: number;
+  }>(() => ({
+    totalCaptains: cachedOverview?.stats?.totalCaptains || 0,
+    inspectedToday: cachedOverview?.stats?.inspectedToday || 0,
+    pendingToday: cachedOverview?.stats?.pendingToday || 0,
+    totalInspections: cachedOverview?.stats?.totalInspections || 0,
+  }));
 
   const [isLoading, setIsLoading] = useState(() => !cachedOverview);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -146,10 +166,14 @@ export default function AdminInspectionsPage() {
     return init;
   });
 
+  const safeCaptains = Array.isArray(captains) ? captains : [];
+  const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
+  const safeInspections = Array.isArray(inspections) ? inspections : [];
+
   // Load Data with caching and deduplication
   const loadData = async (showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
-    else if (captains.length === 0) setIsLoading(true);
+    else if ((Array.isArray(captains) ? captains.length : 0) === 0) setIsLoading(true);
 
     try {
       const [overviewRes, historyRes, vehiclesRes] = await Promise.all([
@@ -171,18 +195,18 @@ export default function AdminInspectionsPage() {
         }),
       ]);
 
-      if (overviewRes.success && overviewRes.captains) {
+      if (overviewRes?.success && Array.isArray(overviewRes?.captains)) {
         setCaptains(overviewRes.captains);
         if (overviewRes.stats) {
           setStats(overviewRes.stats);
         }
       }
 
-      if (historyRes.success && historyRes.inspections) {
+      if (historyRes?.success && Array.isArray(historyRes?.inspections)) {
         setInspections(historyRes.inspections);
       }
 
-      if (vehiclesRes.success && vehiclesRes.vehicles) {
+      if (vehiclesRes?.success && Array.isArray(vehiclesRes?.vehicles)) {
         setVehicles(vehiclesRes.vehicles);
       }
     } catch (error) {
@@ -268,7 +292,7 @@ export default function AdminInspectionsPage() {
       return;
     }
 
-    const selectedCap = captains.find((c) => c.id === customCaptainId);
+    const selectedCap = safeCaptains.find((c) => c.id === customCaptainId);
     const effectivePlate =
       customVehiclePlate.trim() || selectedCap?.assignedVehiclePlate || "ا ص ل 7223";
 
@@ -360,7 +384,7 @@ export default function AdminInspectionsPage() {
 
   // Filtered captains
   const filteredCaptains = useMemo(() => {
-    return captains.filter((c) => {
+    return safeCaptains.filter((c) => {
       const matchesSearch =
         search === "" ||
         c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -376,11 +400,11 @@ export default function AdminInspectionsPage() {
 
       return matchesSearch && matchesStatus && matchesCaptain;
     });
-  }, [captains, search, statusFilter, captainFilter]);
+  }, [safeCaptains, search, statusFilter, captainFilter]);
 
   // Filtered history inspections
   const filteredInspections = useMemo(() => {
-    return inspections.filter((insp) => {
+    return safeInspections.filter((insp) => {
       const matchesSearch =
         search === "" ||
         (insp.captainName && insp.captainName.toLowerCase().includes(search.toLowerCase())) ||
@@ -555,7 +579,7 @@ export default function AdminInspectionsPage() {
               <UserCheck className="w-3.5 h-3.5 shrink-0" />
               <span>كباتن اليوم وحالة الفحص</span>
               <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                {captains.length}
+                {safeCaptains.length}
               </span>
             </button>
 
@@ -570,7 +594,7 @@ export default function AdminInspectionsPage() {
               <FileText className="w-3.5 h-3.5 shrink-0" />
               <span>سجل الفحوصات التشغيلية</span>
               <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-purple-500/10 text-purple-700 dark:text-purple-400">
-                {inspections.length}
+                {safeInspections.length}
               </span>
             </button>
           </div>
@@ -587,8 +611,8 @@ export default function AdminInspectionsPage() {
                 onChange={(e) => setCaptainFilter(e.target.value)}
                 className="theme-input w-full pr-8 pl-6 py-1.5 text-xs rounded-xl cursor-pointer"
               >
-                <option value="">جميع الكباتن ({captains.length})</option>
-                {captains.map((c) => (
+                <option value="">جميع الكباتن ({safeCaptains.length})</option>
+                {safeCaptains.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -644,7 +668,7 @@ export default function AdminInspectionsPage() {
                   : "border theme-border text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
-              الكل ({captains.length})
+              الكل ({safeCaptains.length})
             </button>
             <button
               onClick={() => setStatusFilter("PENDING")}
@@ -672,7 +696,7 @@ export default function AdminInspectionsPage() {
             {captainFilter && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-xs font-bold animate-in fade-in">
                 <UserCheck className="w-3.5 h-3.5" />
-                الكابتن: {captains.find((c) => c.id === captainFilter)?.name || captainFilter}
+                الكابتن: {safeCaptains.find((c) => c.id === captainFilter)?.name || captainFilter}
                 <button
                   type="button"
                   onClick={() => setCaptainFilter("")}
@@ -718,7 +742,7 @@ export default function AdminInspectionsPage() {
                   className="px-2.5 py-1 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/20 transition cursor-pointer"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
-                  الكابتن: {captains.find((c) => c.id === captainFilter)?.name || captainFilter}
+                  الكابتن: {safeCaptains.find((c) => c.id === captainFilter)?.name || captainFilter}
                   <X className="w-3 h-3" />
                 </button>
               )}
@@ -801,6 +825,7 @@ export default function AdminInspectionsPage() {
                                         src={c.avatarUrl}
                                         alt={c.name}
                                         fill
+                                        sizes="36px"
                                         className="object-cover"
                                       />
                                     ) : (
@@ -984,6 +1009,7 @@ export default function AdminInspectionsPage() {
                                   src={c.avatarUrl}
                                   alt={c.name}
                                   fill
+                                  sizes="44px"
                                   className="object-cover"
                                 />
                               ) : (
@@ -1626,7 +1652,7 @@ export default function AdminInspectionsPage() {
                       onChange={(e) => {
                         const capId = e.target.value;
                         setCustomCaptainId(capId);
-                        const found = captains.find((c) => c.id === capId);
+                        const found = safeCaptains.find((c) => c.id === capId);
                         if (found?.assignedVehiclePlate) {
                           setCustomVehiclePlate(found.assignedVehiclePlate);
                         }
@@ -1635,7 +1661,7 @@ export default function AdminInspectionsPage() {
                       className="theme-input w-full p-2.5 text-xs rounded-xl"
                     >
                       <option value="">-- اختر الكابتن المراد فحصه --</option>
-                      {captains.map((c) => (
+                      {safeCaptains.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name} {c.hasTodayInspection ? "(تم فحصه اليوم)" : "(غير مفحوص اليوم)"}
                         </option>
@@ -1648,9 +1674,9 @@ export default function AdminInspectionsPage() {
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         لوحة المركبة <span className="text-rose-500">*</span>
                       </label>
-                      {vehicles.length > 0 && (
+                      {safeVehicles.length > 0 && (
                         <span className="text-[10px] text-slate-400">
-                          {vehicles.length} مركبة بالأسطول
+                          {safeVehicles.length} مركبة بالأسطول
                         </span>
                       )}
                     </div>
@@ -1663,7 +1689,7 @@ export default function AdminInspectionsPage() {
                       className="theme-input w-full p-2.5 text-xs rounded-xl font-mono"
                     />
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      {vehicles.length > 0 && (
+                      {safeVehicles.length > 0 && (
                         <select
                           onChange={(e) => {
                             if (e.target.value) setCustomVehiclePlate(e.target.value);
@@ -1672,7 +1698,7 @@ export default function AdminInspectionsPage() {
                           className="text-[11px] py-1 px-2 rounded-lg border theme-border bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer hover:border-amber-500/40"
                         >
                           <option value="">اختيار سريع من مركبات الأسطول...</option>
-                          {vehicles.map((v) => (
+                          {safeVehicles.map((v) => (
                             <option key={v.id} value={v.plateNumberAr}>
                               {v.plateNumberAr} - {v.make} {v.model}
                             </option>
@@ -1680,7 +1706,7 @@ export default function AdminInspectionsPage() {
                         </select>
                       )}
                       {customCaptainId && (() => {
-                        const cap = captains.find((c) => c.id === customCaptainId);
+                        const cap = safeCaptains.find((c) => c.id === customCaptainId);
                         if (cap?.assignedVehiclePlate && cap.assignedVehiclePlate !== customVehiclePlate) {
                           return (
                             <button

@@ -261,3 +261,66 @@ export async function generateAndSaveInspectionPdf(
     inspection: inspectionRecord,
   };
 }
+
+/**
+ * Retrieves existing inspection PDF from storage if already generated,
+ * or generates it on-demand via Puppeteer if not found.
+ */
+export async function getOrGenerateInspectionPdf(
+  inspectionId: string,
+  baseUrl?: string,
+  options?: { forceRegenerate?: boolean }
+): Promise<{
+  pdfBuffer: Buffer;
+  fileName: string;
+  filePath: string;
+  publicUrl: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inspection: any;
+  isExisting: boolean;
+}> {
+  const inspectionRecord = await prisma.vehicleInspection.findUnique({
+    where: { id: inspectionId },
+    include: {
+      captain: true,
+    },
+  });
+
+  if (!inspectionRecord) {
+    throw new Error(`سجل الفحص غير موجود: ${inspectionId}`);
+  }
+
+  const shortCode = inspectionRecord.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+  const fileName = `inspection-${shortCode}.pdf`;
+  const filePath = path.join(INSPECTIONS_STORAGE_DIR, fileName);
+  const publicUrl = `/storage/inspections/${fileName}`;
+
+  // Check if PDF already exists and is valid on disk
+  if (!options?.forceRegenerate) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const stat = fs.statSync(filePath);
+        if (stat.size > 1000) {
+          const pdfBuffer = fs.readFileSync(filePath);
+          return {
+            pdfBuffer,
+            fileName,
+            filePath,
+            publicUrl,
+            inspection: inspectionRecord,
+            isExisting: true,
+          };
+        }
+      }
+    } catch (fsErr) {
+      console.warn("Could not read cached inspection PDF from disk, falling back to generate:", fsErr);
+    }
+  }
+
+  // Not found or forced regeneration: Generate via Puppeteer and save
+  const generated = await generateAndSaveInspectionPdf(inspectionRecord.id, baseUrl);
+  return {
+    ...generated,
+    isExisting: false,
+  };
+}

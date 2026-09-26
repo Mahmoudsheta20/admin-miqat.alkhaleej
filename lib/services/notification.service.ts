@@ -151,9 +151,14 @@ export class NotificationService {
    * Count unread notifications
    */
   static async getUnreadCount(userId: string): Promise<number> {
-    return prisma.notification.count({
-      where: { userId, isRead: false },
-    });
+    try {
+      return await prisma.notification.count({
+        where: { userId, isRead: false },
+      });
+    } catch (err) {
+      console.warn("[NotificationService] getUnreadCount transient error:", err);
+      return 0;
+    }
   }
 
   /**

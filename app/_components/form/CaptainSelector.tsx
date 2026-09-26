@@ -43,7 +43,8 @@ export function CaptainSelector({
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedCaptain = captains.find((c) => c.id === selectedCaptainId);
+  const safeCaptains = Array.isArray(captains) ? captains : [];
+  const selectedCaptain = safeCaptains.find((c) => c.id === selectedCaptainId);
 
   // Click outside listener
   useEffect(() => {
@@ -66,7 +67,7 @@ export function CaptainSelector({
   }, [isOpen]);
 
   // Filter captains by search
-  const filteredCaptains = captains.filter((cap) => {
+  const filteredCaptains = safeCaptains.filter((cap) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     return (

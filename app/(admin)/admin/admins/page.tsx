@@ -35,8 +35,11 @@ import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientC
 export default function AdminManagementPage() {
   const { user } = useAuth();
 
-  const [admins, setAdmins] = useState<AdminUserItem[]>(() => getCachedData("admins_list") || []);
-  const [loading, setLoading] = useState(() => !getCachedData("admins_list"));
+  const cachedAdmins = getCachedData<{ success: boolean; admins?: AdminUserItem[] }>("admins_list");
+  const [admins, setAdmins] = useState<AdminUserItem[]>(() =>
+    Array.isArray(cachedAdmins?.admins) ? cachedAdmins.admins : []
+  );
+  const [loading, setLoading] = useState(() => !cachedAdmins);
   const [isSuper, setIsSuper] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -42,13 +42,26 @@ import { formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function AdminContractsPage() {
+  const cachedContracts = getCachedData<any>("contracts_ALL_ALL_");
+  const cachedCaptains = getCachedData<any>("captains_list");
+
   // Data states
-  const [contracts, setContracts] = useState<Contract[]>(() => getCachedData("contracts_ALL_ALL_") || []);
-  const [captains, setCaptains] = useState<(SystemUser & { contractCount?: number; hasTodayInspection?: boolean })[]>(
-    () => getCachedData("captains_list") || []
-  );
-  const [isLoading, setIsLoading] = useState(() => !getCachedData("contracts_ALL_ALL_"));
-  const [isLoadingCaptains, setIsLoadingCaptains] = useState(() => !getCachedData("captains_list"));
+  const [contracts, setContracts] = useState<Contract[]>(() => {
+    if (Array.isArray(cachedContracts)) return cachedContracts;
+    if (cachedContracts && typeof cachedContracts === "object" && Array.isArray(cachedContracts.contracts)) {
+      return cachedContracts.contracts;
+    }
+    return [];
+  });
+  const [captains, setCaptains] = useState<(SystemUser & { contractCount?: number; hasTodayInspection?: boolean })[]>(() => {
+    if (Array.isArray(cachedCaptains)) return cachedCaptains;
+    if (cachedCaptains && typeof cachedCaptains === "object" && Array.isArray(cachedCaptains.captains)) {
+      return cachedCaptains.captains;
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => !cachedContracts);
+  const [isLoadingCaptains, setIsLoadingCaptains] = useState(() => !cachedCaptains);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -155,7 +168,7 @@ export default function AdminContractsPage() {
     const loadCaptains = async () => {
       try {
         const res = await fetchCached("captains_list", getCaptains, { ttlMs: 120_000 });
-        if (!isCancelled && res.success && res.captains) {
+        if (!isCancelled && res?.success && Array.isArray(res?.captains)) {
           setCaptains(res.captains);
         }
       } catch (e) {
@@ -545,9 +558,9 @@ export default function AdminContractsPage() {
                   className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
                 >
                   <option value="ALL" className="bg-white dark:bg-slate-900">
-                    جميع الكباتن ({captains.length})
+                    جميع الكباتن ({Array.isArray(captains) ? captains.length : 0})
                   </option>
-                  {captains.map((cap) => (
+                  {(Array.isArray(captains) ? captains : []).map((cap) => (
                     <option key={cap.id} value={cap.id} className="bg-white dark:bg-slate-900">
                       {cap.name} {cap.assignedVehiclePlate ? `(${cap.assignedVehiclePlate})` : ""}
                     </option>

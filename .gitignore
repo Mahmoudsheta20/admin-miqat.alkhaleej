@@ -56,5 +56,7 @@ public/storage/contracts/*
 !public/storage/contracts/.gitkeep
 public/storage/avatars/*
 !public/storage/avatars/.gitkeep
+public/storage/inspections/*
+!public/storage/inspections/.gitkeep
 
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  generateAndSaveContractPdf,
+  getOrGenerateContractPdf,
   buildContractPdfBuffer,
 } from "@/lib/contractStorage";
 import { DEFAULT_CONTRACT_DATA } from "@/lib/contractConstants";
@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const contractId = searchParams.get("contractId") || searchParams.get("ref");
     const isDownload = searchParams.get("download") === "1" || searchParams.get("download") === "true";
+    const forceRegenerate = searchParams.get("regenerate") === "1" || searchParams.get("force") === "1";
     const baseUrl = getBaseUrl(req);
 
     let pdfBuffer: Buffer;
@@ -30,8 +31,8 @@ export async function GET(req: NextRequest) {
     let storageUrl = "";
 
     if (contractId) {
-      // Generates with UNIQUE QR code on server, saves to storage, updates DB
-      const result = await generateAndSaveContractPdf(contractId, baseUrl);
+      // First check if PDF already exists on disk; if not, generate it with Puppeteer
+      const result = await getOrGenerateContractPdf(contractId, baseUrl, { forceRegenerate });
       pdfBuffer = result.pdfBuffer;
       fileName = result.fileName;
       storageUrl = result.publicUrl;
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const contractId = body.contractId || body.ref;
+    const forceRegenerate = Boolean(body.regenerate || body.force);
     const baseUrl = getBaseUrl(req);
 
     let pdfBuffer: Buffer;
@@ -73,7 +75,7 @@ export async function POST(req: NextRequest) {
     let storageUrl = "";
 
     if (contractId) {
-      const result = await generateAndSaveContractPdf(contractId, baseUrl);
+      const result = await getOrGenerateContractPdf(contractId, baseUrl, { forceRegenerate });
       pdfBuffer = result.pdfBuffer;
       fileName = result.fileName;
       storageUrl = result.publicUrl;

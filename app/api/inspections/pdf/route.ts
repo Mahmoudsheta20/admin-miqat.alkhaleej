@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
-  generateAndSaveInspectionPdf,
+  getOrGenerateInspectionPdf,
   mapInspectionToPdfData,
   buildInspectionPdfBuffer,
   generateInspectionQrCode,
@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
     const inspectionId = searchParams.get("inspectionId") || searchParams.get("id");
     const captainId = searchParams.get("captainId");
     const isDownload = searchParams.get("download") === "1" || searchParams.get("download") === "true";
+    const forceRegenerate = searchParams.get("regenerate") === "1" || searchParams.get("force") === "1";
     const baseUrl = getBaseUrl(req);
 
     let effectiveInspectionId = inspectionId;
@@ -46,7 +47,8 @@ export async function GET(req: NextRequest) {
     let fileName = "Miqat_Vehicle_Inspection.pdf";
 
     if (effectiveInspectionId) {
-      const result = await generateAndSaveInspectionPdf(effectiveInspectionId, baseUrl);
+      // First check if PDF already exists on disk; if not, generate it with Puppeteer
+      const result = await getOrGenerateInspectionPdf(effectiveInspectionId, baseUrl, { forceRegenerate });
       pdfBuffer = result.pdfBuffer;
       fileName = result.fileName;
     } else {
