@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   X,
   User,
-  Phone,
   Mail,
   Shield,
   CheckCircle2,
@@ -27,7 +26,13 @@ interface ProfileModalProps {
   initialTab?: "profile" | "password";
 }
 
-export default function ProfileModal({
+export default function ProfileModal(props: ProfileModalProps) {
+  const { user } = useAuth();
+  if (!props.isOpen || !user) return null;
+  return <ProfileModalContent key={`${user.id}:${props.initialTab}`} {...props} />;
+}
+
+function ProfileModalContent({
   isOpen,
   onClose,
   initialTab = "profile",
@@ -37,9 +42,9 @@ export default function ProfileModal({
   const [activeTab, setActiveTab] = useState<"profile" | "password">(initialTab);
 
   // Profile Edit State
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [name, setName] = useState(user?.name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatarUrl || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -54,24 +59,6 @@ export default function ProfileModal({
   const [passError, setPassError] = useState<string | null>(null);
   const [passSuccess, setPassSuccess] = useState<string | null>(null);
   const [isChangingPass, setIsChangingPass] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      setName(user.name || "");
-      setPhone(user.phone || "");
-      setAvatarUrl(user.avatarUrl || "");
-      setError(null);
-      setSuccessMsg(null);
-      setPassError(null);
-      setPassSuccess(null);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    }
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [user, isOpen, initialTab]);
 
   if (!isOpen || !user) return null;
 
@@ -116,17 +103,17 @@ export default function ProfileModal({
     setPassError(null);
     setPassSuccess(null);
 
-    const cleanCur = currentPassword.trim();
-    const cleanNew = newPassword.trim();
-    const cleanConf = confirmPassword.trim();
+    const cleanCur = currentPassword;
+    const cleanNew = newPassword;
+    const cleanConf = confirmPassword;
 
     if (!cleanCur) {
       setPassError("يرجى إدخال كلمة المرور الحالية");
       return;
     }
 
-    if (!cleanNew || cleanNew.length < 6) {
-      setPassError("كلمة المرور الجديدة يجب ألا تقل عن 6 خانات");
+    if (!cleanNew || cleanNew.length < 8) {
+      setPassError("كلمة المرور الجديدة يجب ألا تقل عن 8 خانات");
       return;
     }
 
@@ -174,7 +161,7 @@ export default function ProfileModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4"
       dir="rtl"
     >
-      <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
+      <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
           <div className="flex items-center gap-3">
@@ -401,7 +388,7 @@ export default function ProfileModal({
                 <span>أمان الحساب:</span>
               </p>
               <p className="text-[11px] leading-relaxed">
-                يجب ألا تقل كلمة المرور الجديدة عن 6 خانات، وتختلف عن كلمة المرور الحالية.
+                يجب ألا تقل كلمة المرور الجديدة عن 8 خانات، وتختلف عن كلمة المرور الحالية.
               </p>
             </div>
 
@@ -440,7 +427,7 @@ export default function ProfileModal({
                   type={showNewPass ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="كلمة مرور جديدة (6 خانات على الأقل)"
+                  placeholder="كلمة مرور جديدة (8 خانات على الأقل)"
                   required
                   dir="ltr"
                   className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-right"

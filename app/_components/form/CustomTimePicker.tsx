@@ -157,7 +157,7 @@ export function CustomTimePicker({
 
       {/* Popover Time Selector */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 right-0 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 sm:p-4 animate-in fade-in zoom-in-95 duration-150">
           {/* Quick Preset Buttons */}
           <div className="flex items-center gap-1.5 pb-3 border-b theme-border">
             <button

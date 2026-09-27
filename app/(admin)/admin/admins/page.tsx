@@ -7,7 +7,6 @@ import {
   Crown,
   Users,
   CheckCircle2,
-  XCircle,
   Trash2,
   Power,
   Copy,
@@ -21,7 +20,6 @@ import {
   Lock,
   KeyRound,
 } from "lucide-react";
-import { useAuth } from "@/lib/authContext";
 import {
   getAdminsListAction,
   createAdminUserAction,
@@ -33,7 +31,6 @@ import { AdminUserItem, SUPER_ADMIN_EMAIL } from "@/lib/adminConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function AdminManagementPage() {
-  const { user } = useAuth();
 
   const cachedAdmins = getCachedData<{ success: boolean; admins?: AdminUserItem[] }>("admins_list");
   const [admins, setAdmins] = useState<AdminUserItem[]>(() =>
@@ -64,26 +61,22 @@ export default function AdminManagementPage() {
   const [resetLoadingAdminId, setResetLoadingAdminId] = useState<string | null>(null);
 
   const fetchAdmins = async (forceRefresh = false) => {
-    if (forceRefresh || admins.length === 0) {
-      setLoading(true);
-    }
-    setError(null);
-    try {
-      const res = await fetchCached("admins_list", getAdminsListAction, {
+    return fetchCached("admins_list", getAdminsListAction, {
         ttlMs: 120_000,
         forceRefresh,
-      });
+      }).then(res => {
+      setError(null);
       if (res.success && res.admins) {
         setAdmins(res.admins);
         setIsSuper(Boolean(res.isCallerSuperAdmin));
       } else {
         setError(res.error || "تعذر تحميل قائمة المسؤولين");
       }
-    } catch {
+    }).catch(() => {
       setError("حدث خطأ أثناء الاتصال بقاعدة البيانات");
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
+    });
   };
 
   useEffect(() => {

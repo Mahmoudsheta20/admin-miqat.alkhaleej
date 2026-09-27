@@ -47,6 +47,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
   const [timeStr, setTimeStr] = useState("");
+  const [clockTime, setClockTime] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileTab, setProfileTab] = useState<"profile" | "password">("profile");
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -63,6 +64,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   useEffect(() => {
     const update = () => {
       const now = new Date();
+      setClockTime(now.getTime());
       setTimeStr(
         now.toLocaleTimeString("ar-SA", {
           hour: "2-digit",
@@ -79,18 +81,17 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
   // Load full notifications list with caching (called when dropdown opens or updated)
   const loadNotifications = async (forceRefresh = false) => {
-    try {
-      const res = await fetchCached("user_notifications", getUserNotificationsAction, {
+    return fetchCached("user_notifications", getUserNotificationsAction, {
         ttlMs: 30_000,
         forceRefresh,
-      });
+      }).then(res => {
       if (res.success && res.notifications) {
         setNotifications(res.notifications);
         setUnreadCount(res.unreadCount || 0);
       }
-    } catch (err) {
+    }).catch(err => {
       console.warn("Header notifications load warning:", err);
-    }
+    });
   };
 
   // Lightweight poll: Only checks unread count integer every 60s with 45s client cache
@@ -98,20 +99,17 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const pollUnreadCount = async () => {
     if (isPollingRef.current) return;
     isPollingRef.current = true;
-    try {
-      const res = await fetchCached(
+    return fetchCached(
         "unread_notifications_count",
         getUnreadNotificationsCountAction,
         { ttlMs: 45_000 }
-      );
+      ).then(res => {
       if (res?.success && typeof res.count === "number") {
         setUnreadCount(res.count);
       }
-    } catch {
-      // ignore
-    } finally {
+    }).catch(() => {}).finally(() => {
       isPollingRef.current = false;
-    }
+    });
   };
 
   useEffect(() => {
@@ -160,7 +158,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const formatArabicTime = (dateStr: string | Date) => {
     try {
       const d = new Date(dateStr);
-      const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+      const diff = Math.floor((clockTime - d.getTime()) / 1000);
       if (diff < 60) return "الآن";
       const min = Math.floor(diff / 60);
       if (min < 60) return `منذ ${min} دقيقة`;
@@ -230,13 +228,13 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
+      <header className="sticky top-0 z-30 shrink-0 bg-white dark:bg-[#090e17] border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
         <div className="px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Left Side: Mobile Menu Button + Clean Logo */}
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={onMenuToggle}
-              className="lg:hidden p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
+              className="lg:hidden min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
               aria-label="القائمة الجانبية"
             >
               <Menu className="w-5 h-5" />
@@ -248,13 +246,13 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               onClick={() => router.push(homePath)}
               title="ميقات الخليج - الصفحة الرئيسية"
             >
-              <div className="h-8 sm:h-9 max-w-[130px] sm:max-w-[150px] flex items-center">
+              <div className="h-8 sm:h-9 w-20 sm:w-auto sm:max-w-[150px] flex items-center">
                 <Image
                   src="/logo.svg"
                   alt="ميقات الخليج"
                   width={140}
                   height={40}
-                  className="object-contain w-auto h-7 sm:h-8"
+                   className="object-contain max-w-full w-auto h-7 sm:h-8"
                   priority
                 />
               </div>
@@ -278,7 +276,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {user.role === "CAPTAIN" && (
               <button
                 onClick={() => router.push("/captain/contract")}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
                 title="إنشاء عقد رحلة جديد"
               >
                 <FileCheck2 className="w-4 h-4" />
@@ -290,7 +288,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {user.role === "ADMIN" && (
               <button
                 onClick={() => router.push("/admin/contracts")}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
                 title="سجل العقود الرسمية"
               >
                 <Plus className="w-4 h-4" />
@@ -301,7 +299,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {/* Theme Switcher Button */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition"
+              className="min-w-11 min-h-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition"
               title={
                 theme === "dark"
                   ? "التبديل إلى الوضع النهاري"
@@ -325,7 +323,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                     loadNotifications();
                   }
                 }}
-                className={`relative p-1.5 sm:p-2 rounded-xl border transition-all duration-200 ${
+                className={`relative min-w-11 min-h-11 flex items-center justify-center rounded-xl border transition-all duration-200 ${
                   isNotifOpen
                     ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15"
                     : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300"
@@ -345,7 +343,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {/* Notifications Dropdown Card */}
               {isNotifOpen && (
                 <div
-                  className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 sm:-left-12 top-16 sm:top-full mt-1.5 sm:mt-2 sm:w-96 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
+                  className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-96 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
                   role="menu"
                 >
                   {/* Dropdown Header */}
@@ -444,7 +442,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className={`flex items-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1 rounded-xl border transition-all duration-200 text-right ${
+                className={`min-w-11 min-h-11 flex items-center justify-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1 rounded-xl border transition-all duration-200 text-right ${
                   isProfileMenuOpen
                     ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15 shadow-xs"
                     : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
@@ -479,7 +477,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   </span>
                 </div>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
+                  className={`hidden sm:block w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
                     isProfileMenuOpen ? "rotate-180 text-amber-500" : ""
                   }`}
                 />
@@ -488,7 +486,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {/* Profile Dropdown Menu Card */}
               {isProfileMenuOpen && (
                 <div
-                  className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full mt-1.5 sm:mt-2 sm:w-80 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
+                  className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-80 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
                   role="menu"
                   aria-orientation="vertical"
                 >

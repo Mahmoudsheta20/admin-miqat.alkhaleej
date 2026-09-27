@@ -15,7 +15,6 @@ import {
   Sun,
   Moon,
   KeyRound,
-  RotateCcw,
   Mail,
   Send,
 } from "lucide-react";
@@ -115,8 +114,7 @@ function ResetPasswordContent() {
     setInfoMessage("");
 
     try {
-      const clientOrigin = typeof window !== "undefined" ? window.location.origin : undefined;
-      const res = await requestPasswordResetAction(cleanEmail, clientOrigin);
+      const res = await requestPasswordResetAction(cleanEmail);
 
       if (res.success) {
         setInfoMessage(res.message || "تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني بنجاح.");
@@ -140,8 +138,8 @@ function ResetPasswordContent() {
 
     const cleanEmail = emailInput.trim().toLowerCase();
     const cleanToken = tokenInput.trim().replace(/\s+/g, "").replace(/-/g, "");
-    const cleanPass = newPassword.trim();
-    const cleanConfirm = confirmPassword.trim();
+    const cleanPass = newPassword;
+    const cleanConfirm = confirmPassword;
 
     if (!cleanEmail) {
       setErrorMessage("يرجى إدخال البريد الإلكتروني");
@@ -149,17 +147,17 @@ function ResetPasswordContent() {
     }
 
     if (!cleanToken) {
-      setErrorMessage("يرجى إدخال رمز التحقق المكون من 6 أرقام");
+      setErrorMessage("يرجى إدخال رمز التحقق المرسل بالبريد");
       return;
     }
 
     if (cleanToken.length < 6) {
-      setErrorMessage("رمز التحقق يجب ألا يقل عن 6 أرقام");
+      setErrorMessage("رمز التحقق غير مكتمل");
       return;
     }
 
-    if (!cleanPass || cleanPass.length < 6) {
-      setErrorMessage("كلمة المرور الجديدة يجب ألا تقل عن 6 خانات");
+    if (!cleanPass || cleanPass.length < 8) {
+      setErrorMessage("كلمة المرور الجديدة يجب ألا تقل عن 8 خانات");
       return;
     }
 
@@ -351,7 +349,7 @@ function ResetPasswordContent() {
                       htmlFor="reset-token"
                       className="text-xs font-bold text-slate-800 dark:text-slate-200"
                     >
-                      رمز التحقق (6 أرقام) <span className="text-rose-500">*</span>
+                      رمز التحقق <span className="text-rose-500">*</span>
                     </label>
                     <button
                       type="button"
@@ -410,7 +408,7 @@ function ResetPasswordContent() {
                       dir="ltr"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="أدخل 6 خانات على الأقل"
+                      placeholder="أدخل 8 خانات على الأقل"
                       className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
                     />
                     <button

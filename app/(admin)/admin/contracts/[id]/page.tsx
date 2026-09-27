@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   FileText,
   ArrowRight,
@@ -12,9 +12,7 @@ import {
   Car,
   User,
   MapPin,
-  Calendar,
   Users,
-  Download,
   AlertTriangle,
   FileCheck2,
   Printer,
@@ -23,7 +21,6 @@ import {
 } from "lucide-react";
 import { Contract, ContractStatus } from "@/lib/types";
 import { getContractById, updateContractStatusAction } from "@/app/_actions/contract";
-import { useAuth } from "@/lib/authContext";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 interface ContractReviewPageProps {
@@ -32,14 +29,12 @@ interface ContractReviewPageProps {
 
 export default function ContractReviewPage({ params }: ContractReviewPageProps) {
   const resolvedParams = use(params);
-  const router = useRouter();
-  const { user } = useAuth();
 
   const [contract, setContract] = useState<Contract | null>(
-    () => getCachedData<any>(`contract_${resolvedParams.id}`)?.contract || null
+    () => getCachedData<Awaited<ReturnType<typeof getContractById>>>(`contract_${resolvedParams.id}`)?.contract || null
   );
   const [loading, setLoading] = useState(
-    () => !getCachedData<any>(`contract_${resolvedParams.id}`)
+    () => !getCachedData<Awaited<ReturnType<typeof getContractById>>>(`contract_${resolvedParams.id}`)
   );
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,32 +47,28 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
     text: string;
   } | null>(null);
 
-  const fetchContract = async (forceRefresh = false) => {
-    if (forceRefresh || !contract) {
-      setLoading(true);
-    }
-    setError(null);
-    try {
-      const res = await fetchCached(
+  const fetchContract = useCallback(async (forceRefresh = false) => {
+    return fetchCached(
         `contract_${resolvedParams.id}`,
         () => getContractById(resolvedParams.id),
         { ttlMs: 60_000, forceRefresh }
-      );
+      ).then(res => {
+      setError(null);
       if (res.success && res.contract) {
         setContract(res.contract);
       } else {
         setError(res.error || "لم يتم العثور على العقد المطلوب");
       }
-    } catch {
+    }).catch(() => {
       setError("حدث خطأ أثناء تحميل بيانات العقد");
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [resolvedParams.id]);
 
   useEffect(() => {
     fetchContract();
-  }, [resolvedParams.id]);
+  }, [fetchContract]);
 
   const handleUpdateStatus = async (newStatus: ContractStatus, notes?: string) => {
     if (!contract) return;
@@ -446,11 +437,32 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           </h3>
 
           <div className="space-y-3 text-xs">
-            <div>
-              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">اسم الكابتن المعتمد:</span>
-              <span className="font-bold text-slate-900 dark:text-white">
-                {contract.captain?.name || "كابتن رسمي"}
-              </span>
+            <div className="flex items-center gap-3">
+              {contract.captain?.avatarUrl ? (
+                <Image
+                  src={contract.captain.avatarUrl}
+                  alt={contract.captain.name}
+                  width={44}
+                  height={44}
+                  unoptimized
+                  className="w-11 h-11 rounded-xl object-cover border border-amber-500/30 shrink-0"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-sm flex items-center justify-center border border-amber-500/20 shrink-0">
+                  {contract.captain?.name?.slice(0, 2) || "ك"}
+                </div>
+              )}
+              <div className="min-w-0">
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">اسم الكابتن المعتمد:</span>
+                <span className="font-bold text-slate-900 dark:text-white truncate block">
+                  {contract.captain?.name || "كابتن رسمي"}
+                </span>
+                {contract.captain?.phone && (
+                  <span className="text-[11px] font-mono text-slate-500 block mt-0.5" dir="ltr">
+                    {contract.captain.phone}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60">

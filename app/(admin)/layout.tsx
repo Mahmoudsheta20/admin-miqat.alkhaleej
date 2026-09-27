@@ -53,7 +53,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#080c14]">
+    <div className="app-shell flex h-dvh overflow-hidden bg-slate-50 dark:bg-[#080c14]">
       {/* Sidebar (Desktop & Mobile Drawer) */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -65,14 +65,14 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header onMenuToggle={() => setMobileSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8 touch-scroll">
-          <div className="max-w-7xl mx-auto w-full">{children}</div>
+        <main className="app-main min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-3 sm:p-6 lg:p-8 touch-scroll">
+          <div className="app-content min-w-0 max-w-7xl mx-auto w-full">{children}</div>
         </main>
 
         {/* Mobile Bottom Navigation Bar for Admin */}
         <nav
           aria-label="التنقل السريع للجوال"
-          className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 px-2 py-1.5 pb-safe flex items-center justify-around shadow-lg select-none"
+          className="mobile-bottom-nav lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#090e17]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 px-2 py-1.5 flex items-center justify-around shadow-lg select-none"
         >
           {/* Dashboard */}
           <Link

@@ -193,7 +193,7 @@ export function CaptainSelector({
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 right-0 w-full sm:w-[450px] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-[450px] max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
           {/* Search Input */}
           <div className="relative mb-2">
             <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
@@ -241,8 +241,19 @@ export function CaptainSelector({
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {/* Avatar */}
-                      <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">
-                        {cap.name.slice(0, 2)}
+                      <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden border border-amber-500/20">
+                        {cap.avatarUrl ? (
+                          <Image
+                            src={cap.avatarUrl}
+                            alt={cap.name}
+                            width={32}
+                            height={32}
+                            unoptimized
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          cap.name.slice(0, 2)
+                        )}
                       </div>
 
                       <div className="min-w-0">

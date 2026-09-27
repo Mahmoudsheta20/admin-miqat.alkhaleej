@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -188,7 +188,8 @@ function SidebarNavLinks({
             key={item.href}
             href={item.href}
             onClick={onMobileClose}
-            className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
+            aria-current={active ? "page" : undefined}
+            className={`group relative min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
               active
                 ? "bg-amber-500/12 text-amber-700 dark:text-amber-400 font-black border border-amber-500/25 shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-950 dark:hover:text-white border border-transparent"
@@ -330,6 +331,21 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const drawerRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    if (mobileOpen && !drawer.open) drawer.showModal();
+    if (!mobileOpen && drawer.open) drawer.close();
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => { if (desktop.matches) onMobileClose(); };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, [onMobileClose]);
 
   const isSuper = isSuperAdmin(user?.email);
 
@@ -342,48 +358,48 @@ export default function Sidebar({
 
   const homePath = user?.role === "ADMIN" ? "/admin" : "/captain";
 
-  const sidebarContent = (
+  const sidebarContent = (isCollapsed: boolean) => (
     <div className="flex flex-col h-full bg-white dark:bg-[#090e17] text-slate-800 dark:text-slate-200 select-none">
-      <SidebarHeader collapsed={collapsed} homePath={homePath} />
+      <SidebarHeader collapsed={isCollapsed} homePath={homePath} />
       <SidebarNavLinks
-        collapsed={collapsed}
+        collapsed={isCollapsed}
         pathname={pathname}
         filteredItems={filteredItems}
         onMobileClose={onMobileClose}
       />
-      <SidebarFooter collapsed={collapsed} user={user} onToggle={onToggle} />
+      <SidebarFooter collapsed={isCollapsed} user={user} onToggle={onToggle} />
     </div>
   );
 
   return (
     <>
       {/* Mobile overlay drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-            onClick={onMobileClose}
-          />
-          <aside className="fixed inset-y-0 right-0 w-72 bg-white dark:bg-[#090e17] border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col">
+      <dialog
+        ref={drawerRef}
+        aria-label="القائمة الجانبية"
+        onCancel={onMobileClose}
+        onClick={event => { if (event.target === event.currentTarget) onMobileClose(); }}
+        className="mobile-drawer fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 lg:hidden"
+      >
+          <aside className="absolute inset-y-0 right-0 w-[min(20rem,calc(100vw-3rem))] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] bg-white dark:bg-[#090e17] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
             <button
               onClick={onMobileClose}
-              className="absolute top-4 left-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
+              className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] left-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
               aria-label="إغلاق القائمة"
             >
               <X className="w-4 h-4" />
             </button>
-            {sidebarContent}
+            {sidebarContent(false)}
           </aside>
-        </div>
-      )}
+      </dialog>
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 h-screen sticky top-0 bg-white dark:bg-[#090e17] border-l border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
+        className={`hidden lg:flex flex-col shrink-0 h-full sticky top-0 bg-white dark:bg-[#090e17] border-l border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
           collapsed ? "w-[72px]" : "w-64"
         }`}
       >
-        {sidebarContent}
+        {sidebarContent(collapsed)}
       </aside>
     </>
   );

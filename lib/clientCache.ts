@@ -22,6 +22,7 @@ const memoryCache = new Map<string, CacheEntry<unknown>>();
 
 // Map for tracking pending in-flight promises to deduplicate simultaneous requests
 const inFlightRequests = new Map<string, Promise<unknown>>();
+let cacheGeneration = 0;
 
 export interface CacheOptions {
   /** Time To Live in milliseconds (default: 60,000ms / 1 minute) */
@@ -57,6 +58,7 @@ export async function fetchCached<T>(
 ): Promise<T> {
   const { ttlMs = 60_000, forceRefresh = false } = options;
   const now = Date.now();
+  const generation = cacheGeneration;
 
   // 1. Check existing fresh cache if forceRefresh is false
   if (!forceRefresh) {
@@ -80,6 +82,7 @@ export async function fetchCached<T>(
   const executePromise = (async () => {
     try {
       const result = await fetcher();
+      if (generation !== cacheGeneration) return result;
 
       // Only cache valid, non-error payloads
       if (isValidCachePayload(result)) {
@@ -96,11 +99,11 @@ export async function fetchCached<T>(
       return result;
     } catch (err) {
       // On error, ensure broken key is deleted
-      memoryCache.delete(key);
+      if (generation === cacheGeneration) memoryCache.delete(key);
       throw err;
     } finally {
       // Clean up in-flight tracker once settled
-      inFlightRequests.delete(key);
+      if (generation === cacheGeneration) inFlightRequests.delete(key);
     }
   })();
 
@@ -150,6 +153,8 @@ export function setCachedData<T>(key: string, data: T, ttlMs = 60_000): void {
  *   invalidateClientCache() -> clears everything.
  */
 export function invalidateClientCache(prefixOrKey?: string): void {
+  cacheGeneration++;
+  inFlightRequests.clear();
   if (!prefixOrKey) {
     memoryCache.clear();
     inFlightRequests.clear();

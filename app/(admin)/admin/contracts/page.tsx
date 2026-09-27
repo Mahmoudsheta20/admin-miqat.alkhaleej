@@ -1,4 +1,5 @@
 "use client";
+import { backendUrl } from "@/lib/backend";
 
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -42,8 +43,8 @@ import { formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function AdminContractsPage() {
-  const cachedContracts = getCachedData<any>("contracts_ALL_ALL_");
-  const cachedCaptains = getCachedData<any>("captains_list");
+  const cachedContracts = getCachedData<Awaited<ReturnType<typeof getContracts>>>("contracts_ALL_ALL_");
+  const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
 
   // Data states
   const [contracts, setContracts] = useState<Contract[]>(() => {
@@ -78,6 +79,7 @@ export default function AdminContractsPage() {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [previewPdfId, setPreviewPdfId] = useState<string | null>(null);
   const [previewPdfRef, setPreviewPdfRef] = useState<string>("");
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
 
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
@@ -269,6 +271,7 @@ export default function AdminContractsPage() {
   const openPdf = (c: Contract) => {
     setPreviewPdfId(c.id);
     setPreviewPdfRef(c.referenceNumber);
+    setPreviewPdfUrl(c.pdfPath || null);
   };
 
   // Filtered contracts by inspectionFilter (client-side instantaneous filter)
@@ -1048,7 +1051,7 @@ export default function AdminContractsPage() {
 
                             {/* Direct Download from Server */}
                             <a
-                              href={`/api/contracts/pdf?contractId=${c.id}&download=1`}
+                              href={backendUrl(`/contracts/${encodeURIComponent(c.id)}/pdf?download=1`)}
                               className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
                               title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
                             >
@@ -1171,7 +1174,7 @@ export default function AdminContractsPage() {
                       </button>
 
                       {/* Action buttons */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="mobile-card-actions grid w-full grid-cols-4 gap-2">
                         <a
                           href={`/verify/contract/${c.referenceNumber}`}
                           target="_blank"
@@ -1211,7 +1214,7 @@ export default function AdminContractsPage() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                         <a
-                          href={`/api/contracts/pdf?contractId=${c.id}&download=1`}
+                          href={backendUrl(`/contracts/${encodeURIComponent(c.id)}/pdf?download=1`)}
                           className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
                           title="توليد وتنزيل PDF مباشرة من السيرفر"
                         >
@@ -1219,7 +1222,7 @@ export default function AdminContractsPage() {
                         </a>
                         <button
                           onClick={() => openPdf(c)}
-                          className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
+                          className="col-span-2 inline-flex items-center gap-1 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
                         >
                           <FileText className="w-3.5 h-3.5" />
                           <span>PDF</span>
@@ -1317,7 +1320,7 @@ export default function AdminContractsPage() {
       {/* Contract Details & Manifest & Inspection Modal */}
       {selectedContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
+          <div className="mobile-dialog-panel relative w-full max-w-2xl flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <div className="flex items-center gap-3">
@@ -1585,7 +1588,7 @@ export default function AdminContractsPage() {
                   <span>تعديل العقد</span>
                 </Link>
                 <a
-                  href={`/api/contracts/pdf?contractId=${selectedContract.id}&download=1`}
+                  href={backendUrl(`/contracts/${encodeURIComponent(selectedContract.id)}/pdf?download=1`)}
                   className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 hover:text-amber-600 transition"
                   title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
                 >
@@ -1609,9 +1612,13 @@ export default function AdminContractsPage() {
       {previewPdfId && (
         <PdfPreviewModal
           isOpen={!!previewPdfId}
-          onClose={() => setPreviewPdfId(null)}
+          onClose={() => {
+            setPreviewPdfId(null);
+            setPreviewPdfUrl(null);
+          }}
           contractId={previewPdfId}
           referenceNumber={previewPdfRef}
+          pdfUrl={previewPdfUrl}
         />
       )}
 

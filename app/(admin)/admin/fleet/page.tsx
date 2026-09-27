@@ -2,12 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Car,
   Plus,
   Search,
-  CheckCircle2,
-  AlertTriangle,
-  Wrench,
   Edit2,
   Trash2,
   RefreshCw,
@@ -28,7 +24,7 @@ import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function FleetManagementPage() {
-  const cachedFleet = getCachedData<any>("fleet_vehicles");
+  const cachedFleet = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     if (Array.isArray(cachedFleet)) return cachedFleet;
     if (cachedFleet && typeof cachedFleet === "object" && Array.isArray(cachedFleet.vehicles)) {
@@ -61,22 +57,18 @@ export default function FleetManagementPage() {
   });
 
   const loadVehicles = async (forceRefresh = false) => {
-    if (forceRefresh || (Array.isArray(vehicles) ? vehicles.length : 0) === 0) {
-      setIsLoading(true);
-    }
-    try {
-      const res = await fetchCached("fleet_vehicles", getVehicles, {
+    return fetchCached("fleet_vehicles", getVehicles, {
         ttlMs: 120_000,
         forceRefresh,
-      });
+      }).then(res => {
       if (res?.success && Array.isArray(res?.vehicles)) {
         setVehicles(res.vehicles);
       }
-    } catch (err) {
+    }).catch(err => {
       console.error("Failed to load vehicles:", err);
-    } finally {
+    }).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   useEffect(() => {
@@ -346,7 +338,7 @@ export default function FleetManagementPage() {
       {/* Add/Edit Modal */}
       {(isAddModalOpen || editingVehicle) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
-          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
+          <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 {editingVehicle ? "تعديل بيانات المركبة" : "إضافة مركبة جديدة للأسطول"}

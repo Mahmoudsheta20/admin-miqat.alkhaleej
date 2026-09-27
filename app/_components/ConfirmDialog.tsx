@@ -59,11 +59,12 @@ export default function ConfirmDialog({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-md theme-card rounded-2xl p-5 sm:p-6 shadow-2xl animate-in zoom-in-95">
+      <div role="dialog" aria-modal="true" aria-label={title} className="mobile-dialog-panel relative w-full max-w-md theme-card rounded-2xl p-5 sm:p-6 shadow-2xl animate-in zoom-in-95">
         {/* Close */}
         <button
           onClick={onCancel}
-          className="absolute top-4 left-4 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+          aria-label="إغلاق"
+          className="absolute top-2 left-2 min-w-11 min-h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
         >
           <X className="w-4 h-4" />
         </button>

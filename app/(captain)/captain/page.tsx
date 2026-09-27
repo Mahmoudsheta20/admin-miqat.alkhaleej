@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -10,13 +10,8 @@ import {
   FilePlus2,
   ClipboardCheck,
   FileText,
-  Calendar,
-  Clock,
-  Shield,
   ArrowUpRight,
   RefreshCw,
-  Phone,
-  UserCheck,
   Camera,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
@@ -31,23 +26,21 @@ import { fetchCached, getCachedData } from "@/lib/clientCache";
 export default function CaptainHomePage() {
   const { user } = useAuth();
   const [inspection, setInspection] = useState<VehicleInspection | null>(() => {
-    return user ? getCachedData<any>(`captain_inspection_${user.id}`)?.inspection || null : null;
+    return user ? getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection || null : null;
   });
   const [contracts, setContracts] = useState<Contract[]>(() => {
-    return user ? getCachedData<any>(`captain_contracts_${user.id}`)?.contracts || [] : [];
+    return user ? getCachedData<Awaited<ReturnType<typeof getContracts>>>(`captain_contracts_${user.id}`)?.contracts || [] : [];
   });
   const [isLoading, setIsLoading] = useState(() => {
-    return !user || !getCachedData<any>(`captain_contracts_${user.id}`);
+    return !user || !getCachedData<Awaited<ReturnType<typeof getContracts>>>(`captain_contracts_${user.id}`);
   });
   const [previewPdfId, setPreviewPdfId] = useState<string | null>(null);
   const [previewPdfRef, setPreviewPdfRef] = useState<string>("");
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const loadData = async (forceRefresh = false) => {
+  const loadData = useCallback(async (forceRefresh = false) => {
     if (!user) return;
-    if (forceRefresh || contracts.length === 0) {
-      setIsLoading(true);
-    }
 
     try {
       const [inspRes, contrRes] = await Promise.all([
@@ -70,11 +63,11 @@ export default function CaptainHomePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [loadData]);
 
   if (!user) return null;
 
@@ -83,6 +76,7 @@ export default function CaptainHomePage() {
   const openPdf = (c: Contract) => {
     setPreviewPdfId(c.id);
     setPreviewPdfRef(c.referenceNumber);
+    setPreviewPdfUrl(c.pdfPath || null);
   };
 
   return (
@@ -347,9 +341,13 @@ export default function CaptainHomePage() {
       {previewPdfId && (
         <PdfPreviewModal
           isOpen={!!previewPdfId}
-          onClose={() => setPreviewPdfId(null)}
+          onClose={() => {
+            setPreviewPdfId(null);
+            setPreviewPdfUrl(null);
+          }}
           contractId={previewPdfId}
           referenceNumber={previewPdfRef}
+          pdfUrl={previewPdfUrl}
         />
       )}
 

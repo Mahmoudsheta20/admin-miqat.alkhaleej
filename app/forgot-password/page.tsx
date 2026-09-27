@@ -51,14 +51,7 @@ export default function ForgotPasswordPage() {
     setErrorMessage("");
 
     try {
-      const siteUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/reset-password`
-          : "https://admin.miqatalkhaleej.com/reset-password";
-
-      // 1. Send via verified Gmail SMTP Server Action with exact client origin
-      const clientOrigin = typeof window !== "undefined" ? window.location.origin : undefined;
-      const res = await requestPasswordResetAction(cleanEmail, clientOrigin);
+      const res = await requestPasswordResetAction(cleanEmail);
 
       if (!res.success) {
         setErrorMessage(

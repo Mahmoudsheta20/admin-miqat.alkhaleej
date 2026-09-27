@@ -1,35 +1,31 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { UserRole, SystemUser } from "./types";
-import { loginAction, quickLoginAction, logoutAction, completePasswordChangeAction } from "@/app/_actions/auth";
+import type { SystemUser } from "./types";
+import { loginAction, logoutAction, completePasswordChangeAction, getCurrentSession } from "@/app/_actions/auth";
+import { invalidateClientCache as clearCache } from "./clientCache";
+import { getAuthToken, setAuthToken } from "./backend";
+
+interface AuthResult {
+  success: boolean;
+  mustChangePassword?: boolean;
+  user?: SystemUser;
+  token?: string;
+  error?: string;
+}
 
 interface AuthContextType {
   user: SystemUser | null;
   isLoading: boolean;
-  login: (
-    email: string,
-    password?: string,
-    rememberMe?: boolean
-  ) => Promise<{
-    success: boolean;
-    mustChangePassword?: boolean;
-    user?: SystemUser;
-    error?: string;
-  }>;
+  login: (email: string, password?: string, rememberMe?: boolean) => Promise<AuthResult>;
   completePasswordChange: (
     userId: string,
     newPassword: string,
     confirmPassword: string,
     rememberMe?: boolean
-  ) => Promise<{
-    success: boolean;
-    user?: SystemUser;
-    error?: string;
-  }>;
-  quickLogin: (role: UserRole, rememberMe?: boolean) => Promise<boolean>;
+  ) => Promise<AuthResult>;
   logout: () => Promise<void>;
-  updateUser: (userData: SystemUser) => void;
+  updateUser: (user: SystemUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,112 +35,115 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
+    // 1. Try to restore cached user immediately so UI doesn't flicker
     try {
-      const savedUser =
+      const cached =
         localStorage.getItem("miqat_auth_user") ||
         sessionStorage.getItem("miqat_auth_user");
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      } else {
-        setUser(null);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && active) {
+          setUser(parsed);
+        }
       }
-    } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+    } catch {}
+
+    const token = getAuthToken();
+    if (!token) {
+      if (active) {
+        setUser(null);
+        setIsLoading(false);
+      }
+      return;
     }
+
+    // 2. Validate current session with backend using Authorization header
+    getCurrentSession()
+      .then((session) => {
+        if (!active) return;
+        if (session && !session.mustChangePassword) {
+          setUser(session);
+          try {
+            localStorage.setItem("miqat_auth_user", JSON.stringify(session));
+          } catch {}
+        } else {
+          setUser(null);
+          setAuthToken(null);
+          try {
+            localStorage.removeItem("miqat_auth_user");
+            sessionStorage.removeItem("miqat_auth_user");
+          } catch {}
+        }
+      })
+      .catch(() => {
+        // Keep cached user on transient network failure
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const saveUserSession = (userData: SystemUser, rememberMe: boolean = true) => {
-    const serialized = JSON.stringify(userData);
-    if (rememberMe) {
-      localStorage.setItem("miqat_auth_user", serialized);
-      sessionStorage.removeItem("miqat_auth_user");
-    } else {
-      sessionStorage.setItem("miqat_auth_user", serialized);
-      localStorage.removeItem("miqat_auth_user");
+  const login = async (email: string, password?: string, rememberMe = true) => {
+    const result = await loginAction(email, password, rememberMe);
+    if (result.success && result.user && !result.mustChangePassword) {
+      if (result.token) {
+        setAuthToken(result.token);
+      }
+      clearCache();
+      setUser(result.user);
+      try {
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem("miqat_auth_user", JSON.stringify(result.user));
+      } catch {}
     }
-    // Also ensure cookie exists for middleware
-    const sessionCookie = encodeURIComponent(
-      JSON.stringify({
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        nationalId: userData.nationalId,
-        assignedVehiclePlate: userData.assignedVehiclePlate,
-        mustChangePassword: userData.mustChangePassword,
-      })
-    );
-    const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
-    document.cookie = `miqat_session=${sessionCookie}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  };
-
-  const updateUser = (userData: SystemUser) => {
-    setUser(userData);
-    saveUserSession(userData, true);
-  };
-
-  const login = async (
-    email: string,
-    password?: string,
-    rememberMe: boolean = true
-  ): Promise<{
-    success: boolean;
-    mustChangePassword?: boolean;
-    user?: SystemUser;
-    error?: string;
-  }> => {
-    const res = await loginAction(email, password, rememberMe);
-    if (res.success && res.user && !res.mustChangePassword) {
-      setUser(res.user);
-      saveUserSession(res.user, rememberMe);
-    }
-    return res;
+    return result;
   };
 
   const completePasswordChange = async (
     userId: string,
     newPassword: string,
     confirmPassword: string,
-    rememberMe: boolean = true
-  ): Promise<{
-    success: boolean;
-    user?: SystemUser;
-    error?: string;
-  }> => {
-    const res = await completePasswordChangeAction({
+    rememberMe = true
+  ) => {
+    const result = await completePasswordChangeAction({
       userId,
       newPassword,
       confirmPassword,
       rememberMe,
     });
-    if (res.success && res.user) {
-      setUser(res.user);
-      saveUserSession(res.user, rememberMe);
+    if (result.success && result.user) {
+      if (result.token) {
+        setAuthToken(result.token);
+      }
+      clearCache();
+      setUser(result.user);
+      try {
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem("miqat_auth_user", JSON.stringify(result.user));
+      } catch {}
     }
-    return res;
-  };
-
-  const quickLogin = async (
-    role: UserRole,
-    rememberMe: boolean = true
-  ): Promise<boolean> => {
-    const res = await quickLoginAction(role, rememberMe);
-    if (res.success && res.user && !res.mustChangePassword) {
-      setUser(res.user);
-      saveUserSession(res.user, rememberMe);
-      return true;
-    }
-    return false;
+    return result;
   };
 
   const logout = async () => {
-    await logoutAction();
+    try {
+      await logoutAction();
+    } catch {}
+    setAuthToken(null);
+    clearCache();
     setUser(null);
-    localStorage.removeItem("miqat_auth_user");
-    sessionStorage.removeItem("miqat_auth_user");
-    document.cookie = "miqat_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    try {
+      localStorage.removeItem("miqat_auth_user");
+      sessionStorage.removeItem("miqat_auth_user");
+    } catch {}
   };
 
   return (
@@ -154,9 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         completePasswordChange,
-        quickLogin,
         logout,
-        updateUser,
+        updateUser: setUser,
       }}
     >
       {children}
@@ -166,8 +164,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

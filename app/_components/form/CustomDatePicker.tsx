@@ -208,7 +208,7 @@ export function CustomDatePicker({
 
       {/* Popover Calendar */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 right-0 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 sm:p-4 animate-in fade-in zoom-in-95 duration-150">
           {/* Quick Shortcuts */}
           <div className="flex items-center gap-1.5 pb-3 border-b theme-border">
             <button
@@ -285,7 +285,7 @@ export function CustomDatePicker({
           <div className="grid grid-cols-7 gap-1">
             {/* Empty slots for start of month */}
             {Array.from({ length: firstDayIndex }).map((_, i) => (
-              <div key={`empty-${i}`} className="w-8 h-8" />
+              <div key={`empty-${i}`} className="h-10 sm:h-8" />
             ))}
 
             {/* Days numbers */}
@@ -305,7 +305,7 @@ export function CustomDatePicker({
                     onChange(dateStr);
                     setIsOpen(false);
                   }}
-                  className={`w-8 h-8 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center relative
+                  className={`w-full h-10 sm:h-8 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center relative
                     ${
                       isSelected
                         ? "gold-gradient-btn text-white shadow-xs"

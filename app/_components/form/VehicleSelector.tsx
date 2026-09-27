@@ -172,7 +172,7 @@ export function VehicleSelector({
 
       {/* Dropdown Popover */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 mt-1 right-0 w-full sm:w-[420px] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
           {/* Search Box */}
           <div className="relative mb-2">
             <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />

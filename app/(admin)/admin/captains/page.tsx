@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import ImageUpload from "@/app/_components/ImageUpload";
 import {
   UserPlus,
   Search,
   Car,
-  Calendar,
   CheckCircle2,
   XCircle,
   Edit2,
   Trash2,
   RefreshCw,
   X,
-  FileCheck,
   KeyRound,
   Copy,
   Check,
@@ -38,7 +36,7 @@ type CaptainItem = SystemUser & {
 };
 
 export default function CaptainsManagementPage() {
-  const cachedCaptains = getCachedData<any>("captains_list");
+  const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
   const [captains, setCaptains] = useState<CaptainItem[]>(() => {
     if (Array.isArray(cachedCaptains)) return cachedCaptains;
     if (cachedCaptains && typeof cachedCaptains === "object" && Array.isArray(cachedCaptains.captains)) {
@@ -79,22 +77,18 @@ export default function CaptainsManagementPage() {
   });
 
   const loadCaptains = async (forceRefresh = false) => {
-    if (forceRefresh || (Array.isArray(captains) ? captains.length : 0) === 0) {
-      setIsLoading(true);
-    }
-    try {
-      const res = await fetchCached("captains_list", getCaptains, {
+    return fetchCached("captains_list", getCaptains, {
         ttlMs: 120_000,
         forceRefresh,
-      });
+      }).then(res => {
       if (res?.success && Array.isArray(res?.captains)) {
         setCaptains(res.captains);
       }
-    } catch (err) {
+    }).catch(err => {
       console.error("Failed to load captains:", err);
-    } finally {
+    }).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   useEffect(() => {
@@ -557,7 +551,7 @@ export default function CaptainsManagementPage() {
       {/* Add / Edit Modal */}
       {(isAddModalOpen || editingCaptain) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
-          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
+          <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 {editingCaptain

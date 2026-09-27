@@ -1,4 +1,5 @@
 "use client";
+import { useStoredPreference } from "@/lib/useStoredPreference";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -40,10 +41,14 @@ export default function LoginPage() {
   const { theme, toggleTheme } = useTheme();
 
   // Form State (No static hardcoded users)
-  const [email, setEmail] = useState("");
+  const rememberedEmail = useStoredPreference("miqat_remembered_email", "");
+  const rememberedSession = useStoredPreference("miqat_save_session", "true");
+  const [enteredEmail, setEmail] = useState<string | null>(null);
+  const email = enteredEmail ?? rememberedEmail;
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [saveSession, setSaveSession] = useState(true);
+  const [sessionPreference, setSaveSession] = useState<boolean | null>(null);
+  const saveSession = sessionPreference ?? rememberedSession === "true";
 
   // Mandatory Password Change State (When logging in with a temporary password)
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -74,22 +79,6 @@ export default function LoginPage() {
       }
     }
   }, [user, router]);
-
-  // Restore saved email preference on mount if user checked "Remember Me" previously
-  useEffect(() => {
-    try {
-      const savedEmail = localStorage.getItem("miqat_remembered_email");
-      const savedSession = localStorage.getItem("miqat_save_session");
-      if (savedEmail) {
-        setEmail(savedEmail);
-      }
-      if (savedSession !== null) {
-        setSaveSession(savedSession === "true");
-      }
-    } catch {
-      // Ignore localStorage access errors
-    }
-  }, []);
 
   const validateEmail = (val: string): string => {
     if (!val.trim()) {
@@ -218,8 +207,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (!pendingUser) return;
 
-    if (!newPassword || newPassword.length < 6) {
-      setErrors({ newPassword: "كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف أو أرقام" });
+    if (!newPassword || newPassword.length < 8) {
+      setErrors({ newPassword: "كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف أو أرقام" });
       setTouched({ newPassword: true });
       return;
     }
@@ -272,7 +261,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-100 via-amber-50/20 to-slate-50 dark:from-[#060a12] dark:via-[#0c121e] dark:to-[#070b13] text-slate-900 dark:text-slate-100 relative selection:bg-amber-500/20 selection:text-amber-800 dark:selection:text-amber-300">
+    <div className="auth-page min-h-dvh overflow-x-clip flex flex-col justify-between p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-100 via-amber-50/20 to-slate-50 dark:from-[#060a12] dark:via-[#0c121e] dark:to-[#070b13] text-slate-900 dark:text-slate-100 relative selection:bg-amber-500/20 selection:text-amber-800 dark:selection:text-amber-300">
       {/* Ambient Decorative Gradients */}
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-500/5 dark:bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
@@ -316,7 +305,7 @@ export default function LoginPage() {
       <main className="max-w-6xl w-full mx-auto my-auto py-6 sm:py-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Brand Overview & Official Credentials */}
-          <section className="lg:col-span-5 space-y-6 text-right">
+          <section className="order-2 lg:order-1 min-w-0 lg:col-span-5 space-y-6 text-right">
             <div className="space-y-3">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-[1.3]">
                 منظومة عمليات <br />
@@ -372,11 +361,11 @@ export default function LoginPage() {
           </section>
 
           {/* Right Column: Secure Login / Change Password Card */}
-          <section className="lg:col-span-7">
+          <section className="order-1 lg:order-2 min-w-0 lg:col-span-7">
             <div className="p-5 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-black/50 space-y-6">
               
               {/* Header */}
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                     {isChangingPassword ? (
@@ -440,7 +429,7 @@ export default function LoginPage() {
                       <span>تنبيه أمني إلزامي ({pendingUser.name})</span>
                     </div>
                     <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
-                      لقد سجلت الدخول باستخدام كلمة مرور مؤقتة ({pendingUser.email}). يُرجى إنشاء كلمة مرور جديدة خاصة بك تتكون من 6 خانات على الأقل للمتابعة.
+                      لقد سجلت الدخول باستخدام كلمة مرور مؤقتة ({pendingUser.email}). يُرجى إنشاء كلمة مرور جديدة خاصة بك تتكون من 8 خانات على الأقل للمتابعة.
                     </p>
                   </div>
 
@@ -471,7 +460,7 @@ export default function LoginPage() {
                           if (errors.newPassword) setErrors((prev) => ({ ...prev, newPassword: undefined }));
                         }}
                         onBlur={() => handleBlur("newPassword")}
-                        placeholder="أدخل 6 أحرف/أرقام على الأقل"
+                        placeholder="أدخل 8 أحرف/أرقام على الأقل"
                         className="w-full px-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
                       />
                       <button

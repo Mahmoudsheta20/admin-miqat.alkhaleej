@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import Image from "next/image";
+import { backendRequest } from "@/lib/backend";
 import { Upload, X, Camera, Loader2, AlertCircle } from "lucide-react";
 
 interface ImageUploadProps {
@@ -60,14 +61,9 @@ export default function ImageUpload({
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success && data.url) {
-        onChange(data.url);
+      const data = await backendRequest<{ url: string }>("/upload", "POST", formData);
+      if (data.success && data.data?.url) {
+        onChange(data.data.url);
       } else {
         setError(data.error || "فشل رفع الصورة");
       }

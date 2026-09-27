@@ -146,8 +146,16 @@ export function sanitizeContractPayload(
   const rawPhone = cleanOptional(data.customerPhone);
   const normalizedPhone = rawPhone ? normalizeArabicNumerals(rawPhone).replace(/\s+/g, "") : undefined;
 
+  // Helper to ensure standard ISO YYYY-MM-DD format
+  const normalizeToIsoDate = (val?: string | null): string => {
+    if (!val) return "";
+    const clean = normalizeArabicNumerals(val.trim()).replace(/\//g, "-");
+    const match = clean.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : clean;
+  };
+
   // Normalize date and time
-  const cleanDate = normalizeArabicNumerals(data.tripDate.trim());
+  const cleanDate = normalizeToIsoDate(data.tripDate);
   const cleanTime = normalizeArabicNumerals(data.tripTime.trim());
 
   // Clean passengers (filter out completely empty rows)
@@ -163,10 +171,11 @@ export function sanitizeContractPayload(
     ? cleanOptional(overrideInspectionId)
     : cleanOptional(data.inspectionId);
 
-  const cleanIssueDate =
+  const rawIssueDate =
     data.issueDateMode === "MANUAL" && data.issueDate
-      ? normalizeArabicNumerals(data.issueDate.trim())
+      ? data.issueDate
       : getSaudiTodayDateStr();
+  const cleanIssueDate = normalizeToIsoDate(rawIssueDate);
 
   return {
     operationType: parseOperationType(data.operationType),

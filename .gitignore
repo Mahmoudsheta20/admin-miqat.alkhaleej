@@ -48,15 +48,16 @@ prisma/*.db-journal
 
 # temporary / generated test files
 out.css
+
 test.css
 scratch*
 
 # generated storage
+/private-storage/
 public/storage/contracts/*
 !public/storage/contracts/.gitkeep
 public/storage/avatars/*
 !public/storage/avatars/.gitkeep
 public/storage/inspections/*
 !public/storage/inspections/.gitkeep
-
 

@@ -47,14 +47,14 @@ export default function CaptainContractBuilderPage() {
   const { user } = useAuth();
 
   const [todayInspection, setTodayInspection] = useState<VehicleInspection | null>(() => {
-    return user ? getCachedData<any>(`captain_inspection_${user.id}`)?.inspection || null : null;
+    return user ? getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection || null : null;
   });
   const [checkingInspection, setCheckingInspection] = useState(() => {
-    return !user || !getCachedData<any>(`captain_inspection_${user.id}`);
+    return !user || !getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`);
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
-  const [createdContract, setCreatedContract] = useState<{ id: string; referenceNumber: string } | null>(null);
+  const [createdContract, setCreatedContract] = useState<{ id: string; referenceNumber: string; pdfPath?: string | null } | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
 
   const todayStr = getSaudiTodayDateStr();
@@ -113,17 +113,32 @@ export default function CaptainContractBuilderPage() {
     setIsSubmitting(true);
     setFormError("");
 
+    const normalizeToIso = (s?: string | null) => {
+      if (!s) return "";
+      const clean = s.trim().replace(/\//g, "-");
+      const m = clean.match(/^(\d{4}-\d{2}-\d{2})/);
+      return m ? m[1] : clean;
+    };
+
+    const todayIso = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Riyadh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
     const payload: ContractFormPayload = {
       operationType: data.operationType,
       origin: data.origin.trim(),
       destination: data.destination.trim(),
-      tripDate: data.tripDate,
-      tripTime: data.tripTime,
+      tripDate: normalizeToIso(data.tripDate),
+      tripTime: data.tripTime.trim(),
       flightCarrier: data.flightCarrier?.trim() || undefined,
       flightNumber: data.flightNumber?.trim() || undefined,
       customerName: data.customerName.trim(),
       customerPhone: data.customerPhone?.trim() || undefined,
       notes: data.notes?.trim() || undefined,
+      issueDate: todayIso,
       captainId: user.id,
       vehiclePlate: data.vehiclePlate.trim() || user.assignedVehiclePlate || "ا ص ل 7223",
       inspectionId: todayInspection?.id,
@@ -142,10 +157,8 @@ export default function CaptainContractBuilderPage() {
       invalidateClientCache("contracts_");
       invalidateClientCache("dashboard_stats");
       invalidateClientCache("inspections_");
-      setCreatedContract({
-        id: res.contract.id,
-        referenceNumber: res.contract.referenceNumber,
-      });
+      setCreatedContract({ id: res.contract.id, referenceNumber: res.contract.referenceNumber, pdfPath: res.contract.pdfPath || null });
+      setIsPdfOpen(true);
     } else {
       setFormError(res.error || "فشل إنشاء العقد");
     }
@@ -264,6 +277,7 @@ export default function CaptainContractBuilderPage() {
             onClose={() => setIsPdfOpen(false)}
             contractId={createdContract.id}
             referenceNumber={createdContract.referenceNumber}
+            pdfUrl={createdContract?.pdfPath}
           />
         )}
       </div>

@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useTransition } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   ClipboardCheck,
   CheckCircle2,
@@ -10,7 +9,6 @@ import {
   AlertCircle,
   Zap,
   Search,
-  Filter,
   RefreshCw,
   Plus,
   Eye,
@@ -21,14 +19,11 @@ import {
   Phone,
   Calendar,
   Clock,
-  ChevronDown,
-  ChevronLeft,
   X,
   FileText,
   AlertTriangle,
   UserCheck,
   Gauge,
-  Flame,
   ShieldAlert,
   Sparkles,
   Edit3,
@@ -89,9 +84,9 @@ const SAFETY_ITEMS: CheckItemConfig[] = [
 const ALL_CHECK_ITEMS = [...DASHBOARD_ITEMS, ...EXTERNAL_ITEMS, ...SAFETY_ITEMS];
 
 export default function AdminInspectionsPage() {
-  const cachedOverview = getCachedData<any>("inspections_overview");
-  const cachedHistory = getCachedData<any>("inspections_history");
-  const cachedVehicles = getCachedData<any>("fleet_vehicles");
+  const cachedOverview = getCachedData<Awaited<ReturnType<typeof getCaptainsInspectionOverview>>>("inspections_overview");
+  const cachedHistory = getCachedData<Awaited<ReturnType<typeof getAllInspectionsList>>>("inspections_history");
+  const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
 
   const [activeTab, setActiveTab] = useState<"captains" | "history">("captains");
   const [captains, setCaptains] = useState<CaptainInspectionItem[]>(() => {
@@ -149,6 +144,7 @@ export default function AdminInspectionsPage() {
     id: string;
     captainName?: string;
     vehiclePlate?: string;
+    pdfPath?: string | null;
   } | null>(null);
 
   // Custom Form state
@@ -166,17 +162,14 @@ export default function AdminInspectionsPage() {
     return init;
   });
 
-  const safeCaptains = Array.isArray(captains) ? captains : [];
+  const safeCaptains = captains;
   const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
-  const safeInspections = Array.isArray(inspections) ? inspections : [];
+  const safeInspections = inspections;
 
   // Load Data with caching and deduplication
-  const loadData = async (showRefresh = false) => {
-    if (showRefresh) setIsRefreshing(true);
-    else if ((Array.isArray(captains) ? captains.length : 0) === 0) setIsLoading(true);
+  const loadData = useCallback(async (showRefresh = false) => {
 
-    try {
-      const [overviewRes, historyRes, vehiclesRes] = await Promise.all([
+    return Promise.all([
         fetchCached("inspections_overview", getCaptainsInspectionOverview, {
           ttlMs: 60_000,
           forceRefresh: showRefresh,
@@ -193,7 +186,7 @@ export default function AdminInspectionsPage() {
           ttlMs: 120_000,
           forceRefresh: showRefresh,
         }),
-      ]);
+      ]).then(([overviewRes, historyRes, vehiclesRes]) => {
 
       if (overviewRes?.success && Array.isArray(overviewRes?.captains)) {
         setCaptains(overviewRes.captains);
@@ -209,20 +202,20 @@ export default function AdminInspectionsPage() {
       if (vehiclesRes?.success && Array.isArray(vehiclesRes?.vehicles)) {
         setVehicles(vehiclesRes.vehicles);
       }
-    } catch (error) {
+    }).catch(error => {
       console.error("Failed to load inspection data:", error);
-      showBanner("error", "تعذر جلب بيانات الفحص التشغيلي");
-    } finally {
+      setBanner({ type: "error", message: "تعذر جلب بيانات الفحص التشغيلي" });
+    }).finally(() => {
       setIsLoading(false);
       setIsRefreshing(false);
-    }
-  };
+    });
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const showBanner = (type: "success" | "error", message: string) => {
+  function showBanner(type: "success" | "error", message: string) {
     setBanner({ type, message });
     setTimeout(() => {
       setBanner((prev) => (prev?.message === message ? null : prev));
@@ -419,7 +412,7 @@ export default function AdminInspectionsPage() {
 
       return matchesSearch && matchesDate && matchesCaptain;
     });
-  }, [inspections, search, historyDateFilter, captainFilter]);
+  }, [safeInspections, search, historyDateFilter, captainFilter]);
 
   return (
     <div className="space-y-6">
@@ -958,6 +951,7 @@ export default function AdminInspectionsPage() {
                                               id: c.todayInspection.id,
                                               captainName: c.name,
                                               vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                              pdfPath: (c.todayInspection as any).pdfPath,
                                             });
                                           }
                                         }}
@@ -1133,6 +1127,7 @@ export default function AdminInspectionsPage() {
                                       id: c.todayInspection.id,
                                       captainName: c.name,
                                       vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                      pdfPath: (c.todayInspection as any).pdfPath,
                                     });
                                   }
                                 }}
@@ -1231,10 +1226,10 @@ export default function AdminInspectionsPage() {
                             <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                               <div className="flex flex-col">
                                 <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">
-                                  {new Date(insp.inspectionDate || insp.createdAt || Date.now()).toLocaleDateString("en-GB")}
+                                  {insp.inspectionDate || insp.createdAt ? new Date(insp.inspectionDate || insp.createdAt || "").toLocaleDateString("en-GB") : "—"}
                                 </span>
                                 <span className="text-[10px]" dir="ltr">
-                                  {new Date(insp.createdAt || insp.inspectionDate || Date.now()).toLocaleTimeString("ar-SA", {
+                                  {new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString("ar-SA", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
@@ -1278,6 +1273,7 @@ export default function AdminInspectionsPage() {
                                       id: insp.id,
                                       captainName: insp.captainName,
                                       vehiclePlate: insp.vehiclePlate,
+                                      pdfPath: (insp as any).pdfPath,
                                     })
                                   }
                                   className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
@@ -1343,10 +1339,10 @@ export default function AdminInspectionsPage() {
                         <div className="flex items-center gap-1.5 font-mono text-slate-600 dark:text-slate-300">
                           <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                           <span dir="ltr">
-                            {new Date(insp.inspectionDate || insp.createdAt || Date.now()).toLocaleDateString("en-GB")}
+                            {insp.inspectionDate || insp.createdAt ? new Date(insp.inspectionDate || insp.createdAt || "").toLocaleDateString("en-GB") : "—"}
                           </span>
                           <span className="text-slate-400 text-[10px]" dir="ltr">
-                            {new Date(insp.createdAt || insp.inspectionDate || Date.now()).toLocaleTimeString("ar-SA", {
+                            {new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString("ar-SA", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -1380,6 +1376,7 @@ export default function AdminInspectionsPage() {
                               id: insp.id,
                               captainName: insp.captainName,
                               vehiclePlate: insp.vehiclePlate,
+                              pdfPath: (insp as any).pdfPath,
                             })
                           }
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
@@ -1409,7 +1406,7 @@ export default function AdminInspectionsPage() {
       ───────────────────────────────────────────────────────────────────────────── */}
       {selectedInspectionForView && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="theme-card w-full max-w-2xl rounded-3xl border theme-border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="mobile-dialog-panel theme-card w-full max-w-2xl rounded-3xl border theme-border shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40">
               <div className="flex items-center gap-3">
@@ -1587,6 +1584,7 @@ export default function AdminInspectionsPage() {
                       id: selectedInspectionForView.id,
                       captainName: selectedInspectionForView.captainName,
                       vehiclePlate: selectedInspectionForView.vehiclePlate,
+                      pdfPath: (selectedInspectionForView as any).pdfPath,
                     });
                   }}
                   className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs hover:shadow-md transition"
@@ -1613,7 +1611,7 @@ export default function AdminInspectionsPage() {
       ───────────────────────────────────────────────────────────────────────────── */}
       {isCustomModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="theme-card w-full max-w-3xl rounded-3xl border theme-border shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+          <div className="mobile-dialog-panel theme-card w-full max-w-3xl rounded-3xl border theme-border shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40">
               <div className="flex items-center gap-3">
@@ -2058,6 +2056,7 @@ export default function AdminInspectionsPage() {
           inspectionId={previewPdfInspection.id}
           captainName={previewPdfInspection.captainName}
           vehiclePlate={previewPdfInspection.vehiclePlate}
+          pdfUrl={previewPdfInspection.pdfPath}
         />
       )}
     </div>

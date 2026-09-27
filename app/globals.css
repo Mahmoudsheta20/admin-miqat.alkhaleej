@@ -3,8 +3,8 @@
 
 @layer base {
   :root {
-    --font-arabic: 'Zain', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-latin: 'Outfit', system-ui, sans-serif;
+    --font-arabic: var(--font-zain), var(--font-outfit), system-ui, sans-serif;
+    --font-latin: var(--font-outfit), system-ui, sans-serif;
     
     /* Light Mode Variables (Default) */
     --bg-main: #f8fafc;
@@ -190,4 +190,63 @@ html.dark ::-webkit-scrollbar-thumb {
 }
 .bottom-safe {
   bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Keep browser chrome, the on-screen keyboard, and notches out of the workspace. */
+.app-shell {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-inline-start: env(safe-area-inset-right, 0px);
+  padding-inline-end: env(safe-area-inset-left, 0px);
+}
+.app-main {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  scroll-padding-block: 1rem 6.5rem;
+}
+.mobile-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  padding-inline: max(0.5rem, env(safe-area-inset-right, 0px)) max(0.5rem, env(safe-area-inset-left, 0px));
+}
+.mobile-bottom-nav a { min-height: 48px; }
+.app-content .grid > * { min-width: 0; }
+.app-shell :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+.mobile-dialog-panel {
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overscroll-behavior: contain;
+}
+.mobile-drawer::backdrop { background: rgb(0 0 0 / 0.6); }
+.auth-page input { min-width: 0; }
+.mobile-card-actions > :is(a, button) {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+@media (min-width: 1024px) {
+  .app-main { padding-bottom: 2rem; }
+}
+@media (max-width: 639px) {
+  .app-content .font-mono { overflow-wrap: anywhere; min-width: 0; }
+  .app-content :where(button, a.gold-gradient-btn, a.secondary-btn),
+  .mobile-dialog-panel :where(button, a.gold-gradient-btn) { min-height: 44px; }
+  .app-content :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { min-width: 0; max-width: 100%; }
+  .mobile-dialog-panel { overflow-y: auto; }
+  .mobile-dialog-panel > .overflow-y-auto { min-height: 0; }
+  .mobile-dialog-panel button[aria-label="إغلاق"] { min-width: 44px; }
+  .form-popover { width: 100%; max-width: 100%; }
+  .form-popover button { min-height: 40px; }
+  .header-popover {
+    max-height: calc(100dvh - 9rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *, .mobile-dialog-panel * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,4 +1,5 @@
 "use client";
+import { backendUrl } from "@/lib/backend";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -119,10 +120,10 @@ export default function EditContractPage({ params }: PageProps) {
   // Loading & State
   const [contract, setContract] = useState<Contract | null>(null);
   const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => {
-    const cached = getCachedData<any>("captains_list");
+    const cached = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
     if (Array.isArray(cached)) return cached;
     if (cached && typeof cached === "object" && Array.isArray(cached.captains)) {
-      return cached.captains.map((c: any) => ({
+      return cached.captains.map((c) => ({
         ...c,
         contractCount: c.contractCount || 0,
         hasTodayInspection: c.hasTodayInspection || false,
@@ -131,7 +132,7 @@ export default function EditContractPage({ params }: PageProps) {
     return [];
   });
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    const cached = getCachedData<any>("fleet_vehicles");
+    const cached = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
     if (Array.isArray(cached)) return cached;
     if (cached && typeof cached === "object" && Array.isArray(cached.vehicles)) {
       return cached.vehicles;
@@ -479,7 +480,7 @@ export default function EditContractPage({ params }: PageProps) {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           <a
-            href={`/api/contracts/pdf?contractId=${id}&download=1`}
+            href={backendUrl(`/contracts/${encodeURIComponent(id)}/pdf?download=1`)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-amber-600 transition shadow-2xs"
             title="توليد وتحميل وثيقة الـ PDF الرسمية مباشرة من السيرفر"
           >
@@ -758,7 +759,7 @@ export default function EditContractPage({ params }: PageProps) {
                   <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                     <span>
-                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت "تاريخ الإصدار"، مع الحفاظ على تاريخ الإنشاء الأصلي في قاعدة البيانات.
+                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، مع الحفاظ على تاريخ الإنشاء الأصلي في قاعدة البيانات.
                     </span>
                   </div>
                 </div>
@@ -1095,6 +1096,7 @@ export default function EditContractPage({ params }: PageProps) {
           onClose={() => setIsPdfOpen(false)}
           contractId={contract.id}
           referenceNumber={contract.referenceNumber}
+          pdfUrl={contract.pdfPath}
         />
       )}
 

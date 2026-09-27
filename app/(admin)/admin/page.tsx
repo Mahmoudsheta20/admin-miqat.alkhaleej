@@ -10,9 +10,6 @@ import {
   ArrowUpRight,
   RefreshCw,
   FileText,
-  Calendar,
-  MapPin,
-  Clock,
   ChevronLeft,
 } from "lucide-react";
 import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
@@ -25,13 +22,11 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(() => !getCachedData("dashboard_stats"));
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedRefNum, setSelectedRefNum] = useState<string>("");
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const loadStats = (forceRefresh = false) => {
-    if (forceRefresh) {
-      setIsLoading(true);
-    }
     startTransition(async () => {
       try {
         const res = await fetchCached("dashboard_stats", getDashboardStats, {
@@ -53,9 +48,10 @@ export default function AdminDashboardPage() {
     loadStats();
   }, []);
 
-  const openPdf = (id: string, ref: string) => {
+  const openPdf = (id: string, ref: string, pdfPath?: string | null) => {
     setSelectedContractId(id);
     setSelectedRefNum(ref);
+    setSelectedPdfUrl(pdfPath || null);
     setIsPdfOpen(true);
   };
 
@@ -217,7 +213,7 @@ export default function AdminDashboardPage() {
 
       {/* Recent Contracts Section */}
       <div className="theme-card rounded-2xl overflow-hidden border theme-border">
-        <div className="p-5 border-b theme-border flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b theme-border flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               أحدث العقود الموثقة
@@ -289,7 +285,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-5 py-3.5 text-left">
                         <button
-                          onClick={() => openPdf(c.id, c.referenceNumber)}
+                          onClick={() => openPdf(c.id, c.referenceNumber, (c as any).pdfPath)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
                         >
                           <FileText className="w-3.5 h-3.5 text-amber-500" />
@@ -306,8 +302,8 @@ export default function AdminDashboardPage() {
             <div className="md:hidden divide-y theme-border">
               {stats.recentContracts.map((c) => (
                 <div key={c.id} className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="min-w-0 break-all font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
                       {c.referenceNumber}
                     </span>
                     <StatusBadge type="operation" status={c.operationType} size="sm" />
@@ -344,7 +340,7 @@ export default function AdminDashboardPage() {
                         تفاصيل
                       </Link>
                       <button
-                        onClick={() => openPdf(c.id, c.referenceNumber)}
+                        onClick={() => openPdf(c.id, c.referenceNumber, (c as any).pdfPath)}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition text-xs shadow-2xs"
                       >
                         <FileText className="w-3.5 h-3.5" />
@@ -363,9 +359,13 @@ export default function AdminDashboardPage() {
       {selectedContractId && (
         <PdfPreviewModal
           isOpen={isPdfOpen}
-          onClose={() => setIsPdfOpen(false)}
+          onClose={() => {
+            setIsPdfOpen(false);
+            setSelectedPdfUrl(null);
+          }}
           contractId={selectedContractId}
           referenceNumber={selectedRefNum}
+          pdfUrl={selectedPdfUrl}
         />
       )}
     </div>

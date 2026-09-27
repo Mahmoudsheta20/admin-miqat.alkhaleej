@@ -1,18 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ClipboardCheck,
   CheckCircle2,
   XCircle,
-  ShieldCheck,
-  Car,
   AlertCircle,
   FilePlus2,
   Check,
-  Info,
   ArrowRight,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
@@ -60,7 +56,6 @@ const SAFETY_ITEMS: CheckItemConfig[] = [
 
 export default function CaptainInspectionPage() {
   const { user } = useAuth();
-  const router = useRouter();
 
   const [vehiclePlate, setVehiclePlate] = useState(
     user?.assignedVehiclePlate || "ا ص ل 7223"
@@ -71,7 +66,7 @@ export default function CaptainInspectionPage() {
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [alreadyInspected, setAlreadyInspected] = useState(() => {
-    return Boolean(user && getCachedData<any>(`captain_inspection_${user.id}`)?.inspection);
+    return Boolean(user && getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection);
   });
 
   // 16 boolean flags
@@ -164,8 +159,6 @@ export default function CaptainInspectionPage() {
       setErrorMessage(res.error || "فشل تسجيل الفحص");
     }
   };
-
-  const allChecked = Object.values(checks).every(Boolean);
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect } from "react";
+import { useStoredPreference, setStoredPreference } from "./useStoredPreference";
 
 type Theme = "light" | "dark";
 
@@ -13,26 +14,15 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+  const preference = useStoredPreference("miqat_theme", "light");
+  const theme: Theme = preference === "dark" ? "dark" : "light";
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("miqat_theme") as Theme | null;
-    if (saved) {
-      setThemeState(saved);
-      document.documentElement.classList.toggle("dark", saved === "dark");
-    } else {
-      // Default to light mode for clear executive daylight view
-      setThemeState("light");
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem("miqat_theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    setStoredPreference("miqat_theme", newTheme);
   };
 
   const toggleTheme = () => {

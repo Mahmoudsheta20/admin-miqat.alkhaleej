@@ -90,8 +90,8 @@ const INSPECTION_CATEGORIES = [
 ];
 
 export default function AdminContractBuilderPage() {
-  const cachedCaptains = getCachedData<any>("captains_list");
-  const cachedVehicles = getCachedData<any>("fleet_vehicles");
+  const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
+  const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
 
   const [captains, setCaptains] = useState<CaptainWithMeta[]>(() => {
     if (Array.isArray(cachedCaptains)) return cachedCaptains;
@@ -112,10 +112,7 @@ export default function AdminContractBuilderPage() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
-  const [createdContract, setCreatedContract] = useState<{
-    id: string;
-    referenceNumber: string;
-  } | null>(null);
+  const [createdContract, setCreatedContract] = useState<{ id: string; referenceNumber: string; pdfPath?: string | null } | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [confirmError, setConfirmError] = useState("");
@@ -408,10 +405,8 @@ export default function AdminContractBuilderPage() {
         invalidateClientCache("contracts_");
         invalidateClientCache("dashboard_stats");
         invalidateClientCache("inspections_");
-        setCreatedContract({
-          id: res.contract.id,
-          referenceNumber: res.contract.referenceNumber,
-        });
+        setCreatedContract({ id: res.contract.id, referenceNumber: res.contract.referenceNumber, pdfPath: res.contract.pdfPath || null });
+        setIsPdfOpen(true);
       } else {
         setServerError(res.error || "فشل إنشاء وتوثيق العقد الرسمي");
       }
@@ -512,6 +507,7 @@ export default function AdminContractBuilderPage() {
             onClose={() => setIsPdfOpen(false)}
             contractId={createdContract.id}
             referenceNumber={createdContract.referenceNumber}
+            pdfUrl={createdContract?.pdfPath}
           />
         )}
       </div>
@@ -840,7 +836,7 @@ export default function AdminContractBuilderPage() {
                   <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                     <span>
-                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت "تاريخ الإصدار"، بينما يحتفظ النظام بتاريخ ووقت التسجيل الفعلي في قاعدة البيانات.
+                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، بينما يحتفظ النظام بتاريخ ووقت التسجيل الفعلي في قاعدة البيانات.
                     </span>
                   </div>
                 </div>
