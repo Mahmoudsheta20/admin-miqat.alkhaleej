@@ -31,6 +31,23 @@ export interface CacheOptions {
 }
 
 /**
+ * Helper to determine if a fetcher result is considered valid for caching.
+ * Prevents transient errors, null, undefined, or failed { success: false } payloads from polluting the cache.
+ */
+function isValidCachePayload(data: unknown): boolean {
+  if (data === null || data === undefined) return false;
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "success" in data &&
+    (data as { success?: boolean }).success === false
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Fetch data with client-side caching and automatic in-flight deduplication.
  */
 export async function fetchCached<T>(
@@ -45,7 +62,11 @@ export async function fetchCached<T>(
   if (!forceRefresh) {
     const entry = memoryCache.get(key) as CacheEntry<T> | undefined;
     if (entry && now - entry.timestamp < entry.ttlMs) {
-      return entry.data;
+      if (isValidCachePayload(entry.data)) {
+        return entry.data;
+      } else {
+        memoryCache.delete(key);
+      }
     }
   }
 
@@ -59,13 +80,24 @@ export async function fetchCached<T>(
   const executePromise = (async () => {
     try {
       const result = await fetcher();
-      // Store in memory cache
-      memoryCache.set(key, {
-        data: result,
-        timestamp: Date.now(),
-        ttlMs,
-      });
+
+      // Only cache valid, non-error payloads
+      if (isValidCachePayload(result)) {
+        memoryCache.set(key, {
+          data: result,
+          timestamp: Date.now(),
+          ttlMs,
+        });
+      } else {
+        // If result was unsuccessful, purge any previous cached entry for this key
+        memoryCache.delete(key);
+      }
+
       return result;
+    } catch (err) {
+      // On error, ensure broken key is deleted
+      memoryCache.delete(key);
+      throw err;
     } finally {
       // Clean up in-flight tracker once settled
       inFlightRequests.delete(key);
@@ -78,15 +110,24 @@ export async function fetchCached<T>(
 
 /**
  * Synchronously read cached data if present and valid.
- * Useful for initial state in useState(getCachedData('...') || fallback).
+ * SSR-safe: returns null during server-side rendering to prevent hydration mismatches.
  */
 export function getCachedData<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+
   const entry = memoryCache.get(key) as CacheEntry<T> | undefined;
   if (!entry) return null;
   const now = Date.now();
   if (now - entry.timestamp > entry.ttlMs) {
+    memoryCache.delete(key);
     return null; // Expired
   }
+
+  if (!isValidCachePayload(entry.data)) {
+    memoryCache.delete(key);
+    return null;
+  }
+
   return entry.data;
 }
 
@@ -94,6 +135,7 @@ export function getCachedData<T>(key: string): T | null {
  * Manually set or update a cache entry (e.g. for optimistic updates).
  */
 export function setCachedData<T>(key: string, data: T, ttlMs = 60_000): void {
+  if (!isValidCachePayload(data)) return;
   memoryCache.set(key, {
     data,
     timestamp: Date.now(),
@@ -114,13 +156,13 @@ export function invalidateClientCache(prefixOrKey?: string): void {
     return;
   }
 
-  for (const key of memoryCache.keys()) {
+  for (const key of Array.from(memoryCache.keys())) {
     if (key === prefixOrKey || key.startsWith(prefixOrKey)) {
       memoryCache.delete(key);
     }
   }
 
-  for (const key of inFlightRequests.keys()) {
+  for (const key of Array.from(inFlightRequests.keys())) {
     if (key === prefixOrKey || key.startsWith(prefixOrKey)) {
       inFlightRequests.delete(key);
     }

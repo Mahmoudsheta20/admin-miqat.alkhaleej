@@ -54,13 +54,33 @@ export async function GET(req: NextRequest) {
         "Pragma": "no-cache",
         "Expires": "0",
         "X-Contract-Storage-Url": storageUrl,
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
     });
   } catch (err: unknown) {
     const error = err as Error;
     console.error("PDF generation error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }
+    );
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
 
 export async function POST(req: NextRequest) {

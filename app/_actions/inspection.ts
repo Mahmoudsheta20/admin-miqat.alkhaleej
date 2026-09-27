@@ -2,7 +2,7 @@
 
 import fs from "fs";
 import path from "path";
-import { prisma } from "@/lib/prisma";
+import { prisma, withPrismaRetry } from "@/lib/prisma";
 import { VehicleInspection } from "@/lib/types";
 import { generateAndSaveInspectionPdf, INSPECTIONS_STORAGE_DIR } from "@/lib/inspectionStorage";
 
@@ -37,15 +37,17 @@ export async function getTodayInspection(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const record = await prisma.vehicleInspection.findFirst({
-      where: {
-        captainId,
-        createdAt: { gte: today },
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        captain: { select: { name: true } },
-      },
+    const record = await withPrismaRetry(async () => {
+      return prisma.vehicleInspection.findFirst({
+        where: {
+          captainId,
+          createdAt: { gte: today },
+        },
+        orderBy: { createdAt: "desc" },
+        include: {
+          captain: { select: { name: true } },
+        },
+      });
     });
 
     if (!record) {
@@ -262,30 +264,32 @@ export async function getCaptainsInspectionOverview(): Promise<{
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [captainsList, totalInspectionsCount] = await Promise.all([
-      prisma.user.findMany({
-        where: { role: "CAPTAIN" },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          nationalId: true,
-          assignedVehiclePlate: true,
-          avatarUrl: true,
-          active: true,
-          inspections: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
+    const [captainsList, totalInspectionsCount] = await withPrismaRetry(async () => {
+      return Promise.all([
+        prisma.user.findMany({
+          where: { role: "CAPTAIN" },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            nationalId: true,
+            assignedVehiclePlate: true,
+            avatarUrl: true,
+            active: true,
+            inspections: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+            _count: {
+              select: { inspections: true },
+            },
           },
-          _count: {
-            select: { inspections: true },
-          },
-        },
-        orderBy: { name: "asc" },
-      }),
-      prisma.vehicleInspection.count(),
-    ]);
+          orderBy: { name: "asc" },
+        }),
+        prisma.vehicleInspection.count(),
+      ]);
+    });
 
     let inspectedTodayCount = 0;
 
@@ -498,22 +502,24 @@ export async function getAllInspectionsList(params?: {
       ];
     }
 
-    const records = await prisma.vehicleInspection.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      include: {
-        captain: {
-          select: {
-            name: true,
-            phone: true,
-            avatarUrl: true,
+    const records = await withPrismaRetry(async () => {
+      return prisma.vehicleInspection.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        include: {
+          captain: {
+            select: {
+              name: true,
+              phone: true,
+              avatarUrl: true,
+            },
+          },
+          _count: {
+            select: { contracts: true },
           },
         },
-        _count: {
-          select: { contracts: true },
-        },
-      },
+      });
     });
 
     const inspections: InspectionWithMeta[] = records.map((r) => ({

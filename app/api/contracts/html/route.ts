@@ -60,11 +60,28 @@ export async function GET(req: NextRequest) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store, no-cache, must-revalidate",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
       },
     });
   } catch (err: unknown) {
     const error = err as Error;
     console.error("HTML contract generation error:", error);
-    return new NextResponse(`Error: ${error.message}`, { status: 500 });
+    return new NextResponse(`Error: ${error.message}`, {
+      status: 500,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }

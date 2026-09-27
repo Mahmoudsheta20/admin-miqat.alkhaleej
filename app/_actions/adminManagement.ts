@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withPrismaRetry } from "@/lib/prisma";
 import { getCurrentSession } from "@/app/_actions/auth";
 import { hashPassword, generateTemporaryPassword } from "@/lib/passwordUtils";
 import { sendEmail } from "@/lib/services/email.service";
@@ -28,9 +28,11 @@ export async function getAdminsListAction(): Promise<{
 
     const callerIsSuper = isSuperAdmin(session.email);
 
-    const users = await prisma.user.findMany({
-      where: { role: "ADMIN" },
-      orderBy: { createdAt: "asc" },
+    const users = await withPrismaRetry(async () => {
+      return prisma.user.findMany({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" },
+      });
     });
 
     const admins: AdminUserItem[] = users.map((u) => ({

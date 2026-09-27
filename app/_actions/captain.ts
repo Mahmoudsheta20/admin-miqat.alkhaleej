@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withPrismaRetry } from "@/lib/prisma";
 import { SystemUser } from "@/lib/types";
 import { hashPassword, generateTemporaryPassword } from "@/lib/passwordUtils";
 
@@ -27,20 +27,22 @@ export async function getCaptains(): Promise<{
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const users = await prisma.user.findMany({
-      where: { role: "CAPTAIN" },
-      include: {
-        _count: {
-          select: { contracts: true },
-        },
-        inspections: {
-          where: {
-            createdAt: { gte: today },
+    const users = await withPrismaRetry(async () => {
+      return prisma.user.findMany({
+        where: { role: "CAPTAIN" },
+        include: {
+          _count: {
+            select: { contracts: true },
           },
-          take: 1,
+          inspections: {
+            where: {
+              createdAt: { gte: today },
+            },
+            take: 1,
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" },
+      });
     });
 
     const captains = users.map((u) => ({

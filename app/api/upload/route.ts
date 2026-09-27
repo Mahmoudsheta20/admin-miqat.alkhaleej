@@ -57,17 +57,40 @@ export async function POST(req: NextRequest) {
     const base64String = buffer.toString("base64");
     const publicUrl = `data:${file.type};base64,${base64String}`;
 
-    return NextResponse.json({
-      success: true,
-      url: publicUrl,
-      fileName,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        url: publicUrl,
+        fileName,
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
+    );
   } catch (err) {
     const error = err as Error;
     console.error("Upload avatar error:", error);
     return NextResponse.json(
       { success: false, error: "حدث خطأ أثناء رفع الصورة: " + error.message },
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }
     );
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }

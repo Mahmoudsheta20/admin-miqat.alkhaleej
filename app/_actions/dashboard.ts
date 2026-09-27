@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withPrismaRetry } from "@/lib/prisma";
 
 export interface DashboardStats {
   totalCaptains: number;
@@ -37,21 +37,23 @@ export async function getDashboardStats(): Promise<{
       totalContracts,
       todayInspections,
       recentContractsRecords,
-    ] = await Promise.all([
-      prisma.user.count({ where: { role: "CAPTAIN", active: true } }),
-      prisma.vehicle.count(),
-      prisma.vehicle.count({ where: { status: "AVAILABLE" } }),
-      prisma.contract.count(),
-      prisma.vehicleInspection.count({ where: { createdAt: { gte: today } } }),
-      prisma.contract.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: {
-          captain: { select: { name: true } },
-          _count: { select: { passengers: true } },
-        },
-      }),
-    ]);
+    ] = await withPrismaRetry(async () => {
+      return Promise.all([
+        prisma.user.count({ where: { role: "CAPTAIN", active: true } }),
+        prisma.vehicle.count(),
+        prisma.vehicle.count({ where: { status: "AVAILABLE" } }),
+        prisma.contract.count(),
+        prisma.vehicleInspection.count({ where: { createdAt: { gte: today } } }),
+        prisma.contract.findMany({
+          take: 5,
+          orderBy: { createdAt: "desc" },
+          include: {
+            captain: { select: { name: true } },
+            _count: { select: { passengers: true } },
+          },
+        }),
+      ]);
+    });
 
     const recentContracts = recentContractsRecords.map((c) => ({
       id: c.id,

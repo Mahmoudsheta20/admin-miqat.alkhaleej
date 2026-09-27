@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withPrismaRetry } from "@/lib/prisma";
 import { Vehicle, VehicleStatus } from "@/lib/types";
 
 export interface VehicleFormData {
@@ -23,8 +23,10 @@ export async function getVehicles(): Promise<{
   error?: string;
 }> {
   try {
-    const records = await prisma.vehicle.findMany({
-      orderBy: { createdAt: "desc" },
+    const records = await withPrismaRetry(async () => {
+      return prisma.vehicle.findMany({
+        orderBy: { createdAt: "desc" },
+      });
     });
 
     const vehicles: Vehicle[] = records.map((v) => ({

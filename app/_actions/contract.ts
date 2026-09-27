@@ -2,7 +2,7 @@
 
 import fs from "fs";
 import path from "path";
-import { prisma } from "@/lib/prisma";
+import { prisma, withPrismaRetry } from "@/lib/prisma";
 import { Contract, OperationType, ContractStatus } from "@/lib/types";
 import { NotificationService } from "@/lib/services/notification.service";
 import { getCurrentSession } from "@/app/_actions/auth";
@@ -627,14 +627,16 @@ export async function getContracts(filters?: {
       ];
     }
 
-    const records = await prisma.contract.findMany({
-      where,
-      include: {
-        passengers: { orderBy: { sequence: "asc" } },
-        captain: true,
-        inspection: true,
-      },
-      orderBy: { createdAt: "desc" },
+    const records = await withPrismaRetry(async () => {
+      return prisma.contract.findMany({
+        where,
+        include: {
+          passengers: { orderBy: { sequence: "asc" } },
+          captain: true,
+          inspection: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
     });
 
     const contracts: Contract[] = records.map((c) => ({
