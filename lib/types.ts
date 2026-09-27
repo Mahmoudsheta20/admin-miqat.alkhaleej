@@ -75,6 +75,7 @@ export interface VehicleInspection {
   seatBelts: boolean;
   driverDeclared: boolean;
   notes?: string | null;
+  pdfPath?: string | null;
   createdAt?: string | Date;
 }
 
