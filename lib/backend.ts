@@ -37,13 +37,37 @@ export function setAuthToken(token: string | null): void {
 }
 
 export function backendUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
-  const cleanBase = base.replace(/\/+$/, "");
+  const rawBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    process.env.BACKEND_URL ||
+    ""
+  )
+    .trim()
+    .replace(/^["']+|["']+$/g, "")
+    .replace(/\/+$/, "");
+
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  if (cleanPath.startsWith("/api/")) {
-    return `${cleanBase}${cleanPath}`;
+  const apiPath = cleanPath.startsWith("/api/") ? cleanPath : `/api${cleanPath}`;
+
+  // If in browser on HTTPS (e.g. Vercel) and backend is HTTP:
+  // Direct HTTP fetch from an HTTPS page is blocked by browsers as Mixed Content.
+  // Using the same-origin proxy (/api/proxy/...) routes it safely through Next.js server!
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    (!rawBase || rawBase.startsWith("http://"))
+  ) {
+    const subPath = apiPath.replace(/^\/api\/?/, "");
+    return `/api/proxy/${subPath}`;
   }
-  return `${cleanBase}/api${cleanPath}`;
+
+  // If rawBase is provided and starts with http/https
+  if (rawBase && (rawBase.startsWith("http://") || rawBase.startsWith("https://"))) {
+    return `${rawBase}${apiPath}`;
+  }
+
+  // Default fallback for local dev
+  return `http://localhost:5001${apiPath}`;
 }
 
 export function queryString(values: object = {}): string {

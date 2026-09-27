@@ -19,6 +19,25 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    const rawBackend = (
+      process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "http://63.188.195.14"
+    )
+      .trim()
+      .replace(/^["']+|["']+$/g, "")
+      .replace(/\/+$/, "");
+
+    const target = rawBackend.startsWith("http") ? rawBackend : `http://${rawBackend}`;
+
+    return [
+      {
+        source: "/api/proxy/:path*",
+        destination: `${target}/api/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
