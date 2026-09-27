@@ -4,6 +4,7 @@ import type { SystemUser } from "@/lib/types";
 export interface CaptainFormData {
   name: string; email: string; phone?: string; nationalId?: string;
   licenseNumber?: string; licenseExpiry?: string; assignedVehiclePlate?: string; avatarUrl?: string;
+  active?: boolean;
 }
 interface CaptainSummary extends SystemUser { contractCount: number; hasTodayInspection: boolean }
 export async function getCaptains() {
@@ -19,5 +20,8 @@ export function resetCaptainTemporaryPassword(id: string) {
 export async function updateCaptain(id: string, data: Partial<CaptainFormData> & { active?: boolean }) {
   const result = await backendRequest<SystemUser>(`/captains/${encodeURIComponent(id)}`, "PUT", data);
   return { success: result.success, captain: result.data, error: result.error };
+}
+export async function toggleCaptainStatus(id: string, active: boolean) {
+  return updateCaptain(id, { active });
 }
 export function deleteCaptain(id: string) { return backendRequest(`/captains/${encodeURIComponent(id)}`, "DELETE"); }

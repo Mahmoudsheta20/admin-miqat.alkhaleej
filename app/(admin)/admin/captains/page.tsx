@@ -16,11 +16,13 @@ import {
   KeyRound,
   Copy,
   Check,
+  Power,
 } from "lucide-react";
 import {
   getCaptains,
   createCaptain,
   updateCaptain,
+  toggleCaptainStatus,
   deleteCaptain,
   resetCaptainTemporaryPassword,
   CaptainFormData,
@@ -63,6 +65,7 @@ export default function CaptainsManagementPage() {
   } | null>(null);
   const [copied, setCopied] = useState(false);
   const [isResettingId, setIsResettingId] = useState<string | null>(null);
+  const [isTogglingId, setIsTogglingId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<CaptainFormData>({
@@ -74,6 +77,7 @@ export default function CaptainsManagementPage() {
     licenseExpiry: "",
     assignedVehiclePlate: "",
     avatarUrl: "",
+    active: true,
   });
 
   const loadCaptains = async (forceRefresh = false) => {
@@ -95,6 +99,33 @@ export default function CaptainsManagementPage() {
     loadCaptains();
   }, []);
 
+  const handleToggleStatus = async (c: CaptainItem) => {
+    const newStatus = !c.active;
+    setIsTogglingId(c.id);
+    try {
+      setCaptains((prev) =>
+        prev.map((item) => (item.id === c.id ? { ...item, active: newStatus } : item))
+      );
+      const res = await toggleCaptainStatus(c.id, newStatus);
+      if (res.success) {
+        invalidateClientCache("captains_list");
+        invalidateClientCache("dashboard_stats");
+      } else {
+        setCaptains((prev) =>
+          prev.map((item) => (item.id === c.id ? { ...item, active: c.active } : item))
+        );
+        alert(res.error || "تعذر تغيير حالة الكابتن");
+      }
+    } catch {
+      setCaptains((prev) =>
+        prev.map((item) => (item.id === c.id ? { ...item, active: c.active } : item))
+      );
+      alert("حدث خطأ غير متوقع أثناء تغيير حالة الكابتن");
+    } finally {
+      setIsTogglingId(null);
+    }
+  };
+
   const openAddModal = () => {
     setFormData({
       name: "",
@@ -105,6 +136,7 @@ export default function CaptainsManagementPage() {
       licenseExpiry: "",
       assignedVehiclePlate: "",
       avatarUrl: "",
+      active: true,
     });
     setFormError("");
     setIsAddModalOpen(true);
@@ -121,8 +153,10 @@ export default function CaptainsManagementPage() {
       licenseExpiry: c.licenseExpiry || "",
       assignedVehiclePlate: c.assignedVehiclePlate || "",
       avatarUrl: c.avatarUrl || "",
+      active: c.active,
     });
     setFormError("");
+    setIsAddModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -382,13 +416,42 @@ export default function CaptainsManagementPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <StatusBadge
-                          type="captain"
-                          status={c.active ? "ACTIVE" : "INACTIVE"}
-                        />
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(c)}
+                          disabled={isTogglingId === c.id}
+                          className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          title={c.active ? "انقر لتعطيل الحساب" : "انقر لتفعيل وتنشيط الحساب"}
+                        >
+                          <StatusBadge
+                            type="captain"
+                            status={c.active ? "ACTIVE" : "INACTIVE"}
+                          />
+                          <span
+                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] transition border ${
+                              c.active
+                                ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 group-hover:border-rose-500/30 group-hover:text-rose-600 group-hover:bg-rose-500/10"
+                                : "border-slate-300 dark:border-slate-700 text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-600 group-hover:bg-emerald-500/10"
+                            }`}
+                          >
+                            <Power className={`w-3 h-3 ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                          </span>
+                        </button>
                       </td>
                       <td className="px-5 py-4 text-left">
                         <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleToggleStatus(c)}
+                            disabled={isTogglingId === c.id}
+                            className={`p-1.5 rounded-lg border transition ${
+                              c.active
+                                ? "theme-card hover:border-rose-500 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                            }`}
+                            title={c.active ? "تعطيل حساب الكابتن مؤقتاً" : "تنشيط وتفعيل حساب الكابتن"}
+                          >
+                            <Power className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                          </button>
                           <button
                             onClick={() => handleResetPassword(c)}
                             disabled={isResettingId === c.id}
@@ -402,7 +465,7 @@ export default function CaptainsManagementPage() {
                           <button
                             onClick={() => openEditModal(c)}
                             className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 transition"
-                            title="تعديل بيانات الكابتن"
+                            title="تعديل بيانات الكابتن وحالته"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
@@ -457,10 +520,19 @@ export default function CaptainsManagementPage() {
                         </div>
                       </div>
                     </div>
-                    <StatusBadge
-                      type="captain"
-                      status={c.active ? "ACTIVE" : "INACTIVE"}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(c)}
+                      disabled={isTogglingId === c.id}
+                      className="group inline-flex items-center gap-1.5 p-1 rounded-xl transition hover:opacity-85"
+                      title={c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط"}
+                    >
+                      <StatusBadge
+                        type="captain"
+                        status={c.active ? "ACTIVE" : "INACTIVE"}
+                      />
+                      <Power className={`w-3.5 h-3.5 ${c.active ? "text-emerald-500" : "text-slate-400"} ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                    </button>
                   </div>
 
                   {/* Details Grid */}
@@ -515,6 +587,18 @@ export default function CaptainsManagementPage() {
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => handleToggleStatus(c)}
+                      disabled={isTogglingId === c.id}
+                      className={`p-2 rounded-xl border transition ${
+                        c.active
+                          ? "theme-card text-slate-500 hover:text-rose-500 border-slate-200 dark:border-slate-800"
+                          : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      }`}
+                      title={c.active ? "تعطيل حساب الكابتن" : "تنشيط وتفعيل حساب الكابتن"}
+                    >
+                      <Power className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                    </button>
                     <button
                       onClick={() => handleResetPassword(c)}
                       disabled={isResettingId === c.id}
@@ -712,6 +796,39 @@ export default function CaptainsManagementPage() {
                     placeholder="ا ص ل 7223"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
+                </div>
+
+                {/* Account Status */}
+                <div className="space-y-1.5 col-span-full pt-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    حالة الحساب والتشغيل
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, active: true })}
+                      className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                        formData.active !== false
+                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20"
+                          : "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>حساب نشط (مفعل)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, active: false })}
+                      className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                        formData.active === false
+                          ? "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20"
+                          : "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                      <span>حساب معطل (موقوف)</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

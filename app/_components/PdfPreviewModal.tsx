@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { X, Download, ExternalLink, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { X, Download, ExternalLink, FileText, CheckCircle2, AlertCircle, RotateCw } from "lucide-react";
 import { backendUrl } from "@/lib/backend";
 
 interface PdfPreviewModalProps {
@@ -23,6 +23,9 @@ export default function PdfPreviewModal({
   referenceNumber = "MQ-2026-00841",
   pdfUrl: propPdfUrl,
 }: PdfPreviewModalProps) {
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
   // 1. Direct official S3 URL
   const s3Url = useMemo(() => {
     if (propPdfUrl && (propPdfUrl.startsWith("http://") || propPdfUrl.startsWith("https://"))) {
@@ -47,9 +50,20 @@ export default function PdfPreviewModal({
   const effectiveUrl = s3Url || streamUrl;
   const directDownloadUrl = s3Url || (contractId ? backendUrl(`/contracts/${encodeURIComponent(contractId)}/pdf?download=1`) : null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setIframeLoading(true);
+    }
+  }, [isOpen, effectiveUrl, reloadKey]);
+
   if (!isOpen) return null;
 
   const fileName = `Contract_${referenceNumber || "Miqat"}.pdf`;
+
+  const handleRefresh = () => {
+    setIframeLoading(true);
+    setReloadKey((prev) => prev + 1);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
@@ -87,6 +101,14 @@ export default function PdfPreviewModal({
           <div className="flex items-center gap-2 self-stretch sm:self-auto">
             {effectiveUrl && (
               <>
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="p-2 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl border theme-card transition"
+                  title="إعادة تحميل المعاينة"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iframeLoading ? "animate-spin" : ""}`} />
+                </button>
                 <a
                   href={directDownloadUrl || effectiveUrl}
                   download={fileName}
@@ -121,11 +143,26 @@ export default function PdfPreviewModal({
         </div>
 
         {/* View Frame */}
-        <div className="min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
+        <div className="relative min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
+          {iframeLoading && effectiveUrl && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs z-10 gap-3">
+              <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+              <div className="text-center space-y-1">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  جاري تحميل ومعاينة وثيقة العقد المعتمدة...
+                </p>
+                <p className="text-[10px] text-slate-400 font-mono">
+                  {referenceNumber}
+                </p>
+              </div>
+            </div>
+          )}
+
           {effectiveUrl ? (
             <iframe
-              key={effectiveUrl}
+              key={`${effectiveUrl}-${reloadKey}`}
               src={`${effectiveUrl}#toolbar=1&navpanes=0`}
+              onLoad={() => setIframeLoading(false)}
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة العقد الرسمي"
             />
