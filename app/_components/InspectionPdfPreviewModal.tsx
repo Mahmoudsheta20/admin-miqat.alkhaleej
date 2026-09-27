@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { X, Download, ExternalLink, FileText, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { X, Download, ExternalLink, FileText, CheckCircle2, ShieldCheck, AlertCircle, RotateCw } from "lucide-react";
+import { backendUrl, getAuthToken } from "@/lib/backend";
 
 interface InspectionPdfPreviewModalProps {
   isOpen: boolean;
@@ -24,24 +25,48 @@ export default function InspectionPdfPreviewModal({
   vehiclePlate = "",
   pdfUrl: propPdfUrl,
 }: InspectionPdfPreviewModalProps) {
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
   const shortCode = useMemo(() => {
     if (!inspectionId) return "";
     return inspectionId.replace(/-/g, "").slice(0, 8).toUpperCase();
   }, [inspectionId]);
 
-  const resolvedPdfUrl = useMemo(() => {
+  // 1. Direct official S3 URL (only if explicitly provided with valid url)
+  const s3Url = useMemo(() => {
     if (propPdfUrl && (propPdfUrl.startsWith("http://") || propPdfUrl.startsWith("https://"))) {
       return propPdfUrl;
     }
-    if (shortCode) {
-      return `${S3_BUCKET_BASE}/inspections/inspection-${shortCode}.pdf`;
-    }
     return null;
-  }, [propPdfUrl, shortCode]);
+  }, [propPdfUrl]);
+
+  // 2. Reliable backend stream URL (generates dynamically on-demand if missing on S3!)
+  const streamUrl = useMemo(() => {
+    if (!inspectionId) return null;
+    const token = getAuthToken();
+    const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
+    return backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?direct=1${tokenParam}`);
+  }, [inspectionId]);
+
+  // Prefer direct S3 URL if already known and uploaded; otherwise use backend stream URL
+  const effectiveUrl = s3Url || streamUrl;
+  const directDownloadUrl = s3Url || (inspectionId ? backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?download=1${getAuthToken() ? `&token=${encodeURIComponent(getAuthToken()!)}` : ""}`) : null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIframeLoading(true);
+    }
+  }, [isOpen, effectiveUrl, reloadKey]);
 
   if (!isOpen) return null;
 
   const fileName = `inspection-${shortCode || "Miqat"}.pdf`;
+
+  const handleRefresh = () => {
+    setIframeLoading(true);
+    setReloadKey((prev) => prev + 1);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
@@ -90,10 +115,18 @@ export default function InspectionPdfPreviewModal({
 
           {/* Actions */}
           <div className="flex items-center gap-2 self-stretch sm:self-auto">
-            {resolvedPdfUrl && (
+            {effectiveUrl && (
               <>
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="p-2 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl border theme-card transition"
+                  title="إعادة تحميل المعاينة"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iframeLoading ? "animate-spin" : ""}`} />
+                </button>
                 <a
-                  href={resolvedPdfUrl}
+                  href={directDownloadUrl || effectiveUrl}
                   download={fileName}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -104,7 +137,7 @@ export default function InspectionPdfPreviewModal({
                   <span>تحميل PDF</span>
                 </a>
                 <a
-                  href={resolvedPdfUrl}
+                  href={effectiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
@@ -126,10 +159,26 @@ export default function InspectionPdfPreviewModal({
         </div>
 
         {/* View Frame */}
-        <div className="min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
-          {resolvedPdfUrl ? (
+        <div className="relative min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
+          {iframeLoading && effectiveUrl && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs z-10 gap-3">
+              <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+              <div className="text-center space-y-1">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  جاري تجهيز وتحميل محضر الفحص التشغيلي...
+                </p>
+                <p className="text-[10px] text-slate-400 font-mono">
+                  #INSP-{shortCode}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {effectiveUrl ? (
             <iframe
-              src={`${resolvedPdfUrl}#toolbar=1&navpanes=0`}
+              key={`${effectiveUrl}-${reloadKey}`}
+              src={`${effectiveUrl}#toolbar=1&navpanes=0`}
+              onLoad={() => setIframeLoading(false)}
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة سجل الفحص التشغيلي"
             />
