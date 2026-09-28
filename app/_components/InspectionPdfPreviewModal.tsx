@@ -2,10 +2,8 @@
 import Modal from "./Modal";
 
 import React, { useState, useCallback } from "react";
-import { usePdfDocument } from "@/lib/use-pdf-document";
 import { X, Download, ExternalLink, FileText, CheckCircle2, ShieldCheck, AlertCircle, RotateCw } from "lucide-react";
 import { backendUrl, getAuthToken } from "@/lib/backend";
-import { pdfServeUrl, isFullUrl } from "@/lib/pdf-serve";
 
 interface InspectionPdfPreviewModalProps {
   isOpen: boolean;
@@ -25,53 +23,28 @@ function InspectionPdfContent({
   inspectionId,
   captainName = "الكابتن",
   vehiclePlate = "",
-  pdfUrl: propPdfUrl,
+  pdfUrl,
 }: InspectionPdfPreviewModalProps) {
   const shortCode = inspectionId?.replace(/-/g, "").slice(0, 8).toUpperCase() || "";
+  const token = getAuthToken();
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // FAST PATH — direct public URL available (e.g. S3):
-  // Route through /api/pdf/serve which runs at the Edge, fetches from S3
-  // in ~10-50ms, caches for 24h, and streams to the browser same-origin.
-  // ═══════════════════════════════════════════════════════════════════════
-  const hasDirectUrl = isFullUrl(propPdfUrl);
-  const directServedUrl = hasDirectUrl ? pdfServeUrl(propPdfUrl) : null;
+  // Prefer backend server PDF endpoint for instant delivery without S3 latency
+  const serverEndpoint = inspectionId
+    ? backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf${token ? `?token=${encodeURIComponent(token)}` : ""}`)
+    : null;
+
+  const url = serverEndpoint || pdfUrl?.trim() || null;
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const handleRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // FALLBACK — no direct URL: resolve through the backend API
-  // ═══════════════════════════════════════════════════════════════════════
-  const backendSourceUrl = !hasDirectUrl && inspectionId
-    ? backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?direct=1`)
-    : propPdfUrl?.trim() || null;
+  const iframeSrc = url
+    ? `${url}${url.includes("?") ? "&" : "?"}v=${refreshKey}#toolbar=1&navpanes=0`
+    : null;
 
-  const {
-    url: hookUrl,
-    isLoading: hookLoading,
-    error: hookError,
-    refresh: hookRefresh,
-  } = usePdfDocument({
-    sourceUrl: hasDirectUrl ? null : backendSourceUrl,
-    token: getAuthToken(),
-    isAuthenticated: Boolean(inspectionId) && !hasDirectUrl,
-  });
-
-  // Merge paths
-  const effectiveUrl = directServedUrl
-    ? `${directServedUrl}&v=${refreshKey}`
-    : hookUrl;
-  const isLoading = hasDirectUrl ? false : hookLoading;
-  const loadError = hasDirectUrl ? null : hookError;
-  const downloadUrl = hasDirectUrl ? propPdfUrl : effectiveUrl;
-
-  const handleRefresh = useCallback(() => {
-    if (hasDirectUrl) {
-      setRefreshKey((k) => k + 1);
-    } else {
-      hookRefresh();
-    }
-  }, [hasDirectUrl, hookRefresh]);
+  const downloadUrl = inspectionId
+    ? backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?download=1${token ? `&token=${encodeURIComponent(token)}` : ""}`)
+    : url;
 
   const fileName = `inspection-${shortCode || "Miqat"}.pdf`;
 
@@ -120,7 +93,7 @@ function InspectionPdfContent({
 
           {/* Actions */}
           <div className="flex items-center gap-2 self-stretch sm:self-auto">
-            {effectiveUrl && (
+            {url && (
               <>
                 <button
                   type="button"
@@ -128,10 +101,10 @@ function InspectionPdfContent({
                   className="p-2 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl border theme-card transition"
                   title="إعادة تحميل المعاينة"
                 >
-                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoading ? "animate-spin" : ""}`} />
+                  <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
                 <a
-                  href={downloadUrl || effectiveUrl}
+                  href={downloadUrl || url}
                   download={fileName}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -142,7 +115,7 @@ function InspectionPdfContent({
                   <span>تحميل PDF</span>
                 </a>
                 <a
-                  href={downloadUrl || effectiveUrl}
+                  href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
@@ -165,37 +138,20 @@ function InspectionPdfContent({
 
         {/* View Frame */}
         <div className="relative min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
-          {isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs z-10 gap-3">
-              <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-              <div className="text-center space-y-1">
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  جاري تجهيز وتحميل محضر الفحص التشغيلي...
-                </p>
-                <p className="text-[10px] text-slate-400 font-mono">#INSP-{shortCode}</p>
-              </div>
-            </div>
-          )}
-
-          {effectiveUrl ? (
+          {iframeSrc ? (
             <iframe
-              key={effectiveUrl}
-              src={`${effectiveUrl}#toolbar=1&navpanes=0`}
+              key={iframeSrc}
+              src={iframeSrc}
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة سجل الفحص التشغيلي"
             />
-          ) : !isLoading ? (
+          ) : (
             <div role="alert" className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
               <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
               <p className="font-bold text-sm">تعذر عرض ملف الفحص</p>
-              <p className="text-xs text-slate-400 mt-1">{loadError || "يرجى التأكد من اعتماد الفحص وتوفر ملف PDF"}</p>
-              {(backendSourceUrl || directServedUrl) && (
-                <button type="button" onClick={handleRefresh} className="mt-4 min-h-11 rounded-xl gold-gradient-btn px-4 py-2 text-sm font-bold">
-                  إعادة المحاولة
-                </button>
-              )}
+              <p className="text-xs text-slate-400 mt-1">يرجى التأكد من اعتماد الفحص وتوفر ملف PDF</p>
             </div>
-          ) : null}
+          )}
         </div>
 
         {/* Footer */}
