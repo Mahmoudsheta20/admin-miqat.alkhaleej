@@ -102,9 +102,26 @@ export function VehicleSelector({
       </div>
 
       {/* Trigger Card */}
+      <select
+        aria-label={label}
+        aria-required={required}
+        aria-invalid={Boolean(error)}
+        disabled={disabled}
+        value={currentVehicle?.plateNumberAr || selectedPlate}
+        onChange={event => {
+          const vehicle = vehicles.find(item => item.plateNumberAr === event.target.value);
+          if (vehicle) onSelectVehicle(vehicle);
+        }}
+        className="theme-input sm:hidden min-h-12 w-full min-w-0 rounded-xl px-3 py-2 text-base"
+      >
+        <option value="">اختر المركبة</option>
+        {selectedPlate && !currentVehicle && <option value={selectedPlate}>{selectedPlate}</option>}
+        {vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.plateNumberAr}>{vehicle.plateNumberAr} — {vehicle.make} {vehicle.model}</option>)}
+      </select>
+
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full h-[72px] p-3 rounded-2xl transition-all duration-200 border text-right flex items-center justify-between
+        className={`hidden sm:flex w-full h-[72px] p-3 rounded-2xl transition-all duration-200 border text-right items-center justify-between
           ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
           ${
             error
@@ -172,7 +189,7 @@ export function VehicleSelector({
 
       {/* Dropdown Popover */}
       {isOpen && !disabled && (
-        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover hidden sm:block relative sm:absolute z-50 mt-1 right-0 w-full sm:w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
           {/* Search Box */}
           <div className="relative mb-2">
             <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />

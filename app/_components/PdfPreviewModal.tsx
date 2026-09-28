@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React from "react";
 import { X, Download, ExternalLink, FileText, CheckCircle2, AlertCircle, RotateCw } from "lucide-react";
-import { backendUrl } from "@/lib/backend";
+import { backendUrl, getAuthToken } from "@/lib/backend";
+
+import { usePdfDocument } from "@/lib/use-pdf-document";
 
 interface PdfPreviewModalProps {
   isOpen: boolean;
@@ -12,58 +14,24 @@ interface PdfPreviewModalProps {
   pdfUrl?: string | null;
 }
 
-const S3_BUCKET_BASE =
-  process.env.NEXT_PUBLIC_S3_BUCKET_URL ||
-  "https://miqatalkhaleej.s3.eu-central-1.amazonaws.com";
+export default function PdfPreviewModal(props: PdfPreviewModalProps) {
+  return props.isOpen ? <PdfPreviewContent {...props} /> : null;
+}
 
-export default function PdfPreviewModal({
-  isOpen,
+function PdfPreviewContent({
   onClose,
   contractId,
-  referenceNumber = "MQ-2026-00841",
+  referenceNumber = "",
   pdfUrl: propPdfUrl,
 }: PdfPreviewModalProps) {
-  const [iframeLoading, setIframeLoading] = useState(true);
-  const [reloadKey, setReloadKey] = useState(0);
-
-  // 1. Direct official S3 URL
-  const s3Url = useMemo(() => {
-    if (propPdfUrl && (propPdfUrl.startsWith("http://") || propPdfUrl.startsWith("https://"))) {
-      return propPdfUrl;
-    }
-    const ref = referenceNumber || contractId || "";
-    const cleanRef = ref.replace(/^Contract_/, "").replace(/\.pdf$/, "");
-    if (cleanRef && cleanRef.startsWith("MQ-")) {
-      return `${S3_BUCKET_BASE}/contracts/Contract_${cleanRef}.pdf`;
-    }
-    return null;
-  }, [propPdfUrl, referenceNumber, contractId]);
-
-  // 2. Reliable backend stream URL
-  const streamUrl = useMemo(() => {
-    const id = contractId || referenceNumber;
-    if (!id) return null;
-    return backendUrl(`/contracts/${encodeURIComponent(id)}/pdf?direct=1`);
-  }, [contractId, referenceNumber]);
-
-  // Prefer S3 URL if available, fallback to backend stream URL
-  const effectiveUrl = s3Url || streamUrl;
-  const directDownloadUrl = s3Url || (contractId ? backendUrl(`/contracts/${encodeURIComponent(contractId)}/pdf?download=1`) : null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIframeLoading(true);
-    }
-  }, [isOpen, effectiveUrl, reloadKey]);
-
-  if (!isOpen) return null;
-
+  const id = contractId || referenceNumber;
+  const sourceUrl = id ? backendUrl(`/contracts/${encodeURIComponent(id)}/pdf?direct=1`) : propPdfUrl || null;
+  const { url: effectiveUrl, isLoading: iframeLoading, error, refresh: handleRefresh } = usePdfDocument({
+    sourceUrl,
+    token: getAuthToken(),
+    isAuthenticated: Boolean(id),
+  });
   const fileName = `Contract_${referenceNumber || "Miqat"}.pdf`;
-
-  const handleRefresh = () => {
-    setIframeLoading(true);
-    setReloadKey((prev) => prev + 1);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
@@ -79,7 +47,7 @@ export default function PdfPreviewModal({
                 <h3 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span>العقد الرسمي للنقل البري</span>
                   <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1 font-bold">
-                    <CheckCircle2 className="w-3 h-3" /> معاينة موثقة (S3)
+                    <CheckCircle2 className="w-3 h-3" /> معاينة الوثيقة المحفوظة
                   </span>
                 </h3>
                 <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -110,7 +78,7 @@ export default function PdfPreviewModal({
                   <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iframeLoading ? "animate-spin" : ""}`} />
                 </button>
                 <a
-                  href={directDownloadUrl || effectiveUrl}
+                  href={effectiveUrl}
                   download={fileName}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -144,7 +112,7 @@ export default function PdfPreviewModal({
 
         {/* View Frame */}
         <div className="relative min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
-          {iframeLoading && effectiveUrl && (
+          {iframeLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs z-10 gap-3">
               <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
               <div className="text-center space-y-1">
@@ -160,35 +128,25 @@ export default function PdfPreviewModal({
 
           {effectiveUrl ? (
             <iframe
-              key={`${effectiveUrl}-${reloadKey}`}
+              key={effectiveUrl}
               src={`${effectiveUrl}#toolbar=1&navpanes=0`}
-              onLoad={() => setIframeLoading(false)}
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة العقد الرسمي"
             />
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
+          ) : !iframeLoading ? (
+            <div role="alert" className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
               <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
               <p className="font-bold text-sm">تعذر تحديد رابط ملف العقد</p>
-              <p className="text-xs text-slate-400 mt-1">يرجى التأكد من إنشاء العقد ووجود رقم مرجعي صالح</p>
+              <p className="text-xs text-slate-400 mt-1">{error || "يرجى التأكد من إنشاء العقد ووجود رقم مرجعي صالح"}</p>
+              <button type="button" onClick={handleRefresh} className="mt-4 min-h-11 px-4 rounded-xl gold-gradient-btn">إعادة المحاولة</button>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Footer notes */}
         <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-t theme-border theme-card-subtle flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span>الصفحة 1: بنود النقل • الصفحة 2: كشف الركاب • الصفحة 3: الفحص والختم</span>
-            {s3Url && (
-              <a
-                href={s3Url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-600 dark:text-amber-400 underline font-bold hidden md:inline"
-              >
-                (رابط S3 المباشر)
-              </a>
-            )}
           </div>
           <span className="font-mono font-bold text-slate-700 dark:text-slate-300">شركة ميقات الخليج للنقل البري</span>
         </div>

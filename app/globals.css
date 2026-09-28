@@ -217,6 +217,31 @@ html.dark ::-webkit-scrollbar-thumb {
   overscroll-behavior: contain;
 }
 .mobile-drawer::backdrop { background: rgb(0 0 0 / 0.6); }
+.return-trip-dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+.return-trip-dialog[open] { display: flex; align-items: center; justify-content: center; }
+.return-trip-dialog .mobile-dialog-panel { overflow: hidden; }
+.contract-submit-bar {
+  position: sticky;
+  bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--bg-card, #fff);
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.08);
+}
+@media (min-width: 1024px) {
+  .contract-submit-bar { bottom: 1rem; }
+}
+@media (max-width: 639px) {
+  .contract-editor input:not([type="checkbox"]),
+  .contract-editor textarea,
+  .contract-editor select { font-size: 16px; }
+  .contract-editor button { min-height: 44px; }
+}
 .header-popover {
   max-height: calc(100dvh - 10rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;

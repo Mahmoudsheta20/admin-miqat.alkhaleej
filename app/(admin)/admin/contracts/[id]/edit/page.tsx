@@ -1,5 +1,4 @@
 "use client";
-import { backendUrl } from "@/lib/backend";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -11,7 +10,6 @@ import {
   MapPin,
   CheckCircle2,
   ArrowRight,
-  ShieldCheck,
   AlertCircle,
   Save,
   Sparkles,
@@ -23,7 +21,7 @@ import {
   Calendar,
   Car,
   Trash2,
-  Download,
+  ArrowLeftRight,
 } from "lucide-react";
 import { getCaptains } from "@/app/_actions/captain";
 import { getVehicles } from "@/app/_actions/fleet";
@@ -41,6 +39,7 @@ import {
   formatOfficialDate,
 } from "@/lib/contractConstants";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import { CustomInput } from "@/app/_components/form/CustomInput";
 import { CustomTextarea } from "@/app/_components/form/CustomTextarea";
@@ -144,6 +143,7 @@ export default function EditContractPage({ params }: PageProps) {
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [isReverseOpen, setIsReverseOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -170,8 +170,8 @@ export default function EditContractPage({ params }: PageProps) {
     }
   };
 
-  const todayStr = getSaudiTodayDateStr();
-  const timeNow = getSaudiCurrentTimeStr();
+  const [todayStr] = useState(getSaudiTodayDateStr);
+  const [timeNow] = useState(getSaudiCurrentTimeStr);
 
   // Vehicle Inspection State
   const [inspectionDate, setInspectionDate] = useState(() => todayStr);
@@ -342,6 +342,7 @@ export default function EditContractPage({ params }: PageProps) {
   const onFormSubmit = async (data: AdminContractFormValues) => {
     try {
       setIsSubmitting(true);
+      setIsPdfOpen(false);
       setServerError("");
       setSuccessMessage("");
 
@@ -350,7 +351,7 @@ export default function EditContractPage({ params }: PageProps) {
         inspectionDate,
         ...checks,
         driverDeclared,
-        notes: inspectionNotes || null,
+        notes: inspectionNotes || undefined,
       };
       const res = await updateContract(id, payload);
 
@@ -392,8 +393,11 @@ export default function EditContractPage({ params }: PageProps) {
         invalidateClientCache("dashboard_stats");
         invalidateClientCache("inspections_");
         invalidateClientCache("captains_list");
-        setSuccessMessage("تم حفظ وتحديث بيانات العقد والوثيقة الرسمية بنجاح!");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        setSuccessMessage(res.contract.pdfPath
+          ? "تم حفظ التعديلات وتحديث ملف PDF في التخزين بنجاح."
+          : "تم حفظ بيانات العقد.");
+        if (!res.contract.pdfPath) setServerError("تعذر تحديث ملف PDF. افتح المعاينة لإعادة تجهيز الوثيقة المحفوظة.");
+        document.getElementById("contract-edit-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
         setServerError(res.error || "فشل تحديث العقد");
       }
@@ -441,7 +445,7 @@ export default function EditContractPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6 pb-20 max-w-5xl mx-auto">
+    <div className="contract-editor space-y-4 sm:space-y-6 pb-8 max-w-5xl mx-auto">
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -464,9 +468,9 @@ export default function EditContractPage({ params }: PageProps) {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
                 <span>تعديل العقد الرسمي</span>
-                <span className="font-mono text-amber-600 dark:text-amber-400 text-lg">
+                <span className="font-mono text-amber-600 dark:text-amber-400 text-sm sm:text-lg break-all">
                   {contract?.referenceNumber}
                 </span>
               </h1>
@@ -479,17 +483,10 @@ export default function EditContractPage({ params }: PageProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <a
-            href={backendUrl(`/contracts/${encodeURIComponent(id)}/pdf?download=1`)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-amber-600 transition shadow-2xs"
-            title="توليد وتحميل وثيقة الـ PDF الرسمية مباشرة من السيرفر"
-          >
-            <Download className="w-3.5 h-3.5 text-amber-500" />
-            <span>تنزيل PDF</span>
-          </a>
           <button
             type="button"
             onClick={() => setIsPdfOpen(true)}
+            disabled={isSubmitting}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs"
           >
             <Eye className="w-3.5 h-3.5 text-amber-500" />
@@ -498,19 +495,22 @@ export default function EditContractPage({ params }: PageProps) {
           <button
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={isSubmitting}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 transition shadow-2xs"
             title="حذف هذا العقد نهائياً"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>حذف</span>
           </button>
-          <Link
-            href="/admin/contracts"
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-slate-400 text-xs font-bold text-slate-600 dark:text-slate-400 transition shadow-2xs"
+          <button
+            type="button"
+            onClick={() => setIsReverseOpen(true)}
+            disabled={isSubmitting}
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-card text-xs font-bold"
           >
-            <ArrowRight className="w-3.5 h-3.5" />
-            <span>العودة</span>
-          </Link>
+            <ArrowLeftRight className="w-4 h-4 text-amber-500" />
+            <span>رحلة عودة</span>
+          </button>
         </div>
       </div>
 
@@ -548,9 +548,10 @@ export default function EditContractPage({ params }: PageProps) {
       )}
 
       {/* Form Container */}
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onFormSubmit)} aria-busy={isSubmitting} className="space-y-6">
+        <fieldset disabled={isSubmitting} className={`contents space-y-4 sm:space-y-6 ${isSubmitting ? "pointer-events-none" : ""}`}>
         {/* Section 1: Operation & Client Info */}
-        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-5">
+        <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex items-center justify-between border-b theme-border pb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
@@ -609,7 +610,7 @@ export default function EditContractPage({ params }: PageProps) {
         </div>
 
         {/* Section 2: Route, Schedule & Release Date */}
-        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-5">
+        <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex items-center gap-2 border-b theme-border pb-4">
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
               <MapPin className="w-4 h-4" />
@@ -780,7 +781,7 @@ export default function EditContractPage({ params }: PageProps) {
         </div>
 
         {/* Section 3: Captain & Vehicle Assignment */}
-        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-5">
+        <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex items-center gap-2 border-b theme-border pb-4">
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
               <Car className="w-4 h-4" />
@@ -804,19 +805,17 @@ export default function EditContractPage({ params }: PageProps) {
                   <CaptainSelector
                     label="الكابتن المسؤول عن التنفيذ"
                     required
-                    captains={captains}
+                    captains={captains.filter(captain => captain.active)}
                     selectedCaptainId={field.value}
                     onSelectCaptain={(cap) => {
-                      field.onChange(cap.id);
-                      if (cap.assignedVehiclePlate) {
-                        setValue("vehiclePlate", cap.assignedVehiclePlate, {
-                          shouldValidate: true,
-                        });
-                      } else if (vehicles.length > 0) {
-                        setValue("vehiclePlate", vehicles[0].plateNumberAr, {
-                          shouldValidate: true,
-                        });
+                      if (cap.id !== field.value) {
+                        setDriverDeclared(false);
+                        setInspectionNotes("");
+                        setInspectionDate(todayStr);
+                        setChecks(previous => Object.fromEntries(Object.keys(previous).map(key => [key, false])));
                       }
+                      field.onChange(cap.id);
+                      setValue("vehiclePlate", cap.assignedVehiclePlate || "", { shouldValidate: true });
                     }}
                     error={fieldState.error?.message}
                   />
@@ -836,6 +835,12 @@ export default function EditContractPage({ params }: PageProps) {
                     selectedPlate={field.value}
                     captainPlate={(Array.isArray(captains) ? captains : []).find((c) => c.id === selectedCaptainId)?.assignedVehiclePlate}
                     onSelectVehicle={(veh) => {
+                      if (veh.plateNumberAr !== field.value) {
+                        setDriverDeclared(false);
+                        setInspectionNotes("");
+                        setInspectionDate(todayStr);
+                        setChecks(previous => Object.fromEntries(Object.keys(previous).map(key => [key, false])));
+                      }
                       field.onChange(veh.plateNumberAr);
                     }}
                     error={fieldState.error?.message}
@@ -847,12 +852,12 @@ export default function EditContractPage({ params }: PageProps) {
         </div>
 
         {/* Section 4: Passenger Manifest Manager */}
-        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-5">
+        <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <PassengerManifestManager control={control} register={register} errors={errors} />
         </div>
 
         {/* Section 5: Vehicle Inspection & Operational Declaration */}
-        <div className="theme-card rounded-3xl border theme-border p-5 sm:p-6 space-y-5">
+        <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-4">
             <div className="flex items-center gap-2.5">
@@ -1044,50 +1049,21 @@ export default function EditContractPage({ params }: PageProps) {
           </label>
         </div>
 
-        {/* Bottom Submission Bar */}
-        <div className="sticky bottom-20 lg:bottom-4 z-20 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>
-              عند حفظ التعديلات، سيتم تحديث قاعدة البيانات وإعادة إنشاء وثيقة الـ PDF الرسمية فوراً.
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-500/30 hover:border-rose-500 bg-rose-500/5 hover:bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 transition"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>حذف العقد</span>
-            </button>
-            <Link
-              href="/admin/contracts"
-              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border theme-card hover:border-slate-400 text-xs font-bold text-slate-700 dark:text-slate-300 transition text-center"
-            >
-              إلغاء
-            </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>جاري حفظ التعديلات والـ PDF...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>حفظ التعديلات وتحديث العقد</span>
-                </>
-              )}
-            </button>
-          </div>
+        {/* Keep the main actions reachable above mobile bottom navigation. */}
+        <div className="contract-submit-bar">
+          <p className="hidden sm:block flex-1 text-xs text-slate-500">سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.</p>
+          <Link href="/admin/contracts" className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">إلغاء</Link>
+          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50">
+            <Save className="h-4 w-4 shrink-0" />
+            <span>{isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF"}</span>
+          </button>
         </div>
+        </fieldset>
       </form>
+
+      {isReverseOpen && contract && (
+        <ReverseTripModal isOpen onClose={() => setIsReverseOpen(false)} contract={contract} />
+      )}
 
       {/* PDF Preview Modal */}
       {isPdfOpen && contract && (

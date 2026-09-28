@@ -24,6 +24,7 @@ import {
   Phone,
   Trash2,
   ShieldCheck,
+  ArrowLeftRight,
 } from "lucide-react";
 import {
   getContracts,
@@ -35,6 +36,7 @@ import ContractActions from "./contract-actions";
 import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import { formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
@@ -82,6 +84,9 @@ export default function AdminContractsPage() {
 
   // Quick copy reference state
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
+
+  // Reverse trip state
+  const [reverseContract, setReverseContract] = useState<Contract | null>(null);
 
   // Deletion states
   const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
@@ -971,6 +976,7 @@ export default function AdminContractsPage() {
                             contractId={c.id}
                             onView={() => setSelectedContract(c)}
                             onPreview={() => openPdf(c)}
+                            onReverse={() => setReverseContract(c)}
                           />
                         </td>
                       </tr>
@@ -1081,6 +1087,7 @@ export default function AdminContractsPage() {
                         contractId={c.id}
                         onView={() => setSelectedContract(c)}
                         onPreview={() => openPdf(c)}
+                        onReverse={() => setReverseContract(c)}
                         isFullWidth
                       />
                     </div>
@@ -1418,6 +1425,19 @@ export default function AdminContractsPage() {
                   onClick={() => {
                     const c = selectedContract;
                     setSelectedContract(null);
+                    setReverseContract(c);
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-300 hover:border-blue-500 hover:bg-blue-500/10 transition"
+                  title="إنشاء رحلة عكسية من هذا العقد"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  <span>رحلة عكسية</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const c = selectedContract;
+                    setSelectedContract(null);
                     setContractToDelete(c);
                   }}
                   className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-rose-500 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition"
@@ -1470,6 +1490,19 @@ export default function AdminContractsPage() {
           if (!isDeleting) setContractToDelete(null);
         }}
       />
+
+      {/* Reverse Trip Modal */}
+      {reverseContract && (
+        <ReverseTripModal
+          isOpen={!!reverseContract}
+          onClose={() => setReverseContract(null)}
+          contract={reverseContract}
+          onSuccess={() => {
+            invalidateClientCache("contracts_");
+            fetchContractsData(undefined, true);
+          }}
+        />
+      )}
     </div>
   );
 }

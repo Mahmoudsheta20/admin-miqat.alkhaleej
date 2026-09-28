@@ -189,6 +189,9 @@ export default function AdminContractBuilderPage() {
   const effectiveCaptainInspection =
     selectedCaptainId && captainInspection?.captainId === selectedCaptainId ? captainInspection : null;
 
+  // A valid inspection MUST exist before the contract can be created
+  const hasValidInspection = Boolean(effectiveCaptainInspection || adminInspectionId);
+
   // Check today's inspection status whenever selected captain changes
   useEffect(() => {
     let isCurrent = true;
@@ -199,13 +202,14 @@ export default function AdminContractBuilderPage() {
         setCheckedCaptainId(selectedCaptainId);
         setAdminInspectionId(null);
         setAdminInspectionSuccessMsg("");
-
         if (res.success && res.inspection) {
           setCaptainInspection(res.inspection);
           setValue("inspectionId", res.inspection.id);
+          setIsConfirmed(true);
         } else {
           setCaptainInspection(null);
           setValue("inspectionId", undefined);
+          setIsConfirmed(true);
         }
       });
     }
@@ -321,7 +325,7 @@ export default function AdminContractBuilderPage() {
   // Handle Form Submission
   const onFormSubmit = async (data: AdminContractFormValues) => {
     if (!isConfirmed) {
-      setConfirmError("يجب إتمام وتأكيد الفحص التشغيلي أدناه قبل إنشاء وتوثيق العقد");
+      setConfirmError("يجب إتمام وتأكيد الإقرار والفحص التشغيلي أدناه قبل إنشاء وتوثيق العقد");
       return;
     }
 
@@ -330,19 +334,21 @@ export default function AdminContractBuilderPage() {
     setServerError("");
 
     try {
-      let resolvedInspectionId: string | null = null;
-      if (adminInspectionMode === "AUTO") {
-        resolvedInspectionId = effectiveCaptainInspection?.id || adminInspectionId || null;
-      } else {
-        resolvedInspectionId = adminInspectionId || null;
-      }
+      // Resolve inspection ID: captain inspection, pre-submitted admin inspection, or auto-document now directly from form!
+      let resolvedInspectionId = effectiveCaptainInspection?.id || adminInspectionId || null;
 
-      // If no resolved inspection ID yet, create and document it now based on mode!
+      // If no resolved inspection ID yet, create and document the real inspection now directly from this form!
       if (!resolvedInspectionId) {
         const plate =
           data.vehiclePlate ||
           currentCaptain?.assignedVehiclePlate ||
           (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
+
+        const nowTime = getSaudiCurrentTimeStr();
+        const effectiveInspectionDate =
+          adminInspectionMode === "MANUAL"
+            ? `${adminInspectionDate.replace(/\//g, "-")}T${nowTime}:00`
+            : new Date().toISOString();
 
         const inspRes = await submitInspection({
           captainId: data.captainId,
@@ -364,22 +370,19 @@ export default function AdminContractBuilderPage() {
           glassHammer: checks.glassHammer ?? true,
           seatBelts: checks.seatBelts ?? true,
           driverDeclared: true,
-          notes: "تم الفحص والاعتماد التشغيلي رسمياً من قبل إدارة العمليات عند توثيق العقد",
-          inspectionDate:
-            adminInspectionMode === "MANUAL"
-              ? `${adminInspectionDate.replace(/\//g, "-")}T${getSaudiCurrentTimeStr()}:00`
-              : new Date().toISOString(),
+          notes: "تم تقديم وتوثيق الفحص التشغيلي الفعلي مباشرة من نموذج إنشاء العقد",
+          inspectionDate: effectiveInspectionDate,
         });
 
         if (inspRes.success && inspRes.inspection) {
           resolvedInspectionId = inspRes.inspection.id;
           setAdminInspectionId(inspRes.inspection.id);
+          setValue("inspectionId", inspRes.inspection.id);
         } else {
-          // CRITICAL: Abort submission if inspection could not be documented!
           setIsSubmitting(false);
           setConfirmError(
             inspRes.error ||
-              "تعذر توثيق الفحص التشغيلي الإلزامي. لا يمكن إنشاء وتوثيق أي عقد بدون فحص تشغيلي وإقرار معتمد."
+              "تعذر تقديم وتوثيق الفحص الفني للمركبة. يرجى توثيق الفحص أولاً."
           );
           return;
         }
@@ -389,7 +392,7 @@ export default function AdminContractBuilderPage() {
       if (!resolvedInspectionId) {
         setIsSubmitting(false);
         setConfirmError(
-          "لا يمكن إنشاء وتوثيق أي عقد دون إتمام الفحص والإقرار التشغيلي الإلزامي (التحقق قبل التوثيق)."
+          "يجب تقديم فحص فعلي للمركبة مرتبط بالكابتن قبل إنشاء العقد. يرجى توثيق الفحص التشغيلي أولاً."
         );
         return;
       }
@@ -1225,7 +1228,11 @@ export default function AdminContractBuilderPage() {
                 أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل، وكافة بيانات الرحلة والمسار والركاب مدخلة بدقة ومسؤولية تشغيلية كاملة.
               </span>
               <span className="text-[11px] text-slate-400 block">
-                * في حال لم يكن الكابتن قد أرسل الفحص اليومي، سيتم توثيق الفحص التشغيلي المعتمد آلياً من إدارة العمليات وربطه بالعقد فوراً.
+                {effectiveCaptainInspection
+                  ? `* تم ربط فحص الكابتن المعتمد اليوم (كود #${effectiveCaptainInspection.id.slice(0, 8)}) بالوثيقة الرسمية.`
+                  : adminInspectionId
+                  ? `* تم توثيق واعتماد الفحص الفني للمركبة من الإدارة (كود #${adminInspectionId.slice(0, 8)}) وربطه بالعقد.`
+                  : `* سيتم توثيق وتقديم فحص فعلي معتمد للمركبة مرتبط بالكابتن آلياً من النموذج وربطه بالعقد.`}
               </span>
             </div>
           </label>

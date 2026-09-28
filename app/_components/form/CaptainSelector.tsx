@@ -91,10 +91,25 @@ export function CaptainSelector({
         )}
       </div>
 
+      <select
+        aria-label={label}
+        aria-required={required}
+        aria-invalid={Boolean(error)}
+        value={selectedCaptainId}
+        onChange={event => {
+          const captain = safeCaptains.find(item => item.id === event.target.value);
+          if (captain) onSelectCaptain(captain);
+        }}
+        className="theme-input sm:hidden min-h-12 w-full min-w-0 rounded-xl px-3 py-2 text-base"
+      >
+        <option value="">اختر الكابتن</option>
+        {safeCaptains.map(captain => <option key={captain.id} value={captain.id}>{captain.name}</option>)}
+      </select>
+
       {/* Selected Captain Card Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-[72px] p-3 rounded-2xl cursor-pointer transition-all duration-200 border text-right flex items-center justify-between
+        className={`hidden sm:flex w-full h-[72px] p-3 rounded-2xl cursor-pointer transition-all duration-200 border text-right items-center justify-between
           ${
             error
               ? "bg-rose-500/5 border-rose-500/50"
@@ -193,7 +208,7 @@ export function CaptainSelector({
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-[450px] max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover hidden sm:block relative sm:absolute z-50 mt-1 right-0 w-full sm:w-[450px] max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
           {/* Search Input */}
           <div className="relative mb-2">
             <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
