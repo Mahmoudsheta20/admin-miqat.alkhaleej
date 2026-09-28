@@ -2,6 +2,8 @@ import type { Contract } from "@/lib/types";
 import type { ContractFormPayload } from "@/app/_actions/contract";
 
 interface ReturnTripSelection {
+  origin: string;
+  destination: string;
   tripDate: string;
   tripTime: string;
   captainId: string;
@@ -14,8 +16,8 @@ export function returnTripPayload(source: Contract, selection: ReturnTripSelecti
     ...selection,
     issueDate: selection.tripDate,
     operationType: source.operationType,
-    origin: source.destination,
-    destination: source.origin,
+    origin: selection.origin.trim(),
+    destination: selection.destination.trim(),
     customerName: source.customerName,
     customerPhone: source.customerPhone || undefined,
     notes: `رحلة عودة للعقد ${source.referenceNumber}`,

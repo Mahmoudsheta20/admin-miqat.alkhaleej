@@ -27,6 +27,8 @@ export default function ReverseTripModal(props: ReverseTripModalProps) {
 function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [origin, setOrigin] = useState(contract.destination);
+  const [destination, setDestination] = useState(contract.origin);
   const [tripDate, setTripDate] = useState("");
   const [tripTime, setTripTime] = useState(contract.tripTime || getSaudiCurrentTimeStr());
   const [captainId, setCaptainId] = useState(contract.captainId);
@@ -66,6 +68,10 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitLock.current || isLoading || loadError) return;
+    if (!origin.trim() || !destination.trim()) {
+      setError("أدخل نقطة الانطلاق ووجهة الوصول.");
+      return;
+    }
     if (!isConfirmed || !captainId || !vehiclePlate || !tripDate || !tripTime) {
       setError("اختر التاريخ والكابتن والمركبة وأكد الفحص قبل إنشاء الرحلة.");
       return;
@@ -79,7 +85,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
     setError("");
     try {
       const payload = returnTripPayload(contract, {
-        tripDate, tripTime, captainId, vehiclePlate,
+        origin, destination, tripDate, tripTime, captainId, vehiclePlate,
       });
       const result = await submitContract(payload);
       if (!result.success || !result.contract) {
@@ -128,10 +134,11 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
           <>
             <form id="return-trip-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-6">
               <div className="rounded-xl border theme-border theme-card-subtle p-4">
-                <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="min-w-0"><dt className="text-xs text-slate-500">من</dt><dd className="break-words font-bold">{contract.destination}</dd></div>
-                  <div className="min-w-0"><dt className="text-xs text-slate-500">إلى</dt><dd className="break-words font-bold">{contract.origin}</dd></div>
-                </dl>
+                <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="grid min-w-0 grid-cols-1 gap-3 disabled:opacity-60 sm:grid-cols-2">
+                  <label className="block min-w-0 space-y-2"><span className="text-sm font-bold">من — نقطة الانطلاق</span><input type="text" required maxLength={500} value={origin} onChange={event => setOrigin(event.target.value)} className={FIELD_CLASS} /></label>
+                  <label className="block min-w-0 space-y-2"><span className="text-sm font-bold">إلى — وجهة الوصول</span><input type="text" required maxLength={500} value={destination} onChange={event => setDestination(event.target.value)} className={FIELD_CLASS} /></label>
+                </fieldset>
+                <p className="mt-2 text-xs text-slate-500">تم عكس المسار تلقائياً، ويمكنك تعديله.</p>
                 <p className="mt-3 border-t theme-border pt-3 text-sm text-slate-500">نفس العميل و{contract.passengers?.length || 0} ركاب. سيُنشأ عقد جديد، وتبقى الرحلة الأصلية كما هي.</p>
               </div>
               <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="min-w-0 space-y-4 disabled:opacity-60">

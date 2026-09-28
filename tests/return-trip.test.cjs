@@ -17,7 +17,7 @@ const source = {
   inspectionId: 'old-inspection', pdfPath: 'old.pdf', flightNumber: 'OUTBOUND-1',
   passengers: [{ id: 'old-passenger', sequence: 1, name: 'Guest', nationality: 'SA', idNumber: '123' }],
 };
-const selection = { captainId: 'original', vehiclePlate: 'OLD 123', tripDate: '2026-09-28', tripTime: '14:30' };
+const selection = { origin: source.destination, destination: source.origin, captainId: 'original', vehiclePlate: 'OLD 123', tripDate: '2026-09-28', tripTime: '14:30' };
 
 test('return trip reverses route and copies passengers without changing the original', () => {
   const snapshot = JSON.stringify(source);
@@ -41,6 +41,14 @@ test('return trip honors a replacement captain and vehicle', () => {
   assert.equal(result.vehiclePlate, 'NEW 456');
   assert.equal(result.inspectionData.inspectionDate, selection.tripDate);
   assert.equal(result.tripTime, '14:30');
+});
+
+test('return trip uses edited route text and trims surrounding whitespace', () => {
+  const snapshot = JSON.stringify(source);
+  const result = returnTripPayload(source, { ...selection, origin: '  مكة - الفندق  ', destination: '  جدة - المطار  ' });
+  assert.equal(result.origin, 'مكة - الفندق');
+  assert.equal(result.destination, 'جدة - المطار');
+  assert.equal(JSON.stringify(source), snapshot);
 });
 
 test('issue and inspection dates follow the selected return date', () => {
