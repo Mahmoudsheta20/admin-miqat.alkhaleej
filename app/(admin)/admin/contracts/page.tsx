@@ -1,14 +1,11 @@
 "use client";
-import { backendUrl } from "@/lib/backend";
 
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   FileText,
   Search,
-  Download,
   Users,
-  Eye,
   RefreshCw,
   X,
   Plane,
@@ -25,17 +22,16 @@ import {
   Copy,
   Check,
   Phone,
-  Edit2,
   Trash2,
   ShieldCheck,
 } from "lucide-react";
 import {
   getContracts,
-  syncAllContractsToStorageAction,
   deleteContract,
 } from "@/app/_actions/contract";
 import { getCaptains } from "@/app/_actions/captain";
 import { Contract, OperationType, SystemUser } from "@/lib/types";
+import ContractActions from "./contract-actions";
 import StatusBadge from "@/app/_components/StatusBadge";
 import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
@@ -81,8 +77,7 @@ export default function AdminContractsPage() {
   const [previewPdfRef, setPreviewPdfRef] = useState<string>("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
 
-  // Sync state
-  const [isSyncing, setIsSyncing] = useState(false);
+  // Action feedback
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   // Quick copy reference state
@@ -126,7 +121,7 @@ export default function AdminContractsPage() {
     }, 2000);
   };
 
-  // Load contracts helper for manual refresh / sync
+  // Load contracts helper for manual refresh
   const fetchContractsData = async (
     opts?: {
       type?: string;
@@ -251,22 +246,6 @@ export default function AdminContractsPage() {
     setCurrentPage(1);
   };
 
-  // Sync action
-  const handleSyncAll = async () => {
-    setIsSyncing(true);
-    setSyncStatus("جاري توليد وحفظ كافة العقود برمز QR فريد في التخزين...");
-    const res = await syncAllContractsToStorageAction();
-    if (res.success) {
-      setSyncStatus(`تم بنجاح حفظ ومزامنة ${res.saved} من أصل ${res.total} عقد في التخزين!`);
-      invalidateClientCache("contracts_");
-      fetchContractsData(undefined, true);
-      setTimeout(() => setSyncStatus(null), 6000);
-    } else {
-      setSyncStatus(`فشل المزامنة: ${res.error}`);
-    }
-    setIsSyncing(false);
-  };
-
   // PDF Preview opener
   const openPdf = (c: Contract) => {
     setPreviewPdfId(c.id);
@@ -375,19 +354,8 @@ export default function AdminContractsPage() {
             <span>+ إنشاء عقد جديد</span>
           </Link>
           <button
-            onClick={handleSyncAll}
-            disabled={isSyncing || isLoading}
-            className="flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition disabled:opacity-50"
-            title="توليد وحفظ ملفات الـ PDF برمز QR لكل عقد في وحدة التخزين"
-          >
-            <Download className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
-            <span className="hidden sm:inline">
-              {isSyncing ? "جاري الحفظ..." : "مزامنة التخزين والـ QR"}
-            </span>
-          </button>
-          <button
-            onClick={() => fetchContractsData()}
-            disabled={isLoading || isSyncing}
+            onClick={() => fetchContractsData(undefined, true)}
+            disabled={isLoading}
             className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50"
             title="تحديث البيانات"
           >
@@ -999,76 +967,11 @@ export default function AdminContractsPage() {
 
                         {/* Action Buttons (STICKY LEFT-0) */}
                         <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors px-3.5 py-3 align-middle text-left whitespace-nowrap shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-b theme-border border-r border-slate-200/80 dark:border-slate-800">
-                          <div className="inline-flex items-center gap-1.5">
-                            {/* QR Verify Page */}
-                            <a
-                              href={`/verify/contract/${c.referenceNumber}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-xl border theme-card hover:border-emerald-500 hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-600 transition"
-                              title="التحقق الإلكتروني عبر رمز QR"
-                            >
-                              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            </a>
-
-                            {/* View Details */}
-                            <button
-                              type="button"
-                              onClick={() => setSelectedContract(c)}
-                              className="p-1.5 rounded-xl border theme-card hover:border-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition"
-                              title="عرض تفاصيل العقد والفحص"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-
-                            {/* Review & Approve Contract */}
-                            <Link
-                              href={`/admin/contracts/${c.id}`}
-                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
-                              title="مراجعة واعتماد العقد رسمياً"
-                            >
-                              <ShieldCheck className="w-4 h-4 text-amber-500" />
-                            </Link>
-
-                            {/* Edit Contract */}
-                            <Link
-                              href={`/admin/contracts/${c.id}/edit`}
-                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
-                              title="تعديل بيانات العقد"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Link>
-
-                            {/* Delete Contract */}
-                            <button
-                              type="button"
-                              onClick={() => setContractToDelete(c)}
-                              className="p-1.5 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
-                              title="حذف العقد"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-
-                            {/* Direct Download from Server */}
-                            <a
-                              href={backendUrl(`/contracts/${encodeURIComponent(c.id)}/pdf?download=1`)}
-                              className="p-1.5 rounded-xl border theme-card hover:border-amber-500 hover:bg-amber-500/10 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
-                              title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
-                            >
-                              <Download className="w-4 h-4" />
-                            </a>
-
-                            {/* PDF Preview & Download */}
-                            <button
-                              type="button"
-                              onClick={() => openPdf(c)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs hover:shadow-md active:scale-95"
-                              title="معاينة وطباعة العقد الرسمي"
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              <span>PDF</span>
-                            </button>
-                          </div>
+                          <ContractActions
+                            contractId={c.id}
+                            onView={() => setSelectedContract(c)}
+                            onPreview={() => openPdf(c)}
+                          />
                         </td>
                       </tr>
                     );
@@ -1174,60 +1077,12 @@ export default function AdminContractsPage() {
                       </button>
 
                       {/* Action buttons */}
-                      <div className="mobile-card-actions grid w-full grid-cols-4 gap-2">
-                        <a
-                          href={`/verify/contract/${c.referenceNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-xl border theme-card hover:border-emerald-500 text-slate-500 hover:text-emerald-600 transition"
-                          title="صفحة التحقق الإلكتروني عبر رمز QR"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        </a>
-                        <button
-                          onClick={() => setSelectedContract(c)}
-                          className="p-2 rounded-xl border theme-card hover:border-slate-400 text-slate-600 dark:text-slate-400 transition"
-                          title="عرض تفاصيل العقد والفحص"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <Link
-                          href={`/admin/contracts/${c.id}`}
-                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
-                          title="مراجعة واعتماد العقد"
-                        >
-                          <ShieldCheck className="w-4 h-4 text-amber-500" />
-                        </Link>
-                        <Link
-                          href={`/admin/contracts/${c.id}/edit`}
-                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
-                          title="تعديل بيانات العقد"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => setContractToDelete(c)}
-                          className="p-2 rounded-xl border theme-card hover:border-rose-500 text-slate-600 dark:text-slate-400 hover:text-rose-600 transition"
-                          title="حذف العقد"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        <a
-                          href={backendUrl(`/contracts/${encodeURIComponent(c.id)}/pdf?download=1`)}
-                          className="p-2 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 hover:text-amber-600 transition"
-                          title="توليد وتنزيل PDF مباشرة من السيرفر"
-                        >
-                          <Download className="w-4 h-4" />
-                        </a>
-                        <button
-                          onClick={() => openPdf(c)}
-                          className="col-span-2 inline-flex items-center gap-1 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>PDF</span>
-                        </button>
-                      </div>
+                      <ContractActions
+                        contractId={c.id}
+                        onView={() => setSelectedContract(c)}
+                        onPreview={() => openPdf(c)}
+                        isFullWidth
+                      />
                     </div>
                   </div>
                 );
@@ -1558,15 +1413,6 @@ export default function AdminContractsPage() {
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>صفحة المراجعة والاعتماد</span>
                 </Link>
-                <a
-                  href={`/verify/contract/${selectedContract.referenceNumber}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-emerald-500 text-emerald-600 dark:text-emerald-400 transition"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  صفحة التحقق بالـ QR
-                </a>
                 <button
                   type="button"
                   onClick={() => {
@@ -1580,21 +1426,6 @@ export default function AdminContractsPage() {
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>حذف العقد</span>
                 </button>
-                <Link
-                  href={`/admin/contracts/${selectedContract.id}/edit`}
-                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  <span>تعديل العقد</span>
-                </Link>
-                <a
-                  href={backendUrl(`/contracts/${encodeURIComponent(selectedContract.id)}/pdf?download=1`)}
-                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 hover:text-amber-600 transition"
-                  title="توليد وتنزيل ملف الـ PDF مباشرة من السيرفر"
-                >
-                  <Download className="w-3.5 h-3.5 text-amber-500" />
-                  <span>تنزيل من السيرفر</span>
-                </a>
                 <button
                   onClick={() => openPdf(selectedContract)}
                   className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-sm"

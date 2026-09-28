@@ -217,6 +217,14 @@ html.dark ::-webkit-scrollbar-thumb {
   overscroll-behavior: contain;
 }
 .mobile-drawer::backdrop { background: rgb(0 0 0 / 0.6); }
+.header-popover {
+  max-height: calc(100dvh - 10rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 1023px) {
+  .header-popover button { min-height: 44px; }
+}
 .auth-page input { min-width: 0; }
 .mobile-card-actions > :is(a, button) {
   display: flex;

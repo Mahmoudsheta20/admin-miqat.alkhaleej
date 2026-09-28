@@ -13,9 +13,11 @@ interface InspectionPdfPreviewModalProps {
   pdfUrl?: string | null;
 }
 
-const S3_BUCKET_BASE =
-  process.env.NEXT_PUBLIC_S3_BUCKET_URL ||
-  "https://miqatalkhaleej.s3.eu-central-1.amazonaws.com";
+interface PdfLoadResult {
+  requestKey: string;
+  url: string | null;
+  error: string | null;
+}
 
 export default function InspectionPdfPreviewModal({
   isOpen,
@@ -25,7 +27,7 @@ export default function InspectionPdfPreviewModal({
   vehiclePlate = "",
   pdfUrl: propPdfUrl,
 }: InspectionPdfPreviewModalProps) {
-  const [iframeLoading, setIframeLoading] = useState(true);
+  const [pdfResult, setPdfResult] = useState<PdfLoadResult | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   const shortCode = useMemo(() => {
@@ -33,38 +35,79 @@ export default function InspectionPdfPreviewModal({
     return inspectionId.replace(/-/g, "").slice(0, 8).toUpperCase();
   }, [inspectionId]);
 
-  // 1. Direct official S3 URL (only if explicitly provided with valid url)
-  const s3Url = useMemo(() => {
-    if (propPdfUrl && (propPdfUrl.startsWith("http://") || propPdfUrl.startsWith("https://"))) {
-      return propPdfUrl;
+  const token = getAuthToken();
+  const sourceUrl = useMemo(() => {
+    if (inspectionId) {
+      return backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?direct=1`);
     }
-    return null;
-  }, [propPdfUrl]);
-
-  // 2. Reliable backend stream URL (generates dynamically on-demand if missing on S3!)
-  const streamUrl = useMemo(() => {
-    if (!inspectionId) return null;
-    const token = getAuthToken();
-    const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
-    return backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?direct=1${tokenParam}`);
-  }, [inspectionId]);
-
-  // Prefer direct S3 URL if already known and uploaded; otherwise use backend stream URL
-  const effectiveUrl = s3Url || streamUrl;
-  const directDownloadUrl = s3Url || (inspectionId ? backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?download=1${getAuthToken() ? `&token=${encodeURIComponent(getAuthToken()!)}` : ""}`) : null);
+    const storedUrl = propPdfUrl?.trim();
+    return storedUrl && /^https?:\/\//i.test(storedUrl) ? storedUrl : null;
+  }, [inspectionId, propPdfUrl]);
+  const requestKey = JSON.stringify([sourceUrl, token, reloadKey, isOpen]);
+  const currentResult = pdfResult?.requestKey === requestKey ? pdfResult : null;
+  const effectiveUrl = currentResult?.url ?? null;
+  const isLoading = isOpen && Boolean(sourceUrl) && !currentResult;
+  const loadError = currentResult?.error;
 
   useEffect(() => {
-    if (isOpen) {
-      setIframeLoading(true);
+    if (!isOpen || !sourceUrl) return;
+    const controller = new AbortController();
+    let isActive = true;
+    let objectUrl: string | null = null;
+    const timeout = window.setTimeout(() => controller.abort(), 120_000);
+
+    async function loadPdf(url: string) {
+      try {
+        // Fetch the authenticated PDF as data. Embedding the API response directly
+        // inherits upstream frame restrictions and can produce "refused to connect".
+        const response = await fetch(url, {
+          headers: inspectionId && token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: inspectionId ? "same-origin" : "omit",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(response.status === 401 || response.status === 403
+            ? "انتهت الجلسة أو لا تملك صلاحية عرض الفحص. يرجى تسجيل الدخول مجدداً."
+            : "تعذر تحميل ملف الفحص. يرجى إعادة المحاولة.");
+        }
+        const blob = await response.blob();
+        if (await blob.slice(0, 5).text() !== "%PDF-") {
+          throw new Error("لم يُرجع الخادم ملف PDF صالحاً. يرجى إعادة المحاولة.");
+        }
+        if (!isActive) return;
+        objectUrl = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+        setPdfResult({ requestKey, url: objectUrl, error: null });
+      } catch (error: unknown) {
+        if (!isActive) return;
+        setPdfResult({
+          requestKey,
+          url: null,
+          error: controller.signal.aborted
+            ? "استغرق تحميل الملف وقتاً طويلاً. يرجى إعادة المحاولة."
+            : error instanceof TypeError
+              ? "تعذر الاتصال بالخادم لتحميل الملف. يرجى إعادة المحاولة."
+              : error instanceof Error ? error.message : "تعذر تحميل ملف الفحص.",
+        });
+      } finally {
+        window.clearTimeout(timeout);
+      }
     }
-  }, [isOpen, effectiveUrl, reloadKey]);
+
+    void loadPdf(sourceUrl);
+    return () => {
+      isActive = false;
+      controller.abort();
+      window.clearTimeout(timeout);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [isOpen, sourceUrl, inspectionId, token, requestKey]);
 
   if (!isOpen) return null;
 
   const fileName = `inspection-${shortCode || "Miqat"}.pdf`;
 
   const handleRefresh = () => {
-    setIframeLoading(true);
     setReloadKey((prev) => prev + 1);
   };
 
@@ -82,7 +125,7 @@ export default function InspectionPdfPreviewModal({
                 <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span>محضر الفحص التشغيلي والفني للمركبة</span>
                   <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1 font-bold">
-                    <CheckCircle2 className="w-3 h-3" /> معاينة موثقة (S3)
+                    <CheckCircle2 className="w-3 h-3" /> معاينة ملف الفحص
                   </span>
                 </h3>
                 <div className="flex items-center gap-3 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -123,10 +166,10 @@ export default function InspectionPdfPreviewModal({
                   className="p-2 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl border theme-card transition"
                   title="إعادة تحميل المعاينة"
                 >
-                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iframeLoading ? "animate-spin" : ""}`} />
+                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoading ? "animate-spin" : ""}`} />
                 </button>
                 <a
-                  href={directDownloadUrl || effectiveUrl}
+                  href={effectiveUrl}
                   download={fileName}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -160,7 +203,7 @@ export default function InspectionPdfPreviewModal({
 
         {/* View Frame */}
         <div className="relative min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
-          {iframeLoading && effectiveUrl && (
+          {isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs z-10 gap-3">
               <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
               <div className="text-center space-y-1">
@@ -178,17 +221,21 @@ export default function InspectionPdfPreviewModal({
             <iframe
               key={`${effectiveUrl}-${reloadKey}`}
               src={`${effectiveUrl}#toolbar=1&navpanes=0`}
-              onLoad={() => setIframeLoading(false)}
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة سجل الفحص التشغيلي"
             />
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
+          ) : !isLoading ? (
+            <div role="alert" className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
               <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
-              <p className="font-bold text-sm">تعذر تحديد رابط ملف الفحص</p>
-              <p className="text-xs text-slate-400 mt-1">يرجى التأكد من اعتماد الفحص وتوفر ملف PDF</p>
+              <p className="font-bold text-sm">تعذر عرض ملف الفحص</p>
+              <p className="text-xs text-slate-400 mt-1">{loadError || "يرجى التأكد من اعتماد الفحص وتوفر ملف PDF"}</p>
+              {sourceUrl && (
+                <button type="button" onClick={handleRefresh} className="mt-4 min-h-11 rounded-xl gold-gradient-btn px-4 py-2 text-sm font-bold">
+                  إعادة المحاولة
+                </button>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Footer info */}

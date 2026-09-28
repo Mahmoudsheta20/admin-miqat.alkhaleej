@@ -64,7 +64,7 @@ export default function AdminLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        <Header onMenuToggle={() => setMobileSidebarOpen(true)} />
+        <Header isMenuOpen={mobileSidebarOpen} onMenuToggle={() => setMobileSidebarOpen(true)} />
         <main className="app-main min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-3 sm:p-6 lg:p-8 touch-scroll">
           <div className="app-content min-w-0 max-w-7xl mx-auto w-full">{children}</div>
         </main>

@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  X,
   Clock,
   Sun,
   Moon,
@@ -39,9 +41,10 @@ import ProfileModal from "./ProfileModal";
 
 interface HeaderProps {
   onMenuToggle: () => void;
+  isMenuOpen: boolean;
 }
 
-export default function Header({ onMenuToggle }: HeaderProps) {
+export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -70,6 +73,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
+          timeZone: "Asia/Riyadh",
           hour12: true,
         }),
       );
@@ -174,7 +178,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
   // Close profile and notification dropdown on click outside or Escape
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: PointerEvent) => {
       const target = event.target as Node;
       if (menuRef.current && !menuRef.current.contains(target)) {
         setIsProfileMenuOpen(false);
@@ -186,18 +190,20 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (isProfileMenuOpen) menuRef.current?.querySelector("button")?.focus();
+        if (isNotifOpen) notifRef.current?.querySelector("button")?.focus();
         setIsProfileMenuOpen(false);
         setIsNotifOpen(false);
       }
     };
 
     if (isProfileMenuOpen || isNotifOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("pointerdown", handleClickOutside);
       document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("pointerdown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isProfileMenuOpen, isNotifOpen]);
@@ -233,7 +239,13 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           {/* Left Side: Mobile Menu Button + Clean Logo */}
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
-              onClick={onMenuToggle}
+              onClick={() => {
+                setIsNotifOpen(false);
+                setIsProfileMenuOpen(false);
+                onMenuToggle();
+              }}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-navigation"
               className="lg:hidden min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
               aria-label="القائمة الجانبية"
             >
@@ -241,9 +253,9 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             </button>
 
             {/* Clean Logo Brand - Image only, no redundant text */}
-            <div
+            <Link
+              href={homePath}
               className="flex items-center cursor-pointer min-w-0 py-1 transition-opacity hover:opacity-90"
-              onClick={() => router.push(homePath)}
               title="ميقات الخليج - الصفحة الرئيسية"
             >
               <div className="h-8 sm:h-9 w-20 sm:w-auto sm:max-w-[150px] flex items-center">
@@ -256,13 +268,13 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   priority
                 />
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Right Side: Clock, CTA, Theme Toggle, User Profile Menu */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Live Makkah Clock */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs">
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs">
               <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span className="text-slate-500 dark:text-slate-400 text-[11px]">
                 مكة المكرمة:
@@ -276,7 +288,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {user.role === "CAPTAIN" && (
               <button
                 onClick={() => router.push("/captain/contract")}
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
+                className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
                 title="إنشاء عقد رحلة جديد"
               >
                 <FileCheck2 className="w-4 h-4" />
@@ -288,7 +300,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {user.role === "ADMIN" && (
               <button
                 onClick={() => router.push("/admin/contracts")}
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
+                className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
                 title="سجل العقود الرسمية"
               >
                 <Plus className="w-4 h-4" />
@@ -299,7 +311,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {/* Theme Switcher Button */}
             <button
               onClick={toggleTheme}
-              className="min-w-11 min-h-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition"
+              className="hidden sm:flex min-w-11 min-h-11 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition"
               title={
                 theme === "dark"
                   ? "التبديل إلى الوضع النهاري"
@@ -318,10 +330,8 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => {
+                  setIsProfileMenuOpen(false);
                   setIsNotifOpen((prev) => !prev);
-                  if (!isNotifOpen) {
-                    loadNotifications();
-                  }
                 }}
                 className={`relative min-w-11 min-h-11 flex items-center justify-center rounded-xl border transition-all duration-200 ${
                   isNotifOpen
@@ -330,6 +340,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 }`}
                 title="مركز الإشعارات"
                 aria-label="مركز الإشعارات"
+                aria-controls="header-notifications"
                 aria-expanded={isNotifOpen}
               >
                 <Bell className="w-4 h-4 text-slate-700 dark:text-slate-300" />
@@ -344,8 +355,20 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {isNotifOpen && (
                 <div
                   className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-96 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
-                  role="menu"
+                  id="header-notifications"
+                  aria-label="الإشعارات"
                 >
+                  <div className="flex items-center justify-between border-b theme-border px-4 py-2 lg:hidden">
+                    <p className="text-sm font-bold">الإشعارات</p>
+                    <button
+                      type="button"
+                      onClick={() => { setIsNotifOpen(false); notifRef.current?.querySelector("button")?.focus(); }}
+                      className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+                      aria-label="إغلاق الإشعارات"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                   {/* Dropdown Header */}
                   <div className="p-3.5 px-4 bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -380,10 +403,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                       </div>
                     ) : (
                       notifications.map((notif) => (
-                        <div
+                        <button
+                          type="button"
                           key={notif.id}
                           onClick={() => handleNotificationClick(notif)}
-                          className={`p-3.5 px-4 cursor-pointer transition flex items-start gap-3 text-right ${
+                          className={`w-full p-3.5 px-4 cursor-pointer transition flex items-start gap-3 text-right ${
                             !notif.isRead
                               ? "bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                               : "hover:bg-slate-50 dark:hover:bg-slate-800/50 opacity-80 hover:opacity-100"
@@ -415,7 +439,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                               {formatArabicTime(notif.createdAt)}
                             </span>
                           </div>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
@@ -441,14 +465,17 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             {/* User Profile Dropdown Menu */}
             <div className="relative" ref={menuRef}>
               <button
-                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                onClick={() => {
+                  setIsNotifOpen(false);
+                  setIsProfileMenuOpen((prev) => !prev);
+                }}
                 className={`min-w-11 min-h-11 flex items-center justify-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1 rounded-xl border transition-all duration-200 text-right ${
                   isProfileMenuOpen
                     ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15 shadow-xs"
                     : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
                 }`}
                 aria-expanded={isProfileMenuOpen}
-                aria-haspopup="true"
+                aria-controls="header-account"
                 aria-label="قائمة الملف الشخصي"
                 title="قائمة الملف الشخصي"
               >
@@ -466,7 +493,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                     <span>{user.name.slice(0, 1)}</span>
                   )}
                 </div>
-                <div className="hidden sm:block min-w-0 pr-0.5 max-w-[110px]">
+                <div className="hidden md:block min-w-0 pr-0.5 max-w-[110px]">
                   <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                     {user.name}
                   </p>
@@ -477,7 +504,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   </span>
                 </div>
                 <ChevronDown
-                  className={`hidden sm:block w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
+                  className={`hidden md:block w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
                     isProfileMenuOpen ? "rotate-180 text-amber-500" : ""
                   }`}
                 />
@@ -487,9 +514,20 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {isProfileMenuOpen && (
                 <div
                   className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-80 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
-                  role="menu"
-                  aria-orientation="vertical"
+                  id="header-account"
+                  aria-label="الحساب والإعدادات"
                 >
+                  <div className="flex items-center justify-between border-b theme-border px-4 py-2 lg:hidden">
+                    <p className="text-sm font-bold">الحساب والإعدادات</p>
+                    <button
+                      type="button"
+                      onClick={() => { setIsProfileMenuOpen(false); menuRef.current?.querySelector("button")?.focus(); }}
+                      className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+                      aria-label="إغلاق الحساب والإعدادات"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                   {/* User Card Header */}
                   <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/60 dark:from-slate-900/90 dark:to-slate-900/40 border-b border-slate-100 dark:border-slate-800/80">
                     <div className="flex items-center gap-3">
@@ -552,7 +590,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                         setIsProfileOpen(true);
                       }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                      role="menuitem"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
@@ -575,7 +612,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                         setIsProfileOpen(true);
                       }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                      role="menuitem"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
@@ -597,7 +633,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                         router.push(homePath);
                       }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                      role="menuitem"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20 transition">
@@ -623,7 +658,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                             router.push("/admin/contracts/new");
                           }}
                           className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                          role="menuitem"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
@@ -644,7 +678,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                             router.push("/admin/captains");
                           }}
                           className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                          role="menuitem"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition">
@@ -666,8 +699,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                               router.push("/admin/admins");
                             }}
                             className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                            role="menuitem"
-                          >
+                            >
                             <div className="flex items-center gap-2.5">
                               <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20 transition">
                                 <ShieldCheck className="w-4 h-4" />
@@ -693,7 +725,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                             router.push("/captain/contract");
                           }}
                           className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                          role="menuitem"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
@@ -714,7 +745,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                             router.push("/captain/inspection");
                           }}
                           className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                          role="menuitem"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition">
@@ -735,7 +765,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                     <button
                       onClick={() => toggleTheme()}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                      role="menuitem"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20 transition">
@@ -769,7 +798,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                         router.push("/login");
                       }}
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition font-bold text-xs text-right"
-                      role="menuitem"
                     >
                       <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
                         <LogOut className="w-4 h-4" />
