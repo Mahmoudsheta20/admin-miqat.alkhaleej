@@ -67,6 +67,15 @@ export function CustomDatePicker({
   const [isOpen, setIsOpen] = useState(false);
   const [manualView, setManualView] = useState<{ year: number; month: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const normalizedMinDate = minDate?.replace(/-/g, "/");
+  const normalizedValue = value.replace(/-/g, "/");
+  const isBeforeMinDate = (date: string) => Boolean(normalizedMinDate && date < normalizedMinDate);
+
+  const quickDate = (offsetDays: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    return formatDate(date.getFullYear(), date.getMonth(), date.getDate());
+  };
 
   const parsed = parseDateStr(value) || {
     year: new Date().getFullYear(),
@@ -115,6 +124,7 @@ export function CustomDatePicker({
 
   // Quick preset shortcuts
   const selectQuickDate = (offsetDays: number) => {
+    if (isBeforeMinDate(quickDate(offsetDays))) return;
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
     const y = d.getFullYear();
@@ -175,6 +185,8 @@ export function CustomDatePicker({
       {/* Trigger Button */}
       <button
         type="button"
+        aria-label={label || "حدد التاريخ"}
+        aria-expanded={isOpen}
         onClick={() => {
           setManualView(null);
           setIsOpen(!isOpen);
@@ -214,6 +226,7 @@ export function CustomDatePicker({
             <button
               type="button"
               onClick={() => selectQuickDate(0)}
+              disabled={isBeforeMinDate(quickDate(0))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold transition text-center"
             >
               اليوم
@@ -221,6 +234,7 @@ export function CustomDatePicker({
             <button
               type="button"
               onClick={() => selectQuickDate(1)}
+              disabled={isBeforeMinDate(quickDate(1))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
               غداً
@@ -228,6 +242,7 @@ export function CustomDatePicker({
             <button
               type="button"
               onClick={() => selectQuickDate(2)}
+              disabled={isBeforeMinDate(quickDate(2))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
               بعد غد
@@ -235,6 +250,7 @@ export function CustomDatePicker({
             <button
               type="button"
               onClick={() => selectQuickDate(7)}
+              disabled={isBeforeMinDate(quickDate(7))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
               +أسبوع
@@ -292,9 +308,9 @@ export function CustomDatePicker({
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
               const dateStr = formatDate(viewYear, viewMonth, day);
-              const isSelected = value === dateStr;
+              const isSelected = normalizedValue === dateStr;
               const isToday = todayStr === dateStr;
-              const isDisabled = Boolean(minDate && dateStr < minDate);
+              const isDisabled = isBeforeMinDate(dateStr);
 
               return (
                 <button

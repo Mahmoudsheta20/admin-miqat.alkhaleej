@@ -10,6 +10,7 @@ import { getVehicles } from "@/app/_actions/fleet";
 import { getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 import { invalidateClientCache } from "@/lib/clientCache";
 import { returnTripPayload } from "@/lib/return-trip";
+import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
 
 interface ReverseTripModalProps {
   isOpen: boolean;
@@ -143,7 +144,14 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
               </div>
               <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="min-w-0 space-y-4 disabled:opacity-60">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <label className="block space-y-2"><span className="text-sm font-bold">تاريخ العودة</span><input autoFocus type="date" required min={originalDate} value={tripDate} onChange={event => setTripDate(event.target.value)} dir="ltr" className={FIELD_CLASS} /></label>
+                  <CustomDatePicker
+                    label="تاريخ العودة"
+                    required
+                    minDate={originalDate}
+                    value={tripDate}
+                    onChange={value => setTripDate(value.replace(/\//g, "-"))}
+                    className="min-w-0"
+                  />
                   <label className="block space-y-2"><span className="text-sm font-bold">وقت العودة</span><input type="time" required value={tripTime} onChange={event => setTripTime(event.target.value)} dir="ltr" className={FIELD_CLASS} /></label>
                 </div>
                 <label className="block space-y-2"><span className="text-sm font-bold">الكابتن</span>
