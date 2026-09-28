@@ -1,5 +1,7 @@
 "use client";
 
+import Modal from "@/app/_components/Modal";
+
 import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
@@ -523,8 +525,8 @@ export default function AdminManagementPage() {
 
       {/* Add Admin Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+        <Modal label="إضافة مسؤول" onClose={() => setModalOpen(false)} isBusy={formLoading}>
+          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-md bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-amber-500" />
@@ -556,7 +558,7 @@ export default function AdminManagementPage() {
                     تم إنشاء حساب المسؤول بنجاح!
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-300">
-                    تم إرسال بريد إلكتروني رسمي يحتوي على بيانات الدخول للمسؤول الجديد عبر Gmail SMTP.
+                    احفظ بيانات الدخول وشاركها مع المسؤول الجديد بطريقة آمنة. لن يتم إرسالها بالبريد الإلكتروني.
                   </p>
                 </div>
 
@@ -700,13 +702,13 @@ export default function AdminManagementPage() {
               </form>
             )}
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+        <Modal label="تأكيد حذف المسؤول" onClose={() => setDeleteTarget(null)} isBusy={deleteLoading}>
+          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
@@ -740,7 +742,7 @@ export default function AdminManagementPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

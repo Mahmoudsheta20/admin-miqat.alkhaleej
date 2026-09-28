@@ -3,7 +3,7 @@ export interface DashboardStats {
   totalCaptains: number; totalVehicles: number; activeVehicles: number;
   totalContracts: number; todayInspections: number;
   recentContracts: {
-    id: string; referenceNumber: string; customerName: string; captainName: string;
+    pdfPath?: string | null; id: string; referenceNumber: string; customerName: string; captainName: string;
     vehiclePlate: string; operationType: string; tripDate: string; tripTime: string; passengersCount: number;
   }[];
 }

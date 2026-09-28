@@ -1,4 +1,7 @@
 "use client";
+import LoadError from "@/app/_components/LoadError";
+
+import Modal from "@/app/_components/Modal";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -33,6 +36,7 @@ export default function FleetManagementPage() {
     return [];
   });
   const [isLoading, setIsLoading] = useState(() => !cachedFleet);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -63,8 +67,10 @@ export default function FleetManagementPage() {
       }).then(res => {
       if (res?.success && Array.isArray(res?.vehicles)) {
         setVehicles(res.vehicles);
-      }
+        setLoadError("");
+      } else { setLoadError(res.error || "تعذر تحميل البيانات"); }
     }).catch(err => {
+      setLoadError("تعذر الاتصال بالخادم");
       console.error("Failed to load vehicles:", err);
     }).finally(() => {
       setIsLoading(false);
@@ -81,13 +87,13 @@ export default function FleetManagementPage() {
       plateNumberEn: "",
       make: "",
       model: "",
-      year: 2025,
+      year: new Date().getFullYear(),
       category: "VIP_VAN",
       capacity: 7,
       status: "AVAILABLE",
-      registrationExpiry: "2027/05/14",
-      insuranceExpiry: "2027/01/20",
-      currentMileage: 10000,
+      registrationExpiry: "",
+      insuranceExpiry: "",
+      currentMileage: 0,
     });
     setFormError("");
     setIsAddModalOpen(true);
@@ -170,6 +176,7 @@ export default function FleetManagementPage() {
 
   return (
     <div className="space-y-6">
+      <LoadError message={loadError} onRetry={() => { void loadVehicles(true); }} isLoading={isLoading} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -337,7 +344,7 @@ export default function FleetManagementPage() {
 
       {/* Add/Edit Modal */}
       {(isAddModalOpen || editingVehicle) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+        <Modal label="بيانات المركبة" onClose={() => { setIsAddModalOpen(false); setEditingVehicle(null); }} isBusy={isSubmitting}>
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
@@ -518,7 +525,7 @@ export default function FleetManagementPage() {
               </div>
             </form>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Confirm Delete Dialog */}

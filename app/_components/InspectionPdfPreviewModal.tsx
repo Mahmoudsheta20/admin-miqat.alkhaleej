@@ -1,8 +1,11 @@
 "use client";
+import Modal from "./Modal";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { usePdfDocument } from "@/lib/use-pdf-document";
 import { X, Download, ExternalLink, FileText, CheckCircle2, ShieldCheck, AlertCircle, RotateCw } from "lucide-react";
 import { backendUrl, getAuthToken } from "@/lib/backend";
+import { pdfServeUrl, isFullUrl } from "@/lib/pdf-serve";
 
 interface InspectionPdfPreviewModalProps {
   isOpen: boolean;
@@ -13,106 +16,67 @@ interface InspectionPdfPreviewModalProps {
   pdfUrl?: string | null;
 }
 
-interface PdfLoadResult {
-  requestKey: string;
-  url: string | null;
-  error: string | null;
+export default function InspectionPdfPreviewModal(props: InspectionPdfPreviewModalProps) {
+  return props.isOpen ? <InspectionPdfContent {...props} /> : null;
 }
 
-export default function InspectionPdfPreviewModal({
-  isOpen,
+function InspectionPdfContent({
   onClose,
   inspectionId,
   captainName = "الكابتن",
   vehiclePlate = "",
   pdfUrl: propPdfUrl,
 }: InspectionPdfPreviewModalProps) {
-  const [pdfResult, setPdfResult] = useState<PdfLoadResult | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const shortCode = inspectionId?.replace(/-/g, "").slice(0, 8).toUpperCase() || "";
 
-  const shortCode = useMemo(() => {
-    if (!inspectionId) return "";
-    return inspectionId.replace(/-/g, "").slice(0, 8).toUpperCase();
-  }, [inspectionId]);
+  // ═══════════════════════════════════════════════════════════════════════
+  // FAST PATH — direct public URL available (e.g. S3):
+  // Route through /api/pdf/serve which runs at the Edge, fetches from S3
+  // in ~10-50ms, caches for 24h, and streams to the browser same-origin.
+  // ═══════════════════════════════════════════════════════════════════════
+  const hasDirectUrl = isFullUrl(propPdfUrl);
+  const directServedUrl = hasDirectUrl ? pdfServeUrl(propPdfUrl) : null;
 
-  const token = getAuthToken();
-  const sourceUrl = useMemo(() => {
-    if (inspectionId) {
-      return backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?direct=1`);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FALLBACK — no direct URL: resolve through the backend API
+  // ═══════════════════════════════════════════════════════════════════════
+  const backendSourceUrl = !hasDirectUrl && inspectionId
+    ? backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?direct=1`)
+    : propPdfUrl?.trim() || null;
+
+  const {
+    url: hookUrl,
+    isLoading: hookLoading,
+    error: hookError,
+    refresh: hookRefresh,
+  } = usePdfDocument({
+    sourceUrl: hasDirectUrl ? null : backendSourceUrl,
+    token: getAuthToken(),
+    isAuthenticated: Boolean(inspectionId) && !hasDirectUrl,
+  });
+
+  // Merge paths
+  const effectiveUrl = directServedUrl
+    ? `${directServedUrl}&v=${refreshKey}`
+    : hookUrl;
+  const isLoading = hasDirectUrl ? false : hookLoading;
+  const loadError = hasDirectUrl ? null : hookError;
+  const downloadUrl = hasDirectUrl ? propPdfUrl : effectiveUrl;
+
+  const handleRefresh = useCallback(() => {
+    if (hasDirectUrl) {
+      setRefreshKey((k) => k + 1);
+    } else {
+      hookRefresh();
     }
-    const storedUrl = propPdfUrl?.trim();
-    return storedUrl && /^https?:\/\//i.test(storedUrl) ? storedUrl : null;
-  }, [inspectionId, propPdfUrl]);
-  const requestKey = JSON.stringify([sourceUrl, token, reloadKey, isOpen]);
-  const currentResult = pdfResult?.requestKey === requestKey ? pdfResult : null;
-  const effectiveUrl = currentResult?.url ?? null;
-  const isLoading = isOpen && Boolean(sourceUrl) && !currentResult;
-  const loadError = currentResult?.error;
-
-  useEffect(() => {
-    if (!isOpen || !sourceUrl) return;
-    const controller = new AbortController();
-    let isActive = true;
-    let objectUrl: string | null = null;
-    const timeout = window.setTimeout(() => controller.abort(), 120_000);
-
-    async function loadPdf(url: string) {
-      try {
-        // Fetch the authenticated PDF as data. Embedding the API response directly
-        // inherits upstream frame restrictions and can produce "refused to connect".
-        const response = await fetch(url, {
-          headers: inspectionId && token ? { Authorization: `Bearer ${token}` } : {},
-          credentials: inspectionId ? "same-origin" : "omit",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(response.status === 401 || response.status === 403
-            ? "انتهت الجلسة أو لا تملك صلاحية عرض الفحص. يرجى تسجيل الدخول مجدداً."
-            : "تعذر تحميل ملف الفحص. يرجى إعادة المحاولة.");
-        }
-        const blob = await response.blob();
-        if (await blob.slice(0, 5).text() !== "%PDF-") {
-          throw new Error("لم يُرجع الخادم ملف PDF صالحاً. يرجى إعادة المحاولة.");
-        }
-        if (!isActive) return;
-        objectUrl = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-        setPdfResult({ requestKey, url: objectUrl, error: null });
-      } catch (error: unknown) {
-        if (!isActive) return;
-        setPdfResult({
-          requestKey,
-          url: null,
-          error: controller.signal.aborted
-            ? "استغرق تحميل الملف وقتاً طويلاً. يرجى إعادة المحاولة."
-            : error instanceof TypeError
-              ? "تعذر الاتصال بالخادم لتحميل الملف. يرجى إعادة المحاولة."
-              : error instanceof Error ? error.message : "تعذر تحميل ملف الفحص.",
-        });
-      } finally {
-        window.clearTimeout(timeout);
-      }
-    }
-
-    void loadPdf(sourceUrl);
-    return () => {
-      isActive = false;
-      controller.abort();
-      window.clearTimeout(timeout);
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [isOpen, sourceUrl, inspectionId, token, requestKey]);
-
-  if (!isOpen) return null;
+  }, [hasDirectUrl, hookRefresh]);
 
   const fileName = `inspection-${shortCode || "Miqat"}.pdf`;
 
-  const handleRefresh = () => {
-    setReloadKey((prev) => prev + 1);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
+    <Modal label="معاينة الفحص" onClose={onClose}>
       <div className="mobile-dialog-panel relative flex flex-col w-full max-w-5xl h-[94dvh] sm:h-[90dvh] theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
         {/* Modal Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b theme-border theme-card-subtle">
@@ -145,8 +109,6 @@ export default function InspectionPdfPreviewModal({
                 </div>
               </div>
             </div>
-
-            {/* Mobile close button */}
             <button
               onClick={onClose}
               className="sm:hidden p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition"
@@ -169,7 +131,7 @@ export default function InspectionPdfPreviewModal({
                   <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoading ? "animate-spin" : ""}`} />
                 </button>
                 <a
-                  href={effectiveUrl}
+                  href={downloadUrl || effectiveUrl}
                   download={fileName}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -180,7 +142,7 @@ export default function InspectionPdfPreviewModal({
                   <span>تحميل PDF</span>
                 </a>
                 <a
-                  href={effectiveUrl}
+                  href={downloadUrl || effectiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
@@ -210,16 +172,14 @@ export default function InspectionPdfPreviewModal({
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   جاري تجهيز وتحميل محضر الفحص التشغيلي...
                 </p>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  #INSP-{shortCode}
-                </p>
+                <p className="text-[10px] text-slate-400 font-mono">#INSP-{shortCode}</p>
               </div>
             </div>
           )}
 
           {effectiveUrl ? (
             <iframe
-              key={`${effectiveUrl}-${reloadKey}`}
+              key={effectiveUrl}
               src={`${effectiveUrl}#toolbar=1&navpanes=0`}
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة سجل الفحص التشغيلي"
@@ -229,7 +189,7 @@ export default function InspectionPdfPreviewModal({
               <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
               <p className="font-bold text-sm">تعذر عرض ملف الفحص</p>
               <p className="text-xs text-slate-400 mt-1">{loadError || "يرجى التأكد من اعتماد الفحص وتوفر ملف PDF"}</p>
-              {sourceUrl && (
+              {(backendSourceUrl || directServedUrl) && (
                 <button type="button" onClick={handleRefresh} className="mt-4 min-h-11 rounded-xl gold-gradient-btn px-4 py-2 text-sm font-bold">
                   إعادة المحاولة
                 </button>
@@ -238,7 +198,7 @@ export default function InspectionPdfPreviewModal({
           ) : null}
         </div>
 
-        {/* Footer info */}
+        {/* Footer */}
         <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-t theme-border theme-card-subtle flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -249,6 +209,6 @@ export default function InspectionPdfPreviewModal({
           </span>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

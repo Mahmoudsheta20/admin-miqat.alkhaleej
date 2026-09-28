@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
@@ -38,7 +39,7 @@ import {
   getSaudiCurrentTimeStr,
   formatOfficialDate,
 } from "@/lib/contractConstants";
-import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import { CustomInput } from "@/app/_components/form/CustomInput";

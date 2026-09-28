@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 
 import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
 import StatusBadge from "@/app/_components/StatusBadge";
-import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 
 export default function AdminDashboardPage() {
@@ -285,7 +286,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-5 py-3.5 text-left">
                         <button
-                          onClick={() => openPdf(c.id, c.referenceNumber, (c as any).pdfPath)}
+                          onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
                         >
                           <FileText className="w-3.5 h-3.5 text-amber-500" />
@@ -340,7 +341,7 @@ export default function AdminDashboardPage() {
                         تفاصيل
                       </Link>
                       <button
-                        onClick={() => openPdf(c.id, c.referenceNumber, (c as any).pdfPath)}
+                        onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition text-xs shadow-2xs"
                       >
                         <FileText className="w-3.5 h-3.5" />

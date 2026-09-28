@@ -1,7 +1,9 @@
 "use client";
 
-import React, { forwardRef } from "react";
-import { AlertCircle } from "lucide-react";
+import React, { forwardRef, useId } from "react";
+
+
+import FormField from "./FormField";
 
 export interface CustomTextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -15,6 +17,7 @@ export interface CustomTextareaProps
 export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProps>(
   (
     {
+      id,
       label,
       error,
       hint,
@@ -31,22 +34,11 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
   ) => {
     const currentLength = value ? String(value).length : 0;
 
-    return (
-      <div className="space-y-1.5 w-full">
-        {label && (
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-              <span>{label}</span>
-              {required && <span className="text-rose-500 font-black">*</span>}
-            </label>
-            {showCount && maxLength && (
-              <span className="text-[10px] font-mono text-slate-400">
-                {currentLength} / {maxLength}
-              </span>
-            )}
-          </div>
-        )}
+    const generatedId = useId();
+    const fieldId = id || generatedId;
 
+    return (
+      <FormField id={fieldId} label={label} error={error} hint={hint} required={required} badge={showCount && maxLength ? `${currentLength} / ${maxLength}` : undefined}>
         <div className="relative">
           {icon && (
             <div className="absolute top-3 right-3 text-slate-400 pointer-events-none">
@@ -60,7 +52,11 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
             value={value}
             maxLength={maxLength}
             {...props}
-            className={`w-full py-2.5 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium resize-y
+            id={fieldId}
+            required={required}
+            aria-invalid={error ? true : props["aria-invalid"]}
+            aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
+            className={`min-w-0 w-full py-2.5 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium resize-y
               ${icon ? "pr-9" : "pr-3.5"}
               pl-3.5
               ${
@@ -73,17 +69,7 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
           />
         </div>
 
-        {error && (
-          <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-            <AlertCircle className="w-3 h-3 shrink-0" />
-            <span>{error}</span>
-          </p>
-        )}
-
-        {hint && !error && (
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
-        )}
-      </div>
+      </FormField>
     );
   }
 );

@@ -1,4 +1,7 @@
 "use client";
+import dynamic from "next/dynamic";
+
+import Modal from "@/app/_components/Modal";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
@@ -40,7 +43,7 @@ import {
 } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
-import InspectionPdfPreviewModal from "@/app/_components/InspectionPdfPreviewModal";
+const InspectionPdfPreviewModal = dynamic(() => import("@/app/_components/InspectionPdfPreviewModal"), { ssr: false });
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
@@ -188,6 +191,9 @@ export default function AdminInspectionsPage() {
         }),
       ]).then(([overviewRes, historyRes, vehiclesRes]) => {
 
+      const failure = [overviewRes, historyRes, vehiclesRes].find(result => !result.success);
+      if (failure) setBanner({ type: "error", message: failure.error || "تعذر تحميل بيانات الفحص" });
+
       if (overviewRes?.success && Array.isArray(overviewRes?.captains)) {
         setCaptains(overviewRes.captains);
         if (overviewRes.stats) {
@@ -233,6 +239,7 @@ export default function AdminInspectionsPage() {
       );
 
       if (res.success && res.inspection) {
+        const inspection = res.inspection;
         showBanner("success", `⚡ تم إتمام واعتماد الفحص المباشر للكابتن (${captain.name}) بنجاح!`);
 
         // Update local state immediately for snappy response
@@ -242,7 +249,7 @@ export default function AdminInspectionsPage() {
               ? {
                   ...c,
                   hasTodayInspection: true,
-                  todayInspection: res.inspection!,
+                  todayInspection: inspection,
                   totalInspections: c.totalInspections + 1,
                 }
               : c
@@ -287,7 +294,9 @@ export default function AdminInspectionsPage() {
 
     const selectedCap = safeCaptains.find((c) => c.id === customCaptainId);
     const effectivePlate =
-      customVehiclePlate.trim() || selectedCap?.assignedVehiclePlate || "ا ص ل 7223";
+      customVehiclePlate.trim() || selectedCap?.assignedVehiclePlate || "";
+
+    if (!effectivePlate) { showBanner("error", "يرجى اختيار المركبة قبل تسجيل الفحص"); return; }
 
     const effectiveDate =
       customInspectionDateMode === "MANUAL" && customInspectionDate
@@ -951,7 +960,7 @@ export default function AdminInspectionsPage() {
                                               id: c.todayInspection.id,
                                               captainName: c.name,
                                               vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                              pdfPath: (c.todayInspection as any).pdfPath,
+                                              pdfPath: c.todayInspection.pdfPath,
                                             });
                                           }
                                         }}
@@ -1127,7 +1136,7 @@ export default function AdminInspectionsPage() {
                                       id: c.todayInspection.id,
                                       captainName: c.name,
                                       vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                      pdfPath: (c.todayInspection as any).pdfPath,
+                                      pdfPath: c.todayInspection.pdfPath,
                                     });
                                   }
                                 }}
@@ -1273,7 +1282,7 @@ export default function AdminInspectionsPage() {
                                       id: insp.id,
                                       captainName: insp.captainName,
                                       vehiclePlate: insp.vehiclePlate,
-                                      pdfPath: (insp as any).pdfPath,
+                                      pdfPath: insp.pdfPath,
                                     })
                                   }
                                   className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
@@ -1376,7 +1385,7 @@ export default function AdminInspectionsPage() {
                               id: insp.id,
                               captainName: insp.captainName,
                               vehiclePlate: insp.vehiclePlate,
-                              pdfPath: (insp as any).pdfPath,
+                              pdfPath: insp.pdfPath,
                             })
                           }
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
@@ -1405,7 +1414,7 @@ export default function AdminInspectionsPage() {
           MODAL 1: INSPECTION DETAILS MODAL (16-POINT BREAKDOWN)
       ───────────────────────────────────────────────────────────────────────────── */}
       {selectedInspectionForView && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <Modal label="تفاصيل الفحص" onClose={() => setSelectedInspectionForView(null)} isBusy={false}>
           <div className="mobile-dialog-panel theme-card w-full max-w-2xl rounded-3xl border theme-border shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40">
@@ -1584,7 +1593,7 @@ export default function AdminInspectionsPage() {
                       id: selectedInspectionForView.id,
                       captainName: selectedInspectionForView.captainName,
                       vehiclePlate: selectedInspectionForView.vehiclePlate,
-                      pdfPath: (selectedInspectionForView as any).pdfPath,
+                      pdfPath: selectedInspectionForView.pdfPath,
                     });
                   }}
                   className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs hover:shadow-md transition"
@@ -1603,14 +1612,14 @@ export default function AdminInspectionsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* ─────────────────────────────────────────────────────────────────────────────
           MODAL 2: CUSTOM / NEW INSPECTION MODAL
       ───────────────────────────────────────────────────────────────────────────── */}
       {isCustomModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <Modal label="تسجيل فحص" onClose={() => setIsCustomModalOpen(false)} isBusy={isSubmittingCustom}>
           <div className="mobile-dialog-panel theme-card w-full max-w-3xl rounded-3xl border theme-border shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40">
@@ -1709,7 +1718,7 @@ export default function AdminInspectionsPage() {
                           return (
                             <button
                               type="button"
-                              onClick={() => setCustomVehiclePlate(cap.assignedVehiclePlate!)}
+                              onClick={() => setCustomVehiclePlate(cap.assignedVehiclePlate || "")}
                               className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer"
                             >
                               مركبة الكابتن ({cap.assignedVehiclePlate})
@@ -1994,15 +2003,15 @@ export default function AdminInspectionsPage() {
               </div>
             </form>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* ─────────────────────────────────────────────────────────────────────────────
           MODAL 3: DELETE CONFIRMATION DIALOG
       ───────────────────────────────────────────────────────────────────────────── */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="theme-card w-full max-w-md rounded-3xl border border-rose-500/30 p-6 space-y-4 shadow-2xl">
+        <Modal label="حذف الفحص" onClose={() => setDeleteConfirmId(null)} isBusy={isDeleting}>
+          <div className="mobile-dialog-panel overflow-y-auto theme-card w-full max-w-md rounded-3xl border border-rose-500/30 p-6 space-y-4 shadow-2xl">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
@@ -2043,7 +2052,7 @@ export default function AdminInspectionsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* ─────────────────────────────────────────────────────────────────────────────

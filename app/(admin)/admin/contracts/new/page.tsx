@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -42,7 +43,7 @@ import {
   getSaudiCurrentTimeStr,
   formatOfficialDate,
 } from "@/lib/contractConstants";
-import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { CustomInput } from "@/app/_components/form/CustomInput";
 import { CustomTextarea } from "@/app/_components/form/CustomTextarea";
@@ -189,9 +190,6 @@ export default function AdminContractBuilderPage() {
   const effectiveCaptainInspection =
     selectedCaptainId && captainInspection?.captainId === selectedCaptainId ? captainInspection : null;
 
-  // A valid inspection MUST exist before the contract can be created
-  const hasValidInspection = Boolean(effectiveCaptainInspection || adminInspectionId);
-
   // Check today's inspection status whenever selected captain changes
   useEffect(() => {
     let isCurrent = true;
@@ -268,7 +266,9 @@ export default function AdminContractBuilderPage() {
       const plate =
         selectedVehiclePlate ||
         currentCaptain?.assignedVehiclePlate ||
-        (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
+        "";
+
+      if (!plate.trim()) throw new Error("اختر المركبة قبل تسجيل الفحص");
 
       const nowTime = getSaudiCurrentTimeStr();
       const effectiveInspectionDate =
@@ -342,7 +342,9 @@ export default function AdminContractBuilderPage() {
         const plate =
           data.vehiclePlate ||
           currentCaptain?.assignedVehiclePlate ||
-          (vehicles.length > 0 ? vehicles[0].plateNumberAr : "ا ص ل 7223");
+          "";
+
+        if (!plate.trim()) throw new Error("اختر المركبة قبل تسجيل الفحص");
 
         const nowTime = getSaudiCurrentTimeStr();
         const effectiveInspectionDate =

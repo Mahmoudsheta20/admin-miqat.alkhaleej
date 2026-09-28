@@ -1,9 +1,10 @@
 "use client";
+import Modal from "./Modal";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { X, Download, ExternalLink, FileText, CheckCircle2, AlertCircle, RotateCw } from "lucide-react";
 import { backendUrl, getAuthToken } from "@/lib/backend";
-
+import { pdfServeUrl, isFullUrl } from "@/lib/pdf-serve";
 import { usePdfDocument } from "@/lib/use-pdf-document";
 
 interface PdfPreviewModalProps {
@@ -25,16 +26,56 @@ function PdfPreviewContent({
   pdfUrl: propPdfUrl,
 }: PdfPreviewModalProps) {
   const id = contractId || referenceNumber;
-  const sourceUrl = id ? backendUrl(`/contracts/${encodeURIComponent(id)}/pdf?direct=1`) : propPdfUrl || null;
-  const { url: effectiveUrl, isLoading: iframeLoading, error, refresh: handleRefresh } = usePdfDocument({
-    sourceUrl,
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FAST PATH — direct public URL available (e.g. S3):
+  // Route through /api/pdf/serve which runs at the Edge, fetches from S3
+  // in ~10-50ms, caches for 24h, and streams to the browser same-origin.
+  // ═══════════════════════════════════════════════════════════════════════
+  const hasDirectUrl = isFullUrl(propPdfUrl);
+  const directServedUrl = hasDirectUrl ? pdfServeUrl(propPdfUrl) : null;
+
+  // Refresh counter — cache-bust the iframe
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FALLBACK — no direct URL: resolve through the backend API
+  // ═══════════════════════════════════════════════════════════════════════
+  const backendSourceUrl = !hasDirectUrl && id
+    ? backendUrl(`/contracts/${encodeURIComponent(id)}/pdf?direct=1`)
+    : null;
+
+  const {
+    url: hookUrl,
+    isLoading: hookLoading,
+    error: hookError,
+    refresh: hookRefresh,
+  } = usePdfDocument({
+    sourceUrl: hasDirectUrl ? null : backendSourceUrl,
     token: getAuthToken(),
-    isAuthenticated: Boolean(id),
+    isAuthenticated: Boolean(id) && !hasDirectUrl,
   });
+
+  // Merge paths
+  const effectiveUrl = directServedUrl
+    ? `${directServedUrl}&v=${refreshKey}`
+    : hookUrl;
+  const isLoading = hasDirectUrl ? false : hookLoading;
+  const error = hasDirectUrl ? null : hookError;
+  const downloadUrl = hasDirectUrl ? propPdfUrl : effectiveUrl;
+
+  const handleRefresh = useCallback(() => {
+    if (hasDirectUrl) {
+      setRefreshKey((k) => k + 1);
+    } else {
+      hookRefresh();
+    }
+  }, [hasDirectUrl, hookRefresh]);
+
   const fileName = `Contract_${referenceNumber || "Miqat"}.pdf`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
+    <Modal label="معاينة العقد" onClose={onClose}>
       <div className="mobile-dialog-panel relative flex flex-col w-full max-w-5xl h-[94dvh] sm:h-[90dvh] theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b theme-border theme-card-subtle">
@@ -55,8 +96,6 @@ function PdfPreviewContent({
                 </p>
               </div>
             </div>
-
-            {/* Mobile close button on top right */}
             <button
               onClick={onClose}
               className="sm:hidden p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition"
@@ -75,10 +114,10 @@ function PdfPreviewContent({
                   className="p-2 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl border theme-card transition"
                   title="إعادة تحميل المعاينة"
                 >
-                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${iframeLoading ? "animate-spin" : ""}`} />
+                  <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoading ? "animate-spin" : ""}`} />
                 </button>
                 <a
-                  href={effectiveUrl}
+                  href={downloadUrl || effectiveUrl}
                   download={fileName}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -89,7 +128,7 @@ function PdfPreviewContent({
                   <span>تحميل PDF</span>
                 </a>
                 <a
-                  href={effectiveUrl}
+                  href={downloadUrl || effectiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300"
@@ -112,16 +151,14 @@ function PdfPreviewContent({
 
         {/* View Frame */}
         <div className="relative min-h-0 flex-1 w-full p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-950 flex flex-col">
-          {iframeLoading && (
+          {isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs z-10 gap-3">
               <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
               <div className="text-center space-y-1">
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   جاري تحميل ومعاينة وثيقة العقد المعتمدة...
                 </p>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  {referenceNumber}
-                </p>
+                <p className="text-[10px] text-slate-400 font-mono">{referenceNumber}</p>
               </div>
             </div>
           )}
@@ -133,7 +170,7 @@ function PdfPreviewContent({
               className="w-full h-full rounded-xl sm:rounded-2xl border theme-border bg-white"
               title="معاينة العقد الرسمي"
             />
-          ) : !iframeLoading ? (
+          ) : !isLoading ? (
             <div role="alert" className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
               <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
               <p className="font-bold text-sm">تعذر تحديد رابط ملف العقد</p>
@@ -143,7 +180,7 @@ function PdfPreviewContent({
           ) : null}
         </div>
 
-        {/* Footer notes */}
+        {/* Footer */}
         <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-t theme-border theme-card-subtle flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span>الصفحة 1: بنود النقل • الصفحة 2: كشف الركاب • الصفحة 3: الفحص والختم</span>
@@ -151,6 +188,6 @@ function PdfPreviewContent({
           <span className="font-mono font-bold text-slate-700 dark:text-slate-300">شركة ميقات الخليج للنقل البري</span>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

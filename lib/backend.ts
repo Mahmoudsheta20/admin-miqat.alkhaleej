@@ -4,6 +4,7 @@ export interface ApiResult<T> {
   error?: string;
   message?: string;
   token?: string;
+  status?: number;
 }
 
 const TOKEN_KEY = "miqat_token";
@@ -21,13 +22,15 @@ export function getAuthToken(): string | null {
   }
 }
 
-export function setAuthToken(token: string | null): void {
+export function setAuthToken(token: string | null, rememberMe = true): void {
   if (typeof window === "undefined") return;
   try {
     if (token) {
-      localStorage.setItem(TOKEN_KEY, token);
-      sessionStorage.setItem(TOKEN_KEY, token);
-      document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+      const storage = rememberMe ? localStorage : sessionStorage;
+      const otherStorage = rememberMe ? sessionStorage : localStorage;
+      otherStorage.removeItem(TOKEN_KEY);
+      storage.setItem(TOKEN_KEY, token);
+      document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; path=/; ${rememberMe ? `max-age=${30 * 24 * 60 * 60}; ` : ""}SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
     } else {
       localStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(TOKEN_KEY);
@@ -63,7 +66,7 @@ export function backendUrl(path: string): string {
 
   // If rawBase is provided and starts with http/https
   if (rawBase && (rawBase.startsWith("http://") || rawBase.startsWith("https://"))) {
-    return `${rawBase}${apiPath}`;
+    return `${rawBase.replace(/\/api$/, "")}${apiPath}`;
   }
 
   // Default fallback for local dev
@@ -100,12 +103,16 @@ export async function backendRequest<T>(path: string, method = "GET", body?: unk
       signal: AbortSignal.timeout(60_000),
     });
 
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      return { success: false, status: response.status, error: "تعذر قراءة استجابة الخادم، يرجى إعادة المحاولة" };
+    }
     const result: ApiResult<T> = await response.json();
 
     // Auto-save returned JWT token if present in response
-    const returnedToken = (result.data as any)?.token || (result as any)?.token;
-    if (returnedToken && typeof returnedToken === "string") {
-      setAuthToken(returnedToken);
+    const returnedToken = responseToken(result);
+    if (response.ok && result.success && returnedToken) {
+      const rememberMe = typeof body === "object" && body !== null && "rememberMe" in body ? body.rememberMe !== false : true;
+      setAuthToken(returnedToken, rememberMe);
     }
 
     // Auto-clear token on logout
@@ -114,11 +121,13 @@ export async function backendRequest<T>(path: string, method = "GET", body?: unk
     }
 
     if (!response.ok || !result.success) {
-      return { success: false, error: result.error || "تعذر تنفيذ الطلب" };
+      return { success: false, status: response.status, error: result.error || "تعذر تنفيذ الطلب" };
     }
     return result;
-  } catch (err: any) {
-    return { success: false, error: err?.message || "تعذر الاتصال بالخادم، يرجى المحاولة مرة أخرى" };
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error && error.name === "TimeoutError"
+      ? "استغرق الطلب وقتاً طويلاً، يرجى إعادة المحاولة"
+      : "تعذر الاتصال بالخادم، يرجى المحاولة مرة أخرى" };
   }
 }
 
@@ -129,7 +138,7 @@ export async function backendFields<T extends object>(
 ): Promise<Partial<T> & { success: boolean; error?: string; message?: string; token?: string }> {
   const result = await backendRequest<T>(path, method, body);
   const fields: Partial<T> = (result.data as Partial<T>) ?? {};
-  const returnedToken = (result.data as any)?.token || (result as any)?.token;
+  const returnedToken = responseToken(result);
   return {
     ...fields,
     token: returnedToken,
@@ -137,4 +146,9 @@ export async function backendFields<T extends object>(
     error: result.error,
     message: result.message,
   };
+}
+
+function responseToken(result: ApiResult<unknown>): string | undefined {
+  if (typeof result.data === "object" && result.data !== null && "token" in result.data && typeof result.data.token === "string") return result.data.token;
+  return typeof result.token === "string" ? result.token : undefined;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useId } from "react";
 import {
   Calendar as CalendarIcon,
   ChevronRight,
@@ -44,7 +44,7 @@ function parseDateStr(str: string): { year: number; month: number; day: number }
   const y = parseInt(parts[0], 10);
   const m = parseInt(parts[1], 10) - 1; // 0-indexed
   const d = parseInt(parts[2], 10);
-  if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+  if (!Number.isInteger(y) || y < 1 || m < 0 || m > 11 || d < 1 || d > new Date(y, m + 1, 0).getDate()) return null;
   return { year: y, month: m, day: d };
 }
 
@@ -64,6 +64,7 @@ export function CustomDatePicker({
   hint,
   className = "",
 }: CustomDatePickerProps) {
+  const controlId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [manualView, setManualView] = useState<{ year: number; month: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -77,7 +78,7 @@ export function CustomDatePicker({
     return formatDate(date.getFullYear(), date.getMonth(), date.getDate());
   };
 
-  const parsed = parseDateStr(value) || {
+  const parsed = parseDateStr(value) || parseDateStr(minDate || "") || {
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
     day: new Date().getDate(),
@@ -153,6 +154,7 @@ export function CustomDatePicker({
     try {
       const dateObj = new Date(p.year, p.month, p.day);
       return dateObj.toLocaleDateString("ar-SA", {
+        calendar: "gregory",
         weekday: "short",
         day: "numeric",
         month: "short",
@@ -164,10 +166,12 @@ export function CustomDatePicker({
   };
 
   return (
-    <div ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
+    <div onKeyDown={event => {
+      if (event.key === "Escape" && isOpen) { event.preventDefault(); event.stopPropagation(); setIsOpen(false); containerRef.current?.querySelector("button")?.focus(); }
+    }} ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
       {label && (
         <div className="flex items-center justify-between gap-1.5 min-w-0">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
+          <label htmlFor={controlId} className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
             <span>{label}</span>
             {required && <span className="text-rose-500 font-black">*</span>}
           </label>
@@ -184,6 +188,8 @@ export function CustomDatePicker({
 
       {/* Trigger Button */}
       <button
+        id={controlId}
+        aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
         aria-label={label || "حدد التاريخ"}
         aria-expanded={isOpen}
@@ -352,14 +358,14 @@ export function CustomDatePicker({
       )}
 
       {error && (
-        <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
+        <p id={`${controlId}-description`} role="alert" className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <AlertCircle className="w-3 h-3 shrink-0" />
           <span>{error}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
+        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
       )}
     </div>
   );

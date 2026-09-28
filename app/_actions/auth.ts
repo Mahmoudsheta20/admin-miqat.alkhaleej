@@ -13,6 +13,7 @@ export function completePasswordChangeAction(params: PasswordChange) {
 export function logoutAction() { return backendRequest("/auth/logout", "POST"); }
 export async function getCurrentSession() {
   const result = await backendRequest<SystemUser>("/auth/session");
+  if (!result.success && result.status !== 401 && result.status !== 403) throw new Error(result.error);
   return result.success ? result.data ?? null : null;
 }
 export async function updateUserProfileAction(_userId: string, data: { name?: string; phone?: string; avatarUrl?: string }) {

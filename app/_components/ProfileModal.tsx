@@ -1,4 +1,5 @@
 "use client";
+import Modal from "./Modal";
 
 import React, { useState } from "react";
 import {
@@ -88,10 +89,7 @@ function ProfileModalContent({
       invalidateClientCache("admins_list");
       invalidateClientCache("dashboard_stats");
       setSuccessMsg("تم تحديث وحفظ بيانات الملف الشخصي بنجاح!");
-      setTimeout(() => {
-        setSuccessMsg(null);
-        onClose();
-      }, 1200);
+
     } else {
       setError(res.error || "فشل حفظ التعديلات");
     }
@@ -142,10 +140,7 @@ function ProfileModalContent({
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        setTimeout(() => {
-          setPassSuccess(null);
-          onClose();
-        }, 1500);
+
       } else {
         setPassError(res.error || "تعذر تغيير كلمة المرور");
       }
@@ -157,10 +152,7 @@ function ProfileModalContent({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4"
-      dir="rtl"
-    >
+    <Modal label="الملف الشخصي" onClose={onClose} isBusy={isSubmitting || isChangingPass}>
       <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
@@ -184,7 +176,7 @@ function ProfileModalContent({
             </div>
           </div>
           <button
-            onClick={onClose}
+            disabled={isSubmitting || isChangingPass} onClick={onClose}
             className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             aria-label="إغلاق"
           >
@@ -346,7 +338,7 @@ function ProfileModalContent({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={onClose}
+                disabled={isSubmitting || isChangingPass} onClick={onClose}
                 className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 إلغاء
@@ -471,7 +463,7 @@ function ProfileModalContent({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={onClose}
+                disabled={isSubmitting || isChangingPass} onClick={onClose}
                 className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 إلغاء
@@ -497,6 +489,6 @@ function ProfileModalContent({
           </form>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }

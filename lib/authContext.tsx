@@ -1,10 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import type { SystemUser } from "./types";
 import { loginAction, logoutAction, completePasswordChangeAction, getCurrentSession } from "@/app/_actions/auth";
 import { invalidateClientCache as clearCache } from "./clientCache";
-import { getAuthToken, setAuthToken } from "./backend";
+import { setAuthToken } from "./backend";
 
 interface AuthResult {
   success: boolean;
@@ -30,44 +30,35 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function hasPersistentSession(): boolean {
+  try { return Boolean(localStorage.getItem("miqat_token") || localStorage.getItem("miqat_auth_user")); }
+  catch { return false; }
+}
+
+function saveUser(user: SystemUser, rememberMe: boolean): void {
+  try {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+    otherStorage.removeItem("miqat_auth_user");
+    storage.setItem("miqat_auth_user", JSON.stringify(user));
+  } catch { /* Storage may be unavailable in private browsing. */ }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const authVersion = useRef(0);
   const [user, setUser] = useState<SystemUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+    const version = authVersion.current;
 
-    // 1. Try to restore cached user immediately so UI doesn't flicker
-    try {
-      const cached =
-        localStorage.getItem("miqat_auth_user") ||
-        sessionStorage.getItem("miqat_auth_user");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && active) {
-          setUser(parsed);
-        }
-      }
-    } catch {}
-
-    const token = getAuthToken();
-    if (!token) {
-      if (active) {
-        setUser(null);
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    // 2. Validate current session with backend using Authorization header
     getCurrentSession()
       .then((session) => {
-        if (!active) return;
+        if (!active || version !== authVersion.current) return;
         if (session && !session.mustChangePassword) {
           setUser(session);
-          try {
-            localStorage.setItem("miqat_auth_user", JSON.stringify(session));
-          } catch {}
+          saveUser(session, hasPersistentSession());
         } else {
           setUser(null);
           setAuthToken(null);
@@ -78,10 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(() => {
-        // Keep cached user on transient network failure
+        // Keep credentials available for a retry after a transient network failure.
       })
       .finally(() => {
-        if (active) {
+        if (active && version === authVersion.current) {
           setIsLoading(false);
         }
       });
@@ -92,18 +83,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password?: string, rememberMe = true) => {
+    authVersion.current++;
     const result = await loginAction(email, password, rememberMe);
     if (result.success && result.user && !result.mustChangePassword) {
       if (result.token) {
-        setAuthToken(result.token);
+        setAuthToken(result.token, rememberMe);
       }
       clearCache();
       setUser(result.user);
-      try {
-        const storage = rememberMe ? localStorage : sessionStorage;
-        storage.setItem("miqat_auth_user", JSON.stringify(result.user));
-      } catch {}
+      saveUser(result.user, rememberMe);
     }
+    setIsLoading(false);
     return result;
   };
 
@@ -113,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     confirmPassword: string,
     rememberMe = true
   ) => {
+    authVersion.current++;
     const result = await completePasswordChangeAction({
       userId,
       newPassword,
@@ -121,19 +112,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (result.success && result.user) {
       if (result.token) {
-        setAuthToken(result.token);
+        setAuthToken(result.token, rememberMe);
       }
       clearCache();
       setUser(result.user);
-      try {
-        const storage = rememberMe ? localStorage : sessionStorage;
-        storage.setItem("miqat_auth_user", JSON.stringify(result.user));
-      } catch {}
+      saveUser(result.user, rememberMe);
     }
+    setIsLoading(false);
     return result;
   };
 
   const logout = async () => {
+    authVersion.current++;
     try {
       await logoutAction();
     } catch {}
@@ -154,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         completePasswordChange,
         logout,
-        updateUser: setUser,
+        updateUser: (updated) => { setUser(updated); saveUser(updated, hasPersistentSession()); },
       }}
     >
       {children}

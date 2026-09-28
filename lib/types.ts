@@ -87,18 +87,6 @@ export type ContractStatus =
   | "EXPIRED"
   | "CANCELLED";
 
-export interface SystemNotification {
-  id: string;
-  userId: string;
-  type: string;
-  title: string;
-  message: string;
-  contractId?: string | null;
-  isRead: boolean;
-  createdAt: string | Date;
-  readAt?: string | Date | null;
-}
-
 export interface Contract {
   id: string;
   referenceNumber: string;

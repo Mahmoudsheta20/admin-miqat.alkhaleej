@@ -1,4 +1,6 @@
 "use client";
+import dynamic from "next/dynamic";
+import LoadError from "@/app/_components/LoadError";
 
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -34,7 +36,7 @@ import { getCaptains } from "@/app/_actions/captain";
 import { Contract, OperationType, SystemUser } from "@/lib/types";
 import ContractActions from "./contract-actions";
 import StatusBadge from "@/app/_components/StatusBadge";
-import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import { formatOfficialDate } from "@/lib/contractConstants";
@@ -61,6 +63,8 @@ export default function AdminContractsPage() {
   });
   const [isLoading, setIsLoading] = useState(() => !cachedContracts);
   const [isLoadingCaptains, setIsLoadingCaptains] = useState(() => !cachedCaptains);
+
+  const [loadError, setLoadError] = useState("");
 
   // Filters
   const [search, setSearch] = useState("");
@@ -156,8 +160,10 @@ export default function AdminContractsPage() {
       );
       if (res.success && res.contracts) {
         setContracts(res.contracts);
-      }
+        setLoadError("");
+      } else { setLoadError(res.error || "تعذر تحميل العقود"); }
     } catch (e) {
+      setLoadError("تعذر تحميل العقود، يرجى إعادة المحاولة");
       console.error("Failed to load contracts:", e);
     } finally {
       setIsLoading(false);
@@ -205,7 +211,8 @@ export default function AdminContractsPage() {
         );
         if (!isCancelled && res.success && res.contracts) {
           setContracts(res.contracts);
-        }
+          setLoadError("");
+        } else if (!isCancelled) { setLoadError(res.error || "تعذر تحميل العقود"); }
       } catch (e) {
         console.error("Failed to load contracts:", e);
       } finally {
@@ -315,6 +322,7 @@ export default function AdminContractsPage() {
 
   return (
     <div className="space-y-6 pb-12">
+      <LoadError message={loadError} onRetry={() => { void fetchContractsData(undefined, true); }} isLoading={isLoading} />
       {/* Sync Status Alert Banner */}
       {syncStatus && (
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xs">

@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 
 import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
@@ -19,7 +20,7 @@ import { getTodayInspection } from "@/app/_actions/inspection";
 import { getContracts } from "@/app/_actions/contract";
 import { Contract, VehicleInspection } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
-import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import ProfileModal from "@/app/_components/ProfileModal";
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 
@@ -136,7 +137,7 @@ export default function CaptainHomePage() {
             <span className="text-slate-400 text-[11px] block">المركبة المسندة</span>
             <span className="font-bold text-slate-900 dark:text-white font-mono flex items-center gap-1 mt-0.5">
               <Car className="w-3.5 h-3.5 text-amber-500" />
-              {user.assignedVehiclePlate || "ا ص ل 7223"}
+              {user.assignedVehiclePlate || "لم تُسند مركبة"}
             </span>
           </div>
 

@@ -1,4 +1,7 @@
 "use client";
+import LoadError from "@/app/_components/LoadError";
+
+import Modal from "@/app/_components/Modal";
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
@@ -47,6 +50,7 @@ export default function CaptainsManagementPage() {
     return [];
   });
   const [isLoading, setIsLoading] = useState(() => !cachedCaptains);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
@@ -87,8 +91,10 @@ export default function CaptainsManagementPage() {
       }).then(res => {
       if (res?.success && Array.isArray(res?.captains)) {
         setCaptains(res.captains);
-      }
+        setLoadError("");
+      } else { setLoadError(res.error || "تعذر تحميل البيانات"); }
     }).catch(err => {
+      setLoadError("تعذر الاتصال بالخادم");
       console.error("Failed to load captains:", err);
     }).finally(() => {
       setIsLoading(false);
@@ -245,6 +251,7 @@ export default function CaptainsManagementPage() {
 
   return (
     <div className="space-y-6">
+      <LoadError message={loadError} onRetry={() => { void loadCaptains(true); }} isLoading={isLoading} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -634,7 +641,7 @@ export default function CaptainsManagementPage() {
 
       {/* Add / Edit Modal */}
       {(isAddModalOpen || editingCaptain) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+        <Modal label="بيانات الكابتن" onClose={() => { setIsAddModalOpen(false); setEditingCaptain(null); }} isBusy={isSubmitting}>
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
@@ -857,7 +864,7 @@ export default function CaptainsManagementPage() {
               </div>
             </form>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Confirm Delete Dialog */}
@@ -873,8 +880,8 @@ export default function CaptainsManagementPage() {
 
       {/* Temporary Password Display Modal */}
       {tempPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="theme-card w-full max-w-md rounded-3xl border theme-border shadow-2xl p-6 space-y-4">
+        <Modal label="كلمة المرور المؤقتة" onClose={() => setTempPasswordModal(null)} isBusy={false}>
+          <div className="mobile-dialog-panel overflow-y-auto theme-card w-full max-w-md rounded-3xl border theme-border shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b theme-border pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -978,7 +985,7 @@ export default function CaptainsManagementPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

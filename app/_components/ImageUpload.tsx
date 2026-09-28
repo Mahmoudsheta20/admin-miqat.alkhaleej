@@ -38,7 +38,8 @@ export default function ImageUpload({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    e.target.value = "";
+    if (!file || isUploading) return;
 
     // Reset errors
     setError(null);
@@ -98,7 +99,10 @@ export default function ImageUpload({
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {/* Preview / Upload Box */}
-        <div
+        <button
+          type="button"
+          disabled={isUploading}
+          aria-label={`تغيير ${label}`}
           onClick={() => !isUploading && fileInputRef.current?.click()}
           className={`relative group cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500/80 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center transition shadow-xs ${sizeClasses} ${shapeClasses}`}
           title="اضغط لاختيار صورة جديدة"
@@ -139,7 +143,7 @@ export default function ImageUpload({
               <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
             </div>
           )}
-        </div>
+        </button>
 
         {/* Buttons & Info */}
         <div className="space-y-1.5 text-xs">

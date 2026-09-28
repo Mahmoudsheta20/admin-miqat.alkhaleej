@@ -190,7 +190,7 @@ export function sanitizeContractPayload(
     notes: cleanOptional(data.notes),
     issueDate: cleanIssueDate,
     captainId: data.captainId.trim(),
-    vehiclePlate: data.vehiclePlate.trim() || "ا ص ل 7223",
+    vehiclePlate: data.vehiclePlate.trim() || "",
     inspectionId: finalInspectionId,
     passengers: validPassengers,
   };

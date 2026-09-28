@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useState } from "react";
+import Modal from "./Modal";
 import { AlertTriangle, X } from "lucide-react";
 
 interface ConfirmDialogProps {
@@ -30,6 +31,9 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const [isBusy, setIsBusy] = useState(false);
+  const [error, setError] = useState("");
+  const pending = useRef(false);
   const isVisible = isOpen !== undefined ? isOpen : !!open;
   if (!isVisible) return null;
 
@@ -54,15 +58,12 @@ export default function ConfirmDialog({
   const styles = variantStyles[variant];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-
+    <Modal label={title} onClose={onCancel} isBusy={isBusy}>
       {/* Dialog */}
-      <div role="dialog" aria-modal="true" aria-label={title} className="mobile-dialog-panel relative w-full max-w-md theme-card rounded-2xl p-5 sm:p-6 shadow-2xl animate-in zoom-in-95">
+      <div className="mobile-dialog-panel relative w-full max-w-md theme-card rounded-2xl p-5 sm:p-6 shadow-2xl animate-in zoom-in-95">
         {/* Close */}
         <button
-          onClick={onCancel}
+          type="button" disabled={isBusy} onClick={onCancel}
           aria-label="إغلاق"
           className="absolute top-2 left-2 min-w-11 min-h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
         >
@@ -78,22 +79,33 @@ export default function ConfirmDialog({
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{message}</p>
         </div>
 
+        {error && <p role="alert" className="mt-3 text-center text-sm text-rose-600">{error}</p>}
         {/* Buttons */}
         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 mt-5 sm:mt-6">
           <button
-            onClick={onCancel}
+            type="button" disabled={isBusy} onClick={onCancel}
             className="w-full sm:flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             {cancelBtnLabel}
           </button>
           <button
-            onClick={onConfirm}
+            type="button"
+            disabled={isBusy}
+            onClick={async () => {
+              if (pending.current) return;
+              pending.current = true;
+              setIsBusy(true);
+              setError("");
+              try { await onConfirm(); }
+              catch { setError("تعذر تنفيذ العملية، يرجى إعادة المحاولة."); }
+              finally { pending.current = false; setIsBusy(false); }
+            }}
             className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${styles.btn}`}
           >
-            {confirmBtnLabel}
+            {isBusy ? "جاري التنفيذ..." : confirmBtnLabel}
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

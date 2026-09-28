@@ -1,10 +1,10 @@
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const ts = require('typescript');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import ts from 'typescript';
 
-const sourceCode = fs.readFileSync(path.join(__dirname, '../lib/return-trip.ts'), 'utf8');
+const sourceCode = fs.readFileSync(path.join(import.meta.dirname, '../lib/return-trip.ts'), 'utf8');
 const compiled = ts.transpileModule(sourceCode, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
 const moduleExports = {};
 new Function('exports', compiled)(moduleExports);

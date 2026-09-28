@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resolvePdfSource } from "./pdf-source";
 
 interface PdfDocumentOptions {
   sourceUrl: string | null;
@@ -15,9 +16,10 @@ interface PdfDocumentResult {
 }
 
 export function usePdfDocument({ sourceUrl, token, isAuthenticated }: PdfDocumentOptions) {
+  const [forceBuffer, setForceBuffer] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [result, setResult] = useState<PdfDocumentResult | null>(null);
-  const key = JSON.stringify([sourceUrl, token, reloadKey]);
+  const key = JSON.stringify([sourceUrl, token, reloadKey, forceBuffer]);
   const current = result?.key === key ? result : null;
 
   useEffect(() => {
@@ -28,20 +30,10 @@ export function usePdfDocument({ sourceUrl, token, isAuthenticated }: PdfDocumen
     const timeout = window.setTimeout(() => controller.abort(), 120_000);
     async function load(url: string) {
       try {
-        const response = await fetch(url, {
-          headers: isAuthenticated && token ? { Authorization: `Bearer ${token}` } : {},
-          credentials: isAuthenticated ? "include" : "omit",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!response.ok) throw new Error(response.status === 401 || response.status === 403
-          ? "يرجى تسجيل الدخول مجدداً للتحقق من صلاحية عرض الملف."
-          : "تعذر تحميل ملف PDF. يرجى إعادة المحاولة.");
-        const blob = await response.blob();
-        if (await blob.slice(0, 5).text() !== "%PDF-") throw new Error("لم يُرجع الخادم ملف PDF صالحاً.");
+        const document = await resolvePdfSource({ sourceUrl: url, token, isAuthenticated, forceBuffer, signal: controller.signal });
         if (!isActive) return;
-        objectUrl = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-        setResult({ key, url: objectUrl, error: null });
+        if (document.blob) objectUrl = URL.createObjectURL(document.blob);
+        setResult({ key, url: document.url || objectUrl, error: null });
       } catch (error: unknown) {
         if (!isActive) return;
         setResult({ key, url: null, error: controller.signal.aborted
@@ -59,12 +51,13 @@ export function usePdfDocument({ sourceUrl, token, isAuthenticated }: PdfDocumen
       window.clearTimeout(timeout);
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [sourceUrl, token, isAuthenticated, key]);
+  }, [sourceUrl, token, isAuthenticated, key, forceBuffer]);
 
   return {
     url: current?.url ?? null,
     error: current?.error ?? null,
     isLoading: Boolean(sourceUrl) && !current,
-    refresh: () => setReloadKey(value => value + 1),
+    refresh: () => { setForceBuffer(false); setReloadKey(value => value + 1); },
+    useFallback: () => { setForceBuffer(true); setReloadKey(value => value + 1); },
   };
 }

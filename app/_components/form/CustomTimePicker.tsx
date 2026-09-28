@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useId } from "react";
 import { Clock, AlertCircle, ChevronDown } from "lucide-react";
 
 export interface CustomTimePickerProps {
@@ -53,6 +53,7 @@ export function CustomTimePicker({
   hint,
   className = "",
 }: CustomTimePickerProps) {
+  const controlId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -109,10 +110,12 @@ export function CustomTimePicker({
   ];
 
   return (
-    <div ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
+    <div onKeyDown={event => {
+      if (event.key === "Escape" && isOpen) { event.preventDefault(); event.stopPropagation(); setIsOpen(false); containerRef.current?.querySelector("button")?.focus(); }
+    }} ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
       {label && (
         <div className="flex items-center justify-between gap-1.5 min-w-0">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
+          <label htmlFor={controlId} className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
             <span>{label}</span>
             {required && <span className="text-rose-500 font-black">*</span>}
           </label>
@@ -126,6 +129,10 @@ export function CustomTimePicker({
 
       {/* Trigger Button */}
       <button
+        aria-label={label || "حدد الوقت"}
+        aria-expanded={isOpen}
+        id={controlId}
+        aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-right cursor-pointer
@@ -279,14 +286,14 @@ export function CustomTimePicker({
       )}
 
       {error && (
-        <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
+        <p id={`${controlId}-description`} role="alert" className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <AlertCircle className="w-3 h-3 shrink-0" />
           <span>{error}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
+        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
       )}
     </div>
   );

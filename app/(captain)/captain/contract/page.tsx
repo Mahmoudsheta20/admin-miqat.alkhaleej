@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -21,7 +22,7 @@ import { getTodayInspection } from "@/app/_actions/inspection";
 import { submitContract, ContractFormPayload } from "@/app/_actions/contract";
 import { OperationType, VehicleInspection } from "@/lib/types";
 import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
-import PdfPreviewModal from "@/app/_components/PdfPreviewModal";
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 interface FormValues {
@@ -76,7 +77,7 @@ export default function CaptainContractBuilderPage() {
       tripTime: timeNow,
       flightCarrier: "الخطوط السعودية",
       flightNumber: "",
-      vehiclePlate: user?.assignedVehiclePlate || "ا ص ل 7223",
+      vehiclePlate: user?.assignedVehiclePlate || "",
       notes: "",
       passengers: [
         { name: "", nationality: "", idNumber: "" },
@@ -140,7 +141,7 @@ export default function CaptainContractBuilderPage() {
       notes: data.notes?.trim() || undefined,
       issueDate: todayIso,
       captainId: user.id,
-      vehiclePlate: data.vehiclePlate.trim() || user.assignedVehiclePlate || "ا ص ل 7223",
+      vehiclePlate: data.vehiclePlate.trim() || user.assignedVehiclePlate || "",
       inspectionId: todayInspection?.id,
       passengers: data.passengers.map((p) => ({
         name: p.name.trim(),

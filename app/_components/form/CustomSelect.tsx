@@ -1,7 +1,9 @@
 "use client";
 
-import React, { forwardRef } from "react";
-import { AlertCircle, ChevronDown } from "lucide-react";
+import React, { forwardRef, useId } from "react";
+import { ChevronDown } from "lucide-react";
+
+import FormField from "./FormField";
 
 export interface SelectOption {
   value: string;
@@ -23,6 +25,7 @@ export interface CustomSelectProps
 export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
   (
     {
+      id,
       label,
       error,
       hint,
@@ -36,22 +39,11 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
     },
     ref
   ) => {
-    return (
-      <div className="space-y-1.5 w-full">
-        {label && (
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-              <span>{label}</span>
-              {required && <span className="text-rose-500 font-black">*</span>}
-            </label>
-            {badge && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                {badge}
-              </span>
-            )}
-          </div>
-        )}
+    const generatedId = useId();
+    const fieldId = id || generatedId;
 
+    return (
+      <FormField id={fieldId} label={label} error={error} hint={hint} required={required} badge={badge}>
         <div className="relative flex items-center">
           {icon && (
             <div className="absolute right-3 text-slate-400 pointer-events-none flex items-center justify-center">
@@ -63,7 +55,11 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
             ref={ref}
             disabled={disabled}
             {...props}
-            className={`w-full h-11 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium appearance-none cursor-pointer
+            id={fieldId}
+            required={required}
+            aria-invalid={error ? true : props["aria-invalid"]}
+            aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
+            className={`min-w-0 w-full h-11 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium appearance-none cursor-pointer
               ${icon ? "pr-9" : "pr-3.5"}
               pl-9
               ${
@@ -91,17 +87,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
           </div>
         </div>
 
-        {error && (
-          <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-            <AlertCircle className="w-3 h-3 shrink-0" />
-            <span>{error}</span>
-          </p>
-        )}
-
-        {hint && !error && (
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
-        )}
-      </div>
+      </FormField>
     );
   }
 );

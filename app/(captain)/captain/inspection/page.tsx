@@ -58,7 +58,7 @@ export default function CaptainInspectionPage() {
   const { user } = useAuth();
 
   const [vehiclePlate, setVehiclePlate] = useState(
-    user?.assignedVehiclePlate || "ا ص ل 7223"
+    user?.assignedVehiclePlate || ""
   );
   const [driverDeclared, setDriverDeclared] = useState(true);
   const [notes, setNotes] = useState("");

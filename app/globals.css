@@ -283,3 +283,27 @@ html.dark ::-webkit-scrollbar-thumb {
     scroll-behavior: auto !important;
   }
 }
+
+/* Shared responsive surfaces and keyboard affordances. */
+.app-modal::backdrop { background: rgb(0 0 0 / 0.65); }
+.app-modal[open] { display: flex; align-items: center; justify-content: center; }
+.app-modal .mobile-dialog-panel { min-width: 0; overflow-y: auto; }
+.app-modal .mobile-dialog-panel.flex { overflow: hidden; }
+.app-modal .mobile-dialog-panel > form { min-height: 0; }
+.app-modal .mobile-dialog-panel > .overflow-y-auto { min-height: 0; }
+.app-modal :where(button, a, input, select, textarea):focus-visible,
+.auth-page :where(button, a, input):focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+.skip-link { position: fixed; inset-inline-start: 1rem; top: -5rem; z-index: 100; padding: 0.75rem 1rem; background: var(--bg-card); color: var(--text-main); border-radius: 0.75rem; }
+.skip-link:focus { top: 1rem; }
+button:disabled { cursor: not-allowed; }
+.form-popover button:disabled { opacity: 0.35; }
+@media (max-width: 639px) {
+  .app-modal :where(button, a) { min-height: 44px; }
+  input[type="time"] { font-size: 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

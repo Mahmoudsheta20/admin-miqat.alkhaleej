@@ -19,23 +19,12 @@ import {
   LayoutDashboard,
   UserCheck,
   FilePlus2,
-  Bell,
-  CheckCheck,
-  FileText,
   ShieldCheck,
   Lock,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useTheme } from "@/lib/themeContext";
-import { SystemNotification } from "@/lib/types";
 import { isSuperAdmin } from "@/lib/adminConstants";
-import {
-  getUserNotificationsAction,
-  getUnreadNotificationsCountAction,
-  markNotificationAsReadAction,
-  markAllNotificationsAsReadAction,
-} from "@/app/_actions/notification";
-import { fetchCached, invalidateClientCache } from "@/lib/clientCache";
 
 import ProfileModal from "./ProfileModal";
 
@@ -50,24 +39,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
   const [timeStr, setTimeStr] = useState("");
-  const [clockTime, setClockTime] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileTab, setProfileTab] = useState<"profile" | "password">("profile");
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  // Notifications state
-  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-
   const menuRef = useRef<HTMLDivElement>(null);
-  const notifRef = useRef<HTMLDivElement>(null);
 
   // Live Makkah Clock
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      setClockTime(now.getTime());
       setTimeStr(
         now.toLocaleTimeString("ar-SA", {
           hour: "2-digit",
@@ -83,121 +64,24 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Load full notifications list with caching (called when dropdown opens or updated)
-  const loadNotifications = async (forceRefresh = false) => {
-    return fetchCached("user_notifications", getUserNotificationsAction, {
-        ttlMs: 30_000,
-        forceRefresh,
-      }).then(res => {
-      if (res.success && res.notifications) {
-        setNotifications(res.notifications);
-        setUnreadCount(res.unreadCount || 0);
-      }
-    }).catch(err => {
-      console.warn("Header notifications load warning:", err);
-    });
-  };
-
-  // Lightweight poll: Only checks unread count integer every 60s with 45s client cache
-  const isPollingRef = useRef(false);
-  const pollUnreadCount = async () => {
-    if (isPollingRef.current) return;
-    isPollingRef.current = true;
-    return fetchCached(
-        "unread_notifications_count",
-        getUnreadNotificationsCountAction,
-        { ttlMs: 45_000 }
-      ).then(res => {
-      if (res?.success && typeof res.count === "number") {
-        setUnreadCount(res.count);
-      }
-    }).catch(() => {}).finally(() => {
-      isPollingRef.current = false;
-    });
-  };
-
-  useEffect(() => {
-    if (user?.id) {
-      pollUnreadCount();
-      const interval = setInterval(pollUnreadCount, 60000); // 60s lightweight count poll
-      return () => clearInterval(interval);
-    }
-  }, [user?.id]);
-
-  // Load full notifications list when user opens the notification dropdown
-  useEffect(() => {
-    if (isNotifOpen) {
-      loadNotifications(true);
-    }
-  }, [isNotifOpen]);
-
-  // Handle single notification click
-  const handleNotificationClick = async (notif: SystemNotification) => {
-    if (!notif.isRead) {
-      await markNotificationAsReadAction(notif.id);
-      invalidateClientCache("user_notifications");
-      invalidateClientCache("unread_notifications_count");
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    }
-    setIsNotifOpen(false);
-
-    if (notif.contractId) {
-      router.push(`/admin/contracts/${notif.contractId}`);
-    }
-  };
-
-  // Handle mark all notifications as read
-  const handleMarkAllRead = async () => {
-    await markAllNotificationsAsReadAction();
-    invalidateClientCache("user_notifications");
-    invalidateClientCache("unread_notifications_count");
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setUnreadCount(0);
-  };
-
-  // Arabic relative time helper
-  const formatArabicTime = (dateStr: string | Date) => {
-    try {
-      const d = new Date(dateStr);
-      const diff = Math.floor((clockTime - d.getTime()) / 1000);
-      if (diff < 60) return "الآن";
-      const min = Math.floor(diff / 60);
-      if (min < 60) return `منذ ${min} دقيقة`;
-      const hrs = Math.floor(min / 60);
-      if (hrs < 24) return `منذ ${hrs} ساعة`;
-      const days = Math.floor(hrs / 24);
-      if (days === 1) return "أمس";
-      return `منذ ${days} أيام`;
-    } catch {
-      return "";
-    }
-  };
-
-  // Close profile and notification dropdown on click outside or Escape
+  // Close profile dropdown on click outside or Escape
   useEffect(() => {
     const handleClickOutside = (event: PointerEvent) => {
       const target = event.target as Node;
       if (menuRef.current && !menuRef.current.contains(target)) {
         setIsProfileMenuOpen(false);
       }
-      if (notifRef.current && !notifRef.current.contains(target)) {
-        setIsNotifOpen(false);
-      }
+
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (isProfileMenuOpen) menuRef.current?.querySelector("button")?.focus();
-        if (isNotifOpen) notifRef.current?.querySelector("button")?.focus();
         setIsProfileMenuOpen(false);
-        setIsNotifOpen(false);
       }
     };
 
-    if (isProfileMenuOpen || isNotifOpen) {
+    if (isProfileMenuOpen) {
       document.addEventListener("pointerdown", handleClickOutside);
       document.addEventListener("keydown", handleEscape);
     }
@@ -206,7 +90,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
       document.removeEventListener("pointerdown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isProfileMenuOpen, isNotifOpen]);
+  }, [isProfileMenuOpen]);
 
   if (!user) return null;
 
@@ -240,7 +124,6 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => {
-                setIsNotifOpen(false);
                 setIsProfileMenuOpen(false);
                 onMenuToggle();
               }}
@@ -326,147 +209,10 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               )}
             </button>
 
-            {/* Notification Center Dropdown */}
-            <div className="relative" ref={notifRef}>
-              <button
-                onClick={() => {
-                  setIsProfileMenuOpen(false);
-                  setIsNotifOpen((prev) => !prev);
-                }}
-                className={`relative min-w-11 min-h-11 flex items-center justify-center rounded-xl border transition-all duration-200 ${
-                  isNotifOpen
-                    ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15"
-                    : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300"
-                }`}
-                title="مركز الإشعارات"
-                aria-label="مركز الإشعارات"
-                aria-controls="header-notifications"
-                aria-expanded={isNotifOpen}
-              >
-                <Bell className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-[#090e17] animate-pulse font-mono">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Notifications Dropdown Card */}
-              {isNotifOpen && (
-                <div
-                  className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-96 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
-                  id="header-notifications"
-                  aria-label="الإشعارات"
-                >
-                  <div className="flex items-center justify-between border-b theme-border px-4 py-2 lg:hidden">
-                    <p className="text-sm font-bold">الإشعارات</p>
-                    <button
-                      type="button"
-                      onClick={() => { setIsNotifOpen(false); notifRef.current?.querySelector("button")?.focus(); }}
-                      className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
-                      aria-label="إغلاق الإشعارات"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  {/* Dropdown Header */}
-                  <div className="p-3.5 px-4 bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-amber-500" />
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                        مركز الإشعارات
-                      </h4>
-                      {unreadCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-                          {unreadCount} جديد
-                        </span>
-                      )}
-                    </div>
-
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 transition"
-                      >
-                        <CheckCheck className="w-3 h-3" />
-                        <span>تحديد الكل كمقروء</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Notifications List */}
-                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-                    {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-slate-400">
-                        <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-xs font-medium">لا توجد إشعارات جديدة</p>
-                      </div>
-                    ) : (
-                      notifications.map((notif) => (
-                        <button
-                          type="button"
-                          key={notif.id}
-                          onClick={() => handleNotificationClick(notif)}
-                          className={`w-full p-3.5 px-4 cursor-pointer transition flex items-start gap-3 text-right ${
-                            !notif.isRead
-                              ? "bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800/50 opacity-80 hover:opacity-100"
-                          }`}
-                        >
-                          <div
-                            className={`p-2 rounded-xl shrink-0 mt-0.5 ${
-                              !notif.isRead
-                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                            }`}
-                          >
-                            <FileText className="w-4 h-4" />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                {notif.title}
-                              </p>
-                              {!notif.isRead && (
-                                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">
-                              {notif.message}
-                            </p>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 block font-medium">
-                              {formatArabicTime(notif.createdAt)}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Dropdown Footer */}
-                  {user.role === "ADMIN" && (
-                    <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-center">
-                      <button
-                        onClick={() => {
-                          setIsNotifOpen(false);
-                          router.push("/admin/contracts");
-                        }}
-                        className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline py-1"
-                      >
-                        الانتقال لسجل العقود الرسمي
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* User Profile Dropdown Menu */}
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => {
-                  setIsNotifOpen(false);
                   setIsProfileMenuOpen((prev) => !prev);
                 }}
                 className={`min-w-11 min-h-11 flex items-center justify-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1 rounded-xl border transition-all duration-200 text-right ${
