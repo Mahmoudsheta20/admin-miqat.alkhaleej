@@ -21,6 +21,7 @@ import { getContracts } from "@/app/_actions/contract";
 import { Contract, VehicleInspection } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
+import InspectionDownloadButton from "@/app/_components/InspectionDownloadButton";
 import ProfileModal from "@/app/_components/ProfileModal";
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 
@@ -201,7 +202,8 @@ export default function CaptainHomePage() {
             </div>
           </div>
 
-          <div className="w-full sm:w-auto shrink-0">
+          <div className="flex w-full flex-col gap-2 sm:w-auto shrink-0">
+            {inspection && <InspectionDownloadButton key={inspection.id} inspectionId={inspection.id} />}
             {hasInspectionToday ? (
               <Link
                 href="/captain/contract"

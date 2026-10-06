@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import InspectionDownloadButton from "@/app/_components/InspectionDownloadButton";
+import type { VehicleInspection } from "@/lib/types";
 import {
   ClipboardCheck,
   CheckCircle2,
@@ -65,9 +67,10 @@ export default function CaptainInspectionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [alreadyInspected, setAlreadyInspected] = useState(() => {
-    return Boolean(user && getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection);
-  });
+  const [inspection, setInspection] = useState<VehicleInspection | null>(() =>
+    user ? getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection || null : null
+  );
+  const alreadyInspected = Boolean(inspection);
 
   // 16 boolean flags
   const [checks, setChecks] = useState<Record<string, boolean>>({
@@ -93,7 +96,7 @@ export default function CaptainInspectionPage() {
     if (user?.id) {
       fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then((res) => {
         if (res.success && res.inspection) {
-          setAlreadyInspected(true);
+          setInspection(res.inspection);
         }
       });
     }
@@ -148,13 +151,13 @@ export default function CaptainInspectionPage() {
     const res = await submitInspection(payload);
     setIsSubmitting(false);
 
-    if (res.success) {
+    if (res.success && res.inspection) {
       invalidateClientCache("captain_inspection_");
       invalidateClientCache("inspections_");
       invalidateClientCache("captains_list");
       invalidateClientCache("dashboard_stats");
       setSubmittedSuccess(true);
-      setAlreadyInspected(true);
+      setInspection(res.inspection);
     } else {
       setErrorMessage(res.error || "فشل تسجيل الفحص");
     }
@@ -193,6 +196,8 @@ export default function CaptainInspectionPage() {
         </div>
       </div>
 
+      {inspection && !submittedSuccess && <InspectionDownloadButton key={inspection.id} inspectionId={inspection.id} />}
+
       {alreadyInspected && !submittedSuccess && (
         <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-blue-900 dark:text-blue-200 text-xs">
           <div className="flex items-center gap-2.5 font-bold">
@@ -219,7 +224,8 @@ export default function CaptainInspectionPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
             تم اعتماد جاهزية الحافلة ({vehiclePlate}) لليوم. تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.
           </p>
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="pt-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3">
+            {inspection && <InspectionDownloadButton key={inspection.id} inspectionId={inspection.id} />}
             <Link
               href="/captain"
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-center"
