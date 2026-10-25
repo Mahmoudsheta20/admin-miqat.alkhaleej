@@ -16,9 +16,10 @@ import {
   Camera,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
-import { getTodayInspection } from "@/app/_actions/inspection";
+import { getTodayInspection, getAllInspectionsList } from "@/app/_actions/inspection";
 import { getContracts } from "@/app/_actions/contract";
 import { Contract, VehicleInspection } from "@/lib/types";
+import { formatOfficialDate } from "@/lib/contractConstants";
 import StatusBadge from "@/app/_components/StatusBadge";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import InspectionDownloadButton from "@/app/_components/InspectionDownloadButton";
@@ -56,8 +57,15 @@ export default function CaptainHomePage() {
         }),
       ]);
 
-      if (inspRes.success) {
-        setInspection(inspRes.inspection || null);
+      if (inspRes.success && inspRes.inspection) {
+        setInspection(inspRes.inspection);
+      } else {
+        const listRes = await getAllInspectionsList({ captainId: user.id, limit: 1 });
+        if (listRes.success && listRes.inspections && listRes.inspections.length > 0) {
+          setInspection(listRes.inspections[0]);
+        } else {
+          setInspection(null);
+        }
       }
       if (contrRes.success && contrRes.contracts) {
         setContracts(contrRes.contracts);
@@ -191,13 +199,13 @@ export default function CaptainHomePage() {
             <div>
               <h2 className="text-sm sm:text-lg font-black flex items-center gap-2">
                 {hasInspectionToday
-                  ? "تم تسجيل الفحص اليومي للمركبة بنجاح"
-                  : "فحص المركبة اليومي غير مسجل حتى الآن"}
+                  ? "تم اعتماد الفحص التشغيلي للمركبة بنجاح"
+                  : "فحص المركبة التشغيلي غير مسجل حتى الآن"}
               </h2>
               <p className="text-xs sm:text-sm mt-1 opacity-80 leading-relaxed max-w-2xl">
                 {hasInspectionToday
-                  ? `أكملت بنود الفحص الميداني الـ 16 اليوم. حافلتك (${inspection.vehiclePlate}) جاهزة للتشغيل، ويمكنك الآن إصدار وتوثيق عقود النقل البري الرسمية.`
-                  : "بناءً على اشتراطات هيئة النقل للسلامة، يجب إتمام قائمة الفحص اليومي الـ 16 للمركبة لفتح صلاحية إصدار عقود الرحلات وكشف الركاب."}
+                  ? `أكملت بنود الفحص الميداني الـ 16 للمركبة (${inspection.vehiclePlate}) بتاريخ ${formatOfficialDate(inspection.inspectionDate)}. حافلتك جاهزة للتشغيل، ويمكنك الآن إصدار وتوثيق عقود النقل البري الرسمية.`
+                  : "بناءً على اشتراطات هيئة النقل للسلامة، يجب إتمام قائمة الفحص التشغيلي الـ 16 للمركبة لفتح صلاحية إصدار عقود الرحلات وكشف الركاب."}
               </p>
             </div>
           </div>

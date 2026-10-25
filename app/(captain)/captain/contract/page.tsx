@@ -18,10 +18,10 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
-import { getTodayInspection } from "@/app/_actions/inspection";
+import { getTodayInspection, getAllInspectionsList } from "@/app/_actions/inspection";
 import { submitContract, ContractFormPayload } from "@/app/_actions/contract";
 import { OperationType, VehicleInspection } from "@/lib/types";
-import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
+import { getSaudiTodayDateStr, getSaudiCurrentTimeStr, formatOfficialDate } from "@/lib/contractConstants";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
@@ -92,14 +92,28 @@ export default function CaptainContractBuilderPage() {
 
   useEffect(() => {
     if (user?.id) {
-      fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then((res) => {
+      fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then(async (res) => {
         if (res.success && res.inspection) {
           setTodayInspection(res.inspection);
           if (res.inspection.vehiclePlate) {
             setValue("vehiclePlate", res.inspection.vehiclePlate);
           }
+          setCheckingInspection(false);
+        } else {
+          try {
+            const listRes = await getAllInspectionsList({ captainId: user.id, limit: 1 });
+            if (listRes.success && listRes.inspections && listRes.inspections.length > 0) {
+              setTodayInspection(listRes.inspections[0]);
+              if (listRes.inspections[0].vehiclePlate) {
+                setValue("vehiclePlate", listRes.inspections[0].vehiclePlate);
+              }
+            }
+          } catch (e) {
+            console.error("Failed to load fallback inspection:", e);
+          } finally {
+            setCheckingInspection(false);
+          }
         }
-        setCheckingInspection(false);
       });
     }
   }, [user, setValue]);
@@ -309,7 +323,7 @@ export default function CaptainContractBuilderPage() {
         <div className="flex items-center gap-2">
           <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            فحص اليوم معتمد ({todayInspection.vehiclePlate})
+            فحص المركبة معتمد ({todayInspection.vehiclePlate}) • {formatOfficialDate(todayInspection.inspectionDate)}
           </span>
         </div>
       </div>
