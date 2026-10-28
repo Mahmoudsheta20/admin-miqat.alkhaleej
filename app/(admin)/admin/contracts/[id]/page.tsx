@@ -205,6 +205,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
 
   return (
     <div className="space-y-6 pb-16" dir="rtl">
+      <Link href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`} className="inline-flex rounded-xl theme-card border px-4 py-2 text-sm font-bold text-amber-700 dark:text-amber-400">إنشاء فاتورة مرتبطة بالعقد</Link>
       {/* Top Breadcrumbs & Nav */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

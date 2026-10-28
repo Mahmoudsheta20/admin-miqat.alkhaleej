@@ -84,6 +84,8 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["ADMIN"],
   },
 
+  { href: "/admin/invoices", label: "الفواتير", icon: <FileText className="w-4 h-4" />, roles: ["ADMIN"] },
+
   // Captain Navigation
   {
     href: "/captain",
