@@ -21,6 +21,7 @@ import {
   FilePlus2,
   ShieldCheck,
   Lock,
+  ReceiptText,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useTheme } from "@/lib/themeContext";
@@ -179,16 +180,26 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               </button>
             )}
 
-            {/* Admin Quick Action */}
+            {/* Admin Quick Actions */}
             {user.role === "ADMIN" && (
-              <button
-                onClick={() => router.push("/admin/contracts")}
-                className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
-                title="سجل العقود الرسمية"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">سجل العقود</span>
-              </button>
+              <div className="hidden lg:flex items-center gap-2">
+                <button
+                  onClick={() => router.push("/admin/invoices/new")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs transition shadow-2xs font-bold cursor-pointer"
+                  title="إنشاء فاتورة جديدة"
+                >
+                  <ReceiptText className="w-3.5 h-3.5" />
+                  <span>+ فاتورة</span>
+                </button>
+                <button
+                  onClick={() => router.push("/admin/contracts/new")}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold cursor-pointer"
+                  title="إنشاء عقد رسمي جديد"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>عقد جديد</span>
+                </button>
+              </div>
             )}
 
             {/* Theme Switcher Button */}

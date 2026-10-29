@@ -12,6 +12,9 @@ import {
   RefreshCw,
   FileText,
   ChevronLeft,
+  FilePlus2,
+  ReceiptText,
+  Eye,
 } from "lucide-react";
 import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
 import StatusBadge from "@/app/_components/StatusBadge";
@@ -78,13 +81,95 @@ export default function AdminDashboardPage() {
             تحديث
           </button>
           <Link
-            href="/admin/contracts"
+            href="/admin/invoices/new"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 transition min-h-[42px]"
+          >
+            <ReceiptText className="w-4 h-4" />
+            <span>+ فاتورة</span>
+          </Link>
+          <Link
+            href="/admin/contracts/new"
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-sm min-h-[42px]"
           >
-            <FileText className="w-4 h-4" />
-            سجل العقود
+            <FilePlus2 className="w-4 h-4" />
+            <span>+ عقد جديد</span>
           </Link>
         </div>
+      </div>
+
+      {/* Quick Daily Operations Shortcuts */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Link
+          href="/admin/contracts/new"
+          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <FilePlus2 className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                إنشاء عقد رحلة
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">توثيق رحلة وكشف ركاب</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
+        </Link>
+
+        <Link
+          href="/admin/invoices/new"
+          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ReceiptText className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                إصدار فاتورة
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">فاتورة حجز أو مبدئية</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
+        </Link>
+
+        <Link
+          href="/admin/inspections"
+          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <ClipboardCheck className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                الفحص المباشر
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">اعتماد فحص الكباتن اليومي</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
+        </Link>
+
+        <Link
+          href="/admin/invoices"
+          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                سجل الفواتير
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">مراجعة وتحميل الفواتير</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
+        </Link>
       </div>
 
       {/* KPI Cards Grid */}
@@ -284,14 +369,30 @@ export default function AdminDashboardPage() {
                           {c.passengersCount} ركاب
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-left">
-                        <button
-                          onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
-                        >
-                          <FileText className="w-3.5 h-3.5 text-amber-500" />
-                          عرض العقد
-                        </button>
+                      <td className="px-5 py-3.5 text-left whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            href={`/admin/contracts/${encodeURIComponent(c.id)}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-amber-500" />
+                            <span>تفاصيل</span>
+                          </Link>
+                          <Link
+                            href={`/admin/invoices/new?contractId=${encodeURIComponent(c.id)}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold transition text-xs"
+                          >
+                            <ReceiptText className="w-3.5 h-3.5" />
+                            <span>فاتورة</span>
+                          </Link>
+                          <button
+                            onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg gold-gradient-btn font-bold transition text-xs cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>PDF</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

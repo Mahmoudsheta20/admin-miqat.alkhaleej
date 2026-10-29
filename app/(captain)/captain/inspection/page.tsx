@@ -18,8 +18,6 @@ import {
   Calendar,
   Clock,
   Eye,
-  FileText,
-  Car,
   RotateCw,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
@@ -152,7 +150,6 @@ export default function CaptainInspectionPage() {
       });
 
       // 2. Fetch Captain's Inspection History
-      setIsLoadingHistory(true);
       fetchCached(`captain_inspections_history_${user.id}`, () => getAllInspectionsList({ captainId: user.id, limit: 30 }), { ttlMs: 60_000 }).then((res) => {
         if (res.success && res.inspections) {
           setHistoryList(res.inspections);

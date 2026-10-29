@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FileText, FilePlus2, UserCheck, ClipboardCheck, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, FileText, FilePlus2, ClipboardCheck, ReceiptText, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import type { UserRole } from "@/lib/types";
 import Header from "./Header";
@@ -15,7 +15,7 @@ const ADMIN_LINKS: MobileNavItem[] = [
   { href: "/admin", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/admin/contracts", label: "العقود", icon: FileText },
   { href: "/admin/contracts/new", label: "عقد جديد", icon: FilePlus2 },
-  { href: "/admin/captains", label: "الكباتن", icon: UserCheck },
+  { href: "/admin/invoices", label: "الفواتير", icon: ReceiptText },
   { href: "/admin/inspections", label: "الفحوصات", icon: ClipboardCheck },
 ];
 const CAPTAIN_LINKS: MobileNavItem[] = [

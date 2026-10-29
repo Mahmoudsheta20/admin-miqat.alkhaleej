@@ -494,10 +494,21 @@ export default function AdminInspectionsPage() {
         </div>
       </div>
 
-      {/* KPI Stats Cards */}
+      {/* KPI Stats Cards (Interactive Filter Triggers) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Captains */}
-        <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border relative overflow-hidden group">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("captains");
+            setStatusFilter("ALL");
+          }}
+          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
+            activeTab === "captains" && statusFilter === "ALL"
+              ? "border-blue-500/40 ring-1 ring-blue-500/30 bg-blue-500/[0.03]"
+              : "theme-border hover:border-blue-500/30"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
               إجمالي الكباتن النشطين
@@ -509,11 +520,22 @@ export default function AdminInspectionsPage() {
           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
             {stats.totalCaptains}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">كابتن مسجل ومصرح بالعمل</p>
-        </div>
+          <p className="text-[11px] text-slate-400 mt-1">اضغط لعرض جميع الكباتن</p>
+        </button>
 
         {/* Inspected Today */}
-        <div className="theme-card p-4 sm:p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 relative overflow-hidden group">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("captains");
+            setStatusFilter("INSPECTED");
+          }}
+          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
+            activeTab === "captains" && statusFilter === "INSPECTED"
+              ? "border-emerald-500/60 ring-1 ring-emerald-500/40 bg-emerald-500/10"
+              : "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
               تم فحصهم اليوم
@@ -528,10 +550,21 @@ export default function AdminInspectionsPage() {
           <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-1">
             جاهزون ومؤهلون لإنشاء الرحلات
           </p>
-        </div>
+        </button>
 
         {/* Pending Today */}
-        <div className="theme-card p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 relative overflow-hidden group">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("captains");
+            setStatusFilter("PENDING");
+          }}
+          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
+            activeTab === "captains" && statusFilter === "PENDING"
+              ? "border-amber-500/60 ring-1 ring-amber-500/40 bg-amber-500/10"
+              : "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
               بانتظار الفحص اليوم
@@ -546,24 +579,74 @@ export default function AdminInspectionsPage() {
           <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-1">
             يتطلب إتمام الفحص قبل الرحلة
           </p>
-        </div>
+        </button>
 
         {/* Total Historical Inspections */}
-        <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border relative overflow-hidden group">
+        <button
+          type="button"
+          onClick={() => setActiveTab("history")}
+          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
+            activeTab === "history"
+              ? "border-amber-500/50 ring-1 ring-amber-500/30 bg-amber-500/5"
+              : "theme-border hover:border-amber-500/30"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
               إجمالي الفحوصات الموثقة
             </span>
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <ClipboardCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
             {stats.totalInspections}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">سجل تشغيلي محفوظ في النظام</p>
-        </div>
+          <p className="text-[11px] text-slate-400 mt-1">اضغط لعرض سجل الفحوصات</p>
+        </button>
       </div>
+
+      {/* Daily Fleet Readiness Progress Bar */}
+      {stats.totalCaptains > 0 && (
+        <div className="theme-card px-4 py-3 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+                <span className="text-slate-700 dark:text-slate-200">
+                  مؤشر جاهزية الكباتن للفحص اليومي
+                </span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                  {Math.round((stats.inspectedToday / Math.max(1, stats.totalCaptains)) * 100)}% ({stats.inspectedToday}/{stats.totalCaptains})
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-l from-emerald-500 to-amber-500 transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, Math.round((stats.inspectedToday / Math.max(1, stats.totalCaptains)) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {stats.pendingToday > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("captains");
+                setStatusFilter("PENDING");
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-bold transition shrink-0 cursor-pointer"
+            >
+              عرض الكباتن بانتظار الفحص ({stats.pendingToday})
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Tabs & Search Filter Bar */}
       <div className="theme-card p-3 sm:p-4 rounded-2xl border theme-border space-y-3">

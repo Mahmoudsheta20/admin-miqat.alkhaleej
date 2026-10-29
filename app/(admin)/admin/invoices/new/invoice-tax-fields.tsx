@@ -1,0 +1,21 @@
+"use client";
+import { useEffect, useState } from "react";
+import { invoiceRequest, type InvoiceDetail, type TaxDocument } from "@/lib/invoices";
+interface OriginalOption { id: string; invoiceNumber: string; customerName: string }
+interface InvoiceTaxFieldsProps { value: TaxDocument; original: InvoiceDetail | null; onChange: (value: TaxDocument) => void; onSelectOriginal: (id: string) => void }
+const INPUT = "theme-input mt-1.5 h-11 w-full rounded-xl px-3 text-sm";
+export default function InvoiceTaxFields({ value, original, onChange, onSelectOriginal }: InvoiceTaxFieldsProps) {
+  const [search, setSearch] = useState(""), [items, setItems] = useState<OriginalOption[]>([]), [error, setError] = useState("");
+  useEffect(() => {
+    if (value.kind === "INVOICE") return;
+    let active = true;
+    const timer = setTimeout(() => { void invoiceRequest<{ items: OriginalOption[] }>(`/tax-originals?search=${encodeURIComponent(search)}`).then(result => { if (active) { setItems(result.data?.items || []); setError(result.error || ""); } }); }, 200);
+    return () => { active = false; clearTimeout(timer); };
+  }, [search, value.kind]);
+  return <section className="theme-card rounded-2xl p-5 sm:p-6"><h2 className="font-bold">نوع المستند الضريبي</h2><p className="mt-2 text-xs leading-relaxed text-amber-700 dark:text-amber-400">الحفظ والطباعة محليًا · الاتصال بالهيئة متوقف · QR ضريبي للمرحلة الأولى</p><div className="mt-5 grid gap-4 sm:grid-cols-2">
+    <label className="text-sm font-bold">المستند<select className={INPUT} value={value.kind} onChange={event => onChange({ ...value, kind: event.target.value as TaxDocument["kind"], originalInvoiceId: undefined, adjustmentReason: undefined, adjustmentEventDate: undefined })}><option value="INVOICE">فاتورة ضريبية</option><option value="CREDIT">إشعار دائن / إلغاء أو استرداد</option><option value="DEBIT">إشعار مدين / رسوم إضافية</option></select></label>
+    <label className="text-sm font-bold">تصنيف الفاتورة<select disabled={Boolean(original)} className={INPUT} value={value.profile} onChange={event => onChange({ ...value, profile: event.target.value as TaxDocument["profile"] })}><option value="SIMPLIFIED">ضريبية مبسطة (أفراد)</option><option value="STANDARD">ضريبية (منشآت)</option></select></label>
+    <label className="text-sm font-bold">تاريخ التوريد / الرحلة<input required type="date" className={INPUT} value={value.supplyDate} onChange={event => onChange({ ...value, supplyDate: event.target.value })} /></label>
+    {value.kind !== "INVOICE" && <><label className="text-sm font-bold">تاريخ واقعة الإلغاء أو الرسوم *<input required type="date" className={INPUT} value={value.adjustmentEventDate || ""} onChange={event => onChange({ ...value, adjustmentEventDate: event.target.value })} /><span className="mt-1 block text-xs font-normal text-slate-500">يحدد فترة احتساب الزيادة للمدين؛ تخفيض الدائن يكون عند الإصدار أو الواقعة أيهما لاحق.</span></label><label className="text-sm font-bold">بحث عن الفاتورة الأصلية<input className={INPUT} value={search} placeholder="رقم الفاتورة أو اسم العميل" onChange={event => setSearch(event.target.value)} /></label><label className="text-sm font-bold sm:col-span-2">الفاتورة الأصلية<select required className={INPUT} value={value.originalInvoiceId || ""} onChange={event => onSelectOriginal(event.target.value)}><option value="">اختر الفاتورة الأصلية</option>{original && !items.some(item => item.id === original.id) && <option value={original.id}>{original.invoiceNumber} · {original.customerName}</option>}{items.map(item => <option key={item.id} value={item.id}>{item.invoiceNumber} · {item.customerName}</option>)}</select></label><label className="text-sm font-bold sm:col-span-2">سبب إصدار الإشعار<input required maxLength={200} className={INPUT} placeholder={value.kind === "CREDIT" ? "مثل: إلغاء الرحلة أو استرداد جزئي" : "مثل: تغيير المسار أو ترقية المركبة"} value={value.adjustmentReason || ""} onChange={event => onChange({ ...value, adjustmentReason: event.target.value })} /></label><p className="text-xs text-slate-500 sm:col-span-2">تُنسخ بيانات العميل والتصنيف من الفاتورة الأصلية، ويمكن تعديل قيم الخدمات للإشعار.</p></>}
+  </div>{error && <p role="alert" className="mt-3 text-xs text-rose-600">{error}</p>}</section>;
+}

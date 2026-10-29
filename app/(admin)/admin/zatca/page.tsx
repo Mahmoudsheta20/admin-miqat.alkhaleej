@@ -1,2 +1,16 @@
-import { redirect } from "next/navigation";
-export default function ZatcaPage() { redirect("/admin/invoices"); }
+"use client";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { invoiceTitle, dateLabel, invoiceRequest, type InvoiceRow } from "@/lib/invoices";
+interface InvoiceList { items: InvoiceRow[]; total: number; page: number }
+export default function ZatcaPage() {
+  const [data, setData] = useState<InvoiceList | null>(null), [error, setError] = useState(""), [page, setPage] = useState(1);
+  const load = useCallback(async () => { const result = await invoiceRequest<InvoiceList>(`?page=${page}&documentType=TAX`); setError(result.error || ""); if (result.data) setData(result.data); }, [page]);
+  useEffect(() => { let active = true; void invoiceRequest<InvoiceList>(`?page=${page}&documentType=TAX`).then(result => { if (!active) return; setError(result.error || ""); if (result.data) setData(result.data); }); return () => { active = false; }; }, [page]);
+  return <div className="space-y-6" dir="rtl"><header className="flex flex-wrap items-center justify-between gap-4"><div><h1 className="text-2xl font-bold">الفوترة الضريبية</h1><p className="mt-2 text-slate-500">فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة · حفظ محلي دون اتصال بالهيئة.</p></div><div className="flex flex-wrap gap-3"><Link className="theme-card px-4 py-2 rounded-xl" href="/admin/invoices/settings">بيانات الشركة</Link><Link className="gold-gradient-btn px-4 py-2 rounded-xl" href="/admin/zatca/new">إنشاء مستند ضريبي</Link></div></header>
+    {error && <p role="alert" className="text-rose-600">{error}</p>}
+    <div className="flex items-center justify-between gap-3 text-sm text-slate-500"><p>{data?.total || 0} فاتورة</p><button className="theme-card rounded-lg px-3 py-2" onClick={() => void load()}>تحديث</button></div>
+    <div className="theme-card rounded-2xl overflow-x-auto"><table className="w-full text-sm text-right"><thead className="theme-card-subtle"><tr>{["رقم الفاتورة", "النوع", "العميل", "الإجمالي", "الضريبة", "تاريخ الفاتورة"].map(label => <th key={label} className="p-4 whitespace-nowrap">{label}</th>)}</tr></thead><tbody>{data?.items.map(row => <tr key={row.id} className="border-t theme-border"><td className="p-4"><Link className="text-amber-700 dark:text-amber-400 font-bold font-mono" href={`/admin/invoices/${row.id}`}>{row.invoiceNumber}</Link></td><td className="p-4 whitespace-nowrap">{invoiceTitle(row)}</td><td className="p-4">{row.customerName}</td><td className="p-4 font-mono">{row.totalAmount} ر.س</td><td className="p-4 font-mono text-slate-500">{row.vatAmount}</td><td className="p-4 whitespace-nowrap">{dateLabel(row.invoiceDate)}</td></tr>)}</tbody></table>{!data && !error && <p role="status" className="p-6 animate-pulse">جارٍ تحميل الفواتير…</p>}{data?.items.length === 0 && <p className="p-8 text-slate-500">لا توجد مستندات ضريبية محلية حتى الآن.</p>}</div>
+    <div className="flex gap-4 items-center"><button disabled={page === 1} className="theme-card px-4 py-2 rounded-lg disabled:opacity-40" onClick={() => setPage(page - 1)}>السابق</button><span>صفحة {page}</span><button disabled={!data || page * 30 >= data.total} className="theme-card px-4 py-2 rounded-lg disabled:opacity-40" onClick={() => setPage(page + 1)}>التالي</button></div>
+  </div>;
+}

@@ -17,6 +17,7 @@ import {
   X,
   Shield,
   ShieldCheck,
+  ReceiptText,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { UserRole, SystemUser } from "@/lib/types";
@@ -84,7 +85,16 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["ADMIN"],
   },
 
-  { href: "/admin/invoices", label: "الفواتير", icon: <FileText className="w-4 h-4" />, roles: ["ADMIN"] },
+  {
+    href: "/admin/invoices",
+    label: "الفواتير",
+    icon: <ReceiptText className="w-4 h-4" />,
+    roles: ["ADMIN"],
+  },
+
+  { href: "/admin/zatca", label: "الفوترة الضريبية", icon: <ShieldCheck className="w-4 h-4" />, roles: ["ADMIN"] },
+  { href: "/admin/purchases", label: "المشتريات والمصروفات", icon: <ReceiptText className="w-4 h-4" />, roles: ["ADMIN"] },
+  { href: "/admin/vat-returns", label: "الإقرار الضريبي", icon: <ClipboardCheck className="w-4 h-4" />, roles: ["ADMIN"] },
 
   // Captain Navigation
   {

@@ -20,14 +20,15 @@ export function emptyBooking(): InvoiceBooking {
   return { type: "ONE_WAY", returnDate: "", returnTime: "", hours: "1", stops: [""], email: "" };
 }
 export function bookingNotes(booking: InvoiceBooking, transport: TransportDetails): string {
-  return [
+  const generated = [
     `نوع الحجز: ${BOOKING_TYPE_LABELS[booking.type]}`,
     booking.type === "ROUND_TRIP" ? `العودة: ${booking.returnDate} ${booking.returnTime} (السعودية)` : "",
     booking.type === "HOURLY" ? `مدة الحجز: ${booking.hours} ساعة` : "",
     booking.type === "MULTI_STOP" ? `الوجهات الإضافية: ${booking.stops.map(stop => stop.trim()).filter(Boolean).join(" ← ")}` : "",
     booking.email.trim() ? `البريد الإلكتروني: ${booking.email.trim()}` : "",
-    transport.notes?.trim() || "",
-  ].filter(Boolean).join("\n");
+  ].filter(Boolean);
+  const notes = (transport.notes || "").split("\n").filter(line => !generated.includes(line.trim())).join("\n").trim();
+  return [...generated, notes].filter(Boolean).join("\n");
 }
 export function validateBooking(booking: InvoiceBooking, transport: TransportDetails): string | undefined {
   if (booking.type === "ROUND_TRIP") {

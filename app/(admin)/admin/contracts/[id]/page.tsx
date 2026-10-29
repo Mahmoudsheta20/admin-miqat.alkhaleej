@@ -18,6 +18,7 @@ import {
   Printer,
   ShieldCheck,
   RotateCcw,
+  ReceiptText,
 } from "lucide-react";
 import { Contract, ContractStatus } from "@/lib/types";
 import { getContractById, updateContractStatusAction } from "@/app/_actions/contract";
@@ -205,7 +206,6 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
 
   return (
     <div className="space-y-6 pb-16" dir="rtl">
-      <Link href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`} className="inline-flex rounded-xl theme-card border px-4 py-2 text-sm font-bold text-amber-700 dark:text-amber-400">إنشاء فاتورة مرتبطة بالعقد</Link>
       {/* Top Breadcrumbs & Nav */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -242,6 +242,14 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
+            className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+          >
+            <ReceiptText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>إنشاء فاتورة مرتبطة بالعقد</span>
+          </Link>
+
           {contract.pdfPath && (
             <a
               href={contract.pdfPath}

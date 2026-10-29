@@ -38,3 +38,9 @@ test('booking notes preserve selected trip details, email and manual notes for t
   assert.ok(validateBooking({ ...booking, type: 'HOURLY', hours: '0' }, transport));
   assert.equal(validateBooking({ ...booking, type: 'HOURLY', hours: '200' }, transport), undefined);
 });
+
+test('copying an original invoice into a note does not duplicate generated booking metadata', () => {
+  const booking = emptyBooking();
+  const notes = bookingNotes(booking, transport);
+  assert.equal(bookingNotes(booking, { ...transport, notes }), notes);
+});

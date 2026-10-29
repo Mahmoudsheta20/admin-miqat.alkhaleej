@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
     const rawBackend = (
       process.env.BACKEND_URL ||
       process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "http://63.188.195.14"
+      "http://localhost:5001"
     )
       .trim()
       .replace(/^["']+|["']+$/g, "")
