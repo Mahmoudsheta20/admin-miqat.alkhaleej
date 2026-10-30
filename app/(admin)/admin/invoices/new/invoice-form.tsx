@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -29,24 +22,15 @@ import {
   Wallet,
 } from "lucide-react";
 
-import InvoiceTypeSelector, {
-  type UnifiedDocChoice,
-} from "./invoice-type-selector";
-import InvoiceBankFields, {
-  EMPTY_BANK,
-} from "@/app/_components/InvoiceBankFields";
+import InvoiceTypeSelector, { type UnifiedDocChoice } from "./invoice-type-selector";
+import InvoiceBankFields, { EMPTY_BANK } from "@/app/_components/InvoiceBankFields";
 import InvoicePhoneField from "./invoice-phone-field";
 import { invoicePhoneFrom, invoicePhoneNumber } from "@/lib/invoice-phone";
 import BookingFields from "./booking-fields";
 import ContractPicker, { type InvoiceContractOption } from "./contract-picker";
 import InvoiceLineEditor from "./invoice-line-editor";
 import TransportFields from "./transport-fields";
-import {
-  bookingNotes,
-  emptyBooking,
-  validateBooking,
-  type InvoiceBooking,
-} from "@/lib/invoice-booking";
+import { bookingNotes, emptyBooking, validateBooking, type InvoiceBooking } from "@/lib/invoice-booking";
 import { getVehicles } from "@/app/_actions/fleet";
 import type { Vehicle } from "@/lib/types";
 import {
@@ -56,11 +40,7 @@ import {
   type TransportDetails,
   type TransportDefaults,
 } from "@/lib/invoice-transport";
-import {
-  emptyInvoiceLine,
-  estimateInvoice,
-  saudiDateTimeInput,
-} from "@/lib/invoice-draft";
+import { emptyInvoiceLine, estimateInvoice, saudiDateTimeInput } from "@/lib/invoice-draft";
 import {
   INVOICE_TYPE_LABELS,
   invoiceRequest,
@@ -73,11 +53,7 @@ import {
 } from "@/lib/invoices";
 import { accountingRequest } from "@/lib/accounting";
 
-export type FormStage =
-  | "DOCUMENT_AND_CUSTOMER"
-  | "TRIP_AND_SERVICE"
-  | "PRICE_AND_TAX"
-  | "PAYMENT_AND_REVIEW";
+export type FormStage = "DOCUMENT_AND_CUSTOMER" | "TRIP_AND_SERVICE" | "PRICE_AND_TAX" | "PAYMENT_AND_REVIEW";
 
 interface InvoiceFormProps {
   contractId?: string;
@@ -116,49 +92,21 @@ const EMPTY_BUYER: BuyerForm = {
 const INPUT =
   "theme-input mt-1.5 h-11 w-full min-w-0 rounded-xl px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30";
 
-const STAGES: {
-  id: FormStage;
-  number: string;
-  title: string;
-  subtitle: string;
-}[] = [
-  {
-    id: "DOCUMENT_AND_CUSTOMER",
-    number: "١",
-    title: "نوع المستند والعميل",
-    subtitle: "اختر نوع المستند وبيانات العميل",
-  },
-  {
-    id: "TRIP_AND_SERVICE",
-    number: "٢",
-    title: "مسار الرحلة والخدمة",
-    subtitle: "حدد مسار الرحلة وموعدها والمركبة",
-  },
-  {
-    id: "PRICE_AND_TAX",
-    number: "٣",
-    title: "السعر والضريبة",
-    subtitle: "أدخل قيمة الخدمة والمعاملة الضريبية",
-  },
-  {
-    id: "PAYMENT_AND_REVIEW",
-    number: "٤",
-    title: "الدفع والمراجعة",
-    subtitle: "هل دفع العميل والمراجعة النهائية",
-  },
+const STAGES: { id: FormStage; number: string; title: string; subtitle: string }[] = [
+  { id: "DOCUMENT_AND_CUSTOMER", number: "١", title: "نوع المستند والعميل", subtitle: "اختر نوع المستند وبيانات العميل" },
+  { id: "TRIP_AND_SERVICE", number: "٢", title: "مسار الرحلة والخدمة", subtitle: "حدد مسار الرحلة وموعدها والمركبة" },
+  { id: "PRICE_AND_TAX", number: "٣", title: "السعر والضريبة", subtitle: "أدخل قيمة الخدمة والمعاملة الضريبية" },
+  { id: "PAYMENT_AND_REVIEW", number: "٤", title: "الدفع والمراجعة", subtitle: "هل دفع العميل والمراجعة النهائية" },
 ];
 
 function difference(before: string, after: string): string {
-  const cents =
-    BigInt(before.replace(".", "")) - BigInt(after.replace(".", ""));
+  const cents = BigInt(before.replace(".", "")) - BigInt(after.replace(".", ""));
   return `${cents / BigInt(100)}.${String(cents % BigInt(100)).padStart(2, "0")}`;
 }
 
 function amount(value: string): string {
   const [whole, decimals] = value.split(".");
-  return decimals === undefined
-    ? value
-    : `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${decimals}`;
+  return decimals === undefined ? value : `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${decimals}`;
 }
 
 export default function InvoiceForm({
@@ -170,12 +118,9 @@ export default function InvoiceForm({
   const router = useRouter();
 
   // Active Stepper Stage
-  const [currentStage, setCurrentStage] = useState<FormStage>(
-    "DOCUMENT_AND_CUSTOMER",
-  );
+  const [currentStage, setCurrentStage] = useState<FormStage>("DOCUMENT_AND_CUSTOMER");
 
-  const [documentType, setDocumentType] =
-    useState<InvoiceDocumentType>(initialDocumentType);
+  const [documentType, setDocumentType] = useState<InvoiceDocumentType>(initialDocumentType);
   const [taxDocument, setTaxDocument] = useState<TaxDocument>({
     kind: noteKind,
     profile: "SIMPLIFIED",
@@ -198,16 +143,10 @@ export default function InvoiceForm({
   const [isReviewed, setIsReviewed] = useState(false);
 
   // Simplified Payment UX: "هل دفع العميل؟"
-  const [paymentStatusChoice, setPaymentStatusChoice] = useState<
-    "NOT_PAID" | "FULLY_PAID" | "PARTIALLY_PAID"
-  >("NOT_PAID");
-  const [fullPaymentMethod, setFullPaymentMethod] = useState<
-    "BANK_TRANSFER" | "CASH" | "CARD"
-  >("BANK_TRANSFER");
+  const [paymentStatusChoice, setPaymentStatusChoice] = useState<"NOT_PAID" | "FULLY_PAID" | "PARTIALLY_PAID">("NOT_PAID");
+  const [fullPaymentMethod, setFullPaymentMethod] = useState<"BANK_TRANSFER" | "CASH" | "CARD">("BANK_TRANSFER");
   const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>("");
-  const [partialPaymentMethod, setPartialPaymentMethod] = useState<
-    "BANK_TRANSFER" | "CASH"
-  >("BANK_TRANSFER");
+  const [partialPaymentMethod, setPartialPaymentMethod] = useState<"BANK_TRANSFER" | "CASH">("BANK_TRANSFER");
 
   // Show Accountant details (collapsible)
   const [showAccountantDetails, setShowAccountantDetails] = useState(false);
@@ -218,8 +157,7 @@ export default function InvoiceForm({
   const [buyer, setBuyer] = useState<BuyerForm>(EMPTY_BUYER);
   const [showBuyerDetails, setShowBuyerDetails] = useState(false);
 
-  const [selectedContract, setSelectedContract] =
-    useState<InvoiceContractOption | null>(null);
+  const [selectedContract, setSelectedContract] = useState<InvoiceContractOption | null>(null);
   const [isSourceLoading, setIsSourceLoading] = useState(false);
   const [sourceError, setSourceError] = useState("");
 
@@ -239,18 +177,14 @@ export default function InvoiceForm({
   const [vehicleError, setVehicleError] = useState("");
   const [vehicleReload, setVehicleReload] = useState(0);
 
-  const [rows, setRows] = useState<FormLine[]>([
-    { id: "line-1", input: emptyInvoiceLine() },
-  ]);
+  const [rows, setRows] = useState<FormLine[]>([{ id: "line-1", input: emptyInvoiceLine() }]);
   const nextRow = useRef(2);
   const operationKey = useRef("");
   const sourceVersion = useRef(0);
   const errorRegion = useRef<HTMLDivElement>(null);
 
   // Synchronize settlementAccountCode & paymentCode based on "هل دفع العميل؟"
-  const changePaymentStatusChoice = (
-    choice: "NOT_PAID" | "FULLY_PAID" | "PARTIALLY_PAID",
-  ) => {
+  const changePaymentStatusChoice = (choice: "NOT_PAID" | "FULLY_PAID" | "PARTIALLY_PAID") => {
     setPaymentStatusChoice(choice);
     if (choice === "NOT_PAID" || choice === "PARTIALLY_PAID") {
       setSettlementAccountCode("1103");
@@ -259,9 +193,7 @@ export default function InvoiceForm({
     }
   };
 
-  const changeFullPaymentMethod = (
-    method: "BANK_TRANSFER" | "CASH" | "CARD",
-  ) => {
+  const changeFullPaymentMethod = (method: "BANK_TRANSFER" | "CASH" | "CARD") => {
     setFullPaymentMethod(method);
     if (paymentStatusChoice === "FULLY_PAID") {
       setSettlementAccountCode(method === "CASH" ? "1101" : "1102");
@@ -291,12 +223,7 @@ export default function InvoiceForm({
       originalInvoiceId: invoice.id,
       profile: invoice.snapshot.input.taxDocument?.profile || "SIMPLIFIED",
     }));
-    setRows(
-      invoice.snapshot.input.lines.map((input, index) => ({
-        id: `original-${index}`,
-        input,
-      })),
-    );
+    setRows(invoice.snapshot.input.lines.map((input, index) => ({ id: `original-${index}`, input })));
     nextRow.current = invoice.snapshot.input.lines.length + 1;
     if (invoice.snapshot.input.transport) {
       setTransport(invoice.snapshot.input.transport);
@@ -309,17 +236,12 @@ export default function InvoiceForm({
   async function selectOriginal(id: string) {
     if (!id) {
       setOriginal(null);
-      setTaxDocument((current) => ({
-        ...current,
-        originalInvoiceId: undefined,
-      }));
+      setTaxDocument((current) => ({ ...current, originalInvoiceId: undefined }));
       return;
     }
     setIsSourceLoading(true);
     setSourceError("");
-    const result = await invoiceRequest<InvoiceDetail>(
-      `/${encodeURIComponent(id)}`,
-    );
+    const result = await invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(id)}`);
     if (result.data) {
       applyOriginal(result.data);
     } else {
@@ -333,18 +255,10 @@ export default function InvoiceForm({
     setIsReviewed(false);
     if (choice === "CUSTOMER") {
       setDocumentType("BOOKING");
-      setTaxDocument((prev) => ({
-        ...prev,
-        kind: "INVOICE",
-        originalInvoiceId: undefined,
-      }));
+      setTaxDocument((prev) => ({ ...prev, kind: "INVOICE", originalInvoiceId: undefined }));
     } else if (choice === "PROFORMA") {
       setDocumentType("PROFORMA");
-      setTaxDocument((prev) => ({
-        ...prev,
-        kind: "INVOICE",
-        originalInvoiceId: undefined,
-      }));
+      setTaxDocument((prev) => ({ ...prev, kind: "INVOICE", originalInvoiceId: undefined }));
     } else if (choice === "CREDIT_NOTE") {
       setDocumentType("TAX");
       setTaxDocument((prev) => ({ ...prev, kind: "CREDIT" }));
@@ -359,14 +273,10 @@ export default function InvoiceForm({
     void Promise.all([
       invoiceRequest<InvoiceSettings>("/settings"),
       initialContractId
-        ? invoiceRequest<TransportDefaults>(
-            `/transport-defaults/${encodeURIComponent(initialContractId)}`,
-          )
+        ? invoiceRequest<TransportDefaults>(`/transport-defaults/${encodeURIComponent(initialContractId)}`)
         : Promise.resolve(null),
       originalInvoiceId
-        ? invoiceRequest<InvoiceDetail>(
-            `/${encodeURIComponent(originalInvoiceId)}`,
-          )
+        ? invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(originalInvoiceId)}`)
         : Promise.resolve(null),
     ]).then(([config, linked, originalResult]) => {
       if (!active) return;
@@ -394,11 +304,7 @@ export default function InvoiceForm({
             id: "line-1",
             input: {
               ...emptyInvoiceLine(),
-              description:
-                `خدمة نقل من ${details.origin} إلى ${details.destination}`.slice(
-                  0,
-                  200,
-                ),
+              description: `خدمة نقل من ${details.origin} إلى ${details.destination}`.slice(0, 200),
             },
           },
         ]);
@@ -434,38 +340,22 @@ export default function InvoiceForm({
   }, [vehicleReload]);
 
   const estimate = estimateInvoice(rows.map((row) => row.input));
-  const beforeDiscount = estimateInvoice(
-    rows.map((row) => ({ ...row.input, discount: "0" })),
-  );
+  const beforeDiscount = estimateInvoice(rows.map((row) => ({ ...row.input, discount: "0" })));
   const discountTotal =
-    estimate.isValid && beforeDiscount.isValid
-      ? difference(beforeDiscount.net, estimate.net)
-      : "—";
-  const canSave =
-    Boolean(settings?.company) &&
-    !isLoading &&
-    !isSaving &&
-    !isSourceLoading &&
-    !sourceError;
+    estimate.isValid && beforeDiscount.isValid ? difference(beforeDiscount.net, estimate.net) : "—";
+  const canSave = Boolean(settings?.company) && !isLoading && !isSaving && !isSourceLoading && !sourceError;
 
   function updateBuyer(change: Partial<BuyerForm>) {
     setBuyer((current) => ({ ...current, ...change }));
     if (isTaxMode && change.vatNumber !== undefined && !original) {
-      setTaxDocument((current) => ({
-        ...current,
-        profile: change.vatNumber ? "STANDARD" : "SIMPLIFIED",
-      }));
+      setTaxDocument((current) => ({ ...current, profile: change.vatNumber ? "STANDARD" : "SIMPLIFIED" }));
       if (change.vatNumber) setShowBuyerDetails(true);
     }
     setIsReviewed(false);
   }
 
   function updateRow(id: string, change: Partial<InvoiceLineInput>) {
-    setRows((current) =>
-      current.map((row) =>
-        row.id === id ? { ...row, input: { ...row.input, ...change } } : row,
-      ),
-    );
+    setRows((current) => current.map((row) => (row.id === id ? { ...row, input: { ...row.input, ...change } } : row)));
     setIsReviewed(false);
   }
 
@@ -481,13 +371,7 @@ export default function InvoiceForm({
 
   function addService(description = "") {
     const index = nextRow.current++;
-    setRows((current) => [
-      ...current,
-      {
-        id: `line-${index}`,
-        input: { ...emptyInvoiceLine(index), description },
-      },
-    ]);
+    setRows((current) => [...current, { id: `line-${index}`, input: { ...emptyInvoiceLine(index), description } }]);
     setIsReviewed(false);
   }
 
@@ -497,17 +381,11 @@ export default function InvoiceForm({
     setIsSourceLoading(true);
     setSourceError("");
     setIsReviewed(false);
-    const result = await invoiceRequest<TransportDefaults>(
-      `/transport-defaults/${encodeURIComponent(contract.id)}`,
-    );
+    const result = await invoiceRequest<TransportDefaults>(`/transport-defaults/${encodeURIComponent(contract.id)}`);
     if (version !== sourceVersion.current) return;
     if (result.data) {
       const { customerName, transport: details } = result.data;
-      setBuyer((current) =>
-        current.name === customerName
-          ? current
-          : { ...EMPTY_BUYER, name: customerName },
-      );
+      setBuyer((current) => (current.name === customerName ? current : { ...EMPTY_BUYER, name: customerName }));
       setTransport(details);
       setPhone(invoicePhoneFrom(details.contactPhone));
       setRows((current) =>
@@ -517,15 +395,11 @@ export default function InvoiceForm({
                 ...current[0],
                 input: {
                   ...current[0].input,
-                  description:
-                    `خدمة نقل من ${details.origin} إلى ${details.destination}`.slice(
-                      0,
-                      200,
-                    ),
+                  description: `خدمة نقل من ${details.origin} إلى ${details.destination}`.slice(0, 200),
                 },
               },
             ]
-          : current,
+          : current
       );
     } else {
       setSourceError(result.error || "تعذر تحميل تفاصيل العقد.");
@@ -554,15 +428,9 @@ export default function InvoiceForm({
     setError("");
     setHasTransportError(false);
 
-    if (
-      isTaxMode &&
-      taxDocument.kind !== "INVOICE" &&
-      (!original || !taxDocument.adjustmentReason?.trim())
-    ) {
+    if (isTaxMode && taxDocument.kind !== "INVOICE" && (!original || !taxDocument.adjustmentReason?.trim())) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
-      showError(
-        "اختر الفاتورة الأصلية وأدخل سبب إصدار الإشعار في المرحلة الأولى.",
-      );
+      showError("اختر الفاتورة الأصلية وأدخل سبب إصدار الإشعار في المرحلة الأولى.");
       return;
     }
 
@@ -570,19 +438,11 @@ export default function InvoiceForm({
       isTaxMode &&
       taxDocument.profile === "STANDARD" &&
       (!buyer.vatNumber ||
-        ![
-          buyer.street,
-          buyer.building,
-          buyer.district,
-          buyer.city,
-          buyer.postalCode,
-        ].every((v) => v.trim()))
+        ![buyer.street, buyer.building, buyer.district, buyer.city, buyer.postalCode].every((v) => v.trim()))
     ) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
       setShowBuyerDetails(true);
-      showError(
-        "أكمل الرقم الضريبي والعنوان الوطني للمشتري في المرحلة الأولى.",
-      );
+      showError("أكمل الرقم الضريبي والعنوان الوطني للمشتري في المرحلة الأولى.");
       return;
     }
 
@@ -592,29 +452,19 @@ export default function InvoiceForm({
       return;
     }
 
-    const addressParts = [
-      buyer.street,
-      buyer.building,
-      buyer.district,
-      buyer.city,
-      buyer.postalCode,
-    ];
+    const addressParts = [buyer.street, buyer.building, buyer.district, buyer.city, buyer.postalCode];
     const hasAddress = addressParts.some((value) => value.trim());
     if (hasAddress && !addressParts.every((value) => value.trim())) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
       setShowBuyerDetails(true);
-      showError(
-        "أكمل عنوان العميل: الشارع والمبنى والحي والمدينة والرمز البريدي.",
-      );
+      showError("أكمل عنوان العميل: الشارع والمبنى والحي والمدينة والرمز البريدي.");
       return;
     }
 
     const contactPhone = invoicePhoneNumber(phone);
     if (!contactPhone) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
-      showError(
-        "أدخل رقم جوال صحيحًا مع اختيار كود الدولة المناسب في المرحلة الأولى.",
-      );
+      showError("أدخل رقم جوال صحيحًا مع اختيار كود الدولة المناسب في المرحلة الأولى.");
       return;
     }
 
@@ -640,14 +490,9 @@ export default function InvoiceForm({
         : {
             name: buyer.name.trim(),
             ...(buyer.commercialRegistration.trim()
-              ? {
-                  identification: buyer.commercialRegistration.trim(),
-                  identificationScheme: "CRN",
-                }
+              ? { identification: buyer.commercialRegistration.trim(), identificationScheme: "CRN" }
               : {}),
-            ...(buyer.vatNumber.trim()
-              ? { vatNumber: buyer.vatNumber.trim() }
-              : {}),
+            ...(buyer.vatNumber.trim() ? { vatNumber: buyer.vatNumber.trim() } : {}),
             ...(hasAddress
               ? {
                   address: {
@@ -672,11 +517,7 @@ export default function InvoiceForm({
                 ...taxDocument,
                 ...(taxDocument.kind !== "INVOICE"
                   ? { adjustmentReason: taxDocument.adjustmentReason?.trim() }
-                  : {
-                      originalInvoiceId: undefined,
-                      adjustmentReason: undefined,
-                      adjustmentEventDate: undefined,
-                    }),
+                  : { originalInvoiceId: undefined, adjustmentReason: undefined, adjustmentEventDate: undefined }),
               },
             }
           : {}),
@@ -685,7 +526,7 @@ export default function InvoiceForm({
               bankDetails: Object.fromEntries(
                 Object.entries(bankDetails)
                   .map(([key, value]) => [key, value.trim()])
-                  .filter(([, value]) => value),
+                  .filter(([, value]) => value)
               ),
             }
           : {}),
@@ -694,9 +535,7 @@ export default function InvoiceForm({
         buyer: payloadBuyer,
         paymentCode,
         accountingApproved: isReviewed,
-        ...(documentType !== "PROFORMA"
-          ? { accounting: { revenueAccountCode, settlementAccountCode } }
-          : {}),
+        ...(documentType !== "PROFORMA" ? { accounting: { revenueAccountCode, settlementAccountCode } } : {}),
         ...(selectedContract ? { contractId: selectedContract.id } : {}),
         transport: transportPayload({
           ...transport,
@@ -710,9 +549,7 @@ export default function InvoiceForm({
           discount: row.input.discount || "0",
           billingUnit: row.input.billingUnit || "TRIP",
           taxReviewed: isReviewed,
-          ...(row.input.category === "S"
-            ? { exemptionCode: undefined, exemptionReason: undefined }
-            : {}),
+          ...(row.input.category === "S" ? { exemptionCode: undefined, exemptionReason: undefined } : {}),
         })),
       });
 
@@ -734,10 +571,7 @@ export default function InvoiceForm({
               reference: `دفعة أولى مستلمة عند إصدار الفاتورة #${result.data.id.slice(0, 8)}`,
             });
           } catch (payErr) {
-            console.error(
-              "Failed to post initial partial payment voucher:",
-              payErr,
-            );
+            console.error("Failed to post initial partial payment voucher:", payErr);
           }
         }
 
@@ -759,7 +593,7 @@ export default function InvoiceForm({
     paymentStatusChoice === "FULLY_PAID"
       ? "0.00"
       : paymentStatusChoice === "PARTIALLY_PAID"
-        ? Math.max(0, totalAmountNum - partialAmountNum).toFixed(2)
+        ? (Math.max(0, totalAmountNum - partialAmountNum)).toFixed(2)
         : estimate.gross;
 
   return (
@@ -788,10 +622,7 @@ export default function InvoiceForm({
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              إنشاء{" "}
-              {documentType === "PROFORMA"
-                ? "فاتورة مبدئية (عرض أسعار)"
-                : INVOICE_TYPE_LABELS[documentType]}
+              إنشاء {documentType === "PROFORMA" ? "فاتورة مبدئية (عرض أسعار)" : INVOICE_TYPE_LABELS[documentType]}
             </h1>
             <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               أدخل بيانات المستند في ٤ خطوات واضحة وميسرة دون تعقيد محاسبي
@@ -801,10 +632,7 @@ export default function InvoiceForm({
       </header>
 
       {/* 4-Stage Interactive Stepper Header */}
-      <nav
-        aria-label="مراحل إنشاء الفاتورة"
-        className="mb-6 theme-card rounded-2xl border theme-border p-2 sm:p-3 shadow-xs"
-      >
+      <nav aria-label="مراحل إنشاء الفاتورة" className="mb-6 theme-card rounded-2xl border theme-border p-2 sm:p-3 shadow-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {STAGES.map((st, idx) => {
             const isCurrent = currentStage === st.id;
@@ -836,9 +664,7 @@ export default function InvoiceForm({
                   {isCompleted ? <Check className="size-3.5" /> : st.number}
                 </div>
                 <div className="min-w-0">
-                  <p
-                    className={`text-xs font-black truncate ${isCurrent ? "text-amber-700 dark:text-amber-300" : ""}`}
-                  >
+                  <p className={`text-xs font-black truncate ${isCurrent ? "text-amber-700 dark:text-amber-300" : ""}`}>
                     {st.title}
                   </p>
                   <p className="text-[10px] text-slate-400 truncate hidden sm:block">
@@ -877,24 +703,14 @@ export default function InvoiceForm({
       )}
 
       {isLoading ? (
-        <div
-          role="status"
-          className="theme-card animate-pulse rounded-2xl p-12 text-center text-slate-400 text-xs sm:text-sm"
-        >
+        <div role="status" className="theme-card animate-pulse rounded-2xl p-12 text-center text-slate-400 text-xs sm:text-sm">
           <Loader2 className="size-6 animate-spin mx-auto mb-2 text-amber-500" />
           <span>جارٍ تجهيز شاشة الفاتورة…</span>
         </div>
       ) : (
-        <form
-          id="invoice-create-form"
-          onSubmit={save}
-          className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]"
-        >
+        <form id="invoice-create-form" onSubmit={save} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
           {/* Main Stepper Stages Area */}
-          <fieldset
-            disabled={isSaving || isSourceLoading}
-            className="min-w-0 space-y-6 disabled:opacity-75"
-          >
+          <fieldset disabled={isSaving || isSourceLoading} className="min-w-0 space-y-6 disabled:opacity-75">
             {/* =========================================================================
                 المرحلة الأولى: نوع المستند والعميل (§5 المرحلة الأولى)
                ========================================================================= */}
@@ -916,8 +732,7 @@ export default function InvoiceForm({
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-                      يُشترط نظاماً ربط الإشعار برقم الفاتورة الصادرة سابقاً.
-                      سيتم نسخ بيانات العميل والمسار والضريبة تلقائياً.
+                      يُشترط نظاماً ربط الإشعار برقم الفاتورة الصادرة سابقاً. سيتم نسخ بيانات العميل والمسار والضريبة تلقائياً.
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="text-xs font-bold sm:col-span-2">
@@ -940,12 +755,7 @@ export default function InvoiceForm({
                               : "مثال: رسوم جولة إضافية وتمديد ساعات الخدمة"
                           }
                           value={taxDocument.adjustmentReason || ""}
-                          onChange={(e) =>
-                            setTaxDocument({
-                              ...taxDocument,
-                              adjustmentReason: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setTaxDocument({ ...taxDocument, adjustmentReason: e.target.value })}
                         />
                       </label>
                     </div>
@@ -960,8 +770,7 @@ export default function InvoiceForm({
                         بيانات العميل والفاتورة
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        اختر العقد لاستيراد كافة بيانات الرحلة والعميل بضغطة زر،
-                        أو أدخلها يدوياً
+                        اختر العقد لاستيراد كافة بيانات الرحلة والعميل بضغطة زر، أو أدخلها يدوياً
                       </p>
                     </div>
                   </div>
@@ -975,10 +784,7 @@ export default function InvoiceForm({
                       onClear={clearContract}
                     />
                     {sourceError && (
-                      <p
-                        role="alert"
-                        className="mt-2 text-xs font-bold text-rose-600"
-                      >
+                      <p role="alert" className="mt-2 text-xs font-bold text-rose-600">
                         {sourceError}
                       </p>
                     )}
@@ -1012,9 +818,7 @@ export default function InvoiceForm({
                         placeholder="3xxxxxxxxxxxxxx3 (15 رقماً)"
                         className={`${INPUT} font-mono`}
                         value={buyer.vatNumber}
-                        onChange={(e) =>
-                          updateBuyer({ vatNumber: e.target.value })
-                        }
+                        onChange={(e) => updateBuyer({ vatNumber: e.target.value })}
                       />
                     </label>
 
@@ -1026,9 +830,7 @@ export default function InvoiceForm({
                         placeholder="إذا كان مختلفاً عن صاحب الفاتورة"
                         className={INPUT}
                         value={transport.contactName || ""}
-                        onChange={(e) =>
-                          updateTransport({ contactName: e.target.value })
-                        }
+                        onChange={(e) => updateTransport({ contactName: e.target.value })}
                       />
                     </label>
 
@@ -1054,9 +856,7 @@ export default function InvoiceForm({
                         placeholder="customer@example.com"
                         className={INPUT}
                         value={booking.email}
-                        onChange={(e) =>
-                          updateBooking({ email: e.target.value })
-                        }
+                        onChange={(e) => updateBooking({ email: e.target.value })}
                       />
                     </label>
 
@@ -1073,9 +873,7 @@ export default function InvoiceForm({
                         value={transport.passengerCount ?? ""}
                         onChange={(e) =>
                           updateTransport({
-                            passengerCount: e.target.value
-                              ? Number(e.target.value)
-                              : undefined,
+                            passengerCount: e.target.value ? Number(e.target.value) : undefined,
                           })
                         }
                       />
@@ -1098,11 +896,7 @@ export default function InvoiceForm({
                             ? original.snapshot.input.buyer.identification || ""
                             : buyer.commercialRegistration
                         }
-                        onChange={(e) =>
-                          updateBuyer({
-                            commercialRegistration: e.target.value,
-                          })
-                        }
+                        onChange={(e) => updateBuyer({ commercialRegistration: e.target.value })}
                       />
                     </label>
                   )}
@@ -1120,46 +914,27 @@ export default function InvoiceForm({
                           ? "العنوان الوطني للمشتري (مطلوب للفواتير الضريبية B2B)"
                           : "عنوان العميل الوطني (اختياري)"}
                       </span>
-                      <ChevronDown
-                        className={`size-3.5 transition-transform ${showBuyerDetails ? "rotate-180" : ""}`}
-                      />
+                      <ChevronDown className={`size-3.5 transition-transform ${showBuyerDetails ? "rotate-180" : ""}`} />
                     </button>
 
                     {showBuyerDetails && (
                       <div className="mt-3 grid gap-3 border theme-border rounded-xl p-3.5 sm:grid-cols-2 bg-slate-50/50 dark:bg-slate-900/20">
-                        {(
-                          [
-                            { key: "street", label: "اسم الشارع" },
-                            {
-                              key: "building",
-                              label: "رقم المبنى (٤ أرقام)",
-                              pattern: "\\d{4}",
-                            },
-                            { key: "district", label: "الحي" },
-                            { key: "city", label: "المدينة" },
-                            {
-                              key: "postalCode",
-                              label: "الرمز البريدي (٥ أرقام)",
-                              pattern: "\\d{5}",
-                            },
-                          ] as const
-                        ).map((field) => (
-                          <label
-                            key={field.key}
-                            className="text-xs font-bold text-slate-600 dark:text-slate-300"
-                          >
+                        {([
+                          { key: "street", label: "اسم الشارع" },
+                          { key: "building", label: "رقم المبنى (٤ أرقام)", pattern: "\\d{4}" },
+                          { key: "district", label: "الحي" },
+                          { key: "city", label: "المدينة" },
+                          { key: "postalCode", label: "الرمز البريدي (٥ أرقام)", pattern: "\\d{5}" },
+                        ] as const).map((field) => (
+                          <label key={field.key} className="text-xs font-bold text-slate-600 dark:text-slate-300">
                             {field.label}
                             <input
                               readOnly={Boolean(original)}
                               maxLength={200}
                               className={INPUT}
                               value={buyer[field.key]}
-                              pattern={
-                                "pattern" in field ? field.pattern : undefined
-                              }
-                              onChange={(e) =>
-                                updateBuyer({ [field.key]: e.target.value })
-                              }
+                              pattern={"pattern" in field ? field.pattern : undefined}
+                              onChange={(e) => updateBuyer({ [field.key]: e.target.value })}
                             />
                           </label>
                         ))}
@@ -1216,9 +991,7 @@ export default function InvoiceForm({
                   <div className="mt-5 rounded-xl border border-blue-500/25 bg-blue-500/[0.04] p-3 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2">
                     <HelpCircle className="size-4 text-blue-500 shrink-0" />
                     <span>
-                      ملاحظة: تظهر في نسخة العميل المطبوعة أعداد الركاب
-                      الإجمالية؛ تفاصيل الأسماء والهويات تُراجع من سجل العقد
-                      والرحلة.
+                      ملاحظة: تظهر في نسخة العميل المطبوعة أعداد الركاب الإجمالية؛ تفاصيل الأسماء والهويات تُراجع من سجل العقد والرحلة.
                     </span>
                   </div>
                 </section>
@@ -1227,9 +1000,7 @@ export default function InvoiceForm({
                 <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowSupplementalTrip(!showSupplementalTrip)
-                    }
+                    onClick={() => setShowSupplementalTrip(!showSupplementalTrip)}
                     className="flex w-full items-center justify-between text-right cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
@@ -1239,14 +1010,11 @@ export default function InvoiceForm({
                           تفاصيل الرحلة التشغيلية الإضافية (اختياري)
                         </h3>
                         <p className="text-[11px] text-slate-400">
-                          بيانات السائق، قراءة العداد، المسافة المقطوعة،
-                          وملاحظات التشغيل
+                          بيانات السائق، قراءة العداد، المسافة المقطوعة، وملاحظات التشغيل
                         </p>
                       </div>
                     </div>
-                    <ChevronDown
-                      className={`size-4 text-slate-400 transition-transform ${showSupplementalTrip ? "rotate-180" : ""}`}
-                    />
+                    <ChevronDown className={`size-4 text-slate-400 transition-transform ${showSupplementalTrip ? "rotate-180" : ""}`} />
                   </button>
 
                   {showSupplementalTrip && (
@@ -1298,8 +1066,7 @@ export default function InvoiceForm({
                         الخدمات والأسعار والمعاملة الضريبية
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        أدخل تفاصيل الخدمات، ويمكنك كتابة السعر قبل الضريبة أو
-                        السعر الإجمالي شامل 15%
+                        أدخل تفاصيل الخدمات، ويمكنك كتابة السعر قبل الضريبة أو السعر الإجمالي شامل 15%
                       </p>
                     </div>
                     <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.05] px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
@@ -1319,9 +1086,7 @@ export default function InvoiceForm({
                         amount={estimate.lines[index]?.gross}
                         onChange={(change) => updateRow(row.id, change)}
                         onRemove={() => {
-                          setRows((current) =>
-                            current.filter((item) => item.id !== row.id),
-                          );
+                          setRows((current) => current.filter((item) => item.id !== row.id));
                           setIsReviewed(false);
                         }}
                       />
@@ -1339,11 +1104,7 @@ export default function InvoiceForm({
                       <Plus className="size-4" />
                       <span>إضافة خدمة جديدة</span>
                     </button>
-                    {[
-                      "رسوم نقل إضافية",
-                      "جولة سياحية وزيارات",
-                      "رسوم انتظار",
-                    ].map((label) => (
+                    {["رسوم نقل إضافية", "جولة سياحية وزيارات", "رسوم انتظار"].map((label) => (
                       <button
                         key={label}
                         type="button"
@@ -1410,8 +1171,7 @@ export default function InvoiceForm({
                         <span>هل دفع العميل قيمة الفاتورة؟</span>
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود
-                        بدقة
+                        حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة
                       </p>
                     </div>
 
@@ -1433,18 +1193,13 @@ export default function InvoiceForm({
                           className="sr-only"
                         />
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white">
-                            لم يدفع بعد (آجل)
-                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">لم يدفع بعد (آجل)</span>
                           <span className="size-4 rounded-full border border-amber-500 flex items-center justify-center">
-                            {paymentStatusChoice === "NOT_PAID" && (
-                              <span className="size-2 rounded-full bg-amber-500" />
-                            )}
+                            {paymentStatusChoice === "NOT_PAID" && <span className="size-2 rounded-full bg-amber-500" />}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي
-                          لمتابعتها لاحقاً.
+                          تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.
                         </p>
                       </label>
 
@@ -1461,24 +1216,17 @@ export default function InvoiceForm({
                           name="paymentStatusChoice"
                           value="FULLY_PAID"
                           checked={paymentStatusChoice === "FULLY_PAID"}
-                          onChange={() =>
-                            changePaymentStatusChoice("FULLY_PAID")
-                          }
+                          onChange={() => changePaymentStatusChoice("FULLY_PAID")}
                           className="sr-only"
                         />
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white">
-                            دفع المبلغ كاملاً
-                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">دفع المبلغ كاملاً</span>
                           <span className="size-4 rounded-full border border-emerald-500 flex items-center justify-center">
-                            {paymentStatusChoice === "FULLY_PAID" && (
-                              <span className="size-2 rounded-full bg-emerald-500" />
-                            )}
+                            {paymentStatusChoice === "FULLY_PAID" && <span className="size-2 rounded-full bg-emerald-500" />}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو
-                          الصندوق.
+                          تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.
                         </p>
                       </label>
 
@@ -1495,19 +1243,13 @@ export default function InvoiceForm({
                           name="paymentStatusChoice"
                           value="PARTIALLY_PAID"
                           checked={paymentStatusChoice === "PARTIALLY_PAID"}
-                          onChange={() =>
-                            changePaymentStatusChoice("PARTIALLY_PAID")
-                          }
+                          onChange={() => changePaymentStatusChoice("PARTIALLY_PAID")}
                           className="sr-only"
                         />
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white">
-                            دفع جزءاً من المبلغ
-                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">دفع جزءاً من المبلغ</span>
                           <span className="size-4 rounded-full border border-blue-500 flex items-center justify-center">
-                            {paymentStatusChoice === "PARTIALLY_PAID" && (
-                              <span className="size-2 rounded-full bg-blue-500" />
-                            )}
+                            {paymentStatusChoice === "PARTIALLY_PAID" && <span className="size-2 rounded-full bg-blue-500" />}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -1523,24 +1265,18 @@ export default function InvoiceForm({
                           كيف استلمت المبلغ من العميل؟
                         </span>
                         <div className="grid gap-3 sm:grid-cols-3">
-                          <label
-                            className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "BANK_TRANSFER" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}
-                          >
+                          <label className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "BANK_TRANSFER" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}>
                             <input
                               type="radio"
                               name="fullPaymentMethod"
                               checked={fullPaymentMethod === "BANK_TRANSFER"}
-                              onChange={() =>
-                                changeFullPaymentMethod("BANK_TRANSFER")
-                              }
+                              onChange={() => changeFullPaymentMethod("BANK_TRANSFER")}
                               className="size-3.5 accent-amber-600"
                             />
                             <Landmark className="size-4" />
                             <span>تحويل بنكي (البنك الأهلي SNB)</span>
                           </label>
-                          <label
-                            className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "CASH" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}
-                          >
+                          <label className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "CASH" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}>
                             <input
                               type="radio"
                               name="fullPaymentMethod"
@@ -1551,9 +1287,7 @@ export default function InvoiceForm({
                             <Wallet className="size-4" />
                             <span>نقداً بالصندوق</span>
                           </label>
-                          <label
-                            className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "CARD" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}
-                          >
+                          <label className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "CARD" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}>
                             <input
                               type="radio"
                               name="fullPaymentMethod"
@@ -1582,9 +1316,7 @@ export default function InvoiceForm({
                             placeholder="0.00"
                             className={`${INPUT} font-mono`}
                             value={partialPaymentAmount}
-                            onChange={(e) =>
-                              setPartialPaymentAmount(e.target.value)
-                            }
+                            onChange={(e) => setPartialPaymentAmount(e.target.value)}
                           />
                         </label>
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -1592,15 +1324,9 @@ export default function InvoiceForm({
                           <select
                             className={INPUT}
                             value={partialPaymentMethod}
-                            onChange={(e) =>
-                              setPartialPaymentMethod(
-                                e.target.value as "BANK_TRANSFER" | "CASH",
-                              )
-                            }
+                            onChange={(e) => setPartialPaymentMethod(e.target.value as "BANK_TRANSFER" | "CASH")}
                           >
-                            <option value="BANK_TRANSFER">
-                              تحويل بنكي / الحساب البنكي SNB
-                            </option>
+                            <option value="BANK_TRANSFER">تحويل بنكي / الحساب البنكي SNB</option>
                             <option value="CASH">نقداً في الصندوق</option>
                           </select>
                         </label>
@@ -1614,9 +1340,7 @@ export default function InvoiceForm({
                       <span>فاتورة مبدئية (عرض أسعار)</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-                      الفاتورة المبدئية هي عرض سعر مبدئي لا يتطلب تسوية أو تحصيل
-                      في هذه المرحلة. يتم تأكيد الدفع عند إصدار الفاتورة الفعلية
-                      للعميل.
+                      الفاتورة المبدئية هي عرض سعر مبدئي لا يتطلب تسوية أو تحصيل في هذه المرحلة. يتم تأكيد الدفع عند إصدار الفاتورة الفعلية للعميل.
                     </p>
                   </section>
                 )}
@@ -1626,9 +1350,7 @@ export default function InvoiceForm({
                   <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowAccountantDetails(!showAccountantDetails)
-                      }
+                      onClick={() => setShowAccountantDetails(!showAccountantDetails)}
                       className="flex w-full items-center justify-between text-right cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
@@ -1638,14 +1360,11 @@ export default function InvoiceForm({
                             تفاصيل التوجيه المحاسبي (تلقائية ومخصصة للمحاسب)
                           </span>
                           <p className="text-[11px] text-slate-400">
-                            حساب الإيراد ({revenueAccountCode}) وحساب التسوية (
-                            {settlementAccountCode})
+                            حساب الإيراد ({revenueAccountCode}) وحساب التسوية ({settlementAccountCode})
                           </p>
                         </div>
                       </div>
-                      <ChevronDown
-                        className={`size-4 text-slate-400 transition-transform ${showAccountantDetails ? "rotate-180" : ""}`}
-                      />
+                      <ChevronDown className={`size-4 text-slate-400 transition-transform ${showAccountantDetails ? "rotate-180" : ""}`} />
                     </button>
 
                     {showAccountantDetails && (
@@ -1660,15 +1379,9 @@ export default function InvoiceForm({
                               setIsReviewed(false);
                             }}
                           >
-                            <option value="4101">
-                              4101 · إيرادات خدمات النقل والمطارات
-                            </option>
-                            <option value="4102">
-                              4102 · إيرادات كبار الشخصيات والعمرة والزيارة
-                            </option>
-                            <option value="4103">
-                              4103 · إيرادات النقل الصفرية أو المعفاة
-                            </option>
+                            <option value="4101">4101 · إيرادات خدمات النقل والمطارات</option>
+                            <option value="4102">4102 · إيرادات كبار الشخصيات والعمرة والزيارة</option>
+                            <option value="4103">4103 · إيرادات النقل الصفرية أو المعفاة</option>
                           </select>
                         </label>
                         <label className="block text-xs font-bold text-slate-500">
@@ -1681,21 +1394,13 @@ export default function InvoiceForm({
                               setIsReviewed(false);
                             }}
                           >
-                            <option value="1103">
-                              1103 · ذمم العملاء (آجل)
-                            </option>
-                            <option value="1102">
-                              1102 · البنك الأهلي السعودي - SNB
-                            </option>
-                            <option value="1101">
-                              1101 · النقدية بالصندوق
-                            </option>
+                            <option value="1103">1103 · ذمم العملاء (آجل)</option>
+                            <option value="1102">1102 · البنك الأهلي السعودي - SNB</option>
+                            <option value="1101">1101 · النقدية بالصندوق</option>
                           </select>
                         </label>
                         <p className="sm:col-span-2 text-[11px] text-slate-400 leading-relaxed">
-                          يوجه النظام القيود تلقائياً بناءً على إجابتك في سؤال
-                          «هل دفع العميل؟». يمكنك تغيير الحساب هنا للمحاسبة
-                          المتقدمة فقط.
+                          يوجه النظام القيود تلقائياً بناءً على إجابتك في سؤال «هل دفع العميل؟». يمكنك تغيير الحساب هنا للمحاسبة المتقدمة فقط.
                         </p>
                       </div>
                     )}
@@ -1715,36 +1420,23 @@ export default function InvoiceForm({
 
                   <div className="grid gap-3 sm:grid-cols-2 text-xs">
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">
-                        العميل والمستند:
-                      </span>
-                      <p className="font-bold text-slate-800 dark:text-slate-100">
-                        {buyer.name || "—"}
-                      </p>
+                      <span className="text-slate-400 block mb-1">العميل والمستند:</span>
+                      <p className="font-bold text-slate-800 dark:text-slate-100">{buyer.name || "—"}</p>
                       {phone.number && (
-                        <p className="text-slate-400 font-mono mt-0.5">
-                          {phone.number}
-                        </p>
+                        <p className="text-slate-400 font-mono mt-0.5">{phone.number}</p>
                       )}
                     </div>
 
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">
-                        مسار وموعد الرحلة:
-                      </span>
+                      <span className="text-slate-400 block mb-1">مسار وموعد الرحلة:</span>
                       <p className="font-bold text-slate-800 dark:text-slate-100">
-                        {transport.origin || "—"} ←{" "}
-                        {transport.destination || "—"}
+                        {transport.origin || "—"} ← {transport.destination || "—"}
                       </p>
-                      <p className="text-slate-400 font-mono mt-0.5">
-                        {transport.tripDate || "—"}
-                      </p>
+                      <p className="text-slate-400 font-mono mt-0.5">{transport.tripDate || "—"}</p>
                     </div>
 
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">
-                        تاريخ ووقت الفاتورة:
-                      </span>
+                      <span className="text-slate-400 block mb-1">تاريخ ووقت الفاتورة:</span>
                       <input
                         required
                         type="datetime-local"
@@ -1758,23 +1450,16 @@ export default function InvoiceForm({
                     </div>
 
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">
-                        حالة السداد والمتبقي:
-                      </span>
+                      <span className="text-slate-400 block mb-1">حالة السداد والمتبقي:</span>
                       <p className="font-black font-mono text-sm">
                         {paymentStatusChoice === "FULLY_PAID" ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">
-                            مدفوع بالكامل (٠.٠٠ متبقي)
-                          </span>
+                          <span className="text-emerald-600 dark:text-emerald-400">مدفوع بالكامل (٠.٠٠ متبقي)</span>
                         ) : paymentStatusChoice === "PARTIALLY_PAID" ? (
                           <span className="text-blue-600 dark:text-blue-400">
-                            مدفوع: {partialPaymentAmount || "0"} ر.س · متبقي:{" "}
-                            {remainingBalance} ر.س
+                            مدفوع: {partialPaymentAmount || "0"} ر.س · متبقي: {remainingBalance} ر.س
                           </span>
                         ) : (
-                          <span className="text-amber-600 dark:text-amber-400">
-                            آجل بالكامل (المتبقي: {estimate.gross} ر.س)
-                          </span>
+                          <span className="text-amber-600 dark:text-amber-400">آجل بالكامل (المتبقي: {estimate.gross} ر.س)</span>
                         )}
                       </p>
                     </div>
@@ -1790,10 +1475,7 @@ export default function InvoiceForm({
                         onChange={(e) => setIsReviewed(e.target.checked)}
                         className="mt-0.5 size-4 shrink-0 accent-amber-600 cursor-pointer"
                       />
-                      <span>
-                        أقر بأنني راجعت بيانات العميل والرحلة والأسعار والضريبة
-                        وهي صحيحة ومعتمدة للإصدار.
-                      </span>
+                      <span>أقر بأنني راجعت بيانات العميل والرحلة والأسعار والضريبة وهي صحيحة ومعتمدة للإصدار.</span>
                     </label>
                   </div>
                 </section>
@@ -1838,17 +1520,13 @@ export default function InvoiceForm({
               <section className="overflow-hidden rounded-2xl border theme-border bg-white dark:bg-slate-900 shadow-xs">
                 <div className="border-b theme-border px-5 py-4 bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-amber-700 dark:text-amber-400">
-                      ملخص المستند
-                    </span>
+                    <span className="text-xs font-black text-amber-700 dark:text-amber-400">ملخص المستند</span>
                     <span className="text-[10px] font-bold text-slate-400 font-mono">
                       {rows.length} {rows.length === 1 ? "خدمة" : "خدمات"}
                     </span>
                   </div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white mt-1">
-                    {documentType === "PROFORMA"
-                      ? "فاتورة مبدئية"
-                      : INVOICE_TYPE_LABELS[documentType]}
+                    {documentType === "PROFORMA" ? "فاتورة مبدئية" : INVOICE_TYPE_LABELS[documentType]}
                   </h3>
                   {buyer.name && (
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
@@ -1865,13 +1543,8 @@ export default function InvoiceForm({
                     ["ضريبة القيمة المضافة (15%)", estimate.vat],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between gap-3">
-                      <dt className="text-slate-500 dark:text-slate-400">
-                        {label}
-                      </dt>
-                      <dd
-                        className="font-mono font-bold text-slate-900 dark:text-slate-100"
-                        dir="ltr"
-                      >
+                      <dt className="text-slate-500 dark:text-slate-400">{label}</dt>
+                      <dd className="font-mono font-bold text-slate-900 dark:text-slate-100" dir="ltr">
                         {amount(val)}
                       </dd>
                     </div>
@@ -1880,20 +1553,12 @@ export default function InvoiceForm({
 
                 {/* Big Total Box */}
                 <div className="mx-4 mb-4 rounded-xl bg-slate-950 p-4 text-white dark:bg-slate-800/90 border border-slate-800">
-                  <p className="text-[11px] text-slate-400 font-bold">
-                    الإجمالي المطلوب شامل الضريبة
-                  </p>
+                  <p className="text-[11px] text-slate-400 font-bold">الإجمالي المطلوب شامل الضريبة</p>
                   <div className="mt-1 flex items-baseline gap-1.5">
-                    <strong
-                      className="font-mono text-3xl font-black tracking-tight"
-                      dir="ltr"
-                      data-testid="invoice-total"
-                    >
+                    <strong className="font-mono text-3xl font-black tracking-tight" dir="ltr" data-testid="invoice-total">
                       {amount(estimate.gross)}
                     </strong>
-                    <span className="text-xs font-bold text-amber-400">
-                      ر.س
-                    </span>
+                    <span className="text-xs font-bold text-amber-400">ر.س</span>
                   </div>
                 </div>
 
@@ -1934,10 +1599,7 @@ export default function InvoiceForm({
 
       <p className="mt-6 flex items-center gap-2 text-xs text-slate-400">
         <Truck className="size-3.5" />
-        <span>
-          تفاصيل الرحلة والمسار محفوظة مع الفاتورة · نسخة العميل المطبوعة تعرض
-          أعداد الركاب فقط.
-        </span>
+        <span>تفاصيل الرحلة والمسار محفوظة مع الفاتورة · نسخة العميل المطبوعة تعرض أعداد الركاب فقط.</span>
       </p>
     </div>
   );

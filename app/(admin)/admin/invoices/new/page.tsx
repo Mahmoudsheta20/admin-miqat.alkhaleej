@@ -13,13 +13,10 @@ interface NewInvoicePageProps {
   }>;
 }
 
-export default async function NewInvoicePage({
-  searchParams,
-}: NewInvoicePageProps) {
+export default async function NewInvoicePage({ searchParams }: NewInvoicePageProps) {
   const query = await searchParams;
   const isTax = query.type === "TAX" || Boolean(query.kind);
-  const docType =
-    query.type === "PROFORMA" ? "PROFORMA" : isTax ? "TAX" : "BOOKING";
+  const docType = query.type === "PROFORMA" ? "PROFORMA" : isTax ? "TAX" : "BOOKING";
   const noteKind =
     query.kind === "CREDIT" || query.kind === "DEBIT" ? query.kind : "INVOICE";
 
@@ -32,3 +29,4 @@ export default async function NewInvoicePage({
     />
   );
 }
+

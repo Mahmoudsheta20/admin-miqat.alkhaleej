@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  FileSpreadsheet,
-  MinusCircle,
-  PlusCircle,
-  ReceiptText,
-} from "lucide-react";
+import { FileSpreadsheet, MinusCircle, PlusCircle, ReceiptText } from "lucide-react";
 import type { InvoiceDocumentType, TaxDocument } from "@/lib/invoices";
 
-export type UnifiedDocChoice =
-  | "CUSTOMER"
-  | "PROFORMA"
-  | "CREDIT_NOTE"
-  | "DEBIT_NOTE";
+export type UnifiedDocChoice = "CUSTOMER" | "PROFORMA" | "CREDIT_NOTE" | "DEBIT_NOTE";
 
 interface InvoiceTypeSelectorProps {
   documentType: InvoiceDocumentType;
@@ -31,32 +22,28 @@ const CHOICES: {
     id: "CUSTOMER",
     title: "فاتورة للعميل",
     badge: "مستند نهائي",
-    description:
-      "مستند مالي معتمد لقيمة الخدمة والرحلة، يشمل رمز الفاتورة الضريبية ZATCA والترحيل المحاسبي.",
+    description: "مستند مالي معتمد لقيمة الخدمة والرحلة، يشمل رمز الفاتورة الضريبية ZATCA والترحيل المحاسبي.",
     icon: ReceiptText,
   },
   {
     id: "PROFORMA",
     title: "فاتورة مبدئية",
     badge: "عرض أسعار",
-    description:
-      "عرض أسعار أولي يتضمن بيانات الرحلة والآيبان البنكي SNB؛ لا يدخل في المحاسبة أو الضريبة حتى يعتمد.",
+    description: "عرض أسعار أولي يتضمن بيانات الرحلة والآيبان البنكي SNB؛ لا يدخل في المحاسبة أو الضريبة حتى يعتمد.",
     icon: FileSpreadsheet,
   },
   {
     id: "CREDIT_NOTE",
     title: "خفض قيمة فاتورة سابقة",
     badge: "إشعار دائن",
-    description:
-      "مستند رسمي لتخفيض أو إلغاء جزء من فاتورة سابقة؛ يُربط بالفاتورة الأصلية ويُخفض ضريبة المبيعات.",
+    description: "مستند رسمي لتخفيض أو إلغاء جزء من فاتورة سابقة؛ يُربط بالفاتورة الأصلية ويُخفض ضريبة المبيعات.",
     icon: MinusCircle,
   },
   {
     id: "DEBIT_NOTE",
     title: "إضافة مبلغ إلى فاتورة سابقة",
     badge: "إشعار مدين",
-    description:
-      "مستند رسمي لإضافة رسوم أو تمديد رحلة على فاتورة سابقة؛ يُربط بالفاتورة الأصلية ويُضاف لضريبة المبيعات.",
+    description: "مستند رسمي لإضافة رسوم أو تمديد رحلة على فاتورة سابقة؛ يُربط بالفاتورة الأصلية ويُضاف لضريبة المبيعات.",
     icon: PlusCircle,
   },
 ];
@@ -84,8 +71,7 @@ export default function InvoiceTypeSelector({
             نوع المستند المطلوب
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            اختر طبيعة الفاتورة؛ يحدد هذا الاختيار كيفية معالجة المستند ضريبياً
-            ومحاسبياً.
+            اختر طبيعة الفاتورة؛ يحدد هذا الاختيار كيفية معالجة المستند ضريبياً ومحاسبياً.
           </p>
         </div>
       </div>
@@ -115,9 +101,7 @@ export default function InvoiceTypeSelector({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Icon
-                      className={`size-4 ${isSelected ? "text-amber-600 dark:text-amber-400" : "text-slate-400"}`}
-                    />
+                    <Icon className={`size-4 ${isSelected ? "text-amber-600 dark:text-amber-400" : "text-slate-400"}`} />
                     <span className="text-sm font-black text-slate-900 dark:text-white">
                       {choice.title}
                     </span>

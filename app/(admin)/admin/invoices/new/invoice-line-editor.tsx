@@ -26,36 +26,11 @@ const COMPONENTS: Record<string, string> = {
   COMMISSION: "عمولة نقل",
 };
 
-const TAX_OPTIONS: {
-  code: string;
-  label: string;
-  rate: string;
-  hint: string;
-}[] = [
-  {
-    code: "S",
-    label: "خاضع لضريبة ١٥٪ (النسبة الأساسية)",
-    rate: "15",
-    hint: "تطبق على معظم رحلات وخدمات النقل المحلية",
-  },
-  {
-    code: "Z",
-    label: "خاضع لنسبة صفرية 0% (صادرات ونقل دولي)",
-    rate: "0",
-    hint: "النقل الدولي للركاب أو رحلات خارج حدود المملكة",
-  },
-  {
-    code: "E",
-    label: "معفى من الضريبة (Exempt)",
-    rate: "0",
-    hint: "خدمات معفاة بموجب المادة 29 من اللائحة",
-  },
-  {
-    code: "O",
-    label: "خارج نطاق الضريبة (Out of Scope)",
-    rate: "0",
-    hint: "مبالغ ورسوم محصلة باسم ولحساب الغير",
-  },
+const TAX_OPTIONS: { code: string; label: string; rate: string; hint: string }[] = [
+  { code: "S", label: "خاضع لضريبة ١٥٪ (النسبة الأساسية)", rate: "15", hint: "تطبق على معظم رحلات وخدمات النقل المحلية" },
+  { code: "Z", label: "خاضع لنسبة صفرية 0% (صادرات ونقل دولي)", rate: "0", hint: "النقل الدولي للركاب أو رحلات خارج حدود المملكة" },
+  { code: "E", label: "معفى من الضريبة (Exempt)", rate: "0", hint: "خدمات معفاة بموجب المادة 29 من اللائحة" },
+  { code: "O", label: "خارج نطاق الضريبة (Out of Scope)", rate: "0", hint: "مبالغ ورسوم محصلة باسم ولحساب الغير" },
 ];
 
 export default function InvoiceLineEditor({
@@ -68,15 +43,12 @@ export default function InvoiceLineEditor({
   onRemove,
 }: InvoiceLineEditorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const expanded =
-    isExpanded || isBooking || !value.component || !value.code.trim();
+  const expanded = isExpanded || isBooking || !value.component || !value.code.trim();
 
   const [priceEntryMode, setPriceEntryMode] = useState<"EXCL" | "INCL">("EXCL");
   const [inclusiveInput, setInclusiveInput] = useState<string>("");
 
-  const [discountMode, setDiscountMode] = useState<"AMOUNT" | "PERCENT">(
-    "AMOUNT",
-  );
+  const [discountMode, setDiscountMode] = useState<"AMOUNT" | "PERCENT">("AMOUNT");
   const [discountPercent, setDiscountPercent] = useState("0");
 
   function handlePriceChange(rawVal: string, mode: "EXCL" | "INCL") {
@@ -100,14 +72,7 @@ export default function InvoiceLineEditor({
     onChange({
       ...change,
       ...(discountMode === "PERCENT"
-        ? {
-            discount:
-              percentageDiscount(
-                next.quantity,
-                next.unitPrice,
-                discountPercent,
-              ) || "0",
-          }
+        ? { discount: percentageDiscount(next.quantity, next.unitPrice, discountPercent) || "0" }
         : {}),
     });
   }
@@ -152,10 +117,7 @@ export default function InvoiceLineEditor({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* Quantity */}
         <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-          {isBooking && (value.billingUnit || "TRIP") === "TRIP"
-            ? "عدد المركبات"
-            : "الكمية"}{" "}
-          *
+          {isBooking && (value.billingUnit || "TRIP") === "TRIP" ? "عدد المركبات" : "الكمية"} *
           <input
             required
             inputMode="decimal"
@@ -176,9 +138,7 @@ export default function InvoiceLineEditor({
           <select
             className={INPUT}
             value={value.billingUnit || "TRIP"}
-            onChange={(e) =>
-              onChange({ billingUnit: e.target.value as BillingUnit })
-            }
+            onChange={(e) => onChange({ billingUnit: e.target.value as BillingUnit })}
           >
             {Object.entries(BILLING_UNIT_LABELS).map(([k, label]) => (
               <option key={k} value={k}>
@@ -266,9 +226,7 @@ export default function InvoiceLineEditor({
               onChange({
                 category: cat,
                 rate: cat === "S" ? "15" : "0",
-                ...(cat === "S"
-                  ? { exemptionCode: undefined, exemptionReason: undefined }
-                  : {}),
+                ...(cat === "S" ? { exemptionCode: undefined, exemptionReason: undefined } : {}),
               });
             }}
           >
@@ -320,17 +278,12 @@ export default function InvoiceLineEditor({
         >
           <SlidersHorizontal className="size-3.5" />
           <span>تطبيق خصم أو تفاصيل توريد إضافية</span>
-          <ChevronDown
-            className={`size-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-          />
+          <ChevronDown className={`size-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
         </button>
 
         <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
           إجمالي هذا البند (شامل الضريبة):{" "}
-          <b
-            className="ms-1.5 font-mono text-sm text-slate-900 dark:text-white"
-            dir="ltr"
-          >
+          <b className="ms-1.5 font-mono text-sm text-slate-900 dark:text-white" dir="ltr">
             {amount || "—"}
           </b>
           <span className="ms-1 text-amber-600 dark:text-amber-400">ر.س</span>
@@ -364,12 +317,7 @@ export default function InvoiceLineEditor({
                   setDiscountMode(mode);
                   if (mode === "PERCENT") {
                     onChange({
-                      discount:
-                        percentageDiscount(
-                          value.quantity,
-                          value.unitPrice,
-                          discountPercent,
-                        ) || "0",
+                      discount: percentageDiscount(value.quantity, value.unitPrice, discountPercent) || "0",
                     });
                   }
                 }}
@@ -387,19 +335,12 @@ export default function InvoiceLineEditor({
                   : "[0-9]{1,10}([.][0-9]{1,2})?"
               }
               className={`${INPUT} font-mono`}
-              value={
-                discountMode === "PERCENT" ? discountPercent : value.discount
-              }
+              value={discountMode === "PERCENT" ? discountPercent : value.discount}
               onChange={(e) => {
                 if (discountMode === "PERCENT") {
                   setDiscountPercent(e.target.value);
                   onChange({
-                    discount:
-                      percentageDiscount(
-                        value.quantity,
-                        value.unitPrice,
-                        e.target.value,
-                      ) || "0",
+                    discount: percentageDiscount(value.quantity, value.unitPrice, e.target.value) || "0",
                   });
                 } else {
                   onChange({ discount: e.target.value });
