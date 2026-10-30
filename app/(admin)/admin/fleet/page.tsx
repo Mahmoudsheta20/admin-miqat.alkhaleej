@@ -24,6 +24,8 @@ import {
 import { Vehicle, VehicleStatus } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
+import SectionGuide from "@/app/_components/SectionGuide";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 export default function FleetManagementPage() {
@@ -37,6 +39,7 @@ export default function FleetManagementPage() {
   });
   const [isLoading, setIsLoading] = useState(() => !cachedFleet);
   const [loadError, setLoadError] = useState("");
+  const [seedMessage, setSeedMessage] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -187,7 +190,19 @@ export default function FleetManagementPage() {
             إدارة حافلات وسيارات ميقات الخليج ومتابعة الجاهزية والتأمين
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <SeedTestDataButton
+            onSeeded={(msg) => {
+              setLoadError("");
+              setSeedMessage(msg);
+              invalidateClientCache("fleet_vehicles");
+              void loadVehicles(true);
+            }}
+            onError={(err) => {
+              setSeedMessage("");
+              setLoadError(err);
+            }}
+          />
           <button
             onClick={() => loadVehicles(true)}
             disabled={isLoading}
@@ -205,6 +220,69 @@ export default function FleetManagementPage() {
           </button>
         </div>
       </div>
+
+      {seedMessage && (
+        <p
+          role="status"
+          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+        >
+          {seedMessage}
+        </p>
+      )}
+
+      <SectionGuide
+        title="شرح أسطول المركبات ومتابعة الجاهزية والتراخيص ومراكز التكلفة"
+        summary="يُدار في هذا القسم أسطول حافلات وسيارات شركة ميقات الخليج للنقل البري، مع توثيق اللوحات بالعربية والإنجليزية، السعة الركابية، عداد المسافات، وتواريخ انتهاء الاستمارة والتأمين."
+        cards={[
+          {
+            title: "1. فئات الأسطول وحالات الجاهزية",
+            badge: "إدارة الأسطول",
+            items: [
+              {
+                label: "تصنيف المركبات",
+                code: "BUS / COASTER / SUV_VIP",
+                description: "تحديد فئة المركبة (حافلة، كوستر، جمس VIP، فان، سيدان) وسعة المقاعد لاختيار المركبة المناسبة لحجم الوفد.",
+              },
+              {
+                label: "حالات التشغيل",
+                code: "AVAILABLE / ON_TRIP / MAINTENANCE",
+                description: "تتبع ما إذا كانت المركبة جاهزة للتشغيل، أو في رحلة حالية، أو داخل الصيانة الدورية.",
+              },
+            ],
+          },
+          {
+            title: "2. التراخيص والتأمين والعداد",
+            badge: "الامتثال النظامي",
+            items: [
+              {
+                label: "صلاحية الاستمارة والتأمين",
+                description: "مراقبة تواريخ انتهاء رخصة السير (الاستمارة) ووثيقة التأمين لتفادي إيقاف الخدمات أو المخالفات.",
+              },
+              {
+                label: "قراءة عداد المسافات (Odometer)",
+                description: "تحديث المسافة المقطوعة بالكيلومتر لمتابعة مواعيد تغيير الزيوت والإطارات والصيانة الوقائية.",
+              },
+            ],
+          },
+          {
+            title: "3. الربط المحاسبي بالمركبة",
+            badge: "مراكز التكلفة",
+            items: [
+              {
+                label: "الأصول الثابتة للأسطول",
+                code: "1201",
+                description: "تندرج قيمة أسطول السيارات والحافلات ضمن حساب (1201 - أسطول السيارات والمركبات والحافلات).",
+              },
+              {
+                label: "ربط المصروفات بلوحة المركبة",
+                code: "5101 / 5102 / 5104",
+                description: "عند تسجيل فاتورة وقود أو صيانة أو تأمين في قسم المشتريات، يمكن ربطها برقم لوحة المركبة لتتبع تكلفة كل مركبة.",
+              },
+            ],
+          },
+        ]}
+        tip="ربط رقم لوحة المركبة بفواتير الوقود والصيانة والعقود يساعدك على معرفة ربحية وتكلفة تشغيل كل مركبة بدقة."
+      />
 
       {/* Filter and Search */}
       <div className="flex flex-col sm:flex-row items-center gap-3">

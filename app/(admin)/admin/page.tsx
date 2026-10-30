@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
 import StatusBadge from "@/app/_components/StatusBadge";
+import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
+import SectionGuide from "@/app/_components/SectionGuide";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 
@@ -28,6 +30,8 @@ export default function AdminDashboardPage() {
   const [selectedRefNum, setSelectedRefNum] = useState<string>("");
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [seedMessage, setSeedMessage] = useState("");
+  const [seedError, setSeedError] = useState("");
   const [, startTransition] = useTransition();
 
   const loadStats = (forceRefresh = false) => {
@@ -71,7 +75,18 @@ export default function AdminDashboardPage() {
             متابعة شاملة لأسطول ميقات الخليج، الكباتن، وحركة العقود الرسمية
           </p>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <SeedTestDataButton
+            onSeeded={(msg) => {
+              setSeedError("");
+              setSeedMessage(msg);
+              loadStats(true);
+            }}
+            onError={(err) => {
+              setSeedMessage("");
+              setSeedError(err);
+            }}
+          />
           <button
             onClick={() => loadStats(true)}
             disabled={isLoading}
@@ -96,6 +111,79 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {seedMessage && (
+        <p
+          role="status"
+          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+        >
+          {seedMessage}
+        </p>
+      )}
+      {seedError && (
+        <p role="alert" className="text-xs sm:text-sm font-bold text-rose-600">
+          {seedError}
+        </p>
+      )}
+
+      <SectionGuide
+        title="كيف تعمل لوحة الإشراف العام ومنظومة التشغيل والمالية؟"
+        summary="مركز القيادة الموحد لشركة ميقات الخليج للنقل البري: يربط دورة التشغيل الميداني (المركبات ← الكباتن ← الفحص اليومي ← العقود الرسمية) بالدورة المحاسبية والضريبية (الفواتير ← المشتريات ← القيود ← الإقرار الضريبي)."
+        cards={[
+          {
+            title: "1. دورة التشغيل الميداني",
+            badge: "العمليات",
+            items: [
+              {
+                label: "أسطول المركبات والكباتن",
+                description: "تسجيل الحافلات وسيارات VIP وتعيين مركبة مخصصة لكل كابتن مع متابعة صلاحية الاستمارة والتأمين.",
+              },
+              {
+                label: "الفحص اليومي الإلزامي",
+                description: "يُشترط اجتياز فحص السلامة اليومي (15 بنداً ميكانيكياً وأمنياً) قبل إصدار عقود التشغيل اليومية.",
+              },
+              {
+                label: "العقود وكشوف الركاب",
+                description: "إصدار عقود النقل الرسمية متضمنة بيانات الرحلة، الناقل الجوي، وكشف أسماء وجنسيات وهويات الركاب.",
+              },
+            ],
+          },
+          {
+            title: "2. الدورة المالية والفوترة ZATCA",
+            badge: "المبيعات والضريبة",
+            items: [
+              {
+                label: "فواتير الحجوزات والضريبة",
+                code: "15% / 0% / معفى",
+                description: "إصدار فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة متوافقة مع المرحلة الأولى لهيئة الزكاة والضريبة والجمارك (TLV Base64 QR).",
+              },
+              {
+                label: "الترحيل المحاسبي التلقائي",
+                code: "1102 / 1103 / 4101 / 210201",
+                description: "كل فاتورة معتمدة تُنشئ قيد يومية متوازناً يربط حساب الإيراد وحساب ضريبة المخرجات بحساب البنك أو ذمم العملاء.",
+              },
+            ],
+          },
+          {
+            title: "3. المصروفات والإقرار الضريبي",
+            badge: "ZATCA VAT",
+            items: [
+              {
+                label: "مشتريات ومصروفات الأسطول",
+                code: "5101–5203",
+                description: "تسجيل فواتير الوقود والصيانة والإيجارات مع احتساب ضريبة المدخلات القابلة للاسترداد (210202) وعزل الرسوم الحكومية والرواتب.",
+              },
+              {
+                label: "الإقرار الضريبي الربع سنوي",
+                code: "خانات 1–16",
+                description: "تجميع آلي لصافي الضريبة المستحقة (ضريبة المخرجات ناقص ضريبة المدخلات) مع نسخ فوري للأرقام لبوابة هيئة الزكاة.",
+              },
+            ],
+          },
+        ]}
+        tip="اضغط على زر «بيانات تجريبية شاملة (رأس مال 300,000 ر.س)» في الأعلى لتعبئة جميع الأقسام الـ 11 تلقائياً وتجربة الدورة الكاملة."
+        formula="Net VAT = Output VAT (Sales 15% ± Notes) − Input VAT (Purchases 15% − Returns)"
+      />
 
       {/* Quick Daily Operations Shortcuts */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

@@ -18,6 +18,11 @@ import {
   Shield,
   ShieldCheck,
   ReceiptText,
+  ShoppingBag,
+  BookOpen,
+  Landmark,
+  Calculator,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { UserRole, SystemUser } from "@/lib/types";
@@ -31,15 +36,111 @@ interface NavItem {
   badgeColor?: string;
   roles: UserRole[];
   superAdminOnly?: boolean;
+  section?: "OPERATIONS" | "DAILY" | "REVIEW" | "CAPTAIN";
 }
 
 const NAV_ITEMS: NavItem[] = [
-  // Admin Navigation
+  // 1. Operations & Fleet (العمليات والأسطول)
   {
     href: "/admin",
     label: "لوحة التحكم",
     icon: <LayoutDashboard className="w-4 h-4" />,
     roles: ["ADMIN"],
+    section: "OPERATIONS",
+  },
+  {
+    href: "/admin/contracts",
+    label: "سجل العقود الرسمية",
+    icon: <FileText className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "OPERATIONS",
+  },
+  {
+    href: "/admin/contracts/new",
+    label: "إنشاء عقد رسمي",
+    icon: <FilePlus2 className="w-4 h-4" />,
+    badge: "جديد",
+    badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
+    roles: ["ADMIN"],
+    section: "OPERATIONS",
+  },
+  {
+    href: "/admin/captains",
+    label: "إدارة الكباتن",
+    icon: <UserCheck className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "OPERATIONS",
+  },
+  {
+    href: "/admin/inspections",
+    label: "فحص الكباتن والمركبات",
+    icon: <ClipboardCheck className="w-4 h-4" />,
+    badge: "يومي",
+    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
+    roles: ["ADMIN"],
+    section: "OPERATIONS",
+  },
+  {
+    href: "/admin/fleet",
+    label: "أسطول المركبات",
+    icon: <Car className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "OPERATIONS",
+  },
+
+  // 2. Daily Work (العمل اليومي والمالية)
+  {
+    href: "/admin/invoices",
+    label: "الفواتير",
+    icon: <ReceiptText className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "DAILY",
+  },
+  {
+    href: "/admin/purchases",
+    label: "المصروفات والمشتريات",
+    icon: <ShoppingBag className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "DAILY",
+  },
+  {
+    href: "/admin/accounting",
+    label: "القيود والقبض والدفع",
+    icon: <Landmark className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "DAILY",
+  },
+
+  // 3. Review & Settings (المراجعة والإعدادات)
+  {
+    href: "/admin/vat-returns",
+    label: "الإقرار الضريبي",
+    icon: <Calculator className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "REVIEW",
+  },
+  {
+    href: "/admin/accounts",
+    label: "دليل الحسابات",
+    icon: <BookOpen className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "REVIEW",
+  },
+  {
+    href: "/admin/invoices/settings",
+    label: "بيانات الشركة والبنك",
+    icon: <Building2 className="w-4 h-4" />,
+    roles: ["ADMIN"],
+    section: "REVIEW",
+  },
+  {
+    href: "/admin/zatca",
+    label: "الفوترة الضريبية ZATCA",
+    icon: <ShieldCheck className="w-4 h-4" />,
+    badge: "متقدم",
+    badgeColor: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
+    roles: ["ADMIN"],
+    section: "REVIEW",
   },
   {
     href: "/admin/admins",
@@ -49,52 +150,8 @@ const NAV_ITEMS: NavItem[] = [
     badgeColor: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30",
     roles: ["ADMIN"],
     superAdminOnly: true,
+    section: "REVIEW",
   },
-  {
-    href: "/admin/contracts/new",
-    label: "إنشاء عقد رسمي",
-    icon: <FilePlus2 className="w-4 h-4" />,
-    badge: "جديد",
-    badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
-    roles: ["ADMIN"],
-  },
-  {
-    href: "/admin/contracts",
-    label: "سجل العقود الرسمية",
-    icon: <FileText className="w-4 h-4" />,
-    roles: ["ADMIN"],
-  },
-  {
-    href: "/admin/captains",
-    label: "إدارة الكباتن",
-    icon: <UserCheck className="w-4 h-4" />,
-    roles: ["ADMIN"],
-  },
-  {
-    href: "/admin/inspections",
-    label: "فحص الكباتن والمركبات",
-    icon: <ClipboardCheck className="w-4 h-4" />,
-    badge: "يومي",
-    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
-    roles: ["ADMIN"],
-  },
-  {
-    href: "/admin/fleet",
-    label: "أسطول المركبات",
-    icon: <Car className="w-4 h-4" />,
-    roles: ["ADMIN"],
-  },
-
-  {
-    href: "/admin/invoices",
-    label: "الفواتير",
-    icon: <ReceiptText className="w-4 h-4" />,
-    roles: ["ADMIN"],
-  },
-
-  { href: "/admin/zatca", label: "الفوترة الضريبية", icon: <ShieldCheck className="w-4 h-4" />, roles: ["ADMIN"] },
-  { href: "/admin/purchases", label: "المشتريات والمصروفات", icon: <ReceiptText className="w-4 h-4" />, roles: ["ADMIN"] },
-  { href: "/admin/vat-returns", label: "الإقرار الضريبي", icon: <ClipboardCheck className="w-4 h-4" />, roles: ["ADMIN"] },
 
   // Captain Navigation
   {
@@ -102,6 +159,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "الرئيسية",
     icon: <Home className="w-4 h-4" />,
     roles: ["CAPTAIN"],
+    section: "CAPTAIN",
   },
   {
     href: "/captain/contract",
@@ -110,6 +168,7 @@ const NAV_ITEMS: NavItem[] = [
     badge: "جديد",
     badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
     roles: ["CAPTAIN"],
+    section: "CAPTAIN",
   },
   {
     href: "/captain/inspection",
@@ -118,6 +177,7 @@ const NAV_ITEMS: NavItem[] = [
     badge: "إلزامي",
     badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
     roles: ["CAPTAIN"],
+    section: "CAPTAIN",
   },
 ];
 
@@ -168,6 +228,13 @@ function SidebarHeader({ collapsed, homePath, onNavigate }: SidebarHeaderProps) 
   );
 }
 
+const SECTION_TITLES: Record<string, string> = {
+  OPERATIONS: "العمليات والأسطول",
+  DAILY: "العمل اليومي والمالية",
+  REVIEW: "المراجعة والإعدادات",
+  CAPTAIN: "بوابة الكابتن",
+};
+
 interface SidebarNavLinksProps {
   collapsed: boolean;
   pathname: string;
@@ -190,52 +257,60 @@ function SidebarNavLinks({
 
   return (
     <nav aria-label="القائمة الرئيسية" className="min-h-0 flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overscroll-contain">
-      {!collapsed && (
-        <p className="px-3 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-          القائمة الرئيسية
-        </p>
-      )}
-      {filteredItems.map((item) => {
+      {filteredItems.map((item, index) => {
         const active = isActive(item.href);
+        const prevSection = index > 0 ? filteredItems[index - 1]?.section : undefined;
+        const sectionChanged = Boolean(item.section && item.section !== prevSection);
+
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onMobileClose}
-            aria-current={active ? "page" : undefined}
-            className={`group relative min-h-12 lg:min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
-              active
-                ? "bg-amber-500/12 text-amber-700 dark:text-amber-400 font-black border border-amber-500/25 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-950 dark:hover:text-white border border-transparent"
-            } ${collapsed ? "justify-center px-2 py-3" : ""}`}
-            title={collapsed ? item.label : undefined}
-          >
-            {/* Active right bar in RTL */}
-            {active && (
-              <span className="absolute right-0 top-2 bottom-2 w-1 bg-amber-500 rounded-l-full" />
-            )}
-            <span
-              className={`shrink-0 transition-colors ${
-                active
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-slate-400 dark:text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200"
-              }`}
-            >
-              {item.icon}
-            </span>
-            {!collapsed && (
-              <>
-                <span className="truncate text-sm lg:text-xs font-bold tracking-normal">{item.label}</span>
-                {item.badge && (
-                  <span
-                    className={`mr-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${item.badgeColor}`}
-                  >
-                    {item.badge}
-                  </span>
+          <React.Fragment key={item.href}>
+            {sectionChanged && (
+              <div className={`${index > 0 ? "pt-3.5 mt-2 border-t border-slate-200/70 dark:border-slate-800/70" : ""}`}>
+                {!collapsed && item.section && SECTION_TITLES[item.section] && (
+                  <p className="px-3 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                    {SECTION_TITLES[item.section]}
+                  </p>
                 )}
-              </>
+              </div>
             )}
-          </Link>
+            <Link
+              href={item.href}
+              onClick={onMobileClose}
+              aria-current={active ? "page" : undefined}
+              className={`group relative min-h-12 lg:min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
+                active
+                  ? "bg-amber-500/12 text-amber-700 dark:text-amber-400 font-black border border-amber-500/25 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-950 dark:hover:text-white border border-transparent"
+              } ${collapsed ? "justify-center px-2 py-3" : ""}`}
+              title={collapsed ? item.label : undefined}
+            >
+              {/* Active right bar in RTL */}
+              {active && (
+                <span className="absolute right-0 top-2 bottom-2 w-1 bg-amber-500 rounded-l-full" />
+              )}
+              <span
+                className={`shrink-0 transition-colors ${
+                  active
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-slate-400 dark:text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200"
+                }`}
+              >
+                {item.icon}
+              </span>
+              {!collapsed && (
+                <>
+                  <span className="truncate text-sm lg:text-xs font-bold tracking-normal">{item.label}</span>
+                  {item.badge && (
+                    <span
+                      className={`mr-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${item.badgeColor}`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </>
+              )}
+            </Link>
+          </React.Fragment>
         );
       })}
     </nav>

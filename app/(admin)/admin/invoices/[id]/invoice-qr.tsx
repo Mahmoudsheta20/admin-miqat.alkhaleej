@@ -13,5 +13,23 @@ export default function InvoiceQr({ invoiceId, isTax = false }: InvoiceQrProps) 
       .catch(() => { if (!controller.signal.aborted) setError("تعذر عرض رمز QR"); });
     return () => { controller.abort(); if (url) URL.revokeObjectURL(url); };
   }, [invoiceId, isTax]);
-  return image ? <Image src={image} alt={isTax ? "رمز ضريبي للمرحلة الأولى" : "رمز رابط الفاتورة"} width={180} height={180} unoptimized className="rounded-lg" /> : <p className="text-sm text-slate-500">{error || "جارٍ تحميل الرمز…"}</p>;
+  return image ? (
+    <figure className="text-center">
+      <Image
+        src={image}
+        alt={isTax ? "رمز الفاتورة الضريبية | Tax Invoice QR" : "رمز رابط الفاتورة"}
+        width={180}
+        height={180}
+        unoptimized
+        className="mx-auto rounded-lg"
+      />
+      {isTax && (
+        <figcaption className="mt-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+          رمز الفاتورة الضريبية | <span dir="ltr">Tax Invoice QR</span>
+        </figcaption>
+      )}
+    </figure>
+  ) : (
+    <p className="text-sm text-slate-500">{error || "جارٍ تحميل الرمز…"}</p>
+  );
 }

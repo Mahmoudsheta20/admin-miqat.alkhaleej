@@ -39,6 +39,8 @@ import StatusBadge from "@/app/_components/StatusBadge";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
+import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
+import SectionGuide from "@/app/_components/SectionGuide";
 import { formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
@@ -359,6 +361,15 @@ export default function AdminContractsPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <SeedTestDataButton
+            onSeeded={(msg) => {
+              invalidateClientCache("contracts_");
+              invalidateClientCache("captains_list");
+              setSyncStatus(msg);
+              void fetchContractsData(undefined, true);
+            }}
+            onError={(err) => setSyncStatus(err)}
+          />
           <Link
             href="/admin/contracts/new"
             className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs hover:shadow-md"
@@ -377,6 +388,66 @@ export default function AdminContractsPage() {
           </button>
         </div>
       </div>
+
+      <SectionGuide
+        title="شرح سجل العقود الرسمية وتوثيق الرحلات وكشوف الركاب"
+        summary="يُستخدم هذا القسم لإصدار وتوثيق عقود النقل البري المعتمدة وفق اشتراطات الهيئة العامة للنقل (TGA)، مع ربط كل عقد بالكابتن والمركبة وفحص السلامة اليومي وكشف الركاب."
+        cards={[
+          {
+            title: "1. أنواع عقود التشغيل",
+            badge: "أنماط النقل",
+            items: [
+              {
+                label: "حج وعمرة (HAJJ_UMRAH)",
+                description: "عقود نقل المعتمرين والحجاج والزوار بين المطارات والفنادق والحرمين الشريفين.",
+              },
+              {
+                label: "توصيل مطارات وكبار شخصيات",
+                code: "AIRPORT / VIP",
+                description: "رحلات الاستقبال والتوديع بالمطارات مع توثيق الناقل الجوي ورقم الرحلة ووقت الوصول.",
+              },
+              {
+                label: "نقل بين المدن وتعاقدات",
+                code: "INTERCITY / CHARTER",
+                description: "عقود تشغيل الحافلات والمركبات للوفود والشركات والرحلات السياحية.",
+              },
+            ],
+          },
+          {
+            title: "2. المتطلبات النظامية للعقد",
+            badge: "TGA & QR",
+            items: [
+              {
+                label: "ربط الفحص اليومي",
+                description: "يتحقق النظام من وجود فحص سلامة يومي معتمد للكابتن والمركبة قبل انطلاق الرحلة.",
+              },
+              {
+                label: "كشف الركاب (Passenger Manifest)",
+                description: "إدراج أسماء الركاب وجنسياتهم وأرقام الهوية/الجواز داخل وثيقة العقد الرسمية.",
+              },
+              {
+                label: "رمز التحقق الإلكتروني QR",
+                description: "يحتوي كل عقد PDF على رمز QR رسمي للتحقق الفوري من صحة العقد وسريانه ميدانياً.",
+              },
+            ],
+          },
+          {
+            title: "3. الإجراءات السريعة",
+            badge: "أدوات المشرف",
+            items: [
+              {
+                label: "إنشاء رحلة عودة (Reverse Trip)",
+                description: "توليد عقد رحلة عودة بضغطة واحدة بنفس كشف الركاب والكابتن مع عكس نقطة الانطلاق والوجهة.",
+              },
+              {
+                label: "معاينة وتنزيل PDF",
+                description: "استعراض وثيقة العقد الرسمي وطباعتها أو إرسالها للكابتن والعميل مباشرة.",
+              },
+            ],
+          },
+        ]}
+        tip="يمكنك فلترة العقود حسب حالة الفحص (مفحوص / بدون فحص) أو نوع العملية أو اسم الكابتن من البطاقات التفاعلية أدناه."
+      />
 
       {/* KPI Stats Ribbon */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

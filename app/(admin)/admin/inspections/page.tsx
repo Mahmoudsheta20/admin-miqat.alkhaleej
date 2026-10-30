@@ -45,6 +45,8 @@ import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
 const InspectionPdfPreviewModal = dynamic(() => import("@/app/_components/InspectionPdfPreviewModal"), { ssr: false });
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
+import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
+import SectionGuide from "@/app/_components/SectionGuide";
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
@@ -472,6 +474,15 @@ export default function AdminInspectionsPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <SeedTestDataButton
+            onSeeded={(msg) => {
+              showBanner("success", msg);
+              invalidateClientCache("inspections_");
+              invalidateClientCache("dashboard_stats");
+              void loadData(true);
+            }}
+            onError={(err) => showBanner("error", err)}
+          />
           <button
             onClick={() => loadData(true)}
             disabled={isRefreshing}
@@ -493,6 +504,56 @@ export default function AdminInspectionsPage() {
           </button>
         </div>
       </div>
+
+      <SectionGuide
+        title="شرح نظام الفحص اليومي للكباتن والمركبات (15 بند سلامة)"
+        summary="يضمن هذا القسم عدم انطلاق أي مركبة في رحلة رسمية قبل التحقق من جاهزيتها الميكانيكية وتوفر أدوات السلامة والطوارئ على متنها وتوثيق إقرار السائق."
+        cards={[
+          {
+            title: "1. بنود لوحة القيادة والمحرك",
+            badge: "6 بنود ميكانيكية",
+            items: [
+              {
+                label: "المؤشرات الحيوية",
+                description: "مؤشر الوقود، مؤشر حرارة المحرك، ضغط الزيت، ولمبة فحص المحرك (Check Engine).",
+              },
+              {
+                label: "أنظمة المكابح والتحذير",
+                description: "سلامة نظام الفرامل المانعة للانغلاق (ABS) وخلو الطبلون من أي إشارات تحذيرية حرجة.",
+              },
+            ],
+          },
+          {
+            title: "2. الفحص الخارجي وأدوات السلامة",
+            badge: "9 بنود أمان",
+            items: [
+              {
+                label: "الهيكل والإطارات والأنوار",
+                description: "سلامة الإطارات، الأنوار الأمامية، الإشارات الجانبية، المرايا، وعدم وجود أي تسريبات أسفل المركبة.",
+              },
+              {
+                label: "تجهيزات الطوارئ الإلزامية",
+                description: "طفاية الحريق، مثلث التحذير العاكس، حقيبة الإسعافات الأولية، مطرقة كسر الزجاج، وأحزمة الأمان.",
+              },
+            ],
+          },
+          {
+            title: "3. طرق الاعتماد والتوثيق",
+            badge: "التشغيل السريع",
+            items: [
+              {
+                label: "الاعتماد الفوري المباشر",
+                description: "يُتيح للمشرف اعتماد جاهزية الكابتن والمركبة بضغطة زر واحدة بعد المعاينة الميدانية.",
+              },
+              {
+                label: "تقرير الفحص الرسمي PDF",
+                description: "يُصدر النظام شهادة فحص يومية قابلة للطباعة وتُربط تلقائياً بعقود الرحلات الصادرة في نفس اليوم.",
+              },
+            ],
+          },
+        ]}
+        tip="انقر على «اجتياز فحص مباشر» أمام أي كابتن لاعتماد فحص اليوم فوراً، أو استخدم «فحص مخصص جديد» لتسجيل ملاحظات تفصيلية على بنود محددة."
+      />
 
       {/* KPI Stats Cards (Interactive Filter Triggers) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

@@ -33,6 +33,8 @@ import {
 import { SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
+import SectionGuide from "@/app/_components/SectionGuide";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 type CaptainItem = SystemUser & {
@@ -51,6 +53,7 @@ export default function CaptainsManagementPage() {
   });
   const [isLoading, setIsLoading] = useState(() => !cachedCaptains);
   const [loadError, setLoadError] = useState("");
+  const [seedMessage, setSeedMessage] = useState("");
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
@@ -262,7 +265,19 @@ export default function CaptainsManagementPage() {
             سجل الكباتن، الفحص الميداني اليومي، ورخص القيادة المعتمدة
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <SeedTestDataButton
+            onSeeded={(msg) => {
+              setLoadError("");
+              setSeedMessage(msg);
+              invalidateClientCache("captains_list");
+              void loadCaptains(true);
+            }}
+            onError={(err) => {
+              setSeedMessage("");
+              setLoadError(err);
+            }}
+          />
           <button
             onClick={() => loadCaptains(true)}
             disabled={isLoading}
@@ -282,6 +297,66 @@ export default function CaptainsManagementPage() {
           </button>
         </div>
       </div>
+
+      {seedMessage && (
+        <p
+          role="status"
+          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+        >
+          {seedMessage}
+        </p>
+      )}
+
+      <SectionGuide
+        title="شرح إدارة الكباتن ورخص القيادة وإسناد المركبات"
+        summary="يُدار في هذا القسم سجل كباتن شركة ميقات الخليج للنقل البري، بيانات الهوية الوطنية/الإقامة، رخص القيادة وتواريخ انتهائها، المركبة المسندة لكل كابتن، وحالة الفحص اليومي."
+        cards={[
+          {
+            title: "1. بيانات الكابتن والاعتماد",
+            badge: "السجل الرسمي",
+            items: [
+              {
+                label: "الهوية ورخصة القيادة",
+                description: "توثيق رقم الهوية/الإقامة ورقم رخصة القيادة العمومي وتاريخ انتهائها لضمان الامتثال النظامي.",
+              },
+              {
+                label: "إسناد المركبة (Vehicle Plate)",
+                description: "ربط الكابتن بلوحة المركبة المخصصة له لتعبئتها تلقائياً في شاشة الفحص اليومي وعقود النقل.",
+              },
+            ],
+          },
+          {
+            title: "2. بوابة الكابتن وكلمات المرور",
+            badge: "الأمان والدخول",
+            items: [
+              {
+                label: "إنشاء كلمة مرور مؤقتة",
+                description: "عند إضافة كابتن جديد أو الضغط على أيقونة المفتاح، يُصدر النظام كلمة مرور مؤقتة لدخول بوابة الكابتن.",
+              },
+              {
+                label: "التنشيط والإيقاف الفوري",
+                description: "يمكن تفعيل أو إيقاف حساب الكابتن بضغطة واحدة دون فقدان سجل عقوده وفحوصاته السابقة.",
+              },
+            ],
+          },
+          {
+            title: "3. الربط التشغيلي والمحاسبي",
+            badge: "التكامل",
+            items: [
+              {
+                label: "حالة فحص اليوم",
+                description: "يظهر أمام كل كابتن شارة فورية توضح ما إذا أتم فحص السلامة اليومي للمركبة أم بانتظار الفحص.",
+              },
+              {
+                label: "مسير الرواتب والعهد",
+                code: "5105 / 1104",
+                description: "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%).",
+              },
+            ],
+          },
+        ]}
+        tip="استخدم زر المفتاح (إعادة تعيين كلمة المرور) لإصدار بيانات دخول جديدة للكابتن ونسخها بضغطة واحدة."
+      />
 
       {/* Search Filter */}
       <div className="theme-card p-4 rounded-2xl border theme-border flex items-center gap-3">
