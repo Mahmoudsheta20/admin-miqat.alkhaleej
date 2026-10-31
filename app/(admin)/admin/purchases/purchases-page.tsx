@@ -39,7 +39,9 @@ export default function PurchasesPage() {
   const [page, setPage] = useState(1);
   const [reload, setReload] = useState(0);
   const [includeVoided, setIncludeVoided] = useState(false);
-  const [editor, setEditor] = useState<PurchaseRow | "NEW" | "NEW_RETURN" | null>(null);
+  const [editor, setEditor] = useState<
+    PurchaseRow | "NEW" | "NEW_RETURN" | null
+  >(null);
   const [history, setHistory] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
@@ -54,7 +56,7 @@ export default function PurchasesPage() {
 
   const { data, error, isLoading } = useAccountingQuery<PurchaseList>(
     `/purchases?${query}`,
-    reload
+    reload,
   );
 
   function saved() {
@@ -84,7 +86,8 @@ export default function PurchasesPage() {
               المصروفات والمشتريات
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              سجّل فواتير الموردين، تابع مصروفات الأسطول، واخصم الضريبة المستحقة.
+              سجّل فواتير الموردين، تابع مصروفات الأسطول، واخصم الضريبة
+              المستحقة.
             </p>
           </div>
         </div>
@@ -143,11 +146,13 @@ export default function PurchasesPage() {
             items: [
               {
                 label: "مصروفات المركبات والتشغيل",
-                description: "الوقود (5101)، الصيانة والإطارات (5102)، النقل من الباطن (5103)، وتأمين المركبات (5104).",
+                description:
+                  "الوقود (5101)، الصيانة والإطارات (5102)، النقل من الباطن (5103)، وتأمين المركبات (5104).",
               },
               {
                 label: "الرواتب والرسوم الحكومية",
-                description: "رواتب وعمولات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة.",
+                description:
+                  "رواتب وعمولات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة.",
               },
             ],
           },
@@ -157,11 +162,13 @@ export default function PurchasesPage() {
             items: [
               {
                 label: "شروط استحقاق الخصم",
-                description: "توفر فاتورة ضريبية رسمية باسم الشركة، ورقم ضريبي للمورد، ورقم مرجعي للمستند.",
+                description:
+                  "توفر فاتورة ضريبية رسمية باسم الشركة، ورقم ضريبي للمورد، ورقم مرجعي للمستند.",
               },
               {
                 label: "حساب الضريبة من الإجمالي",
-                description: "يدعم النظام إدخال الصافي قبل الضريبة أو استخراج الضريبة عكسياً من الإجمالي شامل 15% بدقة هللة واحدة.",
+                description:
+                  "يدعم النظام إدخال الصافي قبل الضريبة أو استخراج الضريبة عكسياً من الإجمالي شامل 15% بدقة هللة واحدة.",
               },
             ],
           },
@@ -171,11 +178,13 @@ export default function PurchasesPage() {
             items: [
               {
                 label: "طرق السداد المعتمدة",
-                description: "آجل على حساب المورد (2101) أو تحويل بنكي (1102) أو نقداً من الصندوق (1101).",
+                description:
+                  "آجل على حساب المورد (2101) أو تحويل بنكي (1102) أو نقداً من الصندوق (1101).",
               },
               {
                 label: "رفع صورة الفاتورة أو PDF",
-                description: "يمكن إرفاق نسخة الفاتورة أو الإيصال مباشرة لحفظ المستند المؤيد للخصم الضريبي.",
+                description:
+                  "يمكن إرفاق نسخة الفاتورة أو الإيصال مباشرة لحفظ المستند المؤيد للخصم الضريبي.",
               },
             ],
           },
@@ -197,13 +206,14 @@ export default function PurchasesPage() {
                 setPage(1);
               }}
             >
-              {Array.from({ length: current.year - 2019 + 2 }, (_, i) => 2020 + i).map(
-                (val) => (
-                  <option key={val} value={val}>
-                    {val}
-                  </option>
-                )
-              )}
+              {Array.from(
+                { length: current.year - 2019 + 2 },
+                (_, i) => 2020 + i,
+              ).map((val) => (
+                <option key={val} value={val}>
+                  {val}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -323,16 +333,42 @@ export default function PurchasesPage() {
       {/* KPI Cards Ribbon */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
-          { label: "المشتريات قبل الضريبة", value: data?.totals.netAmount, color: "text-slate-900 dark:text-white" },
-          { label: "إجمالي ضريبة الفواتير", value: data?.totals.vatAmount, color: "text-amber-600 dark:text-amber-400" },
-          { label: "ضريبة يمكن خصمها (الخانة 7)", value: data?.totals.recoverableVat, color: "text-emerald-600 dark:text-emerald-400" },
-          { label: "الإجمالي شامل الضريبة", value: data?.totals.totalAmount, color: "text-slate-900 dark:text-white" },
+          {
+            label: "المشتريات قبل الضريبة",
+            value: data?.totals.netAmount,
+            color: "text-slate-900 dark:text-white",
+          },
+          {
+            label: "إجمالي ضريبة الفواتير",
+            value: data?.totals.vatAmount,
+            color: "text-amber-600 dark:text-amber-400",
+          },
+          {
+            label: "ضريبة يمكن خصمها (الخانة 7)",
+            value: data?.totals.recoverableVat,
+            color: "text-emerald-600 dark:text-emerald-400",
+          },
+          {
+            label: "الإجمالي شامل الضريبة",
+            value: data?.totals.totalAmount,
+            color: "text-slate-900 dark:text-white",
+          },
         ].map((card) => (
-          <div key={card.label} className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{card.label}</p>
-            <p className={`mt-2 font-mono text-xl sm:text-2xl font-black ${card.color}`} dir="ltr">
+          <div
+            key={card.label}
+            className="theme-card rounded-2xl border theme-border p-4 sm:p-5"
+          >
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              {card.label}
+            </p>
+            <p
+              className={`mt-2 font-mono text-xl sm:text-2xl font-black ${card.color}`}
+              dir="ltr"
+            >
               {card.value ? amountLabel(card.value) : "—"}
-              <span className="ms-1.5 text-xs font-bold text-slate-400">ر.س</span>
+              <span className="ms-1.5 text-xs font-bold text-slate-400">
+                ر.س
+              </span>
             </p>
           </div>
         ))}
@@ -373,7 +409,9 @@ export default function PurchasesPage() {
                   <tr
                     key={row.id}
                     className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition duration-150 ${
-                      isVoided ? "opacity-60 bg-rose-50/30 dark:bg-rose-950/20" : ""
+                      isVoided
+                        ? "opacity-60 bg-rose-50/30 dark:bg-rose-950/20"
+                        : ""
                     }`}
                   >
                     <td className="px-4 py-3.5">
@@ -390,11 +428,16 @@ export default function PurchasesPage() {
                           )}
                         </div>
                         <p className="text-xs text-slate-500 font-mono">
-                          <span className="text-amber-700 dark:text-amber-400 font-bold">{row.voucher}</span>
+                          <span className="text-amber-700 dark:text-amber-400 font-bold">
+                            {row.voucher}
+                          </span>
                           {" · "}
                           <span>{row.invoiceNumber}</span>
                           {row.supplierVatNumber && (
-                            <span className="text-slate-400"> ({row.supplierVatNumber})</span>
+                            <span className="text-slate-400">
+                              {" "}
+                              ({row.supplierVatNumber})
+                            </span>
                           )}
                         </p>
                         {isVoided && (
@@ -419,32 +462,65 @@ export default function PurchasesPage() {
                     </td>
 
                     <td className="px-4 py-3.5 font-mono text-xs whitespace-nowrap">
-                      <span className="text-slate-800 dark:text-slate-200 block">{row.issueDate}</span>
-                      <span className="text-[11px] text-slate-400">الضريبة: {row.vatDate}</span>
+                      <span className="text-slate-800 dark:text-slate-200 block">
+                        {row.issueDate}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        الضريبة: {row.vatDate}
+                      </span>
                     </td>
 
-                    <td className="px-4 py-3.5 font-mono text-xs whitespace-nowrap" dir="ltr">
-                      {amountLabel(isReturn ? String(-Number(row.netAmount)) : row.netAmount)}
+                    <td
+                      className="px-4 py-3.5 font-mono text-xs whitespace-nowrap"
+                      dir="ltr"
+                    >
+                      {amountLabel(
+                        isReturn
+                          ? String(-Number(row.netAmount))
+                          : row.netAmount,
+                      )}
                     </td>
 
-                    <td className="px-4 py-3.5 font-mono text-xs whitespace-nowrap" dir="ltr">
-                      {amountLabel(isReturn ? String(-Number(row.vatAmount)) : row.vatAmount)}
+                    <td
+                      className="px-4 py-3.5 font-mono text-xs whitespace-nowrap"
+                      dir="ltr"
+                    >
+                      {amountLabel(
+                        isReturn
+                          ? String(-Number(row.vatAmount))
+                          : row.vatAmount,
+                      )}
                     </td>
 
-                    <td className="px-4 py-3.5 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap" dir="ltr">
-                      {amountLabel(isReturn ? String(-Number(row.recoverableVat)) : row.recoverableVat)}
+                    <td
+                      className="px-4 py-3.5 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap"
+                      dir="ltr"
+                    >
+                      {amountLabel(
+                        isReturn
+                          ? String(-Number(row.recoverableVat))
+                          : row.recoverableVat,
+                      )}
                     </td>
 
                     <td className="px-4 py-3.5 whitespace-nowrap">
                       <span
                         className={`font-mono font-black text-sm ${
-                          isReturn ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"
+                          isReturn
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-slate-900 dark:text-white"
                         }`}
                         dir="ltr"
                       >
-                        {amountLabel(isReturn ? String(-Number(row.totalAmount)) : row.totalAmount)}
+                        {amountLabel(
+                          isReturn
+                            ? String(-Number(row.totalAmount))
+                            : row.totalAmount,
+                        )}
                       </span>{" "}
-                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">ر.س</span>
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                        ر.س
+                      </span>
                     </td>
 
                     <td className="px-4 py-3.5 whitespace-nowrap text-left">
@@ -500,7 +576,9 @@ export default function PurchasesPage() {
                       {row.supplierName}
                     </strong>
                     <p className="text-[11px] font-mono text-slate-500 mt-0.5 truncate">
-                      <span className="text-amber-700 dark:text-amber-400 font-bold">{row.voucher}</span>
+                      <span className="text-amber-700 dark:text-amber-400 font-bold">
+                        {row.voucher}
+                      </span>
                       {" · "}
                       <span>{row.invoiceNumber}</span>
                     </p>
@@ -519,26 +597,49 @@ export default function PurchasesPage() {
 
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <div className="space-y-0.5">
-                    <span className="text-[11px] text-slate-400 block">التاريخ:</span>
-                    <span className="font-mono text-slate-700 dark:text-slate-300">{row.issueDate}</span>
+                    <span className="text-[11px] text-slate-400 block">
+                      التاريخ:
+                    </span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">
+                      {row.issueDate}
+                    </span>
                   </div>
                   <div className="text-left space-y-0.5">
-                    <span className="text-[11px] text-slate-400 block">الإجمالي الشامل:</span>
+                    <span className="text-[11px] text-slate-400 block">
+                      الإجمالي الشامل:
+                    </span>
                     <span
                       className={`font-mono text-sm font-black ${
-                        isReturn ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"
+                        isReturn
+                          ? "text-rose-600 dark:text-rose-400"
+                          : "text-slate-900 dark:text-white"
                       }`}
                       dir="ltr"
                     >
-                      {amountLabel(isReturn ? String(-Number(row.totalAmount)) : row.totalAmount)} ر.س
+                      {amountLabel(
+                        isReturn
+                          ? String(-Number(row.totalAmount))
+                          : row.totalAmount,
+                      )}{" "}
+                      ر.س
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-[11px] text-slate-600 dark:text-slate-300 font-mono">
-                  <span>قبل الضريبة: {amountLabel(isReturn ? String(-Number(row.netAmount)) : row.netAmount)}</span>
+                  <span>
+                    قبل الضريبة:{" "}
+                    {amountLabel(
+                      isReturn ? String(-Number(row.netAmount)) : row.netAmount,
+                    )}
+                  </span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                    مسترد: {amountLabel(isReturn ? String(-Number(row.recoverableVat)) : row.recoverableVat)}
+                    مسترد:{" "}
+                    {amountLabel(
+                      isReturn
+                        ? String(-Number(row.recoverableVat))
+                        : row.recoverableVat,
+                    )}
                   </span>
                 </div>
 
@@ -584,7 +685,10 @@ export default function PurchasesPage() {
         {isLoading && (
           <div role="status" className="space-y-3 p-8">
             {[1, 2, 3].map((val) => (
-              <div key={val} className="theme-card-subtle h-12 animate-pulse rounded-xl" />
+              <div
+                key={val}
+                className="theme-card-subtle h-12 animate-pulse rounded-xl"
+              />
             ))}
             <span className="sr-only">جارٍ تحميل فواتير الموردين</span>
           </div>
@@ -599,7 +703,8 @@ export default function PurchasesPage() {
               لا توجد فواتير موردين مسجلة لهذه الفترة
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              سجّل مصروفات الوقود والصيانة وتكاليف الأسطول لاحتساب ضريبة المدخلات تلقائياً في الإقرار الضريبي.
+              سجّل مصروفات الوقود والصيانة وتكاليف الأسطول لاحتساب ضريبة
+              المدخلات تلقائياً في الإقرار الضريبي.
             </p>
             <button
               type="button"
@@ -627,7 +732,8 @@ export default function PurchasesPage() {
           </button>
 
           <span className="font-bold text-slate-600 dark:text-slate-300">
-            {data?.total ?? 0} قيد مسجل · صفحة <span className="font-mono">{page}</span>
+            {data?.total ?? 0} قيد مسجل · صفحة{" "}
+            <span className="font-mono">{page}</span>
           </span>
 
           <button

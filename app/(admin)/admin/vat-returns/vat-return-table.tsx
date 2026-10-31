@@ -12,13 +12,20 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>("");
 
-  async function handleCopy(key: string, rawValue: string | null, label: string, boxNum: number) {
+  async function handleCopy(
+    key: string,
+    rawValue: string | null,
+    label: string,
+    boxNum: number,
+  ) {
     if (!rawValue) return;
     try {
       // Copy exact plain decimal string without formatting for ZATCA portal
       await navigator.clipboard.writeText(rawValue);
       setCopiedKey(key);
-      setFeedback(`تم نسخ مبلغ الخانة ${boxNum} (${rawValue}) بنجاح لصقه في بوابة الهيئة!`);
+      setFeedback(
+        `تم نسخ مبلغ الخانة ${boxNum} (${rawValue}) بنجاح لصقه في بوابة الهيئة!`,
+      );
       setTimeout(() => {
         setCopiedKey((curr) => (curr === key ? null : curr));
         setFeedback("");
@@ -31,7 +38,7 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
   function renderCell(
     row: VatRow,
     field: "amount" | "adjustment" | "vat",
-    label: string
+    label: string,
   ) {
     const value = row[field];
     const key = `${row.box}-${field}`;
@@ -63,7 +70,9 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
           </button>
           <bdi
             className={`font-mono text-xs sm:text-sm select-all ${
-              row.isTotal ? "font-black text-slate-900 dark:text-white" : "font-bold text-slate-700 dark:text-slate-200"
+              row.isTotal
+                ? "font-black text-slate-900 dark:text-white"
+                : "font-bold text-slate-700 dark:text-slate-200"
             }`}
           >
             {amountLabel(value)}
@@ -82,7 +91,8 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
             خانات نموذج الإقرار الضريبي (1–16)
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            مطابقة لحقول بوابة هيئة الزكاة والضريبة والجمارك (zatca.gov.sa) · اضغط على زر النسخ بجوار أي رقم للصقه مباشرة.
+            مطابقة لحقول بوابة هيئة الزكاة والضريبة والجمارك (zatca.gov.sa) ·
+            اضغط على زر النسخ بجوار أي رقم للصقه مباشرة.
           </p>
         </div>
         {feedback && (
@@ -251,7 +261,9 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                       {/* Values Grid for Mobile */}
                       <div className="grid grid-cols-3 gap-2 pt-1 text-center">
                         <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border theme-border">
-                          <span className="text-[10px] text-slate-400 block mb-0.5">الصافي</span>
+                          <span className="text-[10px] text-slate-400 block mb-0.5">
+                            الصافي
+                          </span>
                           {row.amount !== null ? (
                             <div className="flex items-center justify-center gap-1">
                               <bdi className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -259,7 +271,14 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               </bdi>
                               <button
                                 type="button"
-                                onClick={() => void handleCopy(`${row.box}-amount`, row.amount, "الصافي", row.box)}
+                                onClick={() =>
+                                  void handleCopy(
+                                    `${row.box}-amount`,
+                                    row.amount,
+                                    "الصافي",
+                                    row.box,
+                                  )
+                                }
                                 className="p-0.5 text-slate-400 hover:text-amber-600"
                                 aria-label={`نسخ الصافي للخانة ${row.box}`}
                               >
@@ -271,12 +290,16 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               </button>
                             </div>
                           ) : (
-                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">—</span>
+                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">
+                              —
+                            </span>
                           )}
                         </div>
 
                         <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border theme-border">
-                          <span className="text-[10px] text-slate-400 block mb-0.5">التعديل</span>
+                          <span className="text-[10px] text-slate-400 block mb-0.5">
+                            التعديل
+                          </span>
                           {row.adjustment !== null ? (
                             <div className="flex items-center justify-center gap-1">
                               <bdi className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -284,7 +307,14 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               </bdi>
                               <button
                                 type="button"
-                                onClick={() => void handleCopy(`${row.box}-adjustment`, row.adjustment, "التعديل", row.box)}
+                                onClick={() =>
+                                  void handleCopy(
+                                    `${row.box}-adjustment`,
+                                    row.adjustment,
+                                    "التعديل",
+                                    row.box,
+                                  )
+                                }
                                 className="p-0.5 text-slate-400 hover:text-amber-600"
                                 aria-label={`نسخ التعديل للخانة ${row.box}`}
                               >
@@ -296,7 +326,9 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               </button>
                             </div>
                           ) : (
-                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">—</span>
+                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">
+                              —
+                            </span>
                           )}
                         </div>
 
@@ -307,7 +339,9 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               : "bg-white dark:bg-slate-900/60 border theme-border"
                           }`}
                         >
-                          <span className="text-[10px] text-slate-400 block mb-0.5">الضريبة</span>
+                          <span className="text-[10px] text-slate-400 block mb-0.5">
+                            الضريبة
+                          </span>
                           {row.vat !== null ? (
                             <div className="flex items-center justify-center gap-1">
                               <bdi
@@ -321,7 +355,14 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               </bdi>
                               <button
                                 type="button"
-                                onClick={() => void handleCopy(`${row.box}-vat`, row.vat, "الضريبة", row.box)}
+                                onClick={() =>
+                                  void handleCopy(
+                                    `${row.box}-vat`,
+                                    row.vat,
+                                    "الضريبة",
+                                    row.box,
+                                  )
+                                }
                                 className="p-0.5 text-slate-400 hover:text-amber-600"
                                 aria-label={`نسخ الضريبة للخانة ${row.box}`}
                               >
@@ -333,7 +374,9 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                               </button>
                             </div>
                           ) : (
-                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">—</span>
+                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">
+                              —
+                            </span>
                           )}
                         </div>
                       </div>
@@ -351,10 +394,13 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
         <div className="flex items-center gap-1.5">
           <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>
-            عمود «المبلغ» يمثل الصافي غير شامل الضريبة، وعمود «التعديل» يمثل الإشعارات الدائنة أو غير القابلة للخصم.
+            عمود «المبلغ» يمثل الصافي غير شامل الضريبة، وعمود «التعديل» يمثل
+            الإشعارات الدائنة أو غير القابلة للخصم.
           </span>
         </div>
-        <span className="font-mono text-[11px] text-slate-400">SAR · ZATCA Box 1–16</span>
+        <span className="font-mono text-[11px] text-slate-400">
+          SAR · ZATCA Box 1–16
+        </span>
       </div>
     </div>
   );

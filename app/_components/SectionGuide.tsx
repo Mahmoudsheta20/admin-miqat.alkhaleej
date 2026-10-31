@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, ChevronDown, ChevronUp, CheckCircle2, Info } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Info,
+} from "lucide-react";
 
 export interface SectionGuideItem {
   label: string;
@@ -67,7 +73,11 @@ export default function SectionGuide({
           className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-white/80 dark:bg-slate-900/70 hover:border-amber-500 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 transition shrink-0 cursor-pointer"
         >
           <span>{isOpen ? "إخفاء الشرح" : "عرض الشرح التفصيلي"}</span>
-          {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          {isOpen ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
         </button>
       </div>
 
@@ -123,7 +133,10 @@ export default function SectionGuide({
                 </div>
               )}
               {formula && (
-                <div className="font-mono text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg shrink-0" dir="ltr">
+                <div
+                  className="font-mono text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg shrink-0"
+                  dir="ltr"
+                >
                   {formula}
                 </div>
               )}
@@ -134,4 +147,3 @@ export default function SectionGuide({
     </section>
   );
 }
-
