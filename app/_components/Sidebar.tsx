@@ -62,7 +62,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "إنشاء عقد رسمي",
     icon: <FilePlus2 className="w-4 h-4" />,
     badge: "جديد",
-    badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
+    badgeColor:
+      "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
     roles: ["ADMIN"],
     section: "OPERATIONS",
   },
@@ -78,7 +79,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "فحص الكباتن والمركبات",
     icon: <ClipboardCheck className="w-4 h-4" />,
     badge: "يومي",
-    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
+    badgeColor:
+      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
     roles: ["ADMIN"],
     section: "OPERATIONS",
   },
@@ -140,7 +142,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "الفوترة الضريبية ZATCA",
     icon: <ShieldCheck className="w-4 h-4" />,
     badge: "متقدم",
-    badgeColor: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
+    badgeColor:
+      "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
     roles: ["ADMIN"],
     section: "REVIEW",
   },
@@ -149,7 +152,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "إدارة المسؤولين",
     icon: <ShieldCheck className="w-4 h-4" />,
     badge: "خاص",
-    badgeColor: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30",
+    badgeColor:
+      "bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30",
     roles: ["ADMIN"],
     superAdminOnly: true,
     section: "REVIEW",
@@ -168,7 +172,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "إنشاء عقد رحلة",
     icon: <FilePlus2 className="w-4 h-4" />,
     badge: "جديد",
-    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
+    badgeColor:
+      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
     roles: ["CAPTAIN"],
     section: "CAPTAIN",
   },
@@ -177,7 +182,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "فحص المركبة اليومي",
     icon: <ClipboardCheck className="w-4 h-4" />,
     badge: "إلزامي",
-    badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
+    badgeColor:
+      "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
     roles: ["CAPTAIN"],
     section: "CAPTAIN",
   },
@@ -189,7 +195,11 @@ interface SidebarHeaderProps {
   onNavigate: () => void;
 }
 
-function SidebarHeader({ collapsed, homePath, onNavigate }: SidebarHeaderProps) {
+function SidebarHeader({
+  collapsed,
+  homePath,
+  onNavigate,
+}: SidebarHeaderProps) {
   return (
     <div
       className={`shrink-0 flex items-center justify-center py-4 px-14 lg:px-3 border-b border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
@@ -253,21 +263,33 @@ function SidebarNavLinks({
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
     if (href === "/captain") return pathname === "/captain";
-    if (href === "/admin/contracts") return pathname === href || (pathname.startsWith(`${href}/`) && pathname !== `${href}/new`);
+    if (href === "/admin/contracts")
+      return (
+        pathname === href ||
+        (pathname.startsWith(`${href}/`) && pathname !== `${href}/new`)
+      );
     return pathname === href || pathname.startsWith(href + "/");
   };
 
   return (
-    <nav aria-label="القائمة الرئيسية" className="min-h-0 flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overscroll-contain">
+    <nav
+      aria-label="القائمة الرئيسية"
+      className="min-h-0 flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overscroll-contain"
+    >
       {filteredItems.map((item, index) => {
         const active = isActive(item.href);
-        const prevSection = index > 0 ? filteredItems[index - 1]?.section : undefined;
-        const sectionChanged = Boolean(item.section && item.section !== prevSection);
+        const prevSection =
+          index > 0 ? filteredItems[index - 1]?.section : undefined;
+        const sectionChanged = Boolean(
+          item.section && item.section !== prevSection,
+        );
 
         return (
           <React.Fragment key={item.href}>
             {sectionChanged && (
-              <div className={`${index > 0 ? "pt-3.5 mt-2 border-t border-slate-200/70 dark:border-slate-800/70" : ""}`}>
+              <div
+                className={`${index > 0 ? "pt-3.5 mt-2 border-t border-slate-200/70 dark:border-slate-800/70" : ""}`}
+              >
                 {!collapsed && item.section && SECTION_TITLES[item.section] && (
                   <p className="px-3 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
                     {SECTION_TITLES[item.section]}
@@ -301,7 +323,9 @@ function SidebarNavLinks({
               </span>
               {!collapsed && (
                 <>
-                  <span className="truncate text-sm lg:text-xs font-bold tracking-normal">{item.label}</span>
+                  <span className="truncate text-sm lg:text-xs font-bold tracking-normal">
+                    {item.label}
+                  </span>
                   {item.badge && (
                     <span
                       className={`mr-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${item.badgeColor}`}
@@ -341,13 +365,19 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
         <>
           {!collapsed ? (
             <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70 flex items-center gap-2.5 shadow-2xs">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
-                isSuper
-                  ? "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20"
-                  : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
-              }`}>
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                  isSuper
+                    ? "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20"
+                    : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                }`}
+              >
                 {user.role === "ADMIN" ? (
-                  isSuper ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />
+                  isSuper ? (
+                    <ShieldCheck className="w-4 h-4" />
+                  ) : (
+                    <Shield className="w-4 h-4" />
+                  )
                 ) : (
                   <Car className="w-4 h-4" />
                 )}
@@ -356,11 +386,13 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
                 <p className="text-xs font-black text-slate-900 dark:text-white truncate">
                   {user.name}
                 </p>
-                <span className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
-                  isSuper
-                    ? "text-purple-700 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20"
-                    : "text-amber-700 dark:text-amber-400 bg-amber-500/10"
-                }`}>
+                <span
+                  className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
+                    isSuper
+                      ? "text-purple-700 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20"
+                      : "text-amber-700 dark:text-amber-400 bg-amber-500/10"
+                  }`}
+                >
                   {roleTitle}
                 </span>
               </div>
@@ -375,7 +407,11 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
               title={`${user.name} (${roleTitle})`}
             >
               {user.role === "ADMIN" ? (
-                isSuper ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />
+                isSuper ? (
+                  <ShieldCheck className="w-4 h-4" />
+                ) : (
+                  <Shield className="w-4 h-4" />
+                )
               ) : (
                 <Car className="w-4 h-4" />
               )}
@@ -434,7 +470,9 @@ export default function Sidebar({
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1024px)");
-    const closeOnDesktop = () => { if (desktop.matches) onMobileClose(); };
+    const closeOnDesktop = () => {
+      if (desktop.matches) onMobileClose();
+    };
     desktop.addEventListener("change", closeOnDesktop);
     return () => desktop.removeEventListener("change", closeOnDesktop);
   }, [onMobileClose]);
@@ -459,11 +497,20 @@ export default function Sidebar({
     return true;
   });
 
-  const homePath = user?.role === "ADMIN" ? (mode === "FINANCE" ? "/admin/invoices" : "/admin") : "/captain";
+  const homePath =
+    user?.role === "ADMIN"
+      ? mode === "FINANCE"
+        ? "/admin/invoices"
+        : "/admin"
+      : "/captain";
 
   const sidebarContent = (isCollapsed: boolean) => (
     <div className="flex min-h-0 flex-1 flex-col h-full bg-white dark:bg-[#090e17] text-slate-800 dark:text-slate-200 select-none">
-      <SidebarHeader collapsed={isCollapsed} homePath={homePath} onNavigate={onMobileClose} />
+      <SidebarHeader
+        collapsed={isCollapsed}
+        homePath={homePath}
+        onNavigate={onMobileClose}
+      />
       {user?.role === "ADMIN" && (
         <WorkspaceModeSwitcher variant="sidebar" collapsed={isCollapsed} />
       )}
@@ -486,19 +533,21 @@ export default function Sidebar({
         aria-label="القائمة الجانبية"
         onCancel={onMobileClose}
         onClose={onMobileClose}
-        onClick={event => { if (event.target === event.currentTarget) onMobileClose(); }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onMobileClose();
+        }}
         className="mobile-drawer fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 lg:hidden"
       >
-          <aside className="absolute inset-y-0 right-0 w-[min(21rem,calc(100vw-3rem))] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] bg-white dark:bg-[#090e17] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
-            <button
-              onClick={onMobileClose}
-              className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] left-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
-              aria-label="إغلاق القائمة"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            {sidebarContent(false)}
-          </aside>
+        <aside className="absolute inset-y-0 right-0 w-[min(21rem,calc(100vw-3rem))] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] bg-white dark:bg-[#090e17] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
+          <button
+            onClick={onMobileClose}
+            className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] left-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
+            aria-label="إغلاق القائمة"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          {sidebarContent(false)}
+        </aside>
       </dialog>
 
       {/* Desktop sidebar */}

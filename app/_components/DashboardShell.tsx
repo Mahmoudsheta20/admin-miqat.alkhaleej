@@ -148,9 +148,7 @@ export default function DashboardShell({
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="truncate max-w-full text-center leading-tight">
-                {label}
-              </span>
+              <span className="truncate max-w-full text-center leading-tight">{label}</span>
             </Link>
           ))}
         </nav>

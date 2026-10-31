@@ -93,11 +93,7 @@ export default function WorkspaceModeSwitcher({
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           title="الانتقال إلى واجهة العمليات والأسطول والعقود"
-          aria-label={
-            !isFinance
-              ? "الوضع الحالي: العمليات والأسطول"
-              : "التبديل إلى العمليات والأسطول"
-          }
+          aria-label={!isFinance ? "الوضع الحالي: العمليات والأسطول" : "التبديل إلى العمليات والأسطول"}
         >
           <Car className="w-3.5 h-3.5 shrink-0" />
           <span className="hidden md:inline">العمليات والأسطول</span>
@@ -113,11 +109,7 @@ export default function WorkspaceModeSwitcher({
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           title="الانتقال إلى واجهة الفواتير والمصروفات والإقرار الضريبي"
-          aria-label={
-            isFinance
-              ? "الوضع الحالي: المالية والضريبة"
-              : "التبديل إلى المالية والضريبة"
-          }
+          aria-label={isFinance ? "الوضع الحالي: المالية والضريبة" : "التبديل إلى المالية والضريبة"}
         >
           <ReceiptText className="w-3.5 h-3.5 shrink-0" />
           <span className="hidden md:inline">المالية والضريبة</span>
