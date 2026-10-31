@@ -22,10 +22,13 @@ import {
   ShieldCheck,
   Lock,
   ReceiptText,
+  ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useTheme } from "@/lib/themeContext";
 import { isSuperAdmin } from "@/lib/adminConstants";
+import { useWorkspaceMode } from "@/lib/workspaceModeContext";
+import WorkspaceModeSwitcher from "./WorkspaceModeSwitcher";
 
 import ProfileModal from "./ProfileModal";
 
@@ -38,6 +41,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { isFinance } = useWorkspaceMode();
 
   const [timeStr, setTimeStr] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -115,13 +119,13 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
     color: "text-slate-600 bg-slate-100 border-slate-200",
   };
 
-  const homePath = user.role === "ADMIN" ? "/admin" : "/captain";
+  const homePath = user.role === "ADMIN" ? (isFinance ? "/admin/invoices" : "/admin") : "/captain";
 
   return (
     <>
       <header className="sticky top-0 z-30 shrink-0 bg-white dark:bg-[#090e17] border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
         <div className="px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left Side: Mobile Menu Button + Clean Logo */}
+          {/* Left Side: Mobile Menu Button + Clean Logo + Mode Switcher */}
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => {
@@ -153,6 +157,13 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                 />
               </div>
             </Link>
+
+            {/* Mode Switcher in Header for Admin */}
+            {user.role === "ADMIN" && (
+              <div className="flex items-center mr-1 sm:mr-2">
+                <WorkspaceModeSwitcher variant="header" />
+              </div>
+            )}
           </div>
 
           {/* Right Side: Clock, CTA, Theme Toggle, User Profile Menu */}
@@ -183,22 +194,45 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
             {/* Admin Quick Actions */}
             {user.role === "ADMIN" && (
               <div className="hidden lg:flex items-center gap-2">
-                <button
-                  onClick={() => router.push("/admin/invoices/new")}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs transition shadow-2xs font-bold cursor-pointer"
-                  title="إنشاء فاتورة جديدة"
-                >
-                  <ReceiptText className="w-3.5 h-3.5" />
-                  <span>+ فاتورة</span>
-                </button>
-                <button
-                  onClick={() => router.push("/admin/contracts/new")}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold cursor-pointer"
-                  title="إنشاء عقد رسمي جديد"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>عقد جديد</span>
-                </button>
+                {isFinance ? (
+                  <>
+                    <button
+                      onClick={() => router.push("/admin/purchases")}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs transition shadow-2xs font-bold cursor-pointer"
+                      title="تسجيل مصروف أو فاتورة مشتريات"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>+ مصروف</span>
+                    </button>
+                    <button
+                      onClick={() => router.push("/admin/invoices/new")}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold cursor-pointer"
+                      title="إنشاء فاتورة ضريبية جديدة"
+                    >
+                      <ReceiptText className="w-4 h-4" />
+                      <span>+ فاتورة</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => router.push("/admin/inspections")}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-800/80 hover:border-amber-500/40 text-slate-700 dark:text-slate-200 text-xs transition shadow-2xs font-bold cursor-pointer"
+                      title="سجل فحص المركبات اليومي"
+                    >
+                      <ClipboardCheck className="w-3.5 h-3.5 text-amber-500" />
+                      <span>الفحوصات</span>
+                    </button>
+                    <button
+                      onClick={() => router.push("/admin/contracts/new")}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold cursor-pointer"
+                      title="إنشاء عقد رسمي جديد"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>عقد جديد</span>
+                    </button>
+                  </>
+                )}
               </div>
             )}
 

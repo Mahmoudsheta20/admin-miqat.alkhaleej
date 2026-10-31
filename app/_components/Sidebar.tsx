@@ -27,6 +27,8 @@ import {
 import { useAuth } from "@/lib/authContext";
 import { UserRole, SystemUser } from "@/lib/types";
 import { isSuperAdmin } from "@/lib/adminConstants";
+import { useWorkspaceMode } from "@/lib/workspaceModeContext";
+import WorkspaceModeSwitcher from "./WorkspaceModeSwitcher";
 
 interface NavItem {
   href: string;
@@ -230,8 +232,8 @@ function SidebarHeader({ collapsed, homePath, onNavigate }: SidebarHeaderProps) 
 
 const SECTION_TITLES: Record<string, string> = {
   OPERATIONS: "العمليات والأسطول",
-  DAILY: "العمل اليومي والمالية",
-  REVIEW: "المراجعة والإعدادات",
+  DAILY: "العمل المالي اليومي",
+  REVIEW: "المراجعة والإقرار والأنظمة",
   CAPTAIN: "بوابة الكابتن",
 };
 
@@ -420,6 +422,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { mode } = useWorkspaceMode();
   const drawerRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -442,14 +445,28 @@ export default function Sidebar({
     if (!user) return false;
     if (!item.roles.includes(user.role)) return false;
     if (item.superAdminOnly && !isSuper) return false;
+
+    // Filter by active workspace mode for ADMIN
+    if (user.role === "ADMIN") {
+      if (mode === "OPERATIONS") {
+        return item.section === "OPERATIONS";
+      }
+      if (mode === "FINANCE") {
+        return item.section === "DAILY" || item.section === "REVIEW";
+      }
+    }
+
     return true;
   });
 
-  const homePath = user?.role === "ADMIN" ? "/admin" : "/captain";
+  const homePath = user?.role === "ADMIN" ? (mode === "FINANCE" ? "/admin/invoices" : "/admin") : "/captain";
 
   const sidebarContent = (isCollapsed: boolean) => (
     <div className="flex min-h-0 flex-1 flex-col h-full bg-white dark:bg-[#090e17] text-slate-800 dark:text-slate-200 select-none">
       <SidebarHeader collapsed={isCollapsed} homePath={homePath} onNavigate={onMobileClose} />
+      {user?.role === "ADMIN" && (
+        <WorkspaceModeSwitcher variant="sidebar" collapsed={isCollapsed} />
+      )}
       <SidebarNavLinks
         collapsed={isCollapsed}
         pathname={pathname}
