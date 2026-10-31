@@ -45,7 +45,9 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
 
   const [timeStr, setTimeStr] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileTab, setProfileTab] = useState<"profile" | "password">("profile");
+  const [profileTab, setProfileTab] = useState<"profile" | "password">(
+    "profile",
+  );
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
@@ -76,12 +78,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
       if (menuRef.current && !menuRef.current.contains(target)) {
         setIsProfileMenuOpen(false);
       }
-
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (isProfileMenuOpen) menuRef.current?.querySelector("button")?.focus();
+        if (isProfileMenuOpen)
+          menuRef.current?.querySelector("button")?.focus();
         setIsProfileMenuOpen(false);
       }
     };
@@ -110,7 +112,8 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
     },
     CAPTAIN: {
       title: "الكابتن",
-      color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+      color:
+        "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     },
   };
 
@@ -119,7 +122,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
     color: "text-slate-600 bg-slate-100 border-slate-200",
   };
 
-  const homePath = user.role === "ADMIN" ? (isFinance ? "/admin/invoices" : "/admin") : "/captain";
+  const homePath =
+    user.role === "ADMIN"
+      ? isFinance
+        ? "/admin/invoices"
+        : "/admin"
+      : "/captain";
 
   return (
     <>
@@ -152,7 +160,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                   alt="ميقات الخليج"
                   width={140}
                   height={40}
-                   className="object-contain max-w-full w-auto h-7 sm:h-8"
+                  className="object-contain max-w-full w-auto h-7 sm:h-8"
                   priority
                 />
               </div>
@@ -312,7 +320,10 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     <p className="text-sm font-bold">الحساب والإعدادات</p>
                     <button
                       type="button"
-                      onClick={() => { setIsProfileMenuOpen(false); menuRef.current?.querySelector("button")?.focus(); }}
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        menuRef.current?.querySelector("button")?.focus();
+                      }}
                       className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
                       aria-label="إغلاق الحساب والإعدادات"
                     >
@@ -431,7 +442,9 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         </div>
                         <div>
                           <p className="font-bold">
-                            {user.role === "ADMIN" ? "لوحة الإدارة" : "لوحة الكابتن"}
+                            {user.role === "ADMIN"
+                              ? "لوحة الإدارة"
+                              : "لوحة الكابتن"}
                           </p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
                             الانتقال للصفحة الرئيسية
@@ -490,7 +503,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                               router.push("/admin/admins");
                             }}
                             className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
-                            >
+                          >
                             <div className="flex items-center gap-2.5">
                               <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20 transition">
                                 <ShieldCheck className="w-4 h-4" />

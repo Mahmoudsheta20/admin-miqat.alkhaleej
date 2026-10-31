@@ -1,8 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useStoredPreference, setStoredPreference } from "./useStoredPreference";
+import {
+  useStoredPreference,
+  setStoredPreference,
+} from "./useStoredPreference";
 
 export type WorkspaceMode = "OPERATIONS" | "FINANCE";
 
@@ -26,7 +35,7 @@ export const FINANCE_ROUTE_PREFIXES = [
 
 export function isFinanceRoute(pathname: string): boolean {
   return FINANCE_ROUTE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 
@@ -35,9 +44,15 @@ export function isOperationsRoute(pathname: string): boolean {
   return pathname.startsWith("/admin");
 }
 
-const WorkspaceModeContext = createContext<WorkspaceModeContextType | undefined>(undefined);
+const WorkspaceModeContext = createContext<
+  WorkspaceModeContextType | undefined
+>(undefined);
 
-export function WorkspaceModeProvider({ children }: { children: React.ReactNode }) {
+export function WorkspaceModeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const stored = useStoredPreference("miqat_workspace_mode", "OPERATIONS");
@@ -57,10 +72,10 @@ export function WorkspaceModeProvider({ children }: { children: React.ReactNode 
   const effectiveMode: WorkspaceMode = isFinanceRoute(pathname)
     ? "FINANCE"
     : isOperationsRoute(pathname)
-    ? "OPERATIONS"
-    : stored === "FINANCE"
-    ? "FINANCE"
-    : "OPERATIONS";
+      ? "OPERATIONS"
+      : stored === "FINANCE"
+        ? "FINANCE"
+        : "OPERATIONS";
 
   const setMode = useCallback((newMode: WorkspaceMode) => {
     setStoredPreference("miqat_workspace_mode", newMode);
@@ -83,7 +98,7 @@ export function WorkspaceModeProvider({ children }: { children: React.ReactNode 
         router.push(target);
       }
     },
-    [setMode, router]
+    [setMode, router],
   );
 
   const toggleMode = useCallback(() => {

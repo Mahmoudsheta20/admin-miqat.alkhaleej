@@ -30,7 +30,7 @@ export default function SectionGuide({
   cards,
   formula,
   tip,
-  defaultOpen = true,
+  defaultOpen = false,
 }: SectionGuideProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 

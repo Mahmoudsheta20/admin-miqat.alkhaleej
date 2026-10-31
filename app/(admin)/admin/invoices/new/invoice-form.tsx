@@ -1597,6 +1597,26 @@ export default function InvoiceForm({
         </form>
       )}
 
+      {/* Mobile Sticky Financial Summary Bar (lg:hidden) */}
+      <div className="lg:hidden sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-20 mt-4">
+        <div className="theme-card bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md rounded-2xl border theme-border shadow-xl p-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[10px] font-bold text-slate-400 block">الإجمالي الشامل</span>
+            <div className="flex items-baseline gap-1">
+              <strong className="font-mono text-lg font-black text-slate-900 dark:text-white" dir="ltr">
+                {amount(estimate.gross)}
+              </strong>
+              <span className="text-[10px] font-bold text-amber-500">ر.س</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
+              المرحلة {STAGES.find((s) => s.id === currentStage)?.number} من ٤
+            </span>
+          </div>
+        </div>
+      </div>
+
       <p className="mt-6 flex items-center gap-2 text-xs text-slate-400">
         <Truck className="size-3.5" />
         <span>تفاصيل الرحلة والمسار محفوظة مع الفاتورة · نسخة العميل المطبوعة تعرض أعداد الركاب فقط.</span>

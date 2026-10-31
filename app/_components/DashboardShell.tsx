@@ -46,7 +46,7 @@ const ADMIN_FINANCE_LINKS: MobileNavItem[] = [
   { href: "/admin/invoices/new", label: "+ فاتورة", icon: Plus },
   { href: "/admin/purchases", label: "المصروفات", icon: ShoppingBag },
   { href: "/admin/accounting", label: "المحاسبة", icon: Landmark },
-  { href: "/admin/vat-returns", label: "الإقرار الضريبي", icon: Calculator },
+  { href: "/admin/vat-returns", label: "الإقرار", icon: Calculator },
 ];
 
 const CAPTAIN_LINKS: MobileNavItem[] = [
@@ -55,7 +55,10 @@ const CAPTAIN_LINKS: MobileNavItem[] = [
   { href: "/captain/contract", label: "عقد جديد", icon: FilePlus2 },
 ];
 
-export default function DashboardShell({ children, role }: DashboardShellProps) {
+export default function DashboardShell({
+  children,
+  role,
+}: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading } = useAuth();
@@ -73,12 +76,15 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
 
   const activeHref = [...links]
     .sort((a, b) => b.href.length - a.href.length)
-    .find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.href;
+    .find(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    )?.href;
 
   useEffect(() => {
     if (isLoading) return;
     if (!user) router.replace("/login");
-    else if (user.role !== role) router.replace(user.role === "ADMIN" ? "/admin" : "/captain");
+    else if (user.role !== role)
+      router.replace(user.role === "ADMIN" ? "/admin" : "/captain");
   }, [isLoading, user, role, router]);
 
   if (isLoading) {
@@ -107,7 +113,10 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
         onMobileClose={() => setDrawerPath(null)}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Header isMenuOpen={isMenuOpen} onMenuToggle={() => setDrawerPath(isMenuOpen ? null : pathname)} />
+        <Header
+          isMenuOpen={isMenuOpen}
+          onMenuToggle={() => setDrawerPath(isMenuOpen ? null : pathname)}
+        />
         <main
           id="main-content"
           tabIndex={-1}
@@ -132,12 +141,16 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
               aria-current={activeHref === href ? "page" : undefined}
               className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-bold transition ${
                 activeHref === href
-                  ? "text-amber-700 dark:text-amber-400"
-                  : "text-slate-600 dark:text-slate-400"
+                  ? isFinance
+                    ? "text-emerald-700 dark:text-emerald-400 font-black"
+                    : "text-amber-700 dark:text-amber-400 font-black"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               }`}
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
-              <span>{label}</span>
+              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span className="truncate max-w-full text-center leading-tight">
+                {label}
+              </span>
             </Link>
           ))}
         </nav>

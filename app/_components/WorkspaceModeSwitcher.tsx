@@ -22,7 +22,9 @@ export default function WorkspaceModeSwitcher({
         <div className="flex justify-center py-2 px-1">
           <button
             type="button"
-            onClick={() => switchAndNavigate(isFinance ? "OPERATIONS" : "FINANCE")}
+            onClick={() =>
+              switchAndNavigate(isFinance ? "OPERATIONS" : "FINANCE")
+            }
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
               isFinance
                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:border-emerald-500 shadow-2xs"
@@ -35,7 +37,11 @@ export default function WorkspaceModeSwitcher({
             }
             aria-label="تبديل وضع مساحة العمل"
           >
-            {isFinance ? <ReceiptText className="w-4 h-4" /> : <Car className="w-4 h-4" />}
+            {isFinance ? (
+              <ReceiptText className="w-4 h-4" />
+            ) : (
+              <Car className="w-4 h-4" />
+            )}
           </button>
         </div>
       );
@@ -81,31 +87,41 @@ export default function WorkspaceModeSwitcher({
         <button
           type="button"
           onClick={() => switchAndNavigate("OPERATIONS")}
-          className={`flex items-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+          className={`flex items-center gap-1.5 py-1.5 px-2 sm:px-2.5 md:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
             !isFinance
               ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-xs border border-amber-500/30 font-black"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           title="الانتقال إلى واجهة العمليات والأسطول والعقود"
+          aria-label={
+            !isFinance
+              ? "الوضع الحالي: العمليات والأسطول"
+              : "التبديل إلى العمليات والأسطول"
+          }
         >
           <Car className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden sm:inline">العمليات والأسطول</span>
-          <span className="sm:hidden">العمليات</span>
+          <span className="hidden md:inline">العمليات والأسطول</span>
+          <span className="hidden min-[380px]:inline md:hidden">العمليات</span>
         </button>
 
         <button
           type="button"
           onClick={() => switchAndNavigate("FINANCE")}
-          className={`flex items-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+          className={`flex items-center gap-1.5 py-1.5 px-2 sm:px-2.5 md:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
             isFinance
               ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 shadow-xs border border-emerald-500/30 font-black"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           title="الانتقال إلى واجهة الفواتير والمصروفات والإقرار الضريبي"
+          aria-label={
+            isFinance
+              ? "الوضع الحالي: المالية والضريبة"
+              : "التبديل إلى المالية والضريبة"
+          }
         >
           <ReceiptText className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden sm:inline">المالية والضريبة</span>
-          <span className="sm:hidden">المالية</span>
+          <span className="hidden md:inline">المالية والضريبة</span>
+          <span className="hidden min-[380px]:inline md:hidden">المالية</span>
         </button>
       </div>
     </div>
