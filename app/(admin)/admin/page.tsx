@@ -1,4 +1,4 @@
-"use client";
+j"use client";
 import dynamic from "next/dynamic";
 
 import React, { useEffect, useState, useTransition } from "react";
@@ -21,15 +21,24 @@ import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
 import StatusBadge from "@/app/_components/StatusBadge";
 import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
-const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
+const PdfPreviewModal = dynamic(
+  () => import("@/app/_components/PdfPreviewModal"),
+  { ssr: false },
+);
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminDashboardPage() {
   const { t, isRTL } = useLanguage();
-  const [stats, setStats] = useState<DashboardStats | null>(() => getCachedData("dashboard_stats"));
-  const [isLoading, setIsLoading] = useState(() => !getCachedData("dashboard_stats"));
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(() =>
+    getCachedData("dashboard_stats"),
+  );
+  const [isLoading, setIsLoading] = useState(
+    () => !getCachedData("dashboard_stats"),
+  );
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(
+    null,
+  );
   const [selectedRefNum, setSelectedRefNum] = useState<string>("");
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
@@ -95,7 +104,9 @@ export default function AdminDashboardPage() {
             disabled={isLoading}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 min-h-[42px] shadow-2xs cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
+            />
             {t("common.refresh")}
           </button>
           <Link
@@ -139,15 +150,18 @@ export default function AdminDashboardPage() {
             items: [
               {
                 label: "أسطول المركبات والكباتن",
-                description: "تسجيل الحافلات وسيارات VIP وتعيين مركبة مخصصة لكل كابتن مع متابعة صلاحية الاستمارة والتأمين.",
+                description:
+                  "تسجيل الحافلات وسيارات VIP وتعيين مركبة مخصصة لكل كابتن مع متابعة صلاحية الاستمارة والتأمين.",
               },
               {
                 label: "الفحص اليومي الإلزامي",
-                description: "يُشترط اجتياز فحص السلامة اليومي (15 بنداً ميكانيكياً وأمنياً) قبل إصدار عقود التشغيل اليومية.",
+                description:
+                  "يُشترط اجتياز فحص السلامة اليومي (15 بنداً ميكانيكياً وأمنياً) قبل إصدار عقود التشغيل اليومية.",
               },
               {
                 label: "العقود وكشوف الركاب",
-                description: "إصدار عقود النقل الرسمية متضمنة بيانات الرحلة، الناقل الجوي، وكشف أسماء وجنسيات وهويات الركاب.",
+                description:
+                  "إصدار عقود النقل الرسمية متضمنة بيانات الرحلة، الناقل الجوي، وكشف أسماء وجنسيات وهويات الركاب.",
               },
             ],
           },
@@ -158,12 +172,14 @@ export default function AdminDashboardPage() {
               {
                 label: "فواتير الحجوزات والضريبة",
                 code: "15% / 0% / معفى",
-                description: "إصدار فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة متوافقة مع المرحلة الأولى لهيئة الزكاة والضريبة والجمارك (TLV Base64 QR).",
+                description:
+                  "إصدار فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة متوافقة مع المرحلة الأولى لهيئة الزكاة والضريبة والجمارك (TLV Base64 QR).",
               },
               {
                 label: "الترحيل المحاسبي التلقائي",
                 code: "1102 / 1103 / 4101 / 210201",
-                description: "كل فاتورة معتمدة تُنشئ قيد يومية متوازناً يربط حساب الإيراد وحساب ضريبة المخرجات بحساب البنك أو ذمم العملاء.",
+                description:
+                  "كل فاتورة معتمدة تُنشئ قيد يومية متوازناً يربط حساب الإيراد وحساب ضريبة المخرجات بحساب البنك أو ذمم العملاء.",
               },
             ],
           },
@@ -174,12 +190,14 @@ export default function AdminDashboardPage() {
               {
                 label: "مشتريات ومصروفات الأسطول",
                 code: "5101–5203",
-                description: "تسجيل فواتير الوقود والصيانة والإيجارات مع احتساب ضريبة المدخلات القابلة للاسترداد (210202) وعزل الرسوم الحكومية والرواتب.",
+                description:
+                  "تسجيل فواتير الوقود والصيانة والإيجارات مع احتساب ضريبة المدخلات القابلة للاسترداد (210202) وعزل الرسوم الحكومية والرواتب.",
               },
               {
                 label: "الإقرار الضريبي الربع سنوي",
                 code: "خانات 1–16",
-                description: "تجميع آلي لصافي الضريبة المستحقة (ضريبة المخرجات ناقص ضريبة المدخلات) مع نسخ فوري للأرقام لبوابة هيئة الزكاة.",
+                description:
+                  "تجميع آلي لصافي الضريبة المستحقة (ضريبة المخرجات ناقص ضريبة المدخلات) مع نسخ فوري للأرقام لبوابة هيئة الزكاة.",
               },
             ],
           },
@@ -202,7 +220,9 @@ export default function AdminDashboardPage() {
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                 {t("contracts.newContract")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">{t("contracts.subtitle")}</p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {t("contracts.subtitle")}
+              </p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -220,7 +240,9 @@ export default function AdminDashboardPage() {
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                 {t("invoice.newInvoice")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">{t("invoice.subtitle")}</p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {t("invoice.subtitle")}
+              </p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -238,7 +260,9 @@ export default function AdminDashboardPage() {
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                 {t("nav.inspections")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">{t("inspections.subtitle")}</p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {t("inspections.subtitle")}
+              </p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -256,7 +280,9 @@ export default function AdminDashboardPage() {
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                 {t("nav.invoices")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">{t("invoice.title")}</p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {t("invoice.title")}
+              </p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -278,7 +304,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : stats?.totalCaptains ?? 0}
+                {isLoading ? "—" : (stats?.totalCaptains ?? 0)}
               </span>
               <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
                 {isRTL ? "كابتن" : "Captains"}
@@ -310,7 +336,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : stats?.totalVehicles ?? 0}
+                {isLoading ? "—" : (stats?.totalVehicles ?? 0)}
               </span>
               <span className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 mr-1.5 font-bold">
                 ({stats?.activeVehicles ?? 0} {isRTL ? "جاهزة" : "Ready"})
@@ -342,7 +368,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : stats?.totalContracts ?? 0}
+                {isLoading ? "—" : (stats?.totalContracts ?? 0)}
               </span>
               <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
                 {isRTL ? "عقد رسمي" : "Contracts"}
@@ -374,7 +400,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : stats?.todayInspections ?? 0}
+                {isLoading ? "—" : (stats?.todayInspections ?? 0)}
               </span>
               <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
                 {isRTL ? "فحص مسجل" : "Inspections"}
@@ -410,7 +436,11 @@ export default function AdminDashboardPage() {
             className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
           >
             {t("common.all")} ({stats?.totalContracts ?? 0})
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {isRTL ? (
+              <ChevronLeft className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
           </Link>
         </div>
 
@@ -427,7 +457,9 @@ export default function AdminDashboardPage() {
           <>
             {/* Desktop Table (Visible on md and larger) */}
             <div className="hidden md:block overflow-x-auto">
-              <table className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs`}>
+              <table
+                className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs`}
+              >
                 <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
                   <tr>
                     <th className="px-5 py-3">{t("contracts.refNumber")}</th>
@@ -437,12 +469,19 @@ export default function AdminDashboardPage() {
                     <th className="px-5 py-3">{t("common.details")}</th>
                     <th className="px-5 py-3">{t("common.date")}</th>
                     <th className="px-5 py-3">{t("contracts.passengers")}</th>
-                    <th className={`px-5 py-3 ${isRTL ? "text-left" : "text-right"}`}>{t("common.actions")}</th>
+                    <th
+                      className={`px-5 py-3 ${isRTL ? "text-left" : "text-right"}`}
+                    >
+                      {t("common.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
                   {stats.recentContracts.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                    <tr
+                      key={c.id}
+                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition"
+                    >
                       <td className="px-5 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
                         {c.referenceNumber}
                       </td>
@@ -456,7 +495,11 @@ export default function AdminDashboardPage() {
                         {c.vehiclePlate}
                       </td>
                       <td className="px-5 py-3.5">
-                        <StatusBadge type="operation" status={c.operationType} size="sm" />
+                        <StatusBadge
+                          type="operation"
+                          status={c.operationType}
+                          size="sm"
+                        />
                       </td>
                       <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono">
                         {c.tripDate} {c.tripTime}
@@ -466,7 +509,9 @@ export default function AdminDashboardPage() {
                           {c.passengersCount} {isRTL ? "ركاب" : "pax"}
                         </span>
                       </td>
-                      <td className={`px-5 py-3.5 ${isRTL ? "text-left" : "text-right"} whitespace-nowrap`}>
+                      <td
+                        className={`px-5 py-3.5 ${isRTL ? "text-left" : "text-right"} whitespace-nowrap`}
+                      >
                         <div className="inline-flex items-center gap-1.5">
                           <Link
                             href={`/admin/contracts/${encodeURIComponent(c.id)}`}
@@ -483,7 +528,9 @@ export default function AdminDashboardPage() {
                             <span>{t("invoice.title")}</span>
                           </Link>
                           <button
-                            onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
+                            onClick={() =>
+                              openPdf(c.id, c.referenceNumber, c.pdfPath)
+                            }
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg gold-gradient-btn font-bold transition text-xs cursor-pointer"
                           >
                             <FileText className="w-3.5 h-3.5" />
@@ -500,30 +547,53 @@ export default function AdminDashboardPage() {
             {/* Mobile Cards (Visible on screens smaller than md) */}
             <div className="md:hidden divide-y theme-border">
               {stats.recentContracts.map((c) => (
-                <div key={c.id} className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                <div
+                  key={c.id}
+                  className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="min-w-0 break-all font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
                       {c.referenceNumber}
                     </span>
-                    <StatusBadge type="operation" status={c.operationType} size="sm" />
+                    <StatusBadge
+                      type="operation"
+                      status={c.operationType}
+                      size="sm"
+                    />
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">{t("contracts.customer")}:</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{c.customerName}</span>
+                      <span className="text-slate-400">
+                        {t("contracts.customer")}:
+                      </span>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {c.customerName}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">{t("contracts.captain")}:</span>
-                      <span className="text-slate-700 dark:text-slate-300 font-semibold">{c.captainName}</span>
+                      <span className="text-slate-400">
+                        {t("contracts.captain")}:
+                      </span>
+                      <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                        {c.captainName}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">{t("fleet.plateAr")}:</span>
-                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{c.vehiclePlate}</span>
+                      <span className="text-slate-400">
+                        {t("fleet.plateAr")}:
+                      </span>
+                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                        {c.vehiclePlate}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">{t("common.date")}:</span>
-                      <span className="font-mono text-slate-500 dark:text-slate-400">{c.tripDate} {c.tripTime}</span>
+                      <span className="text-slate-400">
+                        {t("common.date")}:
+                      </span>
+                      <span className="font-mono text-slate-500 dark:text-slate-400">
+                        {c.tripDate} {c.tripTime}
+                      </span>
                     </div>
                   </div>
 
@@ -539,7 +609,9 @@ export default function AdminDashboardPage() {
                         {t("common.details")}
                       </Link>
                       <button
-                        onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
+                        onClick={() =>
+                          openPdf(c.id, c.referenceNumber, c.pdfPath)
+                        }
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition text-xs shadow-2xs"
                       >
                         <FileText className="w-3.5 h-3.5" />

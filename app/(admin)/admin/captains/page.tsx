@@ -35,7 +35,11 @@ import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
-import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import {
+  fetchCached,
+  getCachedData,
+  invalidateClientCache,
+} from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 type CaptainItem = SystemUser & {
@@ -45,10 +49,15 @@ type CaptainItem = SystemUser & {
 
 export default function CaptainsManagementPage() {
   const { t } = useLanguage();
-  const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
+  const cachedCaptains =
+    getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
   const [captains, setCaptains] = useState<CaptainItem[]>(() => {
     if (Array.isArray(cachedCaptains)) return cachedCaptains;
-    if (cachedCaptains && typeof cachedCaptains === "object" && Array.isArray(cachedCaptains.captains)) {
+    if (
+      cachedCaptains &&
+      typeof cachedCaptains === "object" &&
+      Array.isArray(cachedCaptains.captains)
+    ) {
       return cachedCaptains.captains;
     }
     return [];
@@ -91,19 +100,24 @@ export default function CaptainsManagementPage() {
 
   const loadCaptains = async (forceRefresh = false) => {
     return fetchCached("captains_list", getCaptains, {
-        ttlMs: 120_000,
-        forceRefresh,
-      }).then(res => {
-      if (res?.success && Array.isArray(res?.captains)) {
-        setCaptains(res.captains);
-        setLoadError("");
-      } else { setLoadError(res.error || "تعذر تحميل البيانات"); }
-    }).catch(err => {
-      setLoadError("تعذر الاتصال بالخادم");
-      console.error("Failed to load captains:", err);
-    }).finally(() => {
-      setIsLoading(false);
-    });
+      ttlMs: 120_000,
+      forceRefresh,
+    })
+      .then((res) => {
+        if (res?.success && Array.isArray(res?.captains)) {
+          setCaptains(res.captains);
+          setLoadError("");
+        } else {
+          setLoadError(res.error || "تعذر تحميل البيانات");
+        }
+      })
+      .catch((err) => {
+        setLoadError("تعذر الاتصال بالخادم");
+        console.error("Failed to load captains:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -115,7 +129,9 @@ export default function CaptainsManagementPage() {
     setIsTogglingId(c.id);
     try {
       setCaptains((prev) =>
-        prev.map((item) => (item.id === c.id ? { ...item, active: newStatus } : item))
+        prev.map((item) =>
+          item.id === c.id ? { ...item, active: newStatus } : item,
+        ),
       );
       const res = await toggleCaptainStatus(c.id, newStatus);
       if (res.success) {
@@ -123,13 +139,17 @@ export default function CaptainsManagementPage() {
         invalidateClientCache("dashboard_stats");
       } else {
         setCaptains((prev) =>
-          prev.map((item) => (item.id === c.id ? { ...item, active: c.active } : item))
+          prev.map((item) =>
+            item.id === c.id ? { ...item, active: c.active } : item,
+          ),
         );
         alert(res.error || "تعذر تغيير حالة الكابتن");
       }
     } catch {
       setCaptains((prev) =>
-        prev.map((item) => (item.id === c.id ? { ...item, active: c.active } : item))
+        prev.map((item) =>
+          item.id === c.id ? { ...item, active: c.active } : item,
+        ),
       );
       alert("حدث خطأ غير متوقع أثناء تغيير حالة الكابتن");
     } finally {
@@ -256,7 +276,13 @@ export default function CaptainsManagementPage() {
 
   return (
     <div className="space-y-6">
-      <LoadError message={loadError} onRetry={() => { void loadCaptains(true); }} isLoading={isLoading} />
+      <LoadError
+        message={loadError}
+        onRetry={() => {
+          void loadCaptains(true);
+        }}
+        isLoading={isLoading}
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -319,11 +345,13 @@ export default function CaptainsManagementPage() {
             items: [
               {
                 label: "الهوية ورخصة القيادة",
-                description: "توثيق رقم الهوية/الإقامة ورقم رخصة القيادة العمومي وتاريخ انتهائها لضمان الامتثال النظامي.",
+                description:
+                  "توثيق رقم الهوية/الإقامة ورقم رخصة القيادة العمومي وتاريخ انتهائها لضمان الامتثال النظامي.",
               },
               {
                 label: "إسناد المركبة (Vehicle Plate)",
-                description: "ربط الكابتن بلوحة المركبة المخصصة له لتعبئتها تلقائياً في شاشة الفحص اليومي وعقود النقل.",
+                description:
+                  "ربط الكابتن بلوحة المركبة المخصصة له لتعبئتها تلقائياً في شاشة الفحص اليومي وعقود النقل.",
               },
             ],
           },
@@ -333,11 +361,13 @@ export default function CaptainsManagementPage() {
             items: [
               {
                 label: "إنشاء كلمة مرور مؤقتة",
-                description: "عند إضافة كابتن جديد أو الضغط على أيقونة المفتاح، يُصدر النظام كلمة مرور مؤقتة لدخول بوابة الكابتن.",
+                description:
+                  "عند إضافة كابتن جديد أو الضغط على أيقونة المفتاح، يُصدر النظام كلمة مرور مؤقتة لدخول بوابة الكابتن.",
               },
               {
                 label: "التنشيط والإيقاف الفوري",
-                description: "يمكن تفعيل أو إيقاف حساب الكابتن بضغطة واحدة دون فقدان سجل عقوده وفحوصاته السابقة.",
+                description:
+                  "يمكن تفعيل أو إيقاف حساب الكابتن بضغطة واحدة دون فقدان سجل عقوده وفحوصاته السابقة.",
               },
             ],
           },
@@ -347,12 +377,14 @@ export default function CaptainsManagementPage() {
             items: [
               {
                 label: "حالة فحص اليوم",
-                description: "يظهر أمام كل كابتن شارة فورية توضح ما إذا أتم فحص السلامة اليومي للمركبة أم بانتظار الفحص.",
+                description:
+                  "يظهر أمام كل كابتن شارة فورية توضح ما إذا أتم فحص السلامة اليومي للمركبة أم بانتظار الفحص.",
               },
               {
                 label: "مسير الرواتب والعهد",
                 code: "5105 / 1104",
-                description: "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%).",
+                description:
+                  "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%).",
               },
             ],
           },
@@ -505,7 +537,11 @@ export default function CaptainsManagementPage() {
                           onClick={() => handleToggleStatus(c)}
                           disabled={isTogglingId === c.id}
                           className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                          title={c.active ? "انقر لتعطيل الحساب" : "انقر لتفعيل وتنشيط الحساب"}
+                          title={
+                            c.active
+                              ? "انقر لتعطيل الحساب"
+                              : "انقر لتفعيل وتنشيط الحساب"
+                          }
                         >
                           <StatusBadge
                             type="captain"
@@ -518,7 +554,9 @@ export default function CaptainsManagementPage() {
                                 : "border-slate-300 dark:border-slate-700 text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-600 group-hover:bg-emerald-500/10"
                             }`}
                           >
-                            <Power className={`w-3 h-3 ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                            <Power
+                              className={`w-3 h-3 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                            />
                           </span>
                         </button>
                       </td>
@@ -532,9 +570,15 @@ export default function CaptainsManagementPage() {
                                 ? "theme-card hover:border-rose-500 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                                 : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
                             }`}
-                            title={c.active ? "تعطيل حساب الكابتن مؤقتاً" : "تنشيط وتفعيل حساب الكابتن"}
+                            title={
+                              c.active
+                                ? "تعطيل حساب الكابتن مؤقتاً"
+                                : "تنشيط وتفعيل حساب الكابتن"
+                            }
                           >
-                            <Power className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                            <Power
+                              className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                            />
                           </button>
                           <button
                             onClick={() => handleResetPassword(c)}
@@ -609,13 +653,17 @@ export default function CaptainsManagementPage() {
                       onClick={() => handleToggleStatus(c)}
                       disabled={isTogglingId === c.id}
                       className="group inline-flex items-center gap-1.5 p-1 rounded-xl transition hover:opacity-85"
-                      title={c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط"}
+                      title={
+                        c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط"
+                      }
                     >
                       <StatusBadge
                         type="captain"
                         status={c.active ? "ACTIVE" : "INACTIVE"}
                       />
-                      <Power className={`w-3.5 h-3.5 ${c.active ? "text-emerald-500" : "text-slate-400"} ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                      <Power
+                        className={`w-3.5 h-3.5 ${c.active ? "text-emerald-500" : "text-slate-400"} ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                      />
                     </button>
                   </div>
 
@@ -679,9 +727,15 @@ export default function CaptainsManagementPage() {
                           ? "theme-card text-slate-500 hover:text-rose-500 border-slate-200 dark:border-slate-800"
                           : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                       }`}
-                      title={c.active ? "تعطيل حساب الكابتن" : "تنشيط وتفعيل حساب الكابتن"}
+                      title={
+                        c.active
+                          ? "تعطيل حساب الكابتن"
+                          : "تنشيط وتفعيل حساب الكابتن"
+                      }
                     >
-                      <Power className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`} />
+                      <Power
+                        className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                      />
                     </button>
                     <button
                       onClick={() => handleResetPassword(c)}
@@ -718,7 +772,14 @@ export default function CaptainsManagementPage() {
 
       {/* Add / Edit Modal */}
       {(isAddModalOpen || editingCaptain) && (
-        <Modal label="بيانات الكابتن" onClose={() => { setIsAddModalOpen(false); setEditingCaptain(null); }} isBusy={isSubmitting}>
+        <Modal
+          label="بيانات الكابتن"
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingCaptain(null);
+          }}
+          isBusy={isSubmitting}
+        >
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
@@ -902,7 +963,9 @@ export default function CaptainsManagementPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, active: false })}
+                      onClick={() =>
+                        setFormData({ ...formData, active: false })
+                      }
                       className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active === false
                           ? "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20"
@@ -957,7 +1020,11 @@ export default function CaptainsManagementPage() {
 
       {/* Temporary Password Display Modal */}
       {tempPasswordModal && (
-        <Modal label="كلمة المرور المؤقتة" onClose={() => setTempPasswordModal(null)} isBusy={false}>
+        <Modal
+          label="كلمة المرور المؤقتة"
+          onClose={() => setTempPasswordModal(null)}
+          isBusy={false}
+        >
           <div className="mobile-dialog-panel overflow-y-auto theme-card w-full max-w-md rounded-3xl border theme-border shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b theme-border pb-3">
               <div className="flex items-center gap-2.5">

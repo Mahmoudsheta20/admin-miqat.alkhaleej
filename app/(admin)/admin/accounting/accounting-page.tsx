@@ -64,12 +64,13 @@ function LegacyReview({
   return report.unpostedInvoices.length ? (
     <section className="rounded-2xl border border-amber-300 bg-amber-500/5 p-5">
       <h2 className="font-bold">
-        مستندات حتى نهاية الفترة تحتاج مراجعة محاسبية ({report.unpostedInvoices.length})
+        مستندات حتى نهاية الفترة تحتاج مراجعة محاسبية (
+        {report.unpostedInvoices.length})
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-slate-500">
-        الفواتير القديمة تظهر في VAT كما سُجلت، وتحتاج اعتماد حساب التسوية لإدراجها في دفتر
-        الأستاذ، بما يشمل المستندات الأقدم التي تؤثر في الرصيد الافتتاحي. راجع التحصيل الفعلي
-        قبل الترحيل.
+        الفواتير القديمة تظهر في VAT كما سُجلت، وتحتاج اعتماد حساب التسوية
+        لإدراجها في دفتر الأستاذ، بما يشمل المستندات الأقدم التي تؤثر في الرصيد
+        الافتتاحي. راجع التحصيل الفعلي قبل الترحيل.
       </p>
       <form onSubmit={post} className="mt-4 flex flex-wrap items-end gap-3">
         <label className="flex-1 text-xs font-bold">
@@ -142,7 +143,10 @@ function PeriodArchive({
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const closed = useAccountingQuery<{ items: ClosedPeriod[] }>("/periods", reload);
+  const closed = useAccountingQuery<{ items: ClosedPeriod[] }>(
+    "/periods",
+    reload,
+  );
 
   async function close(e: FormEvent) {
     e.preventDefault();
@@ -170,14 +174,22 @@ function PeriodArchive({
           حفظ الفترة ومنع تعديلها (إقفال الفترة)
         </h2>
         <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-          تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة الأرباح. بعد الإقفال
-          تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ نهاية الفترة لضمان مطابقة الدفاتر مع
-          إقرارات هيئة الزكاة؛ تُسجل أي تسويات لاحقة في فترة جديدة مفتوحة.
+          تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة
+          الأرباح. بعد الإقفال تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ
+          نهاية الفترة لضمان مطابقة الدفاتر مع إقرارات هيئة الزكاة؛ تُسجل أي
+          تسويات لاحقة في فترة جديدة مفتوحة.
         </p>
       </div>
       <form onSubmit={close} className="mt-5 space-y-4">
         <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-xs font-bold text-slate-700 dark:text-slate-300">
-          نطاق الفترة المطلوب إقفالها: <bdi className="font-mono text-amber-700 dark:text-amber-400">{report.range.start}</bdi> إلى <bdi className="font-mono text-amber-700 dark:text-amber-400">{report.range.endInclusive}</bdi>
+          نطاق الفترة المطلوب إقفالها:{" "}
+          <bdi className="font-mono text-amber-700 dark:text-amber-400">
+            {report.range.start}
+          </bdi>{" "}
+          إلى{" "}
+          <bdi className="font-mono text-amber-700 dark:text-amber-400">
+            {report.range.endInclusive}
+          </bdi>
         </div>
         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
           مرجع المراجعة وسبب الإقفال *
@@ -200,7 +212,8 @@ function PeriodArchive({
             className="size-4 accent-amber-600 rounded mt-0.5 cursor-pointer"
           />
           <span>
-            أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه الفترة وحفظها ومنع تعديلها لاحقاً.
+            أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه
+            الفترة وحفظها ومنع تعديلها لاحقاً.
           </span>
         </label>
         <button
@@ -235,8 +248,12 @@ function PeriodArchive({
               onClick={() =>
                 void downloadAccounting(
                   `/periods/${v.id}`,
-                  `miqat-closed-period-${v.startDate.slice(0, 10)}.json`
-                ).catch((e) => setError(e instanceof Error ? e.message : "تعذر تنزيل الأرشيف"))
+                  `miqat-closed-period-${v.startDate.slice(0, 10)}.json`,
+                ).catch((e) =>
+                  setError(
+                    e instanceof Error ? e.message : "تعذر تنزيل الأرشيف",
+                  ),
+                )
               }
             >
               تنزيل النسخة المحفوظة
@@ -257,9 +274,13 @@ export default function AccountingPage() {
   const [seedMessage, setSeedMessage] = useState("");
   const [exporting, setExporting] = useState(false);
 
-  const { data, isLoading, error: failure } = useAccountingQuery<FinancialReport>(
+  const {
+    data,
+    isLoading,
+    error: failure,
+  } = useAccountingQuery<FinancialReport>(
     `/financial-report?${periodQuery(period)}`,
-    reload
+    reload,
   );
   const changed = () => setReload((v) => v + 1);
 
@@ -269,7 +290,7 @@ export default function AccountingPage() {
     try {
       await downloadAccounting(
         `/exports/${format}?${periodQuery(period)}`,
-        `miqat-accounting-${period.year}.${format}`
+        `miqat-accounting-${period.year}.${format}`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "تعذر التصدير");
@@ -345,12 +366,14 @@ export default function AccountingPage() {
             items: [
               {
                 label: "قائمة الدخل وصافي الربح",
-                description: "مقارنة إجمالي إيرادات النقل والعمرة (4000) مقابل التكاليف التشغيلية والإدارية (5000) لاستخراج صافي ربح الفترة.",
+                description:
+                  "مقارنة إجمالي إيرادات النقل والعمرة (4000) مقابل التكاليف التشغيلية والإدارية (5000) لاستخراج صافي ربح الفترة.",
               },
               {
                 label: "السيولة والذمم وحسابات الضريبة",
                 code: "1101–1103 / 2101–2102",
-                description: "متابعة أرصدة الصندوق والبنك الأهلي SNB، ذمم العملاء غير المحصلة، ذمم الموردين، وأرصدة ضريبة المخرجات والمدخلات.",
+                description:
+                  "متابعة أرصدة الصندوق والبنك الأهلي SNB، ذمم العملاء غير المحصلة، ذمم الموردين، وأرصدة ضريبة المخرجات والمدخلات.",
               },
             ],
           },
@@ -360,12 +383,14 @@ export default function AccountingPage() {
             items: [
               {
                 label: "قيود اليومية المتوازنة",
-                description: "كل قيد يتطلب تساوي إجمالي المدين مع إجمالي الدائن، ويتضمن زر «+ إثبات رأس المال (300,000 ر.س)» الجاهز.",
+                description:
+                  "كل قيد يتطلب تساوي إجمالي المدين مع إجمالي الدائن، ويتضمن زر «+ إثبات رأس المال (300,000 ر.س)» الجاهز.",
               },
               {
                 label: "سندات القبض والسداد",
                 code: "SALE / PURCHASE",
-                description: "تسجيل تحصيل دفعات الفواتير الآجلة من العملاء (يُخفض 1103 ويزيد 1102/1101) أو سداد فواتير الموردين الآجلة (يُخفض 2101).",
+                description:
+                  "تسجيل تحصيل دفعات الفواتير الآجلة من العملاء (يُخفض 1103 ويزيد 1102/1101) أو سداد فواتير الموردين الآجلة (يُخفض 2101).",
               },
             ],
           },
@@ -375,11 +400,13 @@ export default function AccountingPage() {
             items: [
               {
                 label: "إقفال الفترات المحاسبية",
-                description: "منع تسجيل أو تعديل أي قيود أو فواتير بتاريخ يقع داخل فترة محاسبية تم إقفالها واعتماد إقرارها الضريبي.",
+                description:
+                  "منع تسجيل أو تعديل أي قيود أو فواتير بتاريخ يقع داخل فترة محاسبية تم إقفالها واعتماد إقرارها الضريبي.",
               },
               {
                 label: "تصدير التقارير PDF و CSV",
-                description: "تنزيل نسخة رسمية من التقرير المالي أو كشف تفصيلي بصيغة CSV/Excel للمحاسب القانوني والمراجع الخارجي.",
+                description:
+                  "تنزيل نسخة رسمية من التقرير المالي أو كشف تفصيلي بصيغة CSV/Excel للمحاسب القانوني والمراجع الخارجي.",
               },
             ],
           },
@@ -435,7 +462,9 @@ export default function AccountingPage() {
                 onClick={() => void download(f)}
                 className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
               >
-                {f === "pdf" ? t("accounting.exportPdf") : t("accounting.exportCsv")}
+                {f === "pdf"
+                  ? t("accounting.exportPdf")
+                  : t("accounting.exportCsv")}
               </button>
             ))}
           </div>
@@ -448,15 +477,27 @@ export default function AccountingPage() {
         </p>
       )}
 
-      {tab === "JOURNALS" && <JournalPanel reload={reload} onChanged={changed} />}
-      {tab === "PAYMENTS" && <PaymentPanel reload={reload} onChanged={changed} />}
+      {tab === "JOURNALS" && (
+        <JournalPanel reload={reload} onChanged={changed} />
+      )}
+      {tab === "PAYMENTS" && (
+        <PaymentPanel reload={reload} onChanged={changed} />
+      )}
 
       {(tab === "REPORTS" || tab === "PERIODS") && isLoading && (
-        <div role="status" className="theme-card h-72 animate-pulse rounded-2xl" />
+        <div
+          role="status"
+          className="theme-card h-72 animate-pulse rounded-2xl"
+        />
       )}
 
       {data && tab === "PERIODS" && (
-        <PeriodArchive period={period} report={data} reload={reload} onChanged={changed} />
+        <PeriodArchive
+          period={period}
+          report={data}
+          reload={reload}
+          onChanged={changed}
+        />
       )}
 
       {data && tab === "REPORTS" && (
@@ -480,7 +521,9 @@ export default function AccountingPage() {
                     : "theme-card rounded-2xl border theme-border p-5"
                 }
               >
-                <p className={`text-xs font-bold ${i === 3 ? "text-slate-300" : "text-slate-500"}`}>
+                <p
+                  className={`text-xs font-bold ${i === 3 ? "text-slate-300" : "text-slate-500"}`}
+                >
                   {label}
                 </p>
                 <p className="mt-4 font-mono text-2xl font-black" dir="ltr">
@@ -496,10 +539,16 @@ export default function AccountingPage() {
               💡 إيضاح مالي هام بشأن حساب الأرباح وضريبة القيمة المضافة:
             </strong>
             <p>
-              ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول والإدارة.
+              ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة
+              الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم
+              من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات
+              الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول
+              والإدارة.
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono pt-1">
-              مصروف الزكاة / ضريبة الدخل التقديري المسجل: {amountLabel(data.profit.taxExpense)} ر.س (لا يُحسب تلقائياً من ضريبة القيمة المضافة).
+              مصروف الزكاة / ضريبة الدخل التقديري المسجل:{" "}
+              {amountLabel(data.profit.taxExpense)} ر.س (لا يُحسب تلقائياً من
+              ضريبة القيمة المضافة).
             </p>
           </div>
 
@@ -512,7 +561,7 @@ export default function AccountingPage() {
                 .filter(
                   (a) =>
                     ["REVENUE", "EXPENSE"].includes(a.type) &&
-                    (Number(a.debit) || Number(a.credit))
+                    (Number(a.debit) || Number(a.credit)),
                 )
                 .map((a) => (
                   <div
@@ -520,15 +569,16 @@ export default function AccountingPage() {
                     className="flex justify-between gap-4 border-t theme-border px-5 py-3 text-sm"
                   >
                     <p>
-                      <bdi className="font-mono text-slate-500">{a.code}</bdi> · {a.nameAr}
+                      <bdi className="font-mono text-slate-500">{a.code}</bdi> ·{" "}
+                      {a.nameAr}
                     </p>
                     <bdi className="font-mono font-bold">
                       {amountLabel(
                         String(
                           a.type === "REVENUE"
                             ? Number(a.credit) - Number(a.debit)
-                            : Number(a.debit) - Number(a.credit)
-                        )
+                            : Number(a.debit) - Number(a.credit),
+                        ),
                       )}
                     </bdi>
                   </div>
@@ -603,8 +653,8 @@ export default function AccountingPage() {
           <section className="theme-card rounded-2xl border theme-border p-5">
             <h2 className="text-lg font-bold">تكلفة وربحية المركبات</h2>
             <p className="mt-2 text-xs text-slate-500">
-              تعتمد على لوحة المركبة المسجلة في الفواتير والمصروفات والقيود. المصروفات العامة
-              غير المخصصة لا توزع تلقائيًا.
+              تعتمد على لوحة المركبة المسجلة في الفواتير والمصروفات والقيود.
+              المصروفات العامة غير المخصصة لا توزع تلقائيًا.
             </p>
             {data.vehicles.length ? (
               <div className="mt-4 overflow-x-auto">
