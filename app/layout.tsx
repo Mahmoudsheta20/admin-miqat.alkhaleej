@@ -5,7 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/themeContext";
 import { AuthProvider } from "@/lib/authContext";
 import { LanguageProvider } from "@/lib/languageContext";
-import { Zain, Inter } from "next/font/google";
+import { Zain, Outfit } from "next/font/google";
 
 const zain = Zain({
   weight: ["200", "300", "400", "700", "800", "900"],
@@ -13,9 +13,9 @@ const zain = Zain({
   variable: "--font-zain",
   display: "swap",
 });
-const inter = Inter({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-outfit",
   display: "swap",
 });
 
@@ -52,7 +52,7 @@ export default async function RootLayout({
       lang={initialLanguage}
       dir={initialLanguage === "ar" ? "rtl" : "ltr"}
       suppressHydrationWarning
-      className={`h-full antialiased ${zain.variable} ${inter.variable}`}
+      className={`h-full antialiased ${zain.variable} ${outfit.variable}`}
     >
       <head>
         <script

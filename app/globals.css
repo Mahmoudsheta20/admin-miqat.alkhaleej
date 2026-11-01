@@ -3,8 +3,9 @@
 
 @layer base {
   :root {
-    --font-arabic: var(--font-inter), var(--font-zain), system-ui, sans-serif;
-    --font-latin: var(--font-inter), var(--font-zain), system-ui, sans-serif;
+    --font-arabic: var(--font-zain), var(--font-outfit), system-ui, sans-serif;
+    --font-latin: var(--font-outfit), var(--font-zain), system-ui, sans-serif;
+    --font-ui: var(--font-arabic);
     
     /* Light Mode Variables (Default) */
     --bg-main: #f8fafc;
@@ -38,7 +39,7 @@
   }
 
   body {
-    font-family: var(--font-arabic);
+    font-family: var(--font-ui);
     background-color: var(--bg-main);
     color: var(--text-main);
     direction: rtl;
@@ -50,12 +51,21 @@
 
   html[dir="ltr"] body {
     direction: ltr;
-    font-family: var(--font-latin), var(--font-arabic);
   }
 
   html[dir="rtl"] body {
     direction: rtl;
-    font-family: var(--font-arabic);
+  }
+
+  /* Language chooses typography; direction remains independent for data fields. */
+  [lang="ar"] {
+    --font-ui: var(--font-arabic);
+    font-family: var(--font-ui);
+  }
+
+  [lang="en"] {
+    --font-ui: var(--font-latin);
+    font-family: var(--font-ui);
   }
 }
 
@@ -319,7 +329,7 @@ button:disabled { cursor: not-allowed; }
 }
 
 /* Logical layout and consistent typography in both interface languages. */
-@theme inline { --font-sans: var(--font-latin); }
+@theme inline { --font-sans: var(--font-ui); }
 html[lang="en"] body { letter-spacing: normal; line-height: 1.55; }
 input, select, textarea, button { font-family: inherit; }
 input, select, textarea { max-width: 100%; }
