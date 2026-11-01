@@ -46,10 +46,12 @@ export default function VatReturnsPage() {
     try {
       await downloadAccounting(
         `/exports/${format}?${periodQuery(period)}`,
-        `miqat-vat-return-${year}-Q${quarter}.${format}`
+        `miqat-vat-return-${year}-Q${quarter}.${format}`,
       );
     } catch (e) {
-      setFailure(e instanceof Error ? e.message : "تعذر التصدير؛ حاول مرة أخرى");
+      setFailure(
+        e instanceof Error ? e.message : "تعذر التصدير؛ حاول مرة أخرى",
+      );
     } finally {
       setIsExporting(false);
     }
@@ -57,7 +59,7 @@ export default function VatReturnsPage() {
 
   const { data, error, isLoading } = useAccountingQuery<VatReport>(
     `/vat-return?${periodQuery(period)}`,
-    reload
+    reload,
   );
 
   const netVatDueNum = data ? Number(data.summary.netVatDue) : 0;
@@ -128,7 +130,8 @@ export default function VatReturnsPage() {
             طريقة تقديم الإقرار الضريبي الرسمي:
           </strong>
           <p>
-            يتم تقديم الإقرار الضريبي رسمياً عبر بوابة هيئة الزكاة والضريبة والجمارك (
+            يتم تقديم الإقرار الضريبي رسمياً عبر بوابة هيئة الزكاة والضريبة
+            والجمارك (
             <a
               href="https://zatca.gov.sa"
               target="_blank"
@@ -138,7 +141,8 @@ export default function VatReturnsPage() {
               zatca.gov.sa
               <ExternalLink className="size-3" />
             </a>
-            ). صُممت هذه الصفحة لمراجعة وتدقيق مبالغ المبيعات والمشتريات بدقة، وتتيح لك نسخ الأرقام بنقرة واحدة ولصقها في الخانة المقابلة بالبوابة.
+            ). صُممت هذه الصفحة لمراجعة وتدقيق مبالغ المبيعات والمشتريات بدقة،
+            وتتيح لك نسخ الأرقام بنقرة واحدة ولصقها في الخانة المقابلة بالبوابة.
           </p>
         </div>
       </div>
@@ -190,11 +194,13 @@ export default function VatReturnsPage() {
             items: [
               {
                 label: "الخانة 1 (المبيعات الخاضعة 15%)",
-                description: "تُعرض المبالغ الصافية قبل الضريبة، وأي تخفيضات أو إلغاءات تظهر في عمود التعديل كإشعارات دائنة.",
+                description:
+                  "تُعرض المبالغ الصافية قبل الضريبة، وأي تخفيضات أو إلغاءات تظهر في عمود التعديل كإشعارات دائنة.",
               },
               {
                 label: "الخانة 6 (إجمالي ضريبة المبيعات)",
-                description: "مجموع ضريبة القيمة المضافة المحصلة عن كافة الرحلات والتوريدات الخاضعة خلال الفترة.",
+                description:
+                  "مجموع ضريبة القيمة المضافة المحصلة عن كافة الرحلات والتوريدات الخاضعة خلال الفترة.",
               },
             ],
           },
@@ -204,11 +210,13 @@ export default function VatReturnsPage() {
             items: [
               {
                 label: "الخانة 7 (المشتريات الخاضعة 15%)",
-                description: "صافي مشتريات الوقود والصيانة والتكاليف المؤيدة بفواتير ضريبية صحيحة للموردين.",
+                description:
+                  "صافي مشتريات الوقود والصيانة والتكاليف المؤيدة بفواتير ضريبية صحيحة للموردين.",
               },
               {
                 label: "الخانة 12 (إجمالي الضريبة القابلة للاسترداد)",
-                description: "مجموع الضريبة المؤهلة للخصم بعد استبعاد المصروفات غير الخاضعة كرواتب السائقين والرسوم الحكومية.",
+                description:
+                  "مجموع الضريبة المؤهلة للخصم بعد استبعاد المصروفات غير الخاضعة كرواتب السائقين والرسوم الحكومية.",
               },
             ],
           },
@@ -218,11 +226,13 @@ export default function VatReturnsPage() {
             items: [
               {
                 label: "الخانة 13 (ضريبة الفترة)",
-                description: "الفارق بين ضريبة المبيعات وضريبة المشتريات (الخانة 6 − الخانة 12).",
+                description:
+                  "الفارق بين ضريبة المبيعات وضريبة المشتريات (الخانة 6 − الخانة 12).",
               },
               {
                 label: "الخانة 16 (صافي الضريبة المستحقة أو المستردة)",
-                description: "الرقم النهائي الواجب سداده للهيئة أو رصيد دائن مستحق للمنشأة بعد خصم الرصيد المرحل والتصحيحات.",
+                description:
+                  "الرقم النهائي الواجب سداده للهيئة أو رصيد دائن مستحق للمنشأة بعد خصم الرصيد المرحل والتصحيحات.",
               },
             ],
           },
@@ -275,12 +285,16 @@ export default function VatReturnsPage() {
 
       {period.mode !== "QUARTER" && (
         <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 text-xs font-bold">
-          ملاحظة: هذا العرض مخصص للتحليل الإحصائي للفترة المحددة. لتقديم الإقرار الفعلي للهيئة، اختر الربع الضريبي (Q1–Q4).
+          ملاحظة: هذا العرض مخصص للتحليل الإحصائي للفترة المحددة. لتقديم الإقرار
+          الفعلي للهيئة، اختر الربع الضريبي (Q1–Q4).
         </div>
       )}
 
       {isLoading && (
-        <div role="status" className="theme-card space-y-4 rounded-2xl p-8 border theme-border">
+        <div
+          role="status"
+          className="theme-card space-y-4 rounded-2xl p-8 border theme-border"
+        >
           <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500">
             <div className="size-5 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
             <span>جارٍ حساب خانات الإقرار ومطابقة القيود…</span>
@@ -297,7 +311,10 @@ export default function VatReturnsPage() {
                 {data.company.legalName}
               </p>
               <p className="text-slate-500 mt-0.5 font-mono">
-                الرقم الضريبي: <span className="font-bold text-slate-800 dark:text-slate-200">{data.company.vatNumber}</span>
+                الرقم الضريبي:{" "}
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {data.company.vatNumber}
+                </span>
               </p>
             </div>
             <div className="text-left">
@@ -307,44 +324,76 @@ export default function VatReturnsPage() {
               </p>
               {data.period.dueDate && (
                 <p className="text-amber-700 dark:text-amber-400 font-bold mt-0.5">
-                  آخر موعد اعتيادي للسداد: <span className="font-mono">{data.period.dueDate}</span>
+                  آخر موعد اعتيادي للسداد:{" "}
+                  <span className="font-mono">{data.period.dueDate}</span>
                 </p>
               )}
             </div>
           </div>
 
           {/* 3. KPI Summary Ribbon (§14.3) */}
-          <section className="grid grid-cols-2 lg:grid-cols-5 gap-3" aria-label="ملخص الأرقام الحاسم">
+          <section
+            className="grid grid-cols-2 lg:grid-cols-5 gap-3"
+            aria-label="ملخص الأرقام الحاسم"
+          >
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-              <span className="text-xs font-bold text-slate-500 block">صافي المبيعات (خ1)</span>
-              <p className="mt-2 font-mono text-lg sm:text-xl font-black text-slate-900 dark:text-white" dir="ltr">
+              <span className="text-xs font-bold text-slate-500 block">
+                صافي المبيعات (خ1)
+              </span>
+              <p
+                className="mt-2 font-mono text-lg sm:text-xl font-black text-slate-900 dark:text-white"
+                dir="ltr"
+              >
                 {amountLabel(data.summary.netSales)}
               </p>
-              <span className="text-[10px] text-slate-400">ر.س (غير شامل الضريبة)</span>
+              <span className="text-[10px] text-slate-400">
+                ر.س (غير شامل الضريبة)
+              </span>
             </div>
 
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 block">ضريبة المبيعات (خ6)</span>
-              <p className="mt-2 font-mono text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400" dir="ltr">
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 block">
+                ضريبة المبيعات (خ6)
+              </span>
+              <p
+                className="mt-2 font-mono text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400"
+                dir="ltr"
+              >
                 {amountLabel(data.summary.outputVat)}
               </p>
-              <span className="text-[10px] text-slate-400">ر.س ضريبة مخرجات</span>
+              <span className="text-[10px] text-slate-400">
+                ر.س ضريبة مخرجات
+              </span>
             </div>
 
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-              <span className="text-xs font-bold text-slate-500 block">المشتريات الخاضعة (خ7)</span>
-              <p className="mt-2 font-mono text-lg sm:text-xl font-black text-slate-900 dark:text-white" dir="ltr">
+              <span className="text-xs font-bold text-slate-500 block">
+                المشتريات الخاضعة (خ7)
+              </span>
+              <p
+                className="mt-2 font-mono text-lg sm:text-xl font-black text-slate-900 dark:text-white"
+                dir="ltr"
+              >
                 {amountLabel(data.summary.netPurchases)}
               </p>
-              <span className="text-[10px] text-slate-400">ر.س تكاليف الأسطول</span>
+              <span className="text-[10px] text-slate-400">
+                ر.س تكاليف الأسطول
+              </span>
             </div>
 
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 block">ضريبة قابلة للخصم (خ12)</span>
-              <p className="mt-2 font-mono text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 block">
+                ضريبة قابلة للخصم (خ12)
+              </span>
+              <p
+                className="mt-2 font-mono text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400"
+                dir="ltr"
+              >
                 {amountLabel(data.summary.recoverableInputVat)}
               </p>
-              <span className="text-[10px] text-slate-400">ر.س ضريبة مدخلات</span>
+              <span className="text-[10px] text-slate-400">
+                ر.س ضريبة مدخلات
+              </span>
             </div>
 
             <div
@@ -356,7 +405,9 @@ export default function VatReturnsPage() {
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold opacity-80 block">
-                  {isRefundable ? "رصيد دائن مسترد (خ16)" : "صافي الضريبة للتحويل (خ16)"}
+                  {isRefundable
+                    ? "رصيد دائن مسترد (خ16)"
+                    : "صافي الضريبة للتحويل (خ16)"}
                 </span>
                 {isRefundable ? (
                   <TrendingDown className="size-4 text-emerald-500" />
@@ -364,11 +415,16 @@ export default function VatReturnsPage() {
                   <TrendingUp className="size-4 text-amber-400" />
                 )}
               </div>
-              <p className="mt-2 font-mono text-xl sm:text-2xl font-black text-amber-400" dir="ltr">
+              <p
+                className="mt-2 font-mono text-xl sm:text-2xl font-black text-amber-400"
+                dir="ltr"
+              >
                 {amountLabel(data.summary.netVatDue)}
               </p>
               <span className="text-[10px] opacity-70">
-                {isRefundable ? "مستحق استرداده من الهيئة" : "واجب السداد لهيئة الزكاة"}
+                {isRefundable
+                  ? "مستحق استرداده من الهيئة"
+                  : "واجب السداد لهيئة الزكاة"}
               </span>
             </div>
           </section>
@@ -398,7 +454,9 @@ export default function VatReturnsPage() {
 
             <div className="grid gap-3 sm:grid-cols-3 text-xs">
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
-                <span className="text-slate-400 block mb-1">إجمالي مشتريات الأسطول:</span>
+                <span className="text-slate-400 block mb-1">
+                  إجمالي مشتريات الأسطول:
+                </span>
                 <strong className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
                   {amountLabel(data.summary.netPurchases)} ر.س
                 </strong>
@@ -408,7 +466,9 @@ export default function VatReturnsPage() {
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
-                <span className="text-slate-400 block mb-1">الضريبة غير القابلة للخصم:</span>
+                <span className="text-slate-400 block mb-1">
+                  الضريبة غير القابلة للخصم:
+                </span>
                 <strong className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
                   {amountLabel(data.summary.nonRecoverableInputVat)} ر.س
                 </strong>
@@ -418,7 +478,9 @@ export default function VatReturnsPage() {
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
-                <span className="text-slate-400 block mb-1">فواتير مبدئية مستبعدة:</span>
+                <span className="text-slate-400 block mb-1">
+                  فواتير مبدئية مستبعدة:
+                </span>
                 <strong className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
                   {data.coverage.proformaCount} فاتورة
                 </strong>
@@ -431,7 +493,9 @@ export default function VatReturnsPage() {
             {/* Warnings list if any */}
             {data.warnings.length > 0 ? (
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1.5">
-                <strong className="font-black block">ملاحظات التحقق من القيود:</strong>
+                <strong className="font-black block">
+                  ملاحظات التحقق من القيود:
+                </strong>
                 {data.warnings.map((w, idx) => (
                   <p key={idx} className="flex items-center gap-1.5">
                     <AlertCircle className="size-3.5 text-amber-600 shrink-0" />
@@ -442,14 +506,18 @@ export default function VatReturnsPage() {
             ) : (
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
-                <span>كافة العمليات والقيود مطابقة للمواصفات الضريبية ولا توجد تنبيهات معلقة.</span>
+                <span>
+                  كافة العمليات والقيود مطابقة للمواصفات الضريبية ولا توجد
+                  تنبيهات معلقة.
+                </span>
               </div>
             )}
 
             {/* 7. Document Drill-down (§14.7) */}
             <details className="mt-4 border-t theme-border pt-4">
               <summary className="cursor-pointer text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline">
-                عرض المستندات المؤيدة للإقرار (فواتير المبيعات: {data.sales.length} · فواتير المشتريات: {data.purchases.length})
+                عرض المستندات المؤيدة للإقرار (فواتير المبيعات:{" "}
+                {data.sales.length} · فواتير المشتريات: {data.purchases.length})
               </summary>
               <div className="mt-4 max-h-80 space-y-2 overflow-y-auto text-xs divide-y theme-border">
                 {data.sales.map((row) => (
@@ -465,17 +533,17 @@ export default function VatReturnsPage() {
                         {row.number}
                       </Link>
                       <span className="text-slate-500">
-                        {
-                          {
-                            CREDIT: "إشعار دائن (تخفيض)",
-                            DEBIT: "إشعار مدين (إضافة)",
-                            INVOICE: "فاتورة مبيعات",
-                          }[row.kind] || row.kind
-                        }
+                        {{
+                          CREDIT: "إشعار دائن (تخفيض)",
+                          DEBIT: "إشعار مدين (إضافة)",
+                          INVOICE: "فاتورة مبيعات",
+                        }[row.kind] || row.kind}
                       </span>
                     </div>
                     <p className="font-mono text-slate-600 dark:text-slate-300">
-                      <span>{row.date}</span> · الصافي: <strong>{row.net}</strong> · الضريبة: <strong>{row.vat}</strong> ر.س
+                      <span>{row.date}</span> · الصافي:{" "}
+                      <strong>{row.net}</strong> · الضريبة:{" "}
+                      <strong>{row.vat}</strong> ر.س
                     </p>
                   </div>
                 ))}
@@ -486,17 +554,26 @@ export default function VatReturnsPage() {
                     key={row.id}
                   >
                     <p className="font-bold text-slate-800 dark:text-slate-200">
-                      {row.supplierName} · <span className="font-mono text-slate-500">{row.invoiceNumber}</span>
+                      {row.supplierName} ·{" "}
+                      <span className="font-mono text-slate-500">
+                        {row.invoiceNumber}
+                      </span>
                     </p>
                     <p className="font-mono text-slate-600 dark:text-slate-300">
-                      الصافي: <strong>{row.netAmount}</strong> · ضريبة قابلة للخصم:{" "}
-                      <strong className="text-emerald-600 dark:text-emerald-400">{row.recoverableVat}</strong> ر.س
+                      الصافي: <strong>{row.netAmount}</strong> · ضريبة قابلة
+                      للخصم:{" "}
+                      <strong className="text-emerald-600 dark:text-emerald-400">
+                        {row.recoverableVat}
+                      </strong>{" "}
+                      ر.س
                     </p>
                   </div>
                 ))}
 
                 {data.sales.length + data.purchases.length === 0 && (
-                  <p className="py-4 text-center text-slate-400">لا توجد مستندات مسجلة ضمن هذه الفترة.</p>
+                  <p className="py-4 text-center text-slate-400">
+                    لا توجد مستندات مسجلة ضمن هذه الفترة.
+                  </p>
                 )}
               </div>
             </details>

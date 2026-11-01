@@ -26,15 +26,24 @@ import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
-import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import {
+  fetchCached,
+  getCachedData,
+  invalidateClientCache,
+} from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function FleetManagementPage() {
   const { t } = useLanguage();
-  const cachedFleet = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
+  const cachedFleet =
+    getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     if (Array.isArray(cachedFleet)) return cachedFleet;
-    if (cachedFleet && typeof cachedFleet === "object" && Array.isArray(cachedFleet.vehicles)) {
+    if (
+      cachedFleet &&
+      typeof cachedFleet === "object" &&
+      Array.isArray(cachedFleet.vehicles)
+    ) {
       return cachedFleet.vehicles;
     }
     return [];
@@ -67,19 +76,24 @@ export default function FleetManagementPage() {
 
   const loadVehicles = async (forceRefresh = false) => {
     return fetchCached("fleet_vehicles", getVehicles, {
-        ttlMs: 120_000,
-        forceRefresh,
-      }).then(res => {
-      if (res?.success && Array.isArray(res?.vehicles)) {
-        setVehicles(res.vehicles);
-        setLoadError("");
-      } else { setLoadError(res.error || "تعذر تحميل البيانات"); }
-    }).catch(err => {
-      setLoadError("تعذر الاتصال بالخادم");
-      console.error("Failed to load vehicles:", err);
-    }).finally(() => {
-      setIsLoading(false);
-    });
+      ttlMs: 120_000,
+      forceRefresh,
+    })
+      .then((res) => {
+        if (res?.success && Array.isArray(res?.vehicles)) {
+          setVehicles(res.vehicles);
+          setLoadError("");
+        } else {
+          setLoadError(res.error || "تعذر تحميل البيانات");
+        }
+      })
+      .catch((err) => {
+        setLoadError("تعذر الاتصال بالخادم");
+        console.error("Failed to load vehicles:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -124,7 +138,11 @@ export default function FleetManagementPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.plateNumberAr.trim() || !formData.make.trim() || !formData.model.trim()) {
+    if (
+      !formData.plateNumberAr.trim() ||
+      !formData.make.trim() ||
+      !formData.model.trim()
+    ) {
       setFormError("رقم اللوحة، الماركة والموديل مطلوبة");
       return;
     }
@@ -181,7 +199,13 @@ export default function FleetManagementPage() {
 
   return (
     <div className="space-y-6">
-      <LoadError message={loadError} onRetry={() => { void loadVehicles(true); }} isLoading={isLoading} />
+      <LoadError
+        message={loadError}
+        onRetry={() => {
+          void loadVehicles(true);
+        }}
+        isLoading={isLoading}
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -211,7 +235,9 @@ export default function FleetManagementPage() {
             className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50 cursor-pointer"
             title={t("common.refresh")}
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+            />
           </button>
           <button
             onClick={openAddModal}
@@ -243,12 +269,14 @@ export default function FleetManagementPage() {
               {
                 label: "تصنيف المركبات",
                 code: "BUS / COASTER / SUV_VIP",
-                description: "تحديد فئة المركبة (حافلة، كوستر، جمس VIP، فان، سيدان) وسعة المقاعد لاختيار المركبة المناسبة لحجم الوفد.",
+                description:
+                  "تحديد فئة المركبة (حافلة، كوستر، جمس VIP، فان، سيدان) وسعة المقاعد لاختيار المركبة المناسبة لحجم الوفد.",
               },
               {
                 label: "حالات التشغيل",
                 code: "AVAILABLE / ON_TRIP / MAINTENANCE",
-                description: "تتبع ما إذا كانت المركبة جاهزة للتشغيل، أو في رحلة حالية، أو داخل الصيانة الدورية.",
+                description:
+                  "تتبع ما إذا كانت المركبة جاهزة للتشغيل، أو في رحلة حالية، أو داخل الصيانة الدورية.",
               },
             ],
           },
@@ -258,11 +286,13 @@ export default function FleetManagementPage() {
             items: [
               {
                 label: "صلاحية الاستمارة والتأمين",
-                description: "مراقبة تواريخ انتهاء رخصة السير (الاستمارة) ووثيقة التأمين لتفادي إيقاف الخدمات أو المخالفات.",
+                description:
+                  "مراقبة تواريخ انتهاء رخصة السير (الاستمارة) ووثيقة التأمين لتفادي إيقاف الخدمات أو المخالفات.",
               },
               {
                 label: "قراءة عداد المسافات (Odometer)",
-                description: "تحديث المسافة المقطوعة بالكيلومتر لمتابعة مواعيد تغيير الزيوت والإطارات والصيانة الوقائية.",
+                description:
+                  "تحديث المسافة المقطوعة بالكيلومتر لمتابعة مواعيد تغيير الزيوت والإطارات والصيانة الوقائية.",
               },
             ],
           },
@@ -273,12 +303,14 @@ export default function FleetManagementPage() {
               {
                 label: "الأصول الثابتة للأسطول",
                 code: "1201",
-                description: "تندرج قيمة أسطول السيارات والحافلات ضمن حساب (1201 - أسطول السيارات والمركبات والحافلات).",
+                description:
+                  "تندرج قيمة أسطول السيارات والحافلات ضمن حساب (1201 - أسطول السيارات والمركبات والحافلات).",
               },
               {
                 label: "ربط المصروفات بلوحة المركبة",
                 code: "5101 / 5102 / 5104",
-                description: "عند تسجيل فاتورة وقود أو صيانة أو تأمين في قسم المشتريات، يمكن ربطها برقم لوحة المركبة لتتبع تكلفة كل مركبة.",
+                description:
+                  "عند تسجيل فاتورة وقود أو صيانة أو تأمين في قسم المشتريات، يمكن ربطها برقم لوحة المركبة لتتبع تكلفة كل مركبة.",
               },
             ],
           },
@@ -352,14 +384,18 @@ export default function FleetManagementPage() {
                 {/* Plates Badges */}
                 <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border flex items-center justify-between">
                   <div className="text-center">
-                    <span className="text-[10px] text-slate-400 block">اللوحة بالعربية</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      اللوحة بالعربية
+                    </span>
                     <span className="font-bold text-sm text-slate-900 dark:text-white">
                       {v.plateNumberAr}
                     </span>
                   </div>
                   <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
                   <div className="text-center">
-                    <span className="text-[10px] text-slate-400 block">Plate (EN)</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      Plate (EN)
+                    </span>
                     <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
                       {v.plateNumberEn}
                     </span>
@@ -424,11 +460,20 @@ export default function FleetManagementPage() {
 
       {/* Add/Edit Modal */}
       {(isAddModalOpen || editingVehicle) && (
-        <Modal label="بيانات المركبة" onClose={() => { setIsAddModalOpen(false); setEditingVehicle(null); }} isBusy={isSubmitting}>
+        <Modal
+          label="بيانات المركبة"
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingVehicle(null);
+          }}
+          isBusy={isSubmitting}
+        >
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {editingVehicle ? "تعديل بيانات المركبة" : "إضافة مركبة جديدة للأسطول"}
+                {editingVehicle
+                  ? "تعديل بيانات المركبة"
+                  : "إضافة مركبة جديدة للأسطول"}
               </h3>
               <button
                 onClick={() => {
@@ -441,7 +486,10 @@ export default function FleetManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+            <form
+              onSubmit={handleSave}
+              className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1"
+            >
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
                   {formError}
@@ -457,7 +505,12 @@ export default function FleetManagementPage() {
                     type="text"
                     required
                     value={formData.plateNumberAr}
-                    onChange={(e) => setFormData({ ...formData, plateNumberAr: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        plateNumberAr: e.target.value,
+                      })
+                    }
                     placeholder="ا ص ل 7223"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -471,7 +524,12 @@ export default function FleetManagementPage() {
                     type="text"
                     required
                     value={formData.plateNumberEn}
-                    onChange={(e) => setFormData({ ...formData, plateNumberEn: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        plateNumberEn: e.target.value,
+                      })
+                    }
                     placeholder="ASL 7223"
                     dir="ltr"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
@@ -486,7 +544,9 @@ export default function FleetManagementPage() {
                     type="text"
                     required
                     value={formData.make}
-                    onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, make: e.target.value })
+                    }
                     placeholder="GMC"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -500,7 +560,9 @@ export default function FleetManagementPage() {
                     type="text"
                     required
                     value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, model: e.target.value })
+                    }
                     placeholder="Yukon XL VIP"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -513,7 +575,9 @@ export default function FleetManagementPage() {
                   <input
                     type="number"
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, year: Number(e.target.value) })
+                    }
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
@@ -525,7 +589,12 @@ export default function FleetManagementPage() {
                   <input
                     type="number"
                     value={formData.capacity}
-                    onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        capacity: Number(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
@@ -536,7 +605,12 @@ export default function FleetManagementPage() {
                   </label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as VehicleStatus })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        status: e.target.value as VehicleStatus,
+                      })
+                    }
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   >
                     <option value="AVAILABLE">جاهزة</option>
@@ -552,7 +626,12 @@ export default function FleetManagementPage() {
                   <input
                     type="number"
                     value={formData.currentMileage}
-                    onChange={(e) => setFormData({ ...formData, currentMileage: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        currentMileage: Number(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
@@ -564,7 +643,12 @@ export default function FleetManagementPage() {
                   <input
                     type="text"
                     value={formData.registrationExpiry}
-                    onChange={(e) => setFormData({ ...formData, registrationExpiry: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        registrationExpiry: e.target.value,
+                      })
+                    }
                     placeholder="2027/05/14"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -577,7 +661,12 @@ export default function FleetManagementPage() {
                   <input
                     type="text"
                     value={formData.insuranceExpiry}
-                    onChange={(e) => setFormData({ ...formData, insuranceExpiry: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        insuranceExpiry: e.target.value,
+                      })
+                    }
                     placeholder="2027/01/20"
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
@@ -600,7 +689,11 @@ export default function FleetManagementPage() {
                   disabled={isSubmitting}
                   className="px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
                 >
-                  {isSubmitting ? "جاري الحفظ..." : editingVehicle ? "حفظ التعديلات" : "إضافة المركبة"}
+                  {isSubmitting
+                    ? "جاري الحفظ..."
+                    : editingVehicle
+                      ? "حفظ التعديلات"
+                      : "إضافة المركبة"}
                 </button>
               </div>
             </form>

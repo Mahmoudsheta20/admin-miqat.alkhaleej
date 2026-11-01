@@ -39,19 +39,48 @@ interface AccountForm {
   profitSection: "OPERATING" | "TAX";
 }
 
-const TYPES: Record<string, { label: string; codePrefix: string; color: string }> = {
-  ASSET: { label: "الأصول", codePrefix: "1xxx", color: "text-blue-700 dark:text-blue-400 bg-blue-500/10 border-blue-500/20" },
-  LIABILITY: { label: "الالتزامات", codePrefix: "2xxx", color: "text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" },
-  EQUITY: { label: "حقوق الملكية", codePrefix: "3xxx", color: "text-indigo-700 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20" },
-  REVENUE: { label: "الإيرادات", codePrefix: "4xxx", color: "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-  EXPENSE: { label: "المصروفات والتكاليف", codePrefix: "5xxx", color: "text-rose-700 dark:text-rose-400 bg-rose-500/10 border-rose-500/20" },
+const TYPES: Record<
+  string,
+  { label: string; codePrefix: string; color: string }
+> = {
+  ASSET: {
+    label: "الأصول",
+    codePrefix: "1xxx",
+    color: "text-blue-700 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
+  },
+  LIABILITY: {
+    label: "الالتزامات",
+    codePrefix: "2xxx",
+    color:
+      "text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
+  },
+  EQUITY: {
+    label: "حقوق الملكية",
+    codePrefix: "3xxx",
+    color:
+      "text-indigo-700 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+  },
+  REVENUE: {
+    label: "الإيرادات",
+    codePrefix: "4xxx",
+    color:
+      "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  },
+  EXPENSE: {
+    label: "المصروفات والتكاليف",
+    codePrefix: "5xxx",
+    color: "text-rose-700 dark:text-rose-400 bg-rose-500/10 border-rose-500/20",
+  },
 };
 
 const INPUT = "theme-input mt-2 h-11 w-full rounded-xl px-3 text-sm";
 
-function suggestNextChildCode(parentCode: string, allAccounts: Account[]): string {
+function suggestNextChildCode(
+  parentCode: string,
+  allAccounts: Account[],
+): string {
   const children = allAccounts.filter(
-    (a) => a.code !== parentCode && a.code.startsWith(parentCode)
+    (a) => a.code !== parentCode && a.code.startsWith(parentCode),
   );
   if (children.length === 0) {
     if (parentCode.endsWith("00")) {
@@ -78,7 +107,13 @@ interface EditorProps {
   onSaved: () => void;
 }
 
-function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorProps) {
+function Editor({
+  account,
+  prefillParent,
+  accounts,
+  onClose,
+  onSaved,
+}: EditorProps) {
   const dialog = useRef<HTMLDialogElement>(null);
 
   const initialForm = useMemo<AccountForm>(() => {
@@ -92,7 +127,9 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
         normalBalance: account.normalBalance as AccountForm["normalBalance"],
         isPosting: account.isPosting,
         isActive: account.isActive,
-        profitSection: (account.profitSection as AccountForm["profitSection"]) || "OPERATING",
+        profitSection:
+          (account.profitSection as AccountForm["profitSection"]) ||
+          "OPERATING",
       };
     }
 
@@ -104,7 +141,8 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
         nameEn: "",
         parentId: prefillParent.id,
         type: prefillParent.type as AccountForm["type"],
-        normalBalance: prefillParent.normalBalance as AccountForm["normalBalance"],
+        normalBalance:
+          prefillParent.normalBalance as AccountForm["normalBalance"],
         isPosting: true,
         isActive: true,
         profitSection: "OPERATING",
@@ -160,14 +198,16 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
             nameEn: form.nameEn.trim(),
             isActive: Boolean(form.isActive),
             profitSection: form.profitSection,
-          }
+          },
     );
 
     setSaving(false);
     if (result.success) {
       onSaved();
     } else {
-      setError(result.error || "تعذر حفظ الحساب. تحقق من صحة الرمز والبيانات المدخلة.");
+      setError(
+        result.error || "تعذر حفظ الحساب. تحقق من صحة الرمز والبيانات المدخلة.",
+      );
     }
   }
 
@@ -188,11 +228,14 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                {isEditing ? `تعديل الحساب #${account.code}` : "إنشاء حساب جديد"}
+                {isEditing
+                  ? `تعديل الحساب #${account.code}`
+                  : "إنشاء حساب جديد"}
               </span>
               {prefillParent && (
                 <span className="text-xs text-slate-500">
-                  تابع للحساب الرئيسي: {prefillParent.code} - {prefillParent.nameAr}
+                  تابع للحساب الرئيسي: {prefillParent.code} -{" "}
+                  {prefillParent.nameAr}
                 </span>
               )}
             </div>
@@ -242,7 +285,9 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
                 update({
                   type: newType,
                   parentId: null,
-                  normalBalance: ["ASSET", "EXPENSE"].includes(newType) ? "DEBIT" : "CREDIT",
+                  normalBalance: ["ASSET", "EXPENSE"].includes(newType)
+                    ? "DEBIT"
+                    : "CREDIT",
                 });
               }}
             >
@@ -293,7 +338,9 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
               value={form.parentId || ""}
               onChange={(e) => update({ parentId: e.target.value || null })}
             >
-              <option value="">(بدون حساب أب — حساب رئيسي من المستوى الأول)</option>
+              <option value="">
+                (بدون حساب أب — حساب رئيسي من المستوى الأول)
+              </option>
               {accounts
                 .filter((a) => !a.isPosting && a.type === form.type)
                 .map((a) => (
@@ -314,10 +361,18 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
               disabled={isEditing}
               className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
               value={form.normalBalance}
-              onChange={(e) => update({ normalBalance: e.target.value as AccountForm["normalBalance"] })}
+              onChange={(e) =>
+                update({
+                  normalBalance: e.target.value as AccountForm["normalBalance"],
+                })
+              }
             >
-              <option value="DEBIT">مدين (Debit) — طبيعي للأصول والمصروفات</option>
-              <option value="CREDIT">دائن (Credit) — طبيعي للالتزامات والملكية والإيرادات</option>
+              <option value="DEBIT">
+                مدين (Debit) — طبيعي للأصول والمصروفات
+              </option>
+              <option value="CREDIT">
+                دائن (Credit) — طبيعي للالتزامات والملكية والإيرادات
+              </option>
             </select>
           </label>
 
@@ -328,10 +383,19 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
               <select
                 className={INPUT}
                 value={form.profitSection}
-                onChange={(e) => update({ profitSection: e.target.value as AccountForm["profitSection"] })}
+                onChange={(e) =>
+                  update({
+                    profitSection: e.target
+                      .value as AccountForm["profitSection"],
+                  })
+                }
               >
-                <option value="OPERATING">مصروف تشغيلي / إداري مباشر (ضمن الأرباح التشغيلية)</option>
-                <option value="TAX">مصروف زكاة شرعية / ضريبة دخل مُسجل يدويًا (بعد صافي الربح)</option>
+                <option value="OPERATING">
+                  مصروف تشغيلي / إداري مباشر (ضمن الأرباح التشغيلية)
+                </option>
+                <option value="TAX">
+                  مصروف زكاة شرعية / ضريبة دخل مُسجل يدويًا (بعد صافي الربح)
+                </option>
               </select>
             </label>
           )}
@@ -352,7 +416,9 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
                 حساب فرعي يقبل الترحيل المباشر (Posting Sub-Account)
               </span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                إذا تم تفعيل هذا الخيار، سيظهر هذا الحساب في شاشات تسجيل الفواتير والمشتريات ومصروفات الأسطول وسندات القبض وقيود اليومية. إذا عطلته، سيصبح حساباً تجميعياً لحساب مجاميع الفروع فقط.
+                إذا تم تفعيل هذا الخيار، سيظهر هذا الحساب في شاشات تسجيل
+                الفواتير والمشتريات ومصروفات الأسطول وسندات القبض وقيود اليومية.
+                إذا عطلته، سيصبح حساباً تجميعياً لحساب مجاميع الفروع فقط.
               </p>
             </div>
           </label>
@@ -370,7 +436,8 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
                 الحساب نشط وجاهز للاستخدام
               </span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                الحسابات النشطة فقط هي التي تظهر في القوائم المنسدلة للعمليات المحاسبية. الحسابات النظامية الأساسية تظل نشطة دائماً.
+                الحسابات النشطة فقط هي التي تظهر في القوائم المنسدلة للعمليات
+                المحاسبية. الحسابات النظامية الأساسية تظل نشطة دائماً.
               </p>
             </div>
           </label>
@@ -399,7 +466,11 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
             disabled={saving}
             className="gold-gradient-btn rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer transition shadow-sm"
           >
-            {saving ? "جارٍ الحفظ…" : isEditing ? "حفظ التعديلات" : "حفظ وإضافة الحساب"}
+            {saving
+              ? "جارٍ الحفظ…"
+              : isEditing
+                ? "حفظ التعديلات"
+                : "حفظ وإضافة الحساب"}
           </button>
         </footer>
       </form>
@@ -411,20 +482,27 @@ export default function AccountsPage() {
   const { t, dir } = useLanguage();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
-  const [postingFilter, setPostingFilter] = useState<"ALL" | "POSTING" | "GROUP">("ALL");
+  const [postingFilter, setPostingFilter] = useState<
+    "ALL" | "POSTING" | "GROUP"
+  >("ALL");
   const [viewMode, setViewMode] = useState<"TREE" | "TABLE">("TREE");
-  const [collapsedTypes, setCollapsedTypes] = useState<Record<string, boolean>>({});
+  const [collapsedTypes, setCollapsedTypes] = useState<Record<string, boolean>>(
+    {},
+  );
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showFaqGuide, setShowFaqGuide] = useState(true);
 
   const [reload, setReload] = useState(0);
   const [seedMessage, setSeedMessage] = useState("");
   const [seedError, setSeedError] = useState("");
-  const [editor, setEditor] = useState<{ account: Account | "NEW"; prefillParent?: Account | null } | null>(null);
+  const [editor, setEditor] = useState<{
+    account: Account | "NEW";
+    prefillParent?: Account | null;
+  } | null>(null);
 
   const { data, error, isLoading } = useAccountingQuery<{ items: Account[] }>(
     "/accounts",
-    reload
+    reload,
   );
   const accounts = useMemo(() => data?.items || [], [data]);
 
@@ -453,7 +531,16 @@ export default function AccountsPage() {
     const equity = accounts.filter((a) => a.type === "EQUITY").length;
     const revenues = accounts.filter((a) => a.type === "REVENUE").length;
     const expenses = accounts.filter((a) => a.type === "EXPENSE").length;
-    return { total, posting, group, assets, liabilities, equity, revenues, expenses };
+    return {
+      total,
+      posting,
+      group,
+      assets,
+      liabilities,
+      equity,
+      revenues,
+      expenses,
+    };
   }, [accounts]);
 
   // Account Hierarchy Depth
@@ -515,13 +602,16 @@ export default function AccountsPage() {
               <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
                 {t("section.financeReview")}
               </span>
-              <span className="text-xs text-slate-500">{t("nav.accounts")}</span>
+              <span className="text-xs text-slate-500">
+                {t("nav.accounts")}
+              </span>
             </div>
             <h1 className="mt-1 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               {t("nav.accounts")} (Chart of Accounts)
             </h1>
             <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق الملكية، الإيرادات، والمصروفات
+              الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق
+              الملكية، الإيرادات، والمصروفات
             </p>
           </div>
         </div>
@@ -534,7 +624,9 @@ export default function AccountsPage() {
             className="p-2.5 rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 cursor-pointer shadow-2xs"
             title={t("common.refresh")}
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-amber-500" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isLoading ? "animate-spin text-amber-500" : ""}`}
+            />
           </button>
           <SeedTestDataButton
             onSeeded={(msg) => {
@@ -614,11 +706,13 @@ export default function AccountsPage() {
             items: [
               {
                 label: "❌ الحساب التجميعي (Group - isPosting = false)",
-                description: "عناوين رئيسية كبرى مثل (1000 الأصول، 2000 الالتزامات، 4000 الإيرادات، 5000 المصروفات). دورها فقط تجميع الأرصدة في الميزانية وقائمة الدخل، ولا يقبل النظام أي قيد أو فاتورة عليها نهائياً.",
+                description:
+                  "عناوين رئيسية كبرى مثل (1000 الأصول، 2000 الالتزامات، 4000 الإيرادات، 5000 المصروفات). دورها فقط تجميع الأرصدة في الميزانية وقائمة الدخل، ولا يقبل النظام أي قيد أو فاتورة عليها نهائياً.",
               },
               {
                 label: "✅ الحساب الفرعي (Posting - isPosting = true)",
-                description: "الحسابات الميدانية التفصيلية مثل (1102 البنك، 4101 إيرادات النقل، 5101 الوقود). هذه فقط هي الحسابات الصالحة للاختيار في القيود والفواتير وسندات الصرف.",
+                description:
+                  "الحسابات الميدانية التفصيلية مثل (1102 البنك، 4101 إيرادات النقل، 5101 الوقود). هذه فقط هي الحسابات الصالحة للاختيار في القيود والفواتير وسندات الصرف.",
               },
             ],
           },
@@ -629,17 +723,20 @@ export default function AccountsPage() {
               {
                 label: "فواتير المبيعات والعمرة",
                 code: "4101 / 4102 + 210201",
-                description: "الطرف الدائن: إيراد النقل (4101) أو VIP (4102) + ضريبة المخرجات (210201). الطرف المدين: البنك (1102) أو الصندوق (1101) أو ذمم العملاء (1103).",
+                description:
+                  "الطرف الدائن: إيراد النقل (4101) أو VIP (4102) + ضريبة المخرجات (210201). الطرف المدين: البنك (1102) أو الصندوق (1101) أو ذمم العملاء (1103).",
               },
               {
                 label: "مشتريات ومصروفات الأسطول",
                 code: "5101–5104 + 210202",
-                description: "الوقود (5101)، الصيانة (5102)، النقل بالباطن (5103)، التأمين (5104) + ضريبة المدخلات (210202) مقابل البنك (1102) أو الموردين (2101).",
+                description:
+                  "الوقود (5101)، الصيانة (5102)، النقل بالباطن (5103)، التأمين (5104) + ضريبة المدخلات (210202) مقابل البنك (1102) أو الموردين (2101).",
               },
               {
                 label: "الرواتب والرسوم الحكومية TGA",
                 code: "5105 / 5106 (0% VAT)",
-                description: "رواتب السائقين (5105) ورسوم هيئة النقل (5106) تُسجل كمعاملة خارج نطاق الضريبة (0.00 ضريبة) لحماية ضريبة المدخلات.",
+                description:
+                  "رواتب السائقين (5105) ورسوم هيئة النقل (5106) تُسجل كمعاملة خارج نطاق الضريبة (0.00 ضريبة) لحماية ضريبة المدخلات.",
               },
             ],
           },
@@ -649,11 +746,13 @@ export default function AccountsPage() {
             items: [
               {
                 label: "1xxx الأصول و 2xxx الالتزامات",
-                description: "1101 صندوق، 1102 بنك SNB، 1103 عملاء، 1201 أسطول الحافلات | 2101 موردين، 210201 ضريبة مخرجات، 210202 ضريبة مدخلات.",
+                description:
+                  "1101 صندوق، 1102 بنك SNB، 1103 عملاء، 1201 أسطول الحافلات | 2101 موردين، 210201 ضريبة مخرجات، 210202 ضريبة مدخلات.",
               },
               {
                 label: "3xxx الملكية، 4xxx الإيراد، 5xxx المصروف",
-                description: "3101 رأس المال (300,000 ر.س) | 4101 إيراد نقل 15%، 4103 صفري | 5101 وقود، 5102 صيانة، 5201 إيجار ومرافق.",
+                description:
+                  "3101 رأس المال (300,000 ر.س) | 4101 إيراد نقل 15%، 4103 صفري | 5101 وقود، 5102 صيانة، 5201 إيجار ومرافق.",
               },
             ],
           },
@@ -674,13 +773,40 @@ export default function AccountsPage() {
             </div>
             <div className="space-y-1">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟</span>
+                <span>
+                  لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟
+                </span>
                 <span className="rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 border border-blue-500/20">
                   حل فوري
                 </span>
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل <code className="font-mono font-bold text-amber-700 dark:text-amber-400">1000</code> أو <code className="font-mono font-bold text-amber-700 dark:text-amber-400">2000</code> أو <code className="font-mono font-bold text-amber-700 dark:text-amber-400">5000</code> في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط التابع له (مثل <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">1102 البنك</code>، <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">4101 الإيرادات</code>، أو <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">5101 الوقود</code>).
+                يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل{" "}
+                <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                  1000
+                </code>{" "}
+                أو{" "}
+                <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                  2000
+                </code>{" "}
+                أو{" "}
+                <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                  5000
+                </code>{" "}
+                في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط
+                التابع له (مثل{" "}
+                <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                  1102 البنك
+                </code>
+                ،{" "}
+                <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                  4101 الإيرادات
+                </code>
+                ، أو{" "}
+                <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                  5101 الوقود
+                </code>
+                ).
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button
@@ -731,7 +857,9 @@ export default function AccountsPage() {
               : "theme-card theme-border hover:border-amber-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-slate-500">إجمالي الحسابات</span>
+          <span className="text-[11px] font-bold text-slate-500">
+            إجمالي الحسابات
+          </span>
           <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
             {isLoading ? "—" : stats.total}
           </div>
@@ -741,7 +869,9 @@ export default function AccountsPage() {
         {/* Posting Sub-Accounts */}
         <button
           type="button"
-          onClick={() => setPostingFilter(postingFilter === "POSTING" ? "ALL" : "POSTING")}
+          onClick={() =>
+            setPostingFilter(postingFilter === "POSTING" ? "ALL" : "POSTING")
+          }
           className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
             postingFilter === "POSTING"
               ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
@@ -757,13 +887,17 @@ export default function AccountsPage() {
           <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
             {isLoading ? "—" : stats.posting}
           </div>
-          <span className="text-[10px] text-emerald-600/80">صالحة للقيود والفواتير</span>
+          <span className="text-[10px] text-emerald-600/80">
+            صالحة للقيود والفواتير
+          </span>
         </button>
 
         {/* Group Accounts */}
         <button
           type="button"
-          onClick={() => setPostingFilter(postingFilter === "GROUP" ? "ALL" : "GROUP")}
+          onClick={() =>
+            setPostingFilter(postingFilter === "GROUP" ? "ALL" : "GROUP")
+          }
           className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
             postingFilter === "GROUP"
               ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30"
@@ -779,58 +913,78 @@ export default function AccountsPage() {
           <div className="text-xl sm:text-2xl font-black font-mono text-amber-600 dark:text-amber-400 mt-1">
             {isLoading ? "—" : stats.group}
           </div>
-          <span className="text-[10px] text-amber-600/80">لحساب مجاميع الفروع</span>
+          <span className="text-[10px] text-amber-600/80">
+            لحساب مجاميع الفروع
+          </span>
         </button>
 
         {/* Assets 1xxx */}
         <button
           type="button"
-          onClick={() => setTypeFilter(typeFilter === "ASSET" ? "ALL" : "ASSET")}
+          onClick={() =>
+            setTypeFilter(typeFilter === "ASSET" ? "ALL" : "ASSET")
+          }
           className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
             typeFilter === "ASSET"
               ? "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30"
               : "theme-card theme-border hover:border-blue-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400">1000 الأصول</span>
+          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400">
+            1000 الأصول
+          </span>
           <div className="text-xl sm:text-2xl font-black font-mono text-blue-600 dark:text-blue-400 mt-1">
             {isLoading ? "—" : stats.assets}
           </div>
-          <span className="text-[10px] text-slate-400">الصندوق، البنك، الأسطول</span>
+          <span className="text-[10px] text-slate-400">
+            الصندوق، البنك، الأسطول
+          </span>
         </button>
 
         {/* Revenues 4xxx */}
         <button
           type="button"
-          onClick={() => setTypeFilter(typeFilter === "REVENUE" ? "ALL" : "REVENUE")}
+          onClick={() =>
+            setTypeFilter(typeFilter === "REVENUE" ? "ALL" : "REVENUE")
+          }
           className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
             typeFilter === "REVENUE"
               ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
               : "theme-card theme-border hover:border-emerald-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">4000 الإيرادات</span>
+          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+            4000 الإيرادات
+          </span>
           <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
             {isLoading ? "—" : stats.revenues}
           </div>
-          <span className="text-[10px] text-slate-400">نقل، VIP، عمرة، صادرات</span>
+          <span className="text-[10px] text-slate-400">
+            نقل، VIP، عمرة، صادرات
+          </span>
         </button>
 
         {/* Expenses 5xxx */}
         <button
           type="button"
-          onClick={() => setTypeFilter(typeFilter === "EXPENSE" ? "ALL" : "EXPENSE")}
+          onClick={() =>
+            setTypeFilter(typeFilter === "EXPENSE" ? "ALL" : "EXPENSE")
+          }
           className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
             typeFilter === "EXPENSE"
               ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30"
               : "theme-card theme-border hover:border-rose-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400">5000 المصروفات</span>
+          <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
+            5000 المصروفات
+          </span>
           <div className="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400 mt-1">
             {isLoading ? "—" : stats.expenses}
           </div>
-          <span className="text-[10px] text-slate-400">وقود، صيانة، رواتب، TGA</span>
+          <span className="text-[10px] text-slate-400">
+            وقود، صيانة، رواتب، TGA
+          </span>
         </button>
       </div>
 
@@ -876,7 +1030,9 @@ export default function AccountsPage() {
 
           <select
             value={postingFilter}
-            onChange={(e) => setPostingFilter(e.target.value as "ALL" | "POSTING" | "GROUP")}
+            onChange={(e) =>
+              setPostingFilter(e.target.value as "ALL" | "POSTING" | "GROUP")
+            }
             className="theme-input h-10 rounded-xl px-3 text-xs font-bold border theme-border"
             aria-label="فلترة بطبيعة الترحيل"
           >
@@ -922,7 +1078,10 @@ export default function AccountsPage() {
         </p>
       )}
       {isLoading && (
-        <div role="status" className="theme-card h-64 animate-pulse rounded-2xl flex items-center justify-center">
+        <div
+          role="status"
+          className="theme-card h-64 animate-pulse rounded-2xl flex items-center justify-center"
+        >
           <div className="flex flex-col items-center gap-2 text-slate-400">
             <RefreshCw className="size-6 animate-spin text-amber-500" />
             <span className="text-xs font-bold">جارٍ تحميل شجرة الحسابات…</span>
@@ -933,10 +1092,13 @@ export default function AccountsPage() {
       {/* View Mode 1: Hierarchical Category Tree View */}
       {viewMode === "TREE" && !isLoading && (
         <div className="space-y-4">
-          {(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"] as const).map((typeKey) => {
+          {(
+            ["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"] as const
+          ).map((typeKey) => {
             const typeInfo = TYPES[typeKey];
             const typeAccounts = groupedByType[typeKey] || [];
-            if (typeAccounts.length === 0 && (typeFilter !== "ALL" || search)) return null;
+            if (typeAccounts.length === 0 && (typeFilter !== "ALL" || search))
+              return null;
 
             const isCollapsed = Boolean(collapsedTypes[typeKey]);
             const postingCount = typeAccounts.filter((a) => a.isPosting).length;
@@ -965,7 +1127,8 @@ export default function AccountsPage() {
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        {typeAccounts.length} حساب مسجل · {postingCount} حساب فرعي يقبل الترحيل
+                        {typeAccounts.length} حساب مسجل · {postingCount} حساب
+                        فرعي يقبل الترحيل
                       </p>
                     </div>
                   </div>
@@ -975,8 +1138,14 @@ export default function AccountsPage() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        const rootParent = typeAccounts.find((a) => !a.isPosting && depth(a) === 0) || typeAccounts[0];
-                        setEditor({ account: "NEW", prefillParent: rootParent });
+                        const rootParent =
+                          typeAccounts.find(
+                            (a) => !a.isPosting && depth(a) === 0,
+                          ) || typeAccounts[0];
+                        setEditor({
+                          account: "NEW",
+                          prefillParent: rootParent,
+                        });
                       }}
                       className="inline-flex items-center gap-1 rounded-lg border theme-border bg-white dark:bg-slate-800 hover:border-amber-500 px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
                     >
@@ -984,7 +1153,11 @@ export default function AccountsPage() {
                       <span>+ حساب فرعي</span>
                     </button>
                     <div className="p-1 text-slate-400">
-                      {isCollapsed ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+                      {isCollapsed ? (
+                        <ChevronDown className="size-4" />
+                      ) : (
+                        <ChevronUp className="size-4" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1005,7 +1178,9 @@ export default function AccountsPage() {
                           <div
                             key={a.id}
                             className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50/60 dark:hover:bg-slate-800/40 ${
-                              isMain ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold" : ""
+                              isMain
+                                ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold"
+                                : ""
                             }`}
                           >
                             {/* Code, Name, Indent & Icon */}
@@ -1055,7 +1230,10 @@ export default function AccountsPage() {
                                 <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                                   {a.nameAr}
                                 </p>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate" dir="ltr">
+                                <p
+                                  className="text-[11px] text-slate-400 dark:text-slate-500 truncate"
+                                  dir="ltr"
+                                >
                                   {a.nameEn}
                                 </p>
                               </div>
@@ -1078,7 +1256,9 @@ export default function AccountsPage() {
 
                               {/* Balance Nature */}
                               <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                {a.normalBalance === "DEBIT" ? "طبيعة: مدين" : "طبيعة: دائن"}
+                                {a.normalBalance === "DEBIT"
+                                  ? "طبيعة: مدين"
+                                  : "طبيعة: دائن"}
                               </span>
 
                               {/* Active Status */}
@@ -1103,7 +1283,12 @@ export default function AccountsPage() {
                               {!a.isPosting && (
                                 <button
                                   type="button"
-                                  onClick={() => setEditor({ account: "NEW", prefillParent: a })}
+                                  onClick={() =>
+                                    setEditor({
+                                      account: "NEW",
+                                      prefillParent: a,
+                                    })
+                                  }
                                   className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 transition"
                                   title={`إضافة حساب فرعي تحت ${a.code}`}
                                 >
@@ -1150,7 +1335,10 @@ export default function AccountsPage() {
             <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
               {filteredAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400 text-xs">
+                  <td
+                    colSpan={6}
+                    className="p-8 text-center text-slate-400 text-xs"
+                  >
                     لا توجد حسابات مطابقة لشروط البحث.
                   </td>
                 </tr>
@@ -1159,7 +1347,9 @@ export default function AccountsPage() {
                   <tr
                     key={a.id}
                     className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition ${
-                      !a.isPosting ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold" : ""
+                      !a.isPosting
+                        ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold"
+                        : ""
                     }`}
                   >
                     {/* Code with Copy */}
@@ -1186,7 +1376,9 @@ export default function AccountsPage() {
                     {/* Name */}
                     <td className="px-5 py-3.5">
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 dark:text-white">{a.nameAr}</p>
+                        <p className="font-bold text-slate-900 dark:text-white">
+                          {a.nameAr}
+                        </p>
                         <p className="text-[11px] text-slate-400" dir="ltr">
                           {a.nameEn}
                         </p>
@@ -1195,9 +1387,13 @@ export default function AccountsPage() {
 
                     {/* Type & Balance */}
                     <td className="px-5 py-3.5 text-xs whitespace-nowrap">
-                      <p className="font-bold">{TYPES[a.type]?.label || a.type}</p>
+                      <p className="font-bold">
+                        {TYPES[a.type]?.label || a.type}
+                      </p>
                       <p className="text-slate-400 text-[11px] mt-0.5">
-                        {a.normalBalance === "DEBIT" ? "طبيعة رصيد: مدين" : "طبيعة رصيد: دائن"}
+                        {a.normalBalance === "DEBIT"
+                          ? "طبيعة رصيد: مدين"
+                          : "طبيعة رصيد: دائن"}
                       </p>
                     </td>
 
@@ -1240,7 +1436,9 @@ export default function AccountsPage() {
                         {!a.isPosting && (
                           <button
                             type="button"
-                            onClick={() => setEditor({ account: "NEW", prefillParent: a })}
+                            onClick={() =>
+                              setEditor({ account: "NEW", prefillParent: a })
+                            }
                             className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
                             title={`إضافة حساب فرعي تحت ${a.code}`}
                           >
