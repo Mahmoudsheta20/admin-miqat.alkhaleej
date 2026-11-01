@@ -7,10 +7,28 @@ export interface PurchaseAudit { id: string; action: string; createdAt: string; 
 export interface PurchaseDetail extends PurchaseRow { audit: PurchaseAudit[] }
 export interface PurchaseList { items: PurchaseRow[]; total: number; page: number; totals: { netAmount: string; vatAmount: string; recoverableVat: string; totalAmount: string } }
 export interface VatSettings { version: number; previousCorrection: string; carriedCredit: string; notes: string; filedOn: string | null; updatedAt: string | null }
-export interface VatRow { box: number; label: string; section: "SALES" | "PURCHASES" | "NET"; amount: string | null; adjustment: string | null; vat: string; isTotal: boolean }
+export interface VatRow { box: number; label: string; section: "SALES" | "PURCHASES" | "NET"; amount: string | null; adjustment: string | null; vat: string; displayVat?: string; isTotal: boolean }
 export interface VatSale { id: string; number: string; source: string; kind: string; date: string; net: string; vat: string; isPriorPeriodAdjustment: boolean }
 export interface VatPurchase { id: string; supplierName: string; invoiceNumber: string; taxTreatment: string; vatDate: string; netAmount: string; vatAmount: string; recoverableVat: string }
-export interface VatReport { year: number; quarter: number; period: { start: string; endExclusive: string; dueDate: string | null }; company: { legalName: string; vatNumber: string }; generatedAt: string; settings: VatSettings; rows: VatRow[]; sales: VatSale[]; purchases: VatPurchase[]; warnings: string[]; coverage: { legacyCount: number; proformaCount: number; otherIssuerCount: number; basis: string; domesticPurchasesOnly: boolean }; summary: { netSales: string; outputVat: string; netPurchases: string; recordedInputVat: string; recoverableInputVat: string; nonRecoverableInputVat: string; currentVatDue: string; netVatDue: string; creditNet: string; debitNet: string; excludedOutsideScope: string } }
+export interface VatReport { year: number; quarter: number; period: { start: string; endExclusive: string; endInclusive?: string; dueDate: string | null }; company: { legalName: string; vatNumber: string }; generatedAt: string; settings: VatSettings; rows: VatRow[]; sales: VatSale[]; purchases: VatPurchase[]; warnings: string[]; coverage: { legacyCount: number; proformaCount: number; otherIssuerCount: number; basis: string; domesticPurchasesOnly: boolean }; summary: { netSales: string; outputVat: string; netPurchases: string; recordedInputVat: string; recoverableInputVat: string; nonRecoverableInputVat: string; currentVatDue: string; netVatDue: string; creditNet: string; debitNet: string; excludedOutsideScope: string } }
+export type VatField = "amount" | "adjustment" | "vat";
+export function vatDisplayValue(row: VatRow, field: VatField): string | null {
+  if (field !== "vat") return row[field];
+  const value = row.displayVat ?? row.vat;
+  // Also support old API responses and frozen reports with a signed credit.
+  return row.box === 15 ? value.replace(/^-/, "") : value;
+}
+export function vatCopyPurpose(row: VatRow, field: VatField): "ENTRY" | "REVIEW" {
+  return field === "vat" ? (row.box === 14 ? "ENTRY" : "REVIEW")
+    : row.box <= 12 && ![6, 12].includes(row.box) ? "ENTRY" : "REVIEW";
+}
+export function vatPeriodEnd(period: VatReport["period"]): string {
+  if (period.endInclusive) return period.endInclusive;
+  const end = new Date(`${period.endExclusive}T00:00:00Z`);
+  if (!Number.isFinite(end.getTime())) return "—";
+  end.setUTCDate(end.getUTCDate() - 1);
+  return end.toISOString().slice(0, 10);
+}
 export const accountingRequest = <T>(path: string, method = "GET", body?: unknown) => backendRequest<T>(`/accounting${path}`, method, body);
 export function currentSaudiPeriod() { const parts = new Intl.DateTimeFormat("en", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()); const part = (type: string) => parts.find(value => value.type === type)?.value || ""; const year = Number(part("year")), month = Number(part("month")); return { year, quarter: Math.ceil(month / 3), day: `${part("year")}-${part("month")}-${part("day")}` }; }
 export function amountLabel(value: string) { return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value)); }

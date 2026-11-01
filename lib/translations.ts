@@ -191,7 +191,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "vat.adj": "التعديل",
     "vat.due": "مبلغ الضريبة",
     "vat.copyNotice":
-      "اضغط على زر النسخ بجوار أي رقم للصقه مباشرة في بوابة الهيئة",
+      "نسخ للإدخال للحقول القابلة للتعبئة، ونسخ للمطابقة للضريبة والإجماليات المحسوبة",
 
     // Fleet & Captains
     "fleet.title": "أسطول المركبات",
@@ -463,7 +463,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "vat.adj": "Adjustment",
     "vat.due": "VAT Due",
     "vat.copyNotice":
-      "Click the copy button beside any number to paste directly into the ZATCA portal",
+      "Copy for entry for editable fields; copy for review for calculated VAT and totals",
 
     // Fleet & Captains
     "fleet.title": "Fleet Vehicles",

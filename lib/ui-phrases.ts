@@ -1,5 +1,18 @@
 // Interface copy only; never transforms stored document snapshots or form values.
 export const UI_PHRASES: Record<string,string> = {
+  "إجمالي صافي المبيعات": "Total net sales",
+  "إجمالي المشتريات الداخلة في الإقرار": "Total purchases included in the return",
+  "رصيد دائن لصالح المنشأة (خ16)": "Credit balance in your favour (box 16)",
+  "صافي الضريبة المستحقة (خ16)": "Net VAT due (box 16)",
+  "يخضع الاسترداد أو الترحيل للإجراء المناسب لدى الهيئة": "Refunds or carry-forward require the appropriate ZATCA procedure",
+  "لا توجد تنبيهات حسابية في هذا التقرير. راجع المستندات ونطاق التغطية قبل التقديم.": "No calculation warnings in this report. Review the evidence and coverage before filing.",
+  "نسخ للإدخال": "Copy for entry",
+  "نسخ للمطابقة": "Copy for review",
+  "الضريبة / الرصيد": "VAT / balance",
+  "رصيد متاح يُخصم مرة واحدة من صافي الضريبة؛ طابقه مع رصيد البوابة.": "Available credit is deducted once from net VAT. Reconcile it with the portal balance.",
+  "غير مدعومة حاليًا؛ راجع مستندات الواردات والاحتساب العكسي منفصلًا.": "Not currently supported. Review import and reverse-charge documents separately.",
+  "يغطي هذا التقرير المشتريات المحلية فقط. الأصفار في خانات الواردات والاحتساب العكسي لا تؤكد عدم وجود معاملات؛ راجعها منفصلًا قبل التقديم.": "This report covers domestic purchases only. Zero import and reverse-charge boxes do not confirm the absence of transactions. Review them separately before filing.",
+  "المبلغ قبل الضريبة، والتعديل تخفيض يُطرح منه. استخدم «نسخ للإدخال» للحقول القابلة للتعبئة، و«نسخ للمطابقة» للضريبة والإجماليات المحسوبة.": "Amount excludes VAT; Adjustment reduces it. Use Copy for entry for editable fields and Copy for review for calculated VAT and totals.",
   "ميقات الخليج": "Miqat Al-Khaleej",
   "شركة ميقات الخليج للنقل البري": "Miqat Al-Khaleej Land Transport Co.",
   "حفظ": "Save",
@@ -2617,6 +2630,9 @@ export const UI_PHRASES: Record<string,string> = {
   "يوجد إشعار دائن في يوم تقديم الإقرار الأصلي؛ عومل ضمن المبلغ. تحقق من ترتيب الإصدار والتقديم في ذلك اليوم قبل نقل الأرقام.": "A credit note shares the original return filing date and is included in Amount. Check the order of issue and filing that day before copying values."
 };
 export const UI_TEMPLATES: Record<string,string> = {
+  "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",
+  "تم نسخ {0} للخانة {1}: {2}. تحقق من الحقل المقابل قبل الإدخال.": "Copied {0} for box {1}: {2}. Check the matching field before entering it.",
+  "تم نسخ {0} للخانة {1}: {2} للمطابقة مع القيم المحسوبة في البوابة.": "Copied {0} for box {1}: {2} to reconcile with the portal's calculated values.",
   "تم نسخ مبلغ الخانة {0} ({1}) بنجاح لصقه في بوابة الهيئة!": "Copied box {0} amount ({1}). Paste it into the ZATCA portal.",
   "تعديل الحساب #{0}": "Edit account #{0}",
   "إضافة حساب فرعي تحت {0}": "Add a sub-account under {0}",

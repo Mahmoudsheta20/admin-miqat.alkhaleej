@@ -23,6 +23,7 @@ import {
   defaultReportPeriod,
   downloadAccounting,
   periodQuery,
+  vatPeriodEnd,
   type VatReport,
 } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
@@ -46,8 +47,8 @@ export default function VatReturnsPage() {
   const vatHelpGuide = useMemo(() => ({
     title: isRTL ? "دليل إعداد ومطابقة الإقرار الضريبي (الخانات 1–16)" : "VAT Return Preparation Guide (Boxes 1–16)",
     summary: isRTL
-      ? "يحتسب هذا القسم نموذج الإقرار الضريبي الرسمي بدقة هللة واحدة بناءً على تاريخ الإصدار والاحتساب الفعلي للفواتير المسجلة، مع استبعاد المسودات والفواتير المبدئية."
-      : "Computes official ZATCA VAT return boxes to the exact halala based on actual invoice issue dates, excluding drafts and proforma quotes.",
+      ? "يجهز هذا القسم أرقام الإقرار من المستندات المسجلة وتواريخ احتساب الضريبة، مع استبعاد المسودات والفواتير المبدئية. راجع المستندات وفروق التقريب قبل التقديم."
+      : "Prepares return figures from recorded documents and VAT dates, excluding drafts and proformas. Review the evidence and rounding differences before filing.",
     cards: [
       {
         title: isRTL ? "١. ضريبة المبيعات والمخرجات (1–6)" : "1. Output Sales VAT (Boxes 1–6)",
@@ -56,8 +57,8 @@ export default function VatReturnsPage() {
           {
             label: isRTL ? "الخانة 1 (المبيعات الخاضعة 15%)" : "Box 1 (Standard 15% Sales)",
             description: isRTL
-              ? "تُعرض المبالغ الصافية قبل الضريبة، وأي تخفيضات أو إلغاءات تظهر في عمود التعديل كإشعارات دائنة."
-              : "Net sales before tax; cancellations and reductions appear as credit note adjustments.",
+              ? "تُعرض المبالغ قبل الضريبة. يخفض الإشعار الدائن المبلغ أو يظهر كتعديل بحسب الفترة الأصلية وتاريخ تقديم إقرارها."
+              : "Amounts exclude VAT. Credits reduce Amount or appear as Adjustments according to the original period and its filing date.",
           },
           {
             label: isRTL ? "الخانة 6 (إجمالي ضريبة المبيعات)" : "Box 6 (Total Output VAT)",
@@ -105,8 +106,8 @@ export default function VatReturnsPage() {
       },
     ],
     tip: isRTL
-      ? "اضغط على زر النسخ بجانب أي رقم لنسخ الرقم العشري النظيف بدون فواصل أو رموز للصقه مباشرة في خانة بوابة الزكاة."
-      : "Click the copy button beside any figure to copy a clean number for direct pasting into the ZATCA portal.",
+      ? "استخدم «نسخ للإدخال» للحقول القابلة للتعبئة، و«نسخ للمطابقة» لمراجعة الضريبة والإجماليات التي تحتسبها البوابة."
+      : "Use Copy for entry for editable fields, and Copy for review to reconcile VAT and totals calculated by the portal.",
     formula: "Box 16 = Box 6 (Output VAT) − Box 12 (Recoverable Input VAT) + Box 14 (Corrections) − Box 15 (Carried Credit)",
   }), [isRTL]);
 
@@ -328,7 +329,7 @@ export default function VatReturnsPage() {
             <div className="text-end">
               <span className="text-slate-400 block">{ui("الفترة الضريبية:")}</span>
               <p className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                {ui(data.period.start)} {ui("إلى")} {ui(data.period.endExclusive)}
+                {ui(data.period.start)} {ui("إلى")} {ui(vatPeriodEnd(data.period))}
               </p>
               {data.period.dueDate && (
                 <p className="text-amber-700 dark:text-amber-400 font-bold mt-0.5">
@@ -346,7 +347,7 @@ export default function VatReturnsPage() {
           >
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
               <span className="text-xs font-bold text-slate-500 block">
-                {ui("صافي المبيعات (خ1)")}</span>
+                {ui("إجمالي صافي المبيعات")}</span>
               <p
                 className="mt-2 font-mono text-lg sm:text-xl font-black text-slate-900 dark:text-white"
                 dir="ltr"
@@ -372,7 +373,7 @@ export default function VatReturnsPage() {
 
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
               <span className="text-xs font-bold text-slate-500 block">
-                {ui("المشتريات الخاضعة (خ7)")}</span>
+                {ui("إجمالي المشتريات الداخلة في الإقرار")}</span>
               <p
                 className="mt-2 font-mono text-lg sm:text-xl font-black text-slate-900 dark:text-white"
                 dir="ltr"
@@ -406,8 +407,8 @@ export default function VatReturnsPage() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold opacity-80 block">
                   {ui(isRefundable
-                    ? "رصيد دائن مسترد (خ16)"
-                    : "صافي الضريبة للتحويل (خ16)")}
+                    ? "رصيد دائن لصالح المنشأة (خ16)"
+                    : "صافي الضريبة المستحقة (خ16)")}
                 </span>
                 {isRefundable ? (
                   <TrendingDown className="size-4 text-emerald-500" />
@@ -423,14 +424,14 @@ export default function VatReturnsPage() {
               </p>
               <span className="text-[10px] opacity-70">
                 {ui(isRefundable
-                  ? "مستحق استرداده من الهيئة"
+                  ? "يخضع الاسترداد أو الترحيل للإجراء المناسب لدى الهيئة"
                   : "واجب السداد لهيئة الزكاة")}
               </span>
             </div>
           </section>
 
           {/* 4. Table 1–16 Boxes with clean copy buttons (§14.4) */}
-          <VatReturnTable rows={data.rows} />
+          <VatReturnTable rows={data.rows} domesticPurchasesOnly={data.coverage.domesticPurchasesOnly} />
 
           {/* 5. Previous Balances & Settlement Settings (§14.6) */}
           {period.mode === "QUARTER" && (
@@ -496,7 +497,7 @@ export default function VatReturnsPage() {
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
                 <span>
-                  {ui("كافة العمليات والقيود مطابقة للمواصفات الضريبية ولا توجد تنبيهات معلقة.")}</span>
+                  {ui("لا توجد تنبيهات حسابية في هذا التقرير. راجع المستندات ونطاق التغطية قبل التقديم.")}</span>
               </div>
             )}
 

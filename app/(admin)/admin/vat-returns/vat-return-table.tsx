@@ -4,14 +4,15 @@ import { useUiText } from "@/lib/ui-text";
 
 import React, { useState } from "react";
 import { Check, Copy, HelpCircle } from "lucide-react";
-import { amountLabel, type VatRow } from "@/lib/accounting";
+import { amountLabel, vatCopyPurpose, vatDisplayValue, type VatField, type VatRow } from "@/lib/accounting";
 import { useLanguage } from "@/lib/languageContext";
 
 interface VatReturnTableProps {
   rows: VatRow[];
+  domesticPurchasesOnly?: boolean;
 }
 
-export default function VatReturnTable({ rows }: VatReturnTableProps) {
+export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: VatReturnTableProps) {
   const ui = useUiText();
 
   const { t } = useLanguage();
@@ -19,18 +20,20 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
   const [feedback, setFeedback] = useState<string>("");
 
   async function handleCopy(
-    key: string,
-    rawValue: string | null,
+    row: VatRow,
+    field: VatField,
     label: string,
-    boxNum: number,
   ) {
-    if (!rawValue) return;
+    const rawValue = vatDisplayValue(row, field), key = `${row.box}-${field}`;
+    if (rawValue === null) return;
     try {
       // Copy exact plain decimal string without formatting for ZATCA portal
       await navigator.clipboard.writeText(rawValue);
       setCopiedKey(key);
       setFeedback(
-        `تم نسخ مبلغ الخانة ${boxNum} (${rawValue}) بنجاح لصقه في بوابة الهيئة!`,
+        vatCopyPurpose(row, field) === "ENTRY"
+          ? `تم نسخ ${ui(label)} للخانة ${row.box}: ${rawValue}. تحقق من الحقل المقابل قبل الإدخال.`
+          : `تم نسخ ${ui(label)} للخانة ${row.box}: ${rawValue} للمطابقة مع القيم المحسوبة في البوابة.`,
       );
       setTimeout(() => {
         setCopiedKey((curr) => (curr === key ? null : curr));
@@ -41,32 +44,33 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
     }
   }
 
-  function renderCell(
+  function renderValue(
     row: VatRow,
-    field: "amount" | "adjustment" | "vat",
+    field: VatField,
     label: string,
   ) {
-    const value = row[field];
+    const value = vatDisplayValue(row, field);
     const key = `${row.box}-${field}`;
     const isCopied = copiedKey === key;
 
     if (value === null) {
       return (
-        <td className="whitespace-nowrap px-4 py-3.5 text-center text-slate-300 dark:text-slate-600 font-mono">
+        <span className="text-slate-300 dark:text-slate-600 font-mono">
           —
-        </td>
+        </span>
       );
     }
 
     return (
-      <td className="whitespace-nowrap px-4 py-3.5 text-end">
         <div className="inline-flex items-center gap-1.5 justify-end">
           <button
             type="button"
-            onClick={() => void handleCopy(key, value, label, row.box)}
+            onClick={() => void handleCopy(row, field, label)}
             className="p-1 rounded-md text-slate-400 hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
-            title={ui(`نسخ ${ui(label)} للخانة ${row.box} لبوابة هيئة الزكاة`)}
-            aria-label={ui(`نسخ ${ui(label)} للخانة ${row.box}`)}
+            title={ui(vatCopyPurpose(row, field) === "ENTRY" ? "نسخ للإدخال" : "نسخ للمطابقة")}
+            aria-label={ui(vatCopyPurpose(row, field) === "ENTRY"
+              ? `نسخ ${ui(label)} للخانة ${row.box}`
+              : `نسخ ${ui(label)} للخانة ${row.box} للمطابقة`)}
           >
             {isCopied ? (
               <Check className="size-3.5 text-emerald-500" />
@@ -84,8 +88,17 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
             {ui(amountLabel(value))}
           </bdi>
         </div>
-      </td>
     );
+  }
+
+  function renderCell(row: VatRow, field: VatField, label: string) {
+    return <td className="whitespace-nowrap px-4 py-3.5 text-end">{renderValue(row, field, label)}</td>;
+  }
+
+  function rowHelp(row: VatRow) {
+    if (row.box === 15) return "رصيد متاح يُخصم مرة واحدة من صافي الضريبة؛ طابقه مع رصيد البوابة.";
+    if (domesticPurchasesOnly && [8, 9].includes(row.box)) return "غير مدعومة حاليًا؛ راجع مستندات الواردات والاحتساب العكسي منفصلًا.";
+    return undefined;
   }
 
   return (
@@ -101,11 +114,17 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
           </p>
         </div>
         {feedback && (
-          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full animate-in fade-in">
+          <span role="status" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full animate-in fade-in">
             {ui(feedback)}
           </span>
         )}
       </div>
+
+      {domesticPurchasesOnly && (
+        <p className="px-5 py-3 border-b theme-border text-xs leading-relaxed text-amber-800 dark:text-amber-300 bg-amber-500/5">
+          {ui("يغطي هذا التقرير المشتريات المحلية فقط. الأصفار في خانات الواردات والاحتساب العكسي لا تؤكد عدم وجود معاملات؛ راجعها منفصلًا قبل التقديم.")}
+        </p>
+      )}
 
       {/* Table Content (Desktop md and up) */}
       <div className="hidden md:block overflow-x-auto">
@@ -116,7 +135,7 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
               <th className="px-4 py-3.5">{ui(t("vat.desc"))}</th>
               <th className={`px-4 py-3.5 ${"text-end"}`}>{ui(t("vat.net"))} ({ui(t("common.sar"))})</th>
               <th className={`px-4 py-3.5 ${"text-end"}`}>{ui(t("vat.adj"))} ({ui(t("common.sar"))})</th>
-              <th className={`px-4 py-3.5 ${"text-end"}`}>{ui(t("vat.due"))} ({ui(t("common.sar"))})</th>
+              <th className={`px-4 py-3.5 ${"text-end"}`}>{ui("الضريبة / الرصيد")} ({ui(t("common.sar"))})</th>
             </tr>
           </thead>
           <tbody className="divide-y theme-border">
@@ -176,13 +195,9 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                                 {ui("قابلة للخصم")}</span>
                             )}
                           </div>
-                          {[2, 8, 9].includes(row.box) && (
+                          {rowHelp(row) && (
                             <span className="text-[10px] text-slate-400 block mt-0.5">
-                              {ui("لا توجد قيود لهذه المعاملة في سجل الفترة الحالية")}</span>
-                          )}
-                          {row.box === 15 && (
-                            <span className="text-[10px] text-slate-400 block mt-0.5">
-                              {ui("يظهر بالسالب لأنه يُطرح من الضريبة الواجبة السداد")}</span>
+                              {ui(rowHelp(row) ?? "")}</span>
                           )}
                         </td>
 
@@ -258,124 +273,18 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
                         </div>
                       </div>
 
-                      {/* Values Grid for Mobile */}
+                      {rowHelp(row) && <p className="text-[10px] text-slate-500 dark:text-slate-400">{ui(rowHelp(row) ?? "")}</p>}
                       <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border theme-border">
-                          <span className="text-[10px] text-slate-400 block mb-0.5">
-                            {ui("الصافي")}</span>
-                          {row.amount !== null ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <bdi className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
-                                {ui(amountLabel(row.amount))}
-                              </bdi>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  void handleCopy(
-                                    `${row.box}-amount`,
-                                    row.amount,
-                                    "الصافي",
-                                    row.box,
-                                  )
-                                }
-                                className="p-0.5 text-slate-400 hover:text-amber-600"
-                                aria-label={ui(`نسخ الصافي للخانة ${row.box}`)}
-                              >
-                                {copiedKey === `${row.box}-amount` ? (
-                                  <Check className="size-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="size-3" />
-                                )}
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">
-                              —
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border theme-border">
-                          <span className="text-[10px] text-slate-400 block mb-0.5">
-                            {ui("التعديل")}</span>
-                          {row.adjustment !== null ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <bdi className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
-                                {ui(amountLabel(row.adjustment))}
-                              </bdi>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  void handleCopy(
-                                    `${row.box}-adjustment`,
-                                    row.adjustment,
-                                    "التعديل",
-                                    row.box,
-                                  )
-                                }
-                                className="p-0.5 text-slate-400 hover:text-amber-600"
-                                aria-label={ui(`نسخ التعديل للخانة ${row.box}`)}
-                              >
-                                {copiedKey === `${row.box}-adjustment` ? (
-                                  <Check className="size-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="size-3" />
-                                )}
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">
-                              —
-                            </span>
-                          )}
-                        </div>
-
-                        <div
-                          className={`p-2 rounded-xl border ${
-                            isGrandTotal
-                              ? "bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-200"
-                              : "bg-white dark:bg-slate-900/60 border theme-border"
-                          }`}
-                        >
-                          <span className="text-[10px] text-slate-400 block mb-0.5">
-                            {ui("الضريبة")}</span>
-                          {row.vat !== null ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <bdi
-                                className={`font-mono text-xs font-black ${
-                                  isGrandTotal
-                                    ? "text-amber-700 dark:text-amber-300"
-                                    : "text-slate-900 dark:text-white"
-                                }`}
-                              >
-                                {ui(amountLabel(row.vat))}
-                              </bdi>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  void handleCopy(
-                                    `${row.box}-vat`,
-                                    row.vat,
-                                    "الضريبة",
-                                    row.box,
-                                  )
-                                }
-                                className="p-0.5 text-slate-400 hover:text-amber-600"
-                                aria-label={ui(`نسخ الضريبة للخانة ${row.box}`)}
-                              >
-                                {copiedKey === `${row.box}-vat` ? (
-                                  <Check className="size-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="size-3" />
-                                )}
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600">
-                              —
-                            </span>
-                          )}
-                        </div>
+                        {([
+                          ["amount", "الصافي"],
+                          ["adjustment", "التعديل"],
+                          ["vat", "الضريبة / الرصيد"],
+                        ] as const).map(([field, label]) => (
+                          <div key={field} className={`p-2 rounded-xl border ${isGrandTotal && field === "vat" ? "bg-amber-500/15 border-amber-500/40" : "bg-white dark:bg-slate-900/60 theme-border"}`}>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">{ui(label)}</span>
+                            {renderValue(row, field, label)}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   );
@@ -391,7 +300,7 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
         <div className="flex items-center gap-1.5">
           <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>
-            {ui("عمود «المبلغ» يمثل الصافي غير شامل الضريبة، وعمود «التعديل» يمثل الإشعارات الدائنة أو غير القابلة للخصم.")}</span>
+            {ui("المبلغ قبل الضريبة، والتعديل تخفيض يُطرح منه. استخدم «نسخ للإدخال» للحقول القابلة للتعبئة، و«نسخ للمطابقة» للضريبة والإجماليات المحسوبة.")}</span>
         </div>
         <span className="font-mono text-[11px] text-slate-400">
           SAR · ZATCA Box 1–16

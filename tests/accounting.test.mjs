@@ -30,3 +30,33 @@ test('report query retains only the fields required by its mode', () => {
  assert.equal(exports.periodQuery(p),'mode=YEAR&year=2026');
  assert.equal(exports.periodQuery({...p,mode:'CUSTOM'}),'mode=CUSTOM&startDate=2026-01-01&endDate=2026-10-01');
 });
+test('VAT display separates available credit from its signed effect without mutating archived rows', () => {
+ const oldRow=Object.freeze({box:15,vat:'-20.00',amount:null,adjustment:null});
+ assert.equal(exports.vatDisplayValue(oldRow,'vat'),'20.00');
+ assert.equal(oldRow.vat,'-20.00');
+ assert.equal(exports.vatDisplayValue({...oldRow,vat:'-999999999999.99'},'vat'),'999999999999.99');
+ assert.equal(exports.vatDisplayValue({...oldRow,vat:'-0.00'},'vat'),'0.00');
+ assert.equal(exports.vatDisplayValue({...oldRow,displayVat:'20.00'},'vat'),'20.00');
+ assert.equal(exports.vatDisplayValue({...oldRow,box:16,vat:'-5.00'},'vat'),'-5.00');
+ assert.equal(exports.vatDisplayValue(oldRow,'amount'),null);
+ assert.equal(exports.vatDisplayValue({box:1,amount:'0.00'},'amount'),'0.00');
+});
+test('calculated VAT and totals are copied for review while editable fields retain entry copy', () => {
+ for(const box of [1,3,7,8,9,10,11]) {
+   assert.equal(exports.vatCopyPurpose({box},'amount'),'ENTRY');
+   assert.equal(exports.vatCopyPurpose({box},'adjustment'),'ENTRY');
+   assert.equal(exports.vatCopyPurpose({box},'vat'),'REVIEW');
+ }
+ for(const box of [6,12,13,15,16]) {
+   assert.equal(exports.vatCopyPurpose({box},'vat'),'REVIEW');
+   assert.equal(exports.vatCopyPurpose({box},'amount'),'REVIEW');
+ }
+ assert.equal(exports.vatCopyPurpose({box:14},'vat'),'ENTRY');
+});
+test('VAT period display uses the final included day across quarters, leap years and legacy responses', () => {
+ assert.equal(exports.vatPeriodEnd({endExclusive:'2026-07-01'}),'2026-06-30');
+ assert.equal(exports.vatPeriodEnd({endExclusive:'2027-01-01'}),'2026-12-31');
+ assert.equal(exports.vatPeriodEnd({endExclusive:'2024-03-01'}),'2024-02-29');
+ assert.equal(exports.vatPeriodEnd({endExclusive:'2026-07-01',endInclusive:'2026-06-30'}),'2026-06-30');
+ assert.equal(exports.vatPeriodEnd({endExclusive:'invalid'}),'—');
+});
