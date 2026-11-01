@@ -35,6 +35,7 @@ import {
 import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 import RecordPaymentModal from "./record-payment-modal";
+import { useLanguage } from "@/lib/languageContext";
 
 interface InvoiceList {
   items: InvoiceRow[];
@@ -52,6 +53,7 @@ function formatMoney(value: string): string {
 }
 
 export default function InvoicesPage() {
+  const { t, dir, isRTL } = useLanguage();
   const [data, setData] = useState<InvoiceList | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -193,7 +195,7 @@ export default function InvoicesPage() {
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / 30));
 
   return (
-    <div className="space-y-6 pb-12" dir="rtl">
+    <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Page Header (§4) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3">
@@ -203,17 +205,17 @@ export default function InvoicesPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold">
-                العمل اليومي والمالية
+                {t("section.financeDaily")}
               </span>
               <span className="text-xs text-slate-400 font-medium">
-                فواتير الرحلات والتحصيل
+                {t("invoice.subtitle")}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-              الفواتير
+              {t("invoice.title")}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              أنشئ فاتورة، تابع دفعات العميل، ونزّل نسخة للمشاركة.
+              {t("invoice.subtitle")}
             </p>
           </div>
         </div>
@@ -235,7 +237,7 @@ export default function InvoicesPage() {
             onClick={() => void load(true)}
             disabled={isLoading || isRefreshing}
             className="p-2.5 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-300 transition disabled:opacity-50 cursor-pointer"
-            title="تحديث الفواتير"
+            title={t("common.refresh")}
           >
             <RefreshCw
               className={`w-4 h-4 ${isRefreshing || isLoading ? "animate-spin text-amber-500" : ""}`}
@@ -247,7 +249,7 @@ export default function InvoicesPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
           >
             <Building2 className="w-4 h-4 text-amber-500" />
-            <span>بيانات الشركة والبنك</span>
+            <span>{t("nav.zatca")}</span>
           </Link>
 
           <Link
@@ -255,7 +257,7 @@ export default function InvoicesPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold text-amber-800 dark:text-amber-300 transition shadow-2xs"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            <span>+ فاتورة مبدئية</span>
+            <span>+ {t("invoice.proforma")}</span>
           </Link>
 
           <Link
@@ -263,7 +265,7 @@ export default function InvoicesPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm hover:shadow-md transition"
           >
             <Plus className="w-4 h-4" />
-            <span>إنشاء فاتورة</span>
+            <span>{t("invoice.newInvoice")}</span>
           </Link>
         </div>
       </header>
@@ -291,7 +293,7 @@ export default function InvoicesPage() {
             onClick={() => void load(true)}
             className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition shrink-0 cursor-pointer"
           >
-            إعادة المحاولة
+            {t("common.retry")}
           </button>
         </div>
       )}
@@ -356,7 +358,9 @@ export default function InvoicesPage() {
         <button
           type="button"
           onClick={() => setTypeFilter("ALL")}
-          className={`text-right p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
+            isRTL ? "text-right" : "text-left"
+          } ${
             typeFilter === "ALL"
               ? "bg-amber-500/5 border-amber-500/40 ring-1 ring-amber-500/30"
               : "theme-card theme-border hover:border-amber-500/30"
@@ -364,7 +368,7 @@ export default function InvoicesPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              إجمالي الفواتير
+              {t("invoice.totalInvoices")}
             </span>
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <ReceiptText className="w-4 h-4" />
@@ -373,13 +377,15 @@ export default function InvoicesPage() {
           <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white mt-2">
             {isLoading && !data ? "—" : stats.total}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">مستند مسجل بالنظام</p>
+          <p className="text-[11px] text-slate-400 mt-1">{t("invoice.savedInSystem")}</p>
         </button>
 
         <button
           type="button"
           onClick={() => setTypeFilter("BOOKING")}
-          className={`text-right p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
+            isRTL ? "text-right" : "text-left"
+          } ${
             typeFilter === "BOOKING"
               ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
               : "theme-card theme-border hover:border-emerald-500/30"
@@ -387,7 +393,7 @@ export default function InvoicesPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-              فواتير العملاء
+              {t("invoice.customerInvoices")}
             </span>
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Check className="w-4 h-4" />
@@ -396,13 +402,15 @@ export default function InvoicesPage() {
           <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-2">
             {isLoading && !data ? "—" : stats.bookingCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">ضمن الصفحة الحالية</p>
+          <p className="text-[11px] text-slate-400 mt-1">{t("invoice.customerInvoices")}</p>
         </button>
 
         <button
           type="button"
           onClick={() => setTypeFilter("PROFORMA")}
-          className={`text-right p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
+            isRTL ? "text-right" : "text-left"
+          } ${
             typeFilter === "PROFORMA"
               ? "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30"
               : "theme-card theme-border hover:border-blue-500/30"
@@ -410,7 +418,7 @@ export default function InvoicesPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
-              الفواتير المبدئية
+              {t("invoice.proformaInvoices")}
             </span>
             <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <FileSpreadsheet className="w-4 h-4" />
@@ -419,13 +427,13 @@ export default function InvoicesPage() {
           <div className="text-2xl sm:text-3xl font-black font-mono text-blue-600 dark:text-blue-400 mt-2">
             {isLoading && !data ? "—" : stats.proformaCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">عروض أسعار مبدئية</p>
+          <p className="text-[11px] text-slate-400 mt-1">{t("invoice.proforma")}</p>
         </button>
 
         <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              صافي المبيعات (شامل الضريبة)
+              {t("invoice.netSales")}
             </span>
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
@@ -433,10 +441,10 @@ export default function InvoicesPage() {
           </div>
           <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-2 flex items-baseline gap-1">
             <span dir="ltr">{isLoading && !data ? "—" : formatMoney(stats.pageGrossSum)}</span>
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">ر.س</span>
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{t("common.sar")}</span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1 font-mono">
-            ضريبة المبيعات: <span dir="ltr">{formatMoney(stats.pageVatSum)}</span> ر.س
+            {t("invoice.salesTax")}: <span dir="ltr">{formatMoney(stats.pageVatSum)}</span> {t("common.sar")}
           </p>
         </div>
       </div>
@@ -444,20 +452,20 @@ export default function InvoicesPage() {
       {/* Search & Filter Toolbar */}
       <div className="theme-card p-3 sm:p-4 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2 pointer-events-none`} />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="بحث سريع برقم الفاتورة، اسم العميل، أو القيمة..."
-            className="theme-input w-full pr-10 pl-8 py-2 text-xs sm:text-sm rounded-xl"
+            placeholder={t("invoice.searchPlaceholder")}
+            className={`theme-input w-full ${isRTL ? "pr-10 pl-8" : "pl-10 pr-8"} py-2 text-xs sm:text-sm rounded-xl`}
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
-              aria-label="مسح البحث"
+              className={`absolute ${isRTL ? "left-2.5" : "right-2.5"} top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600`}
+              aria-label={t("common.delete")}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -467,10 +475,10 @@ export default function InvoicesPage() {
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {(
             [
-              { id: "ALL", label: `الكل (${items.length})` },
-              { id: "BOOKING", label: `فواتير العملاء (${stats.bookingCount})` },
-              { id: "PROFORMA", label: `مبدئية (${stats.proformaCount})` },
-              { id: "NOTES", label: `إشعارات (${stats.notesCount})` },
+              { id: "ALL", label: `${t("common.all")} (${items.length})` },
+              { id: "BOOKING", label: `${t("invoice.customerInvoices")} (${stats.bookingCount})` },
+              { id: "PROFORMA", label: `${t("invoice.proformaInvoices")} (${stats.proformaCount})` },
+              { id: "NOTES", label: `${t("invoice.notesCount")} (${stats.notesCount})` },
             ] as const
           ).map((tab) => (
             <button
@@ -493,16 +501,18 @@ export default function InvoicesPage() {
       <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
         <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
           <span className="font-bold text-slate-700 dark:text-slate-300">
-            قائمة الفواتير ({filteredItems.length} من {data?.total || 0} فاتورة)
+            {t("invoice.title")} ({filteredItems.length} {t("common.of")} {data?.total || 0})
           </span>
-          <span className="text-slate-400 font-mono">صفحة {page} من {totalPages}</span>
+          <span className="text-slate-400 font-mono">
+            {t("common.page")} {page} {t("common.of")} {totalPages}
+          </span>
         </div>
 
         {!data && !error ? (
           <div role="status" className="p-12 flex flex-col items-center justify-center gap-3">
             <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              جارٍ تحميل الفواتير…
+              {t("common.loading")}
             </p>
           </div>
         ) : filteredItems.length === 0 ? (
@@ -524,7 +534,7 @@ export default function InvoicesPage() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs"
               >
                 <Plus className="w-4 h-4" />
-                <span>إنشاء أول فاتورة</span>
+                <span>{t("invoice.newInvoice")}</span>
               </Link>
             ) : (
               <button
@@ -535,7 +545,7 @@ export default function InvoicesPage() {
                 }}
                 className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition"
               >
-                مسح عوامل التصفية
+                {t("common.cancel")}
               </button>
             )}
           </div>
@@ -543,17 +553,17 @@ export default function InvoicesPage() {
           <>
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-right text-xs border-collapse">
+              <table className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs border-collapse`}>
                 <thead>
                   <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-                    <th className="py-3.5 px-4">رقم الفاتورة</th>
-                    <th className="py-3.5 px-4">النوع والحالة</th>
-                    <th className="py-3.5 px-4">العميل</th>
-                    <th className="py-3.5 px-4">قبل الضريبة</th>
-                    <th className="py-3.5 px-4">ضريبة 15%</th>
-                    <th className="py-3.5 px-4">الإجمالي</th>
-                    <th className="py-3.5 px-4">تاريخ الفاتورة</th>
-                    <th className="py-3.5 px-4 text-left">الإجراءات</th>
+                    <th className="py-3.5 px-4">{t("invoice.number")}</th>
+                    <th className="py-3.5 px-4">{t("invoice.typeAndStatus")}</th>
+                    <th className="py-3.5 px-4">{t("invoice.customer")}</th>
+                    <th className="py-3.5 px-4">{t("invoice.subtotal")}</th>
+                    <th className="py-3.5 px-4">{t("invoice.vat")}</th>
+                    <th className="py-3.5 px-4">{t("invoice.total")}</th>
+                    <th className="py-3.5 px-4">{t("invoice.date")}</th>
+                    <th className={`py-3.5 px-4 ${isRTL ? "text-left" : "text-right"}`}>{t("common.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y theme-border">
@@ -657,7 +667,7 @@ export default function InvoicesPage() {
                             {isCredit ? `-${formatMoney(row.totalAmount)}` : formatMoney(row.totalAmount)}
                           </span>{" "}
                           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
-                            ر.س
+                            {t("common.sar")}
                           </span>
                         </td>
 
@@ -665,15 +675,15 @@ export default function InvoicesPage() {
                           {dateLabel(row.invoiceDate)}
                         </td>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap text-left">
+                        <td className={`py-3.5 px-4 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}>
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition"
-                              title="عرض تفاصيل الفاتورة"
+                              title={t("common.view")}
                             >
                               <Eye className="w-3.5 h-3.5 text-amber-500" />
-                              <span>عرض</span>
+                              <span>{t("common.view")}</span>
                             </Link>
 
                             <button
@@ -681,7 +691,7 @@ export default function InvoicesPage() {
                               disabled={isDownloadingThis}
                               onClick={() => void handleDownloadPdf(row)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition disabled:opacity-50 cursor-pointer"
-                              title="تنزيل نسخة PDF للعميل"
+                              title={t("common.downloadPdf")}
                             >
                               {isDownloadingThis ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -696,10 +706,10 @@ export default function InvoicesPage() {
                                 type="button"
                                 onClick={() => setPaymentModalInvoice(row)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 font-bold transition cursor-pointer"
-                                title="تسجيل دفعة أو سند قبض للعميل"
+                                title={t("invoice.recordPayment")}
                               >
                                 <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>تسجيل دفعة</span>
+                                <span>{t("invoice.recordPayment")}</span>
                               </button>
                             )}
                           </div>
@@ -793,7 +803,7 @@ export default function InvoicesPage() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-card text-xs font-bold text-slate-700 dark:text-slate-200"
                       >
                         <Eye className="w-4 h-4 text-amber-500" />
-                        <span>عرض</span>
+                        <span>{t("common.view")}</span>
                       </Link>
 
                       <button
@@ -817,7 +827,7 @@ export default function InvoicesPage() {
                           className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 text-xs font-bold cursor-pointer"
                         >
                           <CreditCard className="w-4 h-4 text-emerald-500" />
-                          <span>تسجيل دفعة</span>
+                          <span>{t("invoice.recordPayment")}</span>
                         </button>
                       )}
                     </div>
@@ -836,12 +846,13 @@ export default function InvoicesPage() {
             onClick={() => setPage(page - 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            <ChevronRight className="w-4 h-4" />
-            <span>السابق</span>
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <span>{t("common.back")}</span>
           </button>
 
           <span className="font-bold text-slate-600 dark:text-slate-300">
-            صفحة <span className="font-mono">{page}</span> من <span className="font-mono">{totalPages}</span>
+            {t("common.page")} <span className="font-mono">{page}</span> {t("common.of")}{" "}
+            <span className="font-mono">{totalPages}</span>
           </span>
 
           <button
@@ -850,8 +861,8 @@ export default function InvoicesPage() {
             onClick={() => setPage(page + 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            <span>التالي</span>
-            <ChevronLeft className="w-4 h-4" />
+            <span>{t("common.next")}</span>
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
         </div>
       </div>

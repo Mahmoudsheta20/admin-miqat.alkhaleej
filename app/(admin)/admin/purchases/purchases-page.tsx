@@ -26,10 +26,12 @@ import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 import PurchaseForm from "./purchase-form";
 import PurchaseHistory from "./purchase-history";
+import { useLanguage } from "@/lib/languageContext";
 
 const CONTROL = "theme-input h-11 rounded-xl px-3 text-xs sm:text-sm";
 
 export default function PurchasesPage() {
+  const { t, dir, isRTL } = useLanguage();
   const current = currentSaudiPeriod();
   const [year, setYear] = useState(current.year);
   const [quarter, setQuarter] = useState(current.quarter);
@@ -66,7 +68,7 @@ export default function PurchasesPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12" dir="rtl">
+    <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Page Header (§9, §16) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3">
@@ -76,18 +78,17 @@ export default function PurchasesPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold">
-                العمل اليومي والمالية
+                {t("section.financeDaily")}
               </span>
               <span className="text-xs text-slate-400 font-medium">
-                فواتير الموردين وتكاليف الأسطول
+                {t("purchases.subtitle")}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-              المصروفات والمشتريات
+              {t("purchases.title")}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              سجّل فواتير الموردين، تابع مصروفات الأسطول، واخصم الضريبة
-              المستحقة.
+              {t("purchases.subtitle")}
             </p>
           </div>
         </div>
@@ -106,7 +107,7 @@ export default function PurchasesPage() {
             className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
           >
             <Calculator className="size-4 text-amber-500" />
-            <span>الإقرار الضريبي</span>
+            <span>{t("nav.vatReturnsShort")}</span>
           </Link>
 
           <button
@@ -118,7 +119,7 @@ export default function PurchasesPage() {
             className="theme-card inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3.5 py-2.5 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
           >
             <RotateCcw className="size-4" />
-            <span>+ مرتجع مورد</span>
+            <span>+ {t("purchases.newReturn")}</span>
           </button>
 
           <button
@@ -130,7 +131,7 @@ export default function PurchasesPage() {
             className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black shadow-sm hover:shadow-md transition cursor-pointer"
           >
             <Plus className="size-4" />
-            <span>تسجيل مصروف</span>
+            <span>{t("purchases.newPurchase")}</span>
           </button>
         </div>
       </header>
@@ -334,22 +335,22 @@ export default function PurchasesPage() {
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
           {
-            label: "المشتريات قبل الضريبة",
+            label: t("purchases.subtotal"),
             value: data?.totals.netAmount,
             color: "text-slate-900 dark:text-white",
           },
           {
-            label: "إجمالي ضريبة الفواتير",
+            label: t("purchases.totalVat"),
             value: data?.totals.vatAmount,
             color: "text-amber-600 dark:text-amber-400",
           },
           {
-            label: "ضريبة يمكن خصمها (الخانة 7)",
+            label: t("purchases.recoverableVat"),
             value: data?.totals.recoverableVat,
             color: "text-emerald-600 dark:text-emerald-400",
           },
           {
-            label: "الإجمالي شامل الضريبة",
+            label: t("purchases.total"),
             value: data?.totals.totalAmount,
             color: "text-slate-900 dark:text-white",
           },
@@ -367,7 +368,7 @@ export default function PurchasesPage() {
             >
               {card.value ? amountLabel(card.value) : "—"}
               <span className="ms-1.5 text-xs font-bold text-slate-400">
-                ر.س
+                {t("common.sar")}
               </span>
             </p>
           </div>
@@ -387,17 +388,23 @@ export default function PurchasesPage() {
 
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full min-w-[900px] text-right text-xs sm:text-sm border-collapse">
+          <table
+            className={`w-full min-w-[900px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}
+          >
             <thead>
               <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-                <th className="px-4 py-3.5">المورد والفاتورة</th>
-                <th className="px-4 py-3.5">التصنيف والمركبة</th>
-                <th className="px-4 py-3.5">التاريخ والاحتساب</th>
-                <th className="px-4 py-3.5">قبل الضريبة</th>
-                <th className="px-4 py-3.5">الضريبة</th>
-                <th className="px-4 py-3.5">قابل للخصم</th>
-                <th className="px-4 py-3.5">الإجمالي</th>
-                <th className="px-4 py-3.5 text-left">الإجراءات</th>
+                <th className="px-4 py-3.5">{t("purchases.supplier")}</th>
+                <th className="px-4 py-3.5">{t("purchases.category")}</th>
+                <th className="px-4 py-3.5">{t("purchases.date")}</th>
+                <th className="px-4 py-3.5">{t("purchases.subtotal")}</th>
+                <th className="px-4 py-3.5">{t("invoice.vat")}</th>
+                <th className="px-4 py-3.5">{t("purchases.recoverableVat")}</th>
+                <th className="px-4 py-3.5">{t("purchases.total")}</th>
+                <th
+                  className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
+                >
+                  {t("common.actions")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y theme-border">
@@ -523,7 +530,9 @@ export default function PurchasesPage() {
                       </span>
                     </td>
 
-                    <td className="px-4 py-3.5 whitespace-nowrap text-left">
+                    <td
+                      className={`px-4 py-3.5 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}
+                    >
                       <div className="inline-flex items-center gap-1.5">
                         {!row.voidedAt && (
                           <button
@@ -531,10 +540,10 @@ export default function PurchasesPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
                             aria-label={`تعديل ${row.invoiceNumber}`}
                             onClick={() => setEditor(row)}
-                            title="تعديل بيانات المصروف"
+                            title={t("common.edit")}
                           >
                             <Pencil className="size-3.5 text-amber-500" />
-                            <span>تعديل</span>
+                            <span>{t("common.edit")}</span>
                           </button>
                         )}
 
@@ -543,10 +552,10 @@ export default function PurchasesPage() {
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
                           aria-label={`سجل ومرفقات ${row.invoiceNumber}`}
                           onClick={() => setHistory(row.id)}
-                          title="عرض تفاصيل القيد والمرفقات وسجل المراجعة"
+                          title={t("common.details")}
                         >
                           <History className="size-3.5 text-slate-400" />
-                          <span>السجل</span>
+                          <span>{t("common.details")}</span>
                         </button>
                       </div>
                     </td>
@@ -728,11 +737,11 @@ export default function PurchasesPage() {
             onClick={() => setPage((v) => v - 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            السابق
+            {t("common.back")}
           </button>
 
           <span className="font-bold text-slate-600 dark:text-slate-300">
-            {data?.total ?? 0} قيد مسجل · صفحة{" "}
+            {data?.total ?? 0} · {t("common.page")}{" "}
             <span className="font-mono">{page}</span>
           </span>
 
@@ -742,7 +751,7 @@ export default function PurchasesPage() {
             onClick={() => setPage((v) => v + 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            التالي
+            {t("common.next")}
           </button>
         </div>
       </div>

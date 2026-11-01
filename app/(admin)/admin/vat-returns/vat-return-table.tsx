@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import { Check, Copy, HelpCircle } from "lucide-react";
 import { amountLabel, type VatRow } from "@/lib/accounting";
+import { useLanguage } from "@/lib/languageContext";
 
 interface VatReturnTableProps {
   rows: VatRow[];
 }
 
 export default function VatReturnTable({ rows }: VatReturnTableProps) {
+  const { t, isRTL } = useLanguage();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>("");
 
@@ -88,11 +90,10 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border px-5 py-4 bg-slate-50/70 dark:bg-slate-800/40">
         <div>
           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-            خانات نموذج الإقرار الضريبي (1–16)
+            {t("vat.title")} (1–16)
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            مطابقة لحقول بوابة هيئة الزكاة والضريبة والجمارك (zatca.gov.sa) ·
-            اضغط على زر النسخ بجوار أي رقم للصقه مباشرة.
+            {t("vat.copyNotice")}
           </p>
         </div>
         {feedback && (
@@ -104,22 +105,36 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
 
       {/* Table Content (Desktop md and up) */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full min-w-[850px] text-right text-xs sm:text-sm border-collapse">
+        <table
+          className={`w-full min-w-[850px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}
+        >
           <thead>
             <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-              <th className="w-16 px-4 py-3.5">الخانة</th>
-              <th className="px-4 py-3.5">بيان التوريدات والمصروفات</th>
-              <th className="px-4 py-3.5 text-left">المبلغ الصافي (ر.س)</th>
-              <th className="px-4 py-3.5 text-left">التعديل (ر.س)</th>
-              <th className="px-4 py-3.5 text-left">مبلغ الضريبة (ر.س)</th>
+              <th className="w-16 px-4 py-3.5">{t("vat.box")}</th>
+              <th className="px-4 py-3.5">{t("vat.desc")}</th>
+              <th
+                className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
+              >
+                {t("vat.net")} ({t("common.sar")})
+              </th>
+              <th
+                className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
+              >
+                {t("vat.adj")} ({t("common.sar")})
+              </th>
+              <th
+                className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
+              >
+                {t("vat.due")} ({t("common.sar")})
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y theme-border">
             {(
               [
-                ["SALES", "١. ضريبة المبيعات والتوريدات (المخرجات)"],
-                ["PURCHASES", "٢. ضريبة المشتريات والمصروفات (المدخلات)"],
-                ["NET", "٣. تسوية وصافي الضريبة للفترة"],
+                ["SALES", t("vat.salesSection")],
+                ["PURCHASES", t("vat.purchasesSection")],
+                ["NET", t("vat.netSection")],
               ] as const
             ).map(([sectionKey, sectionTitle]) => {
               const sectionRows = rows.filter((r) => r.section === sectionKey);

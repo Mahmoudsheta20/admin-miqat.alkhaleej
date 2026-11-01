@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Info,
 } from "lucide-react";
+import { useLanguage } from "@/lib/languageContext";
 
 export interface SectionGuideItem {
   label: string;
@@ -39,12 +40,14 @@ export default function SectionGuide({
   defaultOpen = false,
 }: SectionGuideProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { dir, language } = useLanguage();
+  const isAr = language === "ar";
 
   return (
     <section
       aria-label={title}
       className="theme-card rounded-2xl border border-amber-500/25 bg-amber-500/[0.03] dark:bg-amber-500/[0.04] overflow-hidden transition-all"
-      dir="rtl"
+      dir={dir}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
         <div className="flex items-start sm:items-center gap-3 min-w-0">
@@ -54,7 +57,7 @@ export default function SectionGuide({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300 border border-amber-500/25">
-                دليل المعرفة وشرح القسم
+                {isAr ? "دليل المعرفة وشرح القسم" : "Section Guide & Knowledge"}
               </span>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 {title}
@@ -72,7 +75,15 @@ export default function SectionGuide({
           onClick={() => setIsOpen((prev) => !prev)}
           className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-white/80 dark:bg-slate-900/70 hover:border-amber-500 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 transition shrink-0 cursor-pointer"
         >
-          <span>{isOpen ? "إخفاء الشرح" : "عرض الشرح التفصيلي"}</span>
+          <span>
+            {isOpen
+              ? isAr
+                ? "إخفاء الشرح"
+                : "Hide Guide"
+              : isAr
+                ? "عرض الشرح التفصيلي"
+                : "Show Detailed Guide"}
+          </span>
           {isOpen ? (
             <ChevronUp className="w-3.5 h-3.5" />
           ) : (

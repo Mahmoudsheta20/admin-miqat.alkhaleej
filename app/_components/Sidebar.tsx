@@ -28,7 +28,9 @@ import { useAuth } from "@/lib/authContext";
 import { UserRole, SystemUser } from "@/lib/types";
 import { isSuperAdmin } from "@/lib/adminConstants";
 import { useWorkspaceMode } from "@/lib/workspaceModeContext";
+import { useLanguage } from "@/lib/languageContext";
 import WorkspaceModeSwitcher from "./WorkspaceModeSwitcher";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 interface NavItem {
   href: string;
@@ -247,6 +249,33 @@ const SECTION_TITLES: Record<string, string> = {
   CAPTAIN: "بوابة الكابتن",
 };
 
+const SECTION_TITLE_KEYS: Record<string, string> = {
+  OPERATIONS: "section.operations",
+  DAILY: "section.financeDaily",
+  REVIEW: "section.financeReview",
+  CAPTAIN: "section.captain",
+};
+
+const NAV_ITEM_TRANSLATION_KEYS: Record<string, string> = {
+  "/admin": "nav.dashboard",
+  "/admin/contracts": "nav.contracts",
+  "/admin/contracts/new": "nav.newContract",
+  "/admin/captains": "nav.captains",
+  "/admin/inspections": "nav.inspections",
+  "/admin/fleet": "nav.fleet",
+  "/admin/admins": "nav.admins",
+  "/admin/invoices": "nav.invoices",
+  "/admin/invoices/new": "nav.newInvoice",
+  "/admin/purchases": "nav.purchases",
+  "/admin/accounting": "nav.accounting",
+  "/admin/vat-returns": "nav.vatReturns",
+  "/admin/accounts": "nav.accounts",
+  "/admin/zatca": "nav.zatca",
+  "/captain": "nav.captainPortal",
+  "/captain/inspection": "nav.todayInspection",
+  "/captain/contract": "nav.captainContract",
+};
+
 interface SidebarNavLinksProps {
   collapsed: boolean;
   pathname: string;
@@ -260,6 +289,7 @@ function SidebarNavLinks({
   filteredItems,
   onMobileClose,
 }: SidebarNavLinksProps) {
+  const { t, isRTL } = useLanguage();
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
     if (href === "/captain") return pathname === "/captain";
@@ -283,6 +313,16 @@ function SidebarNavLinks({
         const sectionChanged = Boolean(
           item.section && item.section !== prevSection,
         );
+        const itemLabel = t(
+          NAV_ITEM_TRANSLATION_KEYS[item.href] || "",
+          item.label,
+        );
+        const sectionTitle = item.section
+          ? t(
+              SECTION_TITLE_KEYS[item.section] || "",
+              SECTION_TITLES[item.section],
+            )
+          : "";
 
         return (
           <React.Fragment key={item.href}>
@@ -290,9 +330,9 @@ function SidebarNavLinks({
               <div
                 className={`${index > 0 ? "pt-3.5 mt-2 border-t border-slate-200/70 dark:border-slate-800/70" : ""}`}
               >
-                {!collapsed && item.section && SECTION_TITLES[item.section] && (
+                {!collapsed && item.section && sectionTitle && (
                   <p className="px-3 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                    {SECTION_TITLES[item.section]}
+                    {sectionTitle}
                   </p>
                 )}
               </div>
@@ -306,11 +346,15 @@ function SidebarNavLinks({
                   ? "bg-amber-500/12 text-amber-700 dark:text-amber-400 font-black border border-amber-500/25 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-950 dark:hover:text-white border border-transparent"
               } ${collapsed ? "justify-center px-2 py-3" : ""}`}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? itemLabel : undefined}
             >
-              {/* Active right bar in RTL */}
+              {/* Active bar: right-0 in RTL, left-0 in LTR */}
               {active && (
-                <span className="absolute right-0 top-2 bottom-2 w-1 bg-amber-500 rounded-l-full" />
+                <span
+                  className={`absolute top-2 bottom-2 w-1 bg-amber-500 ${
+                    isRTL ? "right-0 rounded-l-full" : "left-0 rounded-r-full"
+                  }`}
+                />
               )}
               <span
                 className={`shrink-0 transition-colors ${
@@ -324,7 +368,7 @@ function SidebarNavLinks({
               {!collapsed && (
                 <>
                   <span className="truncate text-sm lg:text-xs font-bold tracking-normal">
-                    {item.label}
+                    {itemLabel}
                   </span>
                   {item.badge && (
                     <span
@@ -350,14 +394,15 @@ interface SidebarFooterProps {
 }
 
 function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
+  const { t } = useLanguage();
   const isSuper = user?.role === "ADMIN" && isSuperAdmin(user?.email);
 
   const roleTitle =
     user?.role === "ADMIN"
       ? isSuper
-        ? "المدير العام الأساسي"
-        : "مسؤول إداري"
-      : "كابتن معتمد";
+        ? t("header.superAdmin", "المدير العام الأساسي")
+        : t("header.admin", "مسؤول إداري")
+      : t("header.captain", "كابتن معتمد");
 
   return (
     <div className="shrink-0 p-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-2">
@@ -420,6 +465,9 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
         </>
       )}
 
+      {/* Language Switcher in Sidebar */}
+      <LanguageSwitcher variant="sidebar" collapsed={collapsed} />
+
       {/* Collapse button (desktop only) */}
       <button
         type="button"
@@ -427,15 +475,25 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
         className={`hidden lg:flex items-center justify-center py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-800 cursor-pointer ${
           collapsed ? "w-10 h-10 mx-auto" : "w-full px-3"
         }`}
-        title={collapsed ? "توسيع القائمة" : "طي القائمة"}
-        aria-label={collapsed ? "توسيع القائمة" : "طي القائمة"}
+        title={
+          collapsed
+            ? t("sidebar.expand", "توسيع القائمة")
+            : t("sidebar.collapse", "طي القائمة")
+        }
+        aria-label={
+          collapsed
+            ? t("sidebar.expand", "توسيع القائمة")
+            : t("sidebar.collapse", "طي القائمة")
+        }
       >
         {collapsed ? (
           <ChevronLeft className="w-4 h-4" />
         ) : (
           <>
             <ChevronRight className="w-4 h-4 ml-1.5" />
-            <span className="text-xs">طي القائمة الجانبية</span>
+            <span className="text-xs">
+              {t("sidebar.collapse", "طي القائمة الجانبية")}
+            </span>
           </>
         )}
       </button>

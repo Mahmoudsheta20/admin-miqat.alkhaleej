@@ -29,8 +29,10 @@ import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 import VatReturnTable from "./vat-return-table";
 import ReturnSettings from "./return-settings";
+import { useLanguage } from "@/lib/languageContext";
 
 export default function VatReturnsPage() {
+  const { t, dir } = useLanguage();
   const [period, setPeriod] = useState(defaultReportPeriod);
   const [failure, setFailure] = useState("");
   const [seedMessage, setSeedMessage] = useState("");
@@ -62,7 +64,7 @@ export default function VatReturnsPage() {
   const isRefundable = netVatDueNum < 0;
 
   return (
-    <div className="space-y-6 pb-12" dir="rtl">
+    <div className="space-y-6 pb-12" dir={dir}>
       {/* 1. Header & Actions (§14) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3">
@@ -72,17 +74,17 @@ export default function VatReturnsPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold">
-                المراجعة والإعدادات
+                {t("section.financeReview")}
               </span>
               <span className="text-xs text-slate-400 font-medium">
-                هيئة الزكاة والضريبة والجمارك (ZATCA)
+                {t("vat.subtitle")}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-              الإقرار الضريبي (VAT Return)
+              {t("vat.title")}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              مراجعة وتدقيق خانات نموذج هيئة الزكاة (1–16) ونسخ المبالغ للبوابة الرسمية.
+              {t("vat.subtitle")}
             </p>
           </div>
         </div>
@@ -105,7 +107,7 @@ export default function VatReturnsPage() {
             className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
           >
             <ShoppingBag className="size-4 text-amber-500" />
-            <span>المصروفات والمشتريات</span>
+            <span>{t("purchases.title")}</span>
           </Link>
 
           <Link
@@ -113,7 +115,7 @@ export default function VatReturnsPage() {
             className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
           >
             <ReceiptText className="size-4 text-amber-500" />
-            <span>سجل الفواتير</span>
+            <span>{t("invoice.title")}</span>
           </Link>
         </div>
       </header>
@@ -239,12 +241,12 @@ export default function VatReturnsPage() {
             onClick={() => setReload((value) => value + 1)}
             disabled={isLoading}
             className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition cursor-pointer"
-            title="تحديث حسابات الإقرار"
+            title={t("common.refresh")}
           >
             <RefreshCw
               className={`size-4 ${isLoading ? "animate-spin text-amber-500" : ""}`}
             />
-            <span>تحديث</span>
+            <span>{t("common.refresh")}</span>
           </button>
 
           <button
@@ -252,10 +254,10 @@ export default function VatReturnsPage() {
             disabled={!data || isLoading || isExporting}
             onClick={() => void download("csv")}
             className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition disabled:opacity-50 cursor-pointer"
-            title="تنزيل كشف تدقيق تفصيلي بصيغة CSV"
+            title="CSV"
           >
             <FileSpreadsheet className="size-4 text-emerald-500" />
-            <span>كشف تدقيق CSV</span>
+            <span>{t("accounting.exportCsv")}</span>
           </button>
 
           <button
@@ -263,10 +265,10 @@ export default function VatReturnsPage() {
             disabled={!data || isLoading || isExporting}
             onClick={() => void download("pdf")}
             className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
-            title="تنزيل مسودة الإقرار بصيغة PDF"
+            title="PDF"
           >
             <Download className="size-4" />
-            <span>مسودة الإقرار PDF</span>
+            <span>{t("common.downloadPdf")}</span>
           </button>
         </div>
       </section>

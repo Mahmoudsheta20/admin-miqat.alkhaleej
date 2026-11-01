@@ -19,6 +19,7 @@ import {
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import JournalPanel from "./journal-panel";
 import PaymentPanel from "./payment-panel";
+import { useLanguage } from "@/lib/languageContext";
 
 interface ClosedPeriod {
   id: string;
@@ -248,6 +249,7 @@ function PeriodArchive({
 }
 
 export default function AccountingPage() {
+  const { t, dir } = useLanguage();
   const [period, setPeriod] = useState(defaultReportPeriod);
   const [tab, setTab] = useState("REPORTS");
   const [reload, setReload] = useState(0);
@@ -277,7 +279,7 @@ export default function AccountingPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12" dir="rtl">
+    <div className="space-y-6 pb-12" dir={dir}>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
@@ -285,13 +287,13 @@ export default function AccountingPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-amber-700 dark:text-amber-400">
-              المحاسبة والضريبة
+              {t("mode.finance")}
             </p>
             <h1 className="mt-1 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              القيود والتقارير المالية
+              {t("accounting.title")}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-500">
-              الإيرادات والتكاليف والذمم من القيود المعتمدة للشركة.
+              {t("accounting.subtitle")}
             </p>
           </div>
         </div>
@@ -312,14 +314,14 @@ export default function AccountingPage() {
             className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold transition"
           >
             <BookOpen className="size-4 text-amber-500" />
-            <span>شجرة الحسابات</span>
+            <span>{t("nav.accounts")}</span>
           </Link>
           <Link
             href="/admin/vat-returns"
             className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold transition"
           >
             <Calculator className="size-4 text-amber-500" />
-            <span>الإقرار الضريبي</span>
+            <span>{t("nav.vatReturns")}</span>
           </Link>
         </div>
       </header>
@@ -423,7 +425,7 @@ export default function AccountingPage() {
               className="theme-card rounded-xl border theme-border hover:border-amber-500 px-4 py-3 text-sm font-bold cursor-pointer"
               onClick={changed}
             >
-              تحديث
+              {t("common.refresh")}
             </button>
             {(["pdf", "csv"] as const).map((f) => (
               <button
@@ -433,7 +435,7 @@ export default function AccountingPage() {
                 onClick={() => void download(f)}
                 className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
               >
-                {f === "pdf" ? "تقرير PDF" : "كشف CSV"}
+                {f === "pdf" ? t("accounting.exportPdf") : t("accounting.exportCsv")}
               </button>
             ))}
           </div>

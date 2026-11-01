@@ -43,8 +43,10 @@ import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 import { formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminContractsPage() {
+  const { t } = useLanguage();
   const cachedContracts = getCachedData<Awaited<ReturnType<typeof getContracts>>>("contracts_ALL_ALL_");
   const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
 
@@ -350,10 +352,10 @@ export default function AdminContractsPage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                سجل العقود الرسمية
+                {t("contracts.title")}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                إدارة وتوثيق عقود النقل البري، التحقق الإلكتروني عبر رمز QR، ومتابعة الفحص التشغيلي
+                {t("contracts.subtitle")}
               </p>
             </div>
           </div>
@@ -372,19 +374,19 @@ export default function AdminContractsPage() {
           />
           <Link
             href="/admin/contracts/new"
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs hover:shadow-md"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs hover:shadow-md cursor-pointer"
           >
             <FileText className="w-4 h-4" />
-            <span>+ إنشاء عقد جديد</span>
+            <span>+ {t("contracts.newContract")}</span>
           </Link>
           <button
             onClick={() => fetchContractsData(undefined, true)}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50"
-            title="تحديث البيانات"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 cursor-pointer"
+            title={t("common.refresh")}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-amber-500" : ""}`} />
-            <span className="hidden sm:inline">تحديث</span>
+            <span className="hidden sm:inline">{t("common.refresh")}</span>
           </button>
         </div>
       </div>

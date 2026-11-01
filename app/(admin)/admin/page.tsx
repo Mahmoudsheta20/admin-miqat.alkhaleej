@@ -12,6 +12,7 @@ import {
   RefreshCw,
   FileText,
   ChevronLeft,
+  ChevronRight,
   FilePlus2,
   ReceiptText,
   Eye,
@@ -22,8 +23,10 @@ import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData } from "@/lib/clientCache";
+import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminDashboardPage() {
+  const { t, isRTL } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(() => getCachedData("dashboard_stats"));
   const [isLoading, setIsLoading] = useState(() => !getCachedData("dashboard_stats"));
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
@@ -69,10 +72,10 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            لوحة الإشراف العام
+            {t("dashboard.title")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            متابعة شاملة لأسطول ميقات الخليج، الكباتن، وحركة العقود الرسمية
+            {t("dashboard.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -90,24 +93,24 @@ export default function AdminDashboardPage() {
           <button
             onClick={() => loadStats(true)}
             disabled={isLoading}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 min-h-[42px] shadow-2xs"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 min-h-[42px] shadow-2xs cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            تحديث
+            {t("common.refresh")}
           </button>
           <Link
             href="/admin/invoices/new"
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 transition min-h-[42px]"
           >
             <ReceiptText className="w-4 h-4" />
-            <span>+ فاتورة</span>
+            <span>+ {t("nav.invoices")}</span>
           </Link>
           <Link
             href="/admin/contracts/new"
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-sm min-h-[42px]"
           >
             <FilePlus2 className="w-4 h-4" />
-            <span>+ عقد جديد</span>
+            <span>+ {t("contracts.newContract")}</span>
           </Link>
         </div>
       </div>
@@ -197,9 +200,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                إنشاء عقد رحلة
+                {t("contracts.newContract")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">توثيق رحلة وكشف ركاب</p>
+              <p className="text-[10px] text-slate-400 truncate">{t("contracts.subtitle")}</p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -215,9 +218,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                إصدار فاتورة
+                {t("invoice.newInvoice")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">فاتورة حجز أو مبدئية</p>
+              <p className="text-[10px] text-slate-400 truncate">{t("invoice.subtitle")}</p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -233,9 +236,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                الفحص المباشر
+                {t("nav.inspections")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">اعتماد فحص الكباتن اليومي</p>
+              <p className="text-[10px] text-slate-400 truncate">{t("inspections.subtitle")}</p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -251,9 +254,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                سجل الفواتير
+                {t("nav.invoices")}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">مراجعة وتحميل الفواتير</p>
+              <p className="text-[10px] text-slate-400 truncate">{t("invoice.title")}</p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
@@ -267,7 +270,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                الكباتن النشطين
+                {t("captains.title")}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -277,16 +280,18 @@ export default function AdminDashboardPage() {
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
                 {isLoading ? "—" : stats?.totalCaptains ?? 0}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">كابتن</span>
+              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
+                {isRTL ? "كابتن" : "Captains"}
+              </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>إدارة الطاقم</span>
+            <span>{t("captains.title")}</span>
             <Link
               href="/admin/captains"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              عرض
+              {t("common.view")}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -297,7 +302,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                أسطول المركبات
+                {t("fleet.title")}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Car className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -308,17 +313,17 @@ export default function AdminDashboardPage() {
                 {isLoading ? "—" : stats?.totalVehicles ?? 0}
               </span>
               <span className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 mr-1.5 font-bold">
-                ({stats?.activeVehicles ?? 0} جاهزة)
+                ({stats?.activeVehicles ?? 0} {isRTL ? "جاهزة" : "Ready"})
               </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>الأسطول</span>
+            <span>{t("fleet.title")}</span>
             <Link
               href="/admin/fleet"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              عرض
+              {t("common.view")}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -329,7 +334,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                العقود الموثقة
+                {t("contracts.title")}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -339,16 +344,18 @@ export default function AdminDashboardPage() {
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
                 {isLoading ? "—" : stats?.totalContracts ?? 0}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">عقد رسمي</span>
+              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
+                {isRTL ? "عقد رسمي" : "Contracts"}
+              </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>السجل</span>
+            <span>{t("contracts.title")}</span>
             <Link
               href="/admin/contracts"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              عرض
+              {t("common.view")}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -359,7 +366,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                فحوصات اليوم
+                {t("inspections.title")}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -369,16 +376,18 @@ export default function AdminDashboardPage() {
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
                 {isLoading ? "—" : stats?.todayInspections ?? 0}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">فحص مسجل</span>
+              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
+                {isRTL ? "فحص مسجل" : "Inspections"}
+              </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>التشغيل</span>
+            <span>{t("inspections.title")}</span>
             <Link
               href="/admin/inspections"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              عرض
+              {t("common.view")}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -390,45 +399,45 @@ export default function AdminDashboardPage() {
         <div className="p-4 sm:p-5 border-b theme-border flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-              أحدث العقود الموثقة
+              {t("dashboard.recentContracts")}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              العقود الثلاثية الصادرة المتضمنة كشف الركاب وتقرير الفحص
+              {t("contracts.subtitle")}
             </p>
           </div>
           <Link
             href="/admin/contracts"
             className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
           >
-            عرض الكل ({stats?.totalContracts ?? 0})
-            <ChevronLeft className="w-4 h-4" />
+            {t("common.all")} ({stats?.totalContracts ?? 0})
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Link>
         </div>
 
         {isLoading ? (
           <div className="p-10 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-slate-400">جاري تحميل البيانات...</p>
+            <p className="text-xs text-slate-400">{t("common.loading")}</p>
           </div>
         ) : !stats?.recentContracts?.length ? (
           <div className="p-10 text-center text-slate-400 text-sm">
-            لا توجد عقود مسجلة حتى الآن.
+            {isRTL ? "لا توجد عقود مسجلة حتى الآن." : "No contracts found yet."}
           </div>
         ) : (
           <>
             {/* Desktop Table (Visible on md and larger) */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-right text-xs">
+              <table className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs`}>
                 <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
                   <tr>
-                    <th className="px-5 py-3">رقم العقد</th>
-                    <th className="px-5 py-3">العميل</th>
-                    <th className="px-5 py-3">الكابتن</th>
-                    <th className="px-5 py-3">اللوحة</th>
-                    <th className="px-5 py-3">نوع العملية</th>
-                    <th className="px-5 py-3">التاريخ والوقت</th>
-                    <th className="px-5 py-3">الركاب</th>
-                    <th className="px-5 py-3 text-left">الإجراء</th>
+                    <th className="px-5 py-3">{t("contracts.refNumber")}</th>
+                    <th className="px-5 py-3">{t("contracts.customer")}</th>
+                    <th className="px-5 py-3">{t("contracts.captain")}</th>
+                    <th className="px-5 py-3">{t("fleet.plateAr")}</th>
+                    <th className="px-5 py-3">{t("common.details")}</th>
+                    <th className="px-5 py-3">{t("common.date")}</th>
+                    <th className="px-5 py-3">{t("contracts.passengers")}</th>
+                    <th className={`px-5 py-3 ${isRTL ? "text-left" : "text-right"}`}>{t("common.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
@@ -454,24 +463,24 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                          {c.passengersCount} ركاب
+                          {c.passengersCount} {isRTL ? "ركاب" : "pax"}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-left whitespace-nowrap">
+                      <td className={`px-5 py-3.5 ${isRTL ? "text-left" : "text-right"} whitespace-nowrap`}>
                         <div className="inline-flex items-center gap-1.5">
                           <Link
                             href={`/admin/contracts/${encodeURIComponent(c.id)}`}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
                           >
                             <Eye className="w-3.5 h-3.5 text-amber-500" />
-                            <span>تفاصيل</span>
+                            <span>{t("common.details")}</span>
                           </Link>
                           <Link
                             href={`/admin/invoices/new?contractId=${encodeURIComponent(c.id)}`}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold transition text-xs"
                           >
                             <ReceiptText className="w-3.5 h-3.5" />
-                            <span>فاتورة</span>
+                            <span>{t("invoice.title")}</span>
                           </Link>
                           <button
                             onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}
@@ -501,33 +510,33 @@ export default function AdminDashboardPage() {
 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">العميل:</span>
+                      <span className="text-slate-400">{t("contracts.customer")}:</span>
                       <span className="font-bold text-slate-900 dark:text-white">{c.customerName}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">الكابتن:</span>
+                      <span className="text-slate-400">{t("contracts.captain")}:</span>
                       <span className="text-slate-700 dark:text-slate-300 font-semibold">{c.captainName}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">المركبة / اللوحة:</span>
+                      <span className="text-slate-400">{t("fleet.plateAr")}:</span>
                       <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{c.vehiclePlate}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">التاريخ والوقت:</span>
+                      <span className="text-slate-400">{t("common.date")}:</span>
                       <span className="font-mono text-slate-500 dark:text-slate-400">{c.tripDate} {c.tripTime}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2.5 border-t theme-border gap-2">
                     <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                      {c.passengersCount} ركاب
+                      {c.passengersCount} {isRTL ? "ركاب" : "pax"}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <Link
                         href={`/admin/contracts/${c.id}`}
                         className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs shadow-2xs"
                       >
-                        تفاصيل
+                        {t("common.details")}
                       </Link>
                       <button
                         onClick={() => openPdf(c.id, c.referenceNumber, c.pdfPath)}

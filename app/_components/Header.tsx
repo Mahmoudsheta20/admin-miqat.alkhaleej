@@ -23,12 +23,15 @@ import {
   Lock,
   ReceiptText,
   ShoppingBag,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useTheme } from "@/lib/themeContext";
+import { useLanguage } from "@/lib/languageContext";
 import { isSuperAdmin } from "@/lib/adminConstants";
 import { useWorkspaceMode } from "@/lib/workspaceModeContext";
 import WorkspaceModeSwitcher from "./WorkspaceModeSwitcher";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 import ProfileModal from "./ProfileModal";
 
@@ -42,6 +45,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { isFinance } = useWorkspaceMode();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const [timeStr, setTimeStr] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -244,6 +248,9 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               </div>
             )}
 
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="header" />
+
             {/* Theme Switcher Button */}
             <button
               onClick={toggleTheme}
@@ -420,12 +427,43 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                           <Lock className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold">تغيير كلمة المرور</p>
+                          <p className="font-bold">
+                            {t("header.changePassword")}
+                          </p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            تعيين كلمة مرور جديدة للحساب
+                            {t("header.changePasswordSubtitle")}
                           </p>
                         </div>
                       </div>
+                    </button>
+
+                    {/* Language Switcher in Profile Menu */}
+                    <button
+                      onClick={() => {
+                        toggleLanguage();
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition">
+                          <Globe className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold">
+                            {language === "ar"
+                              ? "اللغة (Language)"
+                              : "Language (اللغة)"}
+                          </p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                            {language === "ar"
+                              ? "التبديل إلى English"
+                              : "Switch to Arabic (العربية)"}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border theme-border font-mono text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                        {language === "ar" ? "English" : "العربية"}
+                      </span>
                     </button>
 
                     {/* Dashboard Home */}

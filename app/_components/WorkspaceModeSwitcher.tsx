@@ -3,6 +3,7 @@
 import React from "react";
 import { Car, ReceiptText } from "lucide-react";
 import { useWorkspaceMode } from "@/lib/workspaceModeContext";
+import { useLanguage } from "@/lib/languageContext";
 
 interface WorkspaceModeSwitcherProps {
   variant?: "header" | "sidebar";
@@ -14,6 +15,7 @@ export default function WorkspaceModeSwitcher({
   collapsed = false,
 }: WorkspaceModeSwitcherProps) {
   const { mode, switchAndNavigate } = useWorkspaceMode();
+  const { t } = useLanguage();
   const isFinance = mode === "FINANCE";
 
   if (variant === "sidebar") {
@@ -32,8 +34,8 @@ export default function WorkspaceModeSwitcher({
             }`}
             title={
               isFinance
-                ? "الوضع الحالي: المالية والضريبة (انقر للتبديل إلى العمليات والأسطول)"
-                : "الوضع الحالي: العمليات والأسطول (انقر للتبديل إلى المالية والضريبة)"
+                ? `${t("mode.finance")}: ${t("mode.switchTip")}`
+                : `${t("mode.operations")}: ${t("mode.switchTip")}`
             }
             aria-label="تبديل وضع مساحة العمل"
           >
@@ -60,7 +62,7 @@ export default function WorkspaceModeSwitcher({
             }`}
           >
             <Car className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">العمليات والأسطول</span>
+            <span className="truncate">{t("mode.operations")}</span>
           </button>
 
           <button
@@ -73,7 +75,7 @@ export default function WorkspaceModeSwitcher({
             }`}
           >
             <ReceiptText className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">المالية والضريبة</span>
+            <span className="truncate">{t("mode.finance")}</span>
           </button>
         </div>
       </div>
@@ -92,12 +94,14 @@ export default function WorkspaceModeSwitcher({
               ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-xs border border-amber-500/30 font-black"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
-          title="الانتقال إلى واجهة العمليات والأسطول والعقود"
-          aria-label={!isFinance ? "الوضع الحالي: العمليات والأسطول" : "التبديل إلى العمليات والأسطول"}
+          title={t("mode.operations")}
+          aria-label={t("mode.operations")}
         >
           <Car className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden md:inline">العمليات والأسطول</span>
-          <span className="hidden min-[380px]:inline md:hidden">العمليات</span>
+          <span className="hidden md:inline">{t("mode.operations")}</span>
+          <span className="hidden min-[380px]:inline md:hidden">
+            {t("mode.operationsShort")}
+          </span>
         </button>
 
         <button
@@ -108,12 +112,14 @@ export default function WorkspaceModeSwitcher({
               ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 shadow-xs border border-emerald-500/30 font-black"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
-          title="الانتقال إلى واجهة الفواتير والمصروفات والإقرار الضريبي"
-          aria-label={isFinance ? "الوضع الحالي: المالية والضريبة" : "التبديل إلى المالية والضريبة"}
+          title={t("mode.finance")}
+          aria-label={t("mode.finance")}
         >
           <ReceiptText className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden md:inline">المالية والضريبة</span>
-          <span className="hidden min-[380px]:inline md:hidden">المالية</span>
+          <span className="hidden md:inline">{t("mode.finance")}</span>
+          <span className="hidden min-[380px]:inline md:hidden">
+            {t("mode.financeShort")}
+          </span>
         </button>
       </div>
     </div>

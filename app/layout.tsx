@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/themeContext";
 import { AuthProvider } from "@/lib/authContext";
+import { LanguageProvider } from "@/lib/languageContext";
 import { Zain, Outfit } from "next/font/google";
 
 const zain = Zain({ weight: ["200", "300", "400", "700", "800", "900"], subsets: ["arabic", "latin"], variable: "--font-zain", display: "swap" });
@@ -45,17 +46,22 @@ export default function RootLayout({
                 } else {
                   document.documentElement.classList.remove('dark');
                 }
+                const savedLang = localStorage.getItem('miqat_language') || 'ar';
+                document.documentElement.lang = savedLang;
+                document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
               } catch (e) {}
             `,
           }}
         />
       </head>
       <body className="min-h-full">
-        <ThemeProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

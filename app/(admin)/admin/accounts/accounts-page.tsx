@@ -25,6 +25,7 @@ import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 import { accountingRequest, type Account } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
+import { useLanguage } from "@/lib/languageContext";
 
 interface AccountForm {
   code: string;
@@ -407,6 +408,7 @@ function Editor({ account, prefillParent, accounts, onClose, onSaved }: EditorPr
 }
 
 export default function AccountsPage() {
+  const { t, dir } = useLanguage();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [postingFilter, setPostingFilter] = useState<"ALL" | "POSTING" | "GROUP">("ALL");
@@ -501,7 +503,7 @@ export default function AccountsPage() {
   }, [filteredAccounts]);
 
   return (
-    <div className="space-y-6 pb-12" dir="rtl">
+    <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
@@ -511,12 +513,12 @@ export default function AccountsPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
-                النظام المالي الموحد
+                {t("section.financeReview")}
               </span>
-              <span className="text-xs text-slate-500">الخريطة المحاسبية</span>
+              <span className="text-xs text-slate-500">{t("nav.accounts")}</span>
             </div>
             <h1 className="mt-1 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              شجرة الحسابات (Chart of Accounts)
+              {t("nav.accounts")} (Chart of Accounts)
             </h1>
             <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق الملكية، الإيرادات، والمصروفات
@@ -530,7 +532,7 @@ export default function AccountsPage() {
             onClick={() => setReload((v) => v + 1)}
             disabled={isLoading}
             className="p-2.5 rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 cursor-pointer shadow-2xs"
-            title="تحديث الحسابات"
+            title={t("common.refresh")}
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-amber-500" : ""}`} />
           </button>
@@ -550,7 +552,7 @@ export default function AccountsPage() {
             className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs sm:text-sm font-bold transition shadow-2xs"
           >
             <Landmark className="size-4 text-amber-500" />
-            <span>القيود والتقارير</span>
+            <span>{t("accounting.title")}</span>
           </Link>
           <button
             type="button"
@@ -558,7 +560,7 @@ export default function AccountsPage() {
             onClick={() => setEditor({ account: "NEW" })}
           >
             <Plus className="size-4" />
-            <span>إضافة حساب جديد</span>
+            <span>+ {t("common.create")}</span>
           </button>
         </div>
       </header>

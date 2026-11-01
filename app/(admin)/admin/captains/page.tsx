@@ -36,6 +36,7 @@ import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
 import SectionGuide from "@/app/_components/SectionGuide";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import { useLanguage } from "@/lib/languageContext";
 
 type CaptainItem = SystemUser & {
   contractCount: number;
@@ -43,6 +44,7 @@ type CaptainItem = SystemUser & {
 };
 
 export default function CaptainsManagementPage() {
+  const { t } = useLanguage();
   const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
   const [captains, setCaptains] = useState<CaptainItem[]>(() => {
     if (Array.isArray(cachedCaptains)) return cachedCaptains;
@@ -259,10 +261,10 @@ export default function CaptainsManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            إدارة الكباتن
+            {t("captains.title")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            سجل الكباتن، الفحص الميداني اليومي، ورخص القيادة المعتمدة
+            {t("captains.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -281,8 +283,8 @@ export default function CaptainsManagementPage() {
           <button
             onClick={() => loadCaptains(true)}
             disabled={isLoading}
-            className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50"
-            title="تحديث البيانات"
+            className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50 cursor-pointer"
+            title={t("common.refresh")}
           >
             <RefreshCw
               className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
@@ -290,10 +292,10 @@ export default function CaptainsManagementPage() {
           </button>
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl gold-gradient-btn transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl gold-gradient-btn transition shadow-sm cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
-            إضافة كابتن جديد
+            {t("captains.add")}
           </button>
         </div>
       </div>

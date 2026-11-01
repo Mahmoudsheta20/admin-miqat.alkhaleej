@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useWorkspaceMode } from "@/lib/workspaceModeContext";
+import { useLanguage } from "@/lib/languageContext";
 import type { UserRole } from "@/lib/types";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -55,6 +56,22 @@ const CAPTAIN_LINKS: MobileNavItem[] = [
   { href: "/captain/contract", label: "عقد جديد", icon: FilePlus2 },
 ];
 
+const MOBILE_NAV_TRANSLATION_KEYS: Record<string, string> = {
+  "/admin": "nav.dashboard",
+  "/admin/contracts": "nav.contracts",
+  "/admin/contracts/new": "nav.newContract",
+  "/admin/inspections": "nav.inspections",
+  "/admin/fleet": "nav.fleet",
+  "/admin/invoices": "nav.invoices",
+  "/admin/invoices/new": "nav.newInvoice",
+  "/admin/purchases": "nav.purchases",
+  "/admin/accounting": "nav.accounting",
+  "/admin/vat-returns": "nav.vatReturnsShort",
+  "/captain": "nav.dashboard",
+  "/captain/inspection": "nav.todayInspection",
+  "/captain/contract": "nav.captainContract",
+};
+
 export default function DashboardShell({
   children,
   role,
@@ -63,16 +80,22 @@ export default function DashboardShell({
   const pathname = usePathname();
   const { user, isLoading } = useAuth();
   const { isFinance } = useWorkspaceMode();
+  const { t } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const isMenuOpen = drawerPath === pathname;
 
-  const links =
+  const rawLinks =
     role === "ADMIN"
       ? isFinance
         ? ADMIN_FINANCE_LINKS
         : ADMIN_OPERATIONS_LINKS
       : CAPTAIN_LINKS;
+
+  const links = rawLinks.map((item) => ({
+    ...item,
+    label: t(MOBILE_NAV_TRANSLATION_KEYS[item.href] || "", item.label),
+  }));
 
   const activeHref = [...links]
     .sort((a, b) => b.href.length - a.href.length)
@@ -148,7 +171,9 @@ export default function DashboardShell({
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="truncate max-w-full text-center leading-tight">{label}</span>
+              <span className="truncate max-w-full text-center leading-tight">
+                {label}
+              </span>
             </Link>
           ))}
         </nav>
