@@ -32,3 +32,5 @@ export function invoicePhoneNumber(phone: InvoicePhone): string | undefined {
   if (!parsed?.isPossible() || parsed.ext || parsed.countryCallingCode !== getCountryCallingCode(phone.country)) return undefined;
   return parsed.number;
 }
+
+export function phoneCountries(language:"ar"|"en"):PhoneCountry[]{const displayNames=new Intl.DisplayNames([language],{type:"region"});return PHONE_COUNTRIES.map(item=>({...item,name:displayNames.of(item.country)||item.country})).sort((a,b)=>{const left=PRIORITY.indexOf(a.country),right=PRIORITY.indexOf(b.country);if(left!==-1||right!==-1)return(left===-1?PRIORITY.length:left)-(right===-1?PRIORITY.length:right);return a.name.localeCompare(b.name,language);});}

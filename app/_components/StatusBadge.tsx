@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React from "react";
 
@@ -41,11 +43,13 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ type, status, size = "sm" }: StatusBadgeProps) {
+  const ui = useUiText();
+
   const config = STATUS_MAP[type]?.[status];
   if (!config) {
     return (
       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600">
-        {status}
+        {ui(status)}
       </span>
     );
   }
@@ -54,7 +58,7 @@ export default function StatusBadge({ type, status, size = "sm" }: StatusBadgePr
 
   return (
     <span className={`${sizeClass} rounded-full font-bold border inline-flex items-center gap-1 ${config.className}`}>
-      {config.label}
+      {ui(config.label)}
     </span>
   );
 }

@@ -1,4 +1,6 @@
 "use client";
+import { LocalizedText } from "@/lib/ui-text";
+
 
 import React, { forwardRef, useId } from "react";
 
@@ -42,7 +44,7 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
         <div className="relative">
           {icon && (
             <div className="absolute top-3 right-3 text-slate-400 pointer-events-none">
-              {icon}
+              <LocalizedText value={icon}/>
             </div>
           )}
 
@@ -57,8 +59,8 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
             aria-invalid={error ? true : props["aria-invalid"]}
             aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
             className={`min-w-0 w-full py-2.5 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium resize-y
-              ${icon ? "pr-9" : "pr-3.5"}
-              pl-3.5
+              ${icon ? "ps-9" : "ps-3.5"}
+              pe-3.5
               ${
                 error
                   ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"

@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import dynamic from "next/dynamic";
 
 import React, { useState, useEffect, use } from "react";
@@ -114,6 +116,8 @@ interface PageProps {
 }
 
 export default function EditContractPage({ params }: PageProps) {
+  const ui = useUiText();
+
   const { id } = use(params);
   const router = useRouter();
 
@@ -415,8 +419,7 @@ export default function EditContractPage({ params }: PageProps) {
         <div className="flex flex-col items-center gap-3">
           <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            جاري تحميل بيانات العقد والأسطول...
-          </p>
+            {ui("جاري تحميل بيانات العقد والأسطول...")}</p>
         </div>
       </div>
     );
@@ -429,17 +432,16 @@ export default function EditContractPage({ params }: PageProps) {
           <AlertCircle className="w-7 h-7" />
         </div>
         <h2 className="text-lg font-black text-slate-900 dark:text-white">
-          {serverError}
+          {ui(serverError)}
         </h2>
         <p className="text-xs text-slate-400">
-          تأكد من صحة رقم العقد أو المعرف المطلوب، أو عد إلى سجل العقود.
-        </p>
+          {ui("تأكد من صحة رقم العقد أو المعرف المطلوب، أو عد إلى سجل العقود.")}</p>
         <Link
           href="/admin/contracts"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold"
         >
           <ArrowRight className="w-4 h-4" />
-          <span>العودة إلى سجل العقود</span>
+          <span>{ui("العودة إلى سجل العقود")}</span>
         </Link>
       </div>
     );
@@ -455,14 +457,13 @@ export default function EditContractPage({ params }: PageProps) {
               href="/admin/contracts"
               className="hover:text-amber-600 dark:hover:text-amber-400 transition"
             >
-              سجل العقود
-            </Link>
+              {ui("سجل العقود")}</Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="font-mono text-slate-700 dark:text-slate-300">
               {contract?.referenceNumber}
             </span>
             <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-amber-600 dark:text-amber-400">تعديل</span>
+            <span className="text-amber-600 dark:text-amber-400">{ui("تعديل")}</span>
           </div>
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold">
@@ -470,14 +471,13 @@ export default function EditContractPage({ params }: PageProps) {
             </div>
             <div>
               <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
-                <span>تعديل العقد الرسمي</span>
+                <span>{ui("تعديل العقد الرسمي")}</span>
                 <span className="font-mono text-amber-600 dark:text-amber-400 text-sm sm:text-lg break-all">
                   {contract?.referenceNumber}
                 </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                تحديث بيانات الرحلة، الركاب، والتوجيه التشغيلي مع إعادة توليد الـ PDF تلقائياً
-              </p>
+                {ui("تحديث بيانات الرحلة، الركاب، والتوجيه التشغيلي مع إعادة توليد الـ PDF تلقائياً")}</p>
             </div>
           </div>
         </div>
@@ -491,17 +491,17 @@ export default function EditContractPage({ params }: PageProps) {
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs"
           >
             <Eye className="w-3.5 h-3.5 text-amber-500" />
-            <span>معاينة</span>
+            <span>{ui("معاينة")}</span>
           </button>
           <button
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isSubmitting}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 transition shadow-2xs"
-            title="حذف هذا العقد نهائياً"
+            title={ui("حذف هذا العقد نهائياً")}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>حذف</span>
+            <span>{ui("حذف")}</span>
           </button>
           <button
             type="button"
@@ -510,7 +510,7 @@ export default function EditContractPage({ params }: PageProps) {
             className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-card text-xs font-bold"
           >
             <ArrowLeftRight className="w-4 h-4 text-amber-500" />
-            <span>رحلة عودة</span>
+            <span>{ui("رحلة عودة")}</span>
           </button>
         </div>
       </div>
@@ -520,22 +520,21 @@ export default function EditContractPage({ params }: PageProps) {
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>{successMessage}</span>
+            <span>{ui(successMessage)}</span>
           </div>
-          <div className="flex items-center gap-2 mr-auto sm:mr-0">
+          <div className="flex items-center gap-2 ms-auto sm:ms-0">
             <button
               onClick={() => setIsPdfOpen(true)}
               className="px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-bold transition flex items-center gap-1"
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>معاينة العقد المحدث</span>
+              <span>{ui("معاينة العقد المحدث")}</span>
             </button>
             <Link
               href="/admin/contracts"
               className="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-100"
             >
-              سجل العقود
-            </Link>
+              {ui("سجل العقود")}</Link>
           </div>
         </div>
       )}
@@ -544,7 +543,7 @@ export default function EditContractPage({ params }: PageProps) {
       {serverError && (
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs">
           <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
-          <span>{serverError}</span>
+          <span>{ui(serverError)}</span>
         </div>
       )}
 
@@ -560,15 +559,13 @@ export default function EditContractPage({ params }: PageProps) {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                  بيانات العملية والعميل (الطرف الثاني)
-                </h2>
+                  {ui("بيانات العملية والعميل (الطرف الثاني)")}</h2>
                 <p className="text-[11px] text-slate-400">
-                  نوع الخدمة التشغيلية واسم الضيف ورقم التواصل
-                </p>
+                  {ui("نوع الخدمة التشغيلية واسم الضيف ورقم التواصل")}</p>
               </div>
             </div>
             <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              مرجع: {contract?.referenceNumber}
+              {ui("مرجع:")}{contract?.referenceNumber}
             </span>
           </div>
 
@@ -576,7 +573,7 @@ export default function EditContractPage({ params }: PageProps) {
             {/* Operation Type */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                نوع العملية التشغيلية <span className="text-rose-500">*</span>
+                {ui("نوع العملية التشغيلية")}<span className="text-rose-500">*</span>
               </label>
               <select
                 {...register("operationType")}
@@ -584,7 +581,7 @@ export default function EditContractPage({ params }: PageProps) {
               >
                 {OPERATION_TYPES.map((op) => (
                   <option key={op} value={op}>
-                    {op}
+                    {ui(op)}
                   </option>
                 ))}
               </select>
@@ -592,17 +589,17 @@ export default function EditContractPage({ params }: PageProps) {
 
             {/* Customer Name */}
             <CustomInput
-              label="اسم العميل / الضيف الأساسي"
+              label={ui("اسم العميل / الضيف الأساسي")}
               required
-              placeholder="مثال: محمد عبد الله"
+              placeholder={ui("مثال: محمد عبد الله")}
               {...register("customerName")}
               error={errors.customerName?.message}
             />
 
             {/* Customer Phone */}
             <CustomInput
-              label="رقم هاتف العميل (اختياري)"
-              placeholder="مثال: 0501234567"
+              label={ui("رقم هاتف العميل (اختياري)")}
+              placeholder={ui("مثال: 0501234567")}
               dir="ltr"
               {...register("customerPhone")}
               error={errors.customerPhone?.message}
@@ -618,29 +615,27 @@ export default function EditContractPage({ params }: PageProps) {
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                مسار الرحلة والجدول الزمني وتاريخ الإصدار
-              </h2>
+                {ui("مسار الرحلة والجدول الزمني وتاريخ الإصدار")}</h2>
               <p className="text-[11px] text-slate-400">
-                محطات الانطلاق والوصول، موعد الرحلة، وتاريخ إصدار العقد
-              </p>
+                {ui("محطات الانطلاق والوصول، موعد الرحلة، وتاريخ إصدار العقد")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Origin */}
             <CustomInput
-              label="نقطة / محطة الانطلاق"
+              label={ui("نقطة / محطة الانطلاق")}
               required
-              placeholder="مثال: مكة المكرمة"
+              placeholder={ui("مثال: مكة المكرمة")}
               {...register("origin")}
               error={errors.origin?.message}
             />
 
             {/* Destination */}
             <CustomInput
-              label="محطة / وجهة الوصول"
+              label={ui("محطة / وجهة الوصول")}
               required
-              placeholder="مثال: مطار الملك عبد العزيز بجدة"
+              placeholder={ui("مثال: مطار الملك عبد العزيز بجدة")}
               {...register("destination")}
               error={errors.destination?.message}
             />
@@ -651,7 +646,7 @@ export default function EditContractPage({ params }: PageProps) {
               name="tripDate"
               render={({ field, fieldState }) => (
                 <CustomDatePicker
-                  label="تاريخ الرحلة"
+                  label={ui("تاريخ الرحلة")}
                   required
                   value={field.value || todayStr}
                   onChange={field.onChange}
@@ -666,7 +661,7 @@ export default function EditContractPage({ params }: PageProps) {
               name="tripTime"
               render={({ field, fieldState }) => (
                 <CustomTimePicker
-                  label="وقت وتوقيت الرحلة"
+                  label={ui("وقت وتوقيت الرحلة")}
                   required
                   value={field.value || timeNow}
                   onChange={field.onChange}
@@ -677,16 +672,16 @@ export default function EditContractPage({ params }: PageProps) {
 
             {/* Flight Carrier */}
             <CustomInput
-              label="الناقل الجوي (لخدمات المطار)"
-              placeholder="مثال: الخطوط السعودية"
+              label={ui("الناقل الجوي (لخدمات المطار)")}
+              placeholder={ui("مثال: الخطوط السعودية")}
               {...register("flightCarrier")}
               error={errors.flightCarrier?.message}
             />
 
             {/* Flight Number */}
             <CustomInput
-              label="رقم الرحلة الجوية"
-              placeholder="مثال: SV841"
+              label={ui("رقم الرحلة الجوية")}
+              placeholder={ui("مثال: SV841")}
               dir="ltr"
               {...register("flightNumber")}
               error={errors.flightNumber?.message}
@@ -698,11 +693,9 @@ export default function EditContractPage({ params }: PageProps) {
                 <div>
                   <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                    تاريخ إصدار العقد (Release Date في الترويسة)
-                  </label>
+                    {ui("تاريخ إصدار العقد (Release Date في الترويسة)")}</label>
                   <p className="text-[11px] text-slate-400">
-                    يمكن إبقاء تاريخ اليوم الفعلي أو تحديد تاريخ مخصص لوثيقة العقد الرسمية
-                  </p>
+                    {ui("يمكن إبقاء تاريخ اليوم الفعلي أو تحديد تاريخ مخصص لوثيقة العقد الرسمية")}</p>
                 </div>
 
                 <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-1 rounded-xl border theme-border self-start sm:self-auto">
@@ -715,8 +708,7 @@ export default function EditContractPage({ params }: PageProps) {
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
-                    اليوم (تلقائي)
-                  </button>
+                    {ui("اليوم (تلقائي)")}</button>
                   <button
                     type="button"
                     onClick={() => setValue("issueDateMode", "MANUAL", { shouldDirty: true })}
@@ -726,20 +718,17 @@ export default function EditContractPage({ params }: PageProps) {
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
-                    يدوي (تاريخ مخصص)
-                  </button>
+                    {ui("يدوي (تاريخ مخصص)")}</button>
                 </div>
               </div>
 
               {issueDateMode === "AUTO" ? (
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
                   <span className="text-slate-500 dark:text-slate-400">
-                    تاريخ الإصدار المعتمد في ترويسة العقد:
-                  </span>
+                    {ui("تاريخ الإصدار المعتمد في ترويسة العقد:")}</span>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    {formatOfficialDate(todayStr)} (تاريخ اليوم الفعلي بتوقيت المملكة)
-                  </span>
+                    {ui(formatOfficialDate(todayStr))} {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
@@ -749,7 +738,7 @@ export default function EditContractPage({ params }: PageProps) {
                       name="issueDate"
                       render={({ field, fieldState }) => (
                         <CustomDatePicker
-                          label="تاريخ الإصدار المعتمد في العقد"
+                          label={ui("تاريخ الإصدار المعتمد في العقد")}
                           required
                           value={field.value || todayStr}
                           onChange={field.onChange}
@@ -761,8 +750,7 @@ export default function EditContractPage({ params }: PageProps) {
                   <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                     <span>
-                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، مع الحفاظ على تاريخ الإنشاء الأصلي في قاعدة البيانات.
-                    </span>
+                      {ui("سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، مع الحفاظ على تاريخ الإنشاء الأصلي في قاعدة البيانات.")}</span>
                   </div>
                 </div>
               )}
@@ -771,8 +759,8 @@ export default function EditContractPage({ params }: PageProps) {
             {/* Notes */}
             <div className="sm:col-span-2 lg:col-span-3">
               <CustomTextarea
-                label="ملاحظات وتوجيهات خاصة بالعقد"
-                placeholder="أي شروط إضافية، تعليمات الكابتن، أو متطلبات خاصة بالرحلة..."
+                label={ui("ملاحظات وتوجيهات خاصة بالعقد")}
+                placeholder={ui("أي شروط إضافية، تعليمات الكابتن، أو متطلبات خاصة بالرحلة...")}
                 rows={2}
                 {...register("notes")}
                 error={errors.notes?.message}
@@ -789,11 +777,9 @@ export default function EditContractPage({ params }: PageProps) {
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                تعيين الكابتن والمركبة
-              </h2>
+                {ui("تعيين الكابتن والمركبة")}</h2>
               <p className="text-[11px] text-slate-400">
-                اختيار الكابتن المعتمد وتحديد لوحة المركبة المنفذة للرحلة
-              </p>
+                {ui("اختيار الكابتن المعتمد وتحديد لوحة المركبة المنفذة للرحلة")}</p>
             </div>
           </div>
 
@@ -804,7 +790,7 @@ export default function EditContractPage({ params }: PageProps) {
                 name="captainId"
                 render={({ field, fieldState }) => (
                   <CaptainSelector
-                    label="الكابتن المسؤول عن التنفيذ"
+                    label={ui("الكابتن المسؤول عن التنفيذ")}
                     required
                     captains={captains.filter(captain => captain.active)}
                     selectedCaptainId={field.value}
@@ -830,7 +816,7 @@ export default function EditContractPage({ params }: PageProps) {
                 name="vehiclePlate"
                 render={({ field, fieldState }) => (
                   <VehicleSelector
-                    label="المركبة المسندة للرحلة"
+                    label={ui("المركبة المسندة للرحلة")}
                     required
                     vehicles={vehicles}
                     selectedPlate={field.value}
@@ -868,17 +854,15 @@ export default function EditContractPage({ params }: PageProps) {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                    الفحص الفني والإقرار التشغيلي للمركبة
-                  </h2>
+                    {ui("الفحص الفني والإقرار التشغيلي للمركبة")}</h2>
                   {(contract?.inspection?.id || contract?.inspectionId) && (
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border theme-border">
-                      #{((contract.inspection?.id || contract.inspectionId) as string).slice(0, 8)}
+                      #{ui(((contract.inspection?.id || contract.inspectionId) as string).slice(0, 8))}
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  تعديل واعتماد بنود الفحص الفني، تاريخ الفحص، والملاحظات التشغيلية التي تظهر في وثيقة العقد الرسمية
-                </p>
+                  {ui("تعديل واعتماد بنود الفحص الفني، تاريخ الفحص، والملاحظات التشغيلية التي تظهر في وثيقة العقد الرسمية")}</p>
               </div>
             </div>
 
@@ -892,7 +876,7 @@ export default function EditContractPage({ params }: PageProps) {
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{passedChecksCount} من 16 بند سليم</span>
+                <span>{ui(passedChecksCount)} {ui("من 16 بند سليم")}</span>
               </span>
 
               <button
@@ -905,10 +889,9 @@ export default function EditContractPage({ params }: PageProps) {
                   setChecks(allPassed);
                 }}
                 className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition border theme-border cursor-pointer"
-                title="تحديد كافة البنود الـ 16 كسليمة ومطابقة"
+                title={ui("تحديد كافة البنود الـ 16 كسليمة ومطابقة")}
               >
-                تحديد الكل سليم (100%)
-              </button>
+                {ui("تحديد الكل سليم (100%)")}</button>
             </div>
           </div>
 
@@ -916,7 +899,7 @@ export default function EditContractPage({ params }: PageProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end bg-slate-50/60 dark:bg-slate-900/40 p-4 rounded-2xl border theme-border">
             <div>
               <CustomDatePicker
-                label="تاريخ الفحص التشغيلي المعتمد"
+                label={ui("تاريخ الفحص التشغيلي المعتمد")}
                 required
                 value={inspectionDate}
                 onChange={setInspectionDate}
@@ -926,14 +909,13 @@ export default function EditContractPage({ params }: PageProps) {
             <div className="sm:col-span-1 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
                 <p className="font-semibold text-slate-700 dark:text-slate-300">
-                  لوحة المركبة المفحوصة:{" "}
+                  {ui("لوحة المركبة المفحوصة:")}{ui(" ")}
                   <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
-                    {selectedVehiclePlate || "غير محددة"}
+                    {ui(selectedVehiclePlate || "غير محددة")}
                   </span>
                 </p>
                 <p>
-                  يتم توثيق بنود الفحص في الصفحة الثالثة من وثيقة عقد التشغيل الرسمية.
-                </p>
+                  {ui("يتم توثيق بنود الفحص في الصفحة الثالثة من وثيقة عقد التشغيل الرسمية.")}</p>
               </div>
 
               <button
@@ -944,12 +926,12 @@ export default function EditContractPage({ params }: PageProps) {
                 {showDetailedChecks ? (
                   <>
                     <ChevronUp className="w-4 h-4 text-amber-500" />
-                    <span>طي بنود الفحص</span>
+                    <span>{ui("طي بنود الفحص")}</span>
                   </>
                 ) : (
                   <>
                     <ChevronDown className="w-4 h-4 text-amber-500" />
-                    <span>تعديل بنود الفحص (16 بنداً)</span>
+                    <span>{ui("تعديل بنود الفحص (16 بنداً)")}</span>
                   </>
                 )}
               </button>
@@ -967,10 +949,10 @@ export default function EditContractPage({ params }: PageProps) {
                   >
                     <div className="flex items-center justify-between border-b theme-border pb-2">
                       <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                        {category.title}
+                        {ui(category.title)}
                       </span>
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                        {category.items.filter((it) => checks[it.key]).length}/{category.items.length}
+                        {ui(category.items.filter((it) => checks[it.key]).length)}/{ui(category.items.length)}
                       </span>
                     </div>
 
@@ -998,7 +980,7 @@ export default function EditContractPage({ params }: PageProps) {
                                 }
                                 className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 cursor-pointer"
                               />
-                              <span>{item.label}</span>
+                              <span>{ui(item.label)}</span>
                             </div>
                             <span
                               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
@@ -1007,7 +989,7 @@ export default function EditContractPage({ params }: PageProps) {
                                   : "text-rose-700 dark:text-rose-400 bg-rose-500/10"
                               }`}
                             >
-                              {isPassed ? "سليم" : "غير سليم"}
+                              {ui(isPassed ? "سليم" : "غير سليم")}
                             </span>
                           </label>
                         );
@@ -1022,8 +1004,8 @@ export default function EditContractPage({ params }: PageProps) {
           {/* Operational Notes */}
           <div>
             <CustomTextarea
-              label="ملاحظات الفاحص التشغيلية (المسجلة في صفحة الفحص بالعقد)"
-              placeholder="مثال: تم فحص المركبة والتأكد من مطابقتها لكافة معايير السلامة التشغيلية المعتمدة..."
+              label={ui("ملاحظات الفاحص التشغيلية (المسجلة في صفحة الفحص بالعقد)")}
+              placeholder={ui("مثال: تم فحص المركبة والتأكد من مطابقتها لكافة معايير السلامة التشغيلية المعتمدة...")}
               rows={2}
               value={inspectionNotes}
               onChange={(e) => setInspectionNotes(e.target.value)}
@@ -1041,22 +1023,20 @@ export default function EditContractPage({ params }: PageProps) {
             />
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                إقرار وتأكيد الفحص التشغيلي المعتمد للعقد
-              </span>
+                {ui("إقرار وتأكيد الفحص التشغيلي المعتمد للعقد")}</span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل وفق الشروط والمعايير المحددة أعلاه، والمركبة جاهزة تماماً للتشغيل لنقل الركاب.
-              </p>
+                {ui("أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل وفق الشروط والمعايير المحددة أعلاه، والمركبة جاهزة تماماً للتشغيل لنقل الركاب.")}</p>
             </div>
           </label>
         </div>
 
         {/* Keep the main actions reachable above mobile bottom navigation. */}
         <div className="contract-submit-bar">
-          <p className="hidden sm:block flex-1 text-xs text-slate-500">سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.</p>
-          <Link href="/admin/contracts" className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">إلغاء</Link>
+          <p className="hidden sm:block flex-1 text-xs text-slate-500">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
+          <Link href="/admin/contracts" className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">{ui("إلغاء")}</Link>
           <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50">
             <Save className="h-4 w-4 shrink-0" />
-            <span>{isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF"}</span>
+            <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>
           </button>
         </div>
         </fieldset>
@@ -1080,7 +1060,7 @@ export default function EditContractPage({ params }: PageProps) {
       {/* Confirm Delete Dialog */}
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
-        title="تأكيد حذف العقد"
+        title={ui("تأكيد حذف العقد")}
         message={
           contract
             ? `هل أنت متأكد من رغبتك في حذف العقد رقم (${contract.referenceNumber}) نهائياً؟ سيتم حذف بيانات الركاب وملف الـ PDF المرتبط به ولا يمكن التراجع عن هذا الإجراء.`

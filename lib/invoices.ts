@@ -14,10 +14,11 @@ export function invoiceTitle(value: { documentType?: InvoiceDocumentType; taxDoc
 export interface InvoiceCompany { legalName: string; vatNumber?: string; commercialRegistration?: string; address?: Buyer["address"]; bankDetails?: InvoiceBankDetails | null; presentation?: { englishName: string; website: string; showSeal: boolean } }
 export interface InvoiceSettings { company: InvoiceCompany | null }
 export interface BookingInvoiceInput { taxDocument?: TaxDocument; documentType?: InvoiceDocumentType; bankDetails?: InvoiceBankDetails; operationKey: string; contractId?: string; invoiceDate: string; buyer: Buyer; paymentCode: string; accountingApproved: boolean; lines: InvoiceLineInput[]; transport?: TransportDetails }
-export interface InvoiceRow { taxDocument?: TaxDocument; documentType?: InvoiceDocumentType; id: string; invoiceNumber: string; customerName: string; netAmount: string; vatAmount: string; totalAmount: string; invoiceDate: string; createdAt: string; status: "SAVED" }
+export interface InvoiceVisibility {isArchived:boolean;reason:string;changedAt:string;version:number}
+export interface InvoiceRow { visibility?:InvoiceVisibility|null; taxDocument?: TaxDocument; documentType?: InvoiceDocumentType; id: string; invoiceNumber: string; customerName: string; netAmount: string; vatAmount: string; totalAmount: string; invoiceDate: string; createdAt: string; status: "SAVED" }
 export interface InvoiceDetail extends InvoiceRow { verificationUrl: string; snapshot: { issuer: InvoiceCompany; input: BookingInvoiceInput; totals: { net: string; vat: string; gross: string }; original?: { number: string; issueDate: string } }; contractId: string | null }
 export const invoiceRequest = <T>(path = "", method = "GET", body?: unknown) => backendRequest<T>(`/invoices${path}`, method, body);
-export function dateLabel(value: string): string { return new Date(value).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh", calendar: "gregory" }); }
+export function dateLabel(value: string, language: "ar"|"en" = "ar"): string { return new Date(value).toLocaleString(language === "en"?"en-GB":"ar-SA", { timeZone: "Asia/Riyadh", calendar: "gregory" }); }
 export async function downloadInvoice(id: string): Promise<void> {
   const token = getAuthToken();
   const response = await fetch(backendUrl(`/invoices/${encodeURIComponent(id)}/pdf`), { credentials: "include", cache: "no-store", headers: token ? { Authorization: `Bearer ${token}` } : {} });

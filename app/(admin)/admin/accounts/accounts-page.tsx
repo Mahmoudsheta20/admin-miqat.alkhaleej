@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -113,6 +115,8 @@ function Editor({
   onClose,
   onSaved,
 }: EditorProps) {
+  const ui = useUiText();
+
   const dialog = useRef<HTMLDialogElement>(null);
 
   const initialForm = useMemo<AccountForm>(() => {
@@ -220,26 +224,26 @@ function Editor({
         if (!saving) onClose();
       }}
       className="theme-card m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-2xl rounded-2xl p-6 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/70 border theme-border overflow-y-auto"
-      dir="rtl"
+      dir={ui.dir}
     >
       <form onSubmit={save}>
         <div className="flex items-start justify-between gap-4 border-b theme-border pb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                {isEditing
+                {ui(isEditing
                   ? `تعديل الحساب #${account.code}`
-                  : "إنشاء حساب جديد"}
+                  : "إنشاء حساب جديد")}
               </span>
               {prefillParent && (
                 <span className="text-xs text-slate-500">
-                  تابع للحساب الرئيسي: {prefillParent.code} -{" "}
-                  {prefillParent.nameAr}
+                  {ui("تابع للحساب الرئيسي:")}{ui(prefillParent.code)} -{ui(" ")}
+                  {(ui.language === "en" && prefillParent.nameEn ? prefillParent.nameEn : ui(prefillParent.nameAr))}
                 </span>
               )}
             </div>
             <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-white">
-              {isEditing ? account.nameAr : "إضافة حساب إلى شجرة الحسابات"}
+              {ui(isEditing ? account.nameAr : "إضافة حساب إلى شجرة الحسابات")}
             </h2>
           </div>
           <button
@@ -255,27 +259,25 @@ function Editor({
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {/* Code */}
           <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            رمز الحساب (من 4 إلى 8 أرقام) *
-            <input
+            {ui("رمز الحساب (من 4 إلى 8 أرقام) *")}<input
               required
               readOnly={isEditing}
               pattern="[0-9]{4,8}"
-              placeholder="مثال: 1105 أو 5107"
+              placeholder={ui("مثال: 1105 أو 5107")}
               className={`${INPUT} font-mono ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
               value={form.code}
               onChange={(e) => update({ code: e.target.value })}
             />
             <span className="mt-1 block text-[11px] text-slate-500 font-normal">
-              {isEditing
+              {ui(isEditing
                 ? "رمز الحساب مقفل للحفاظ على سلامة القيود التاريخية."
-                : "حدد رمزاً فريداً يتبع ترقيم الفئة الرئيسية (مثال: 1xxx للأصول، 5xxx للمصروفات)."}
+                : "حدد رمزاً فريداً يتبع ترقيم الفئة الرئيسية (مثال: 1xxx للأصول، 5xxx للمصروفات).")}
             </span>
           </label>
 
           {/* Type */}
           <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            نوع الحساب *
-            <select
+            {ui("نوع الحساب *")}<select
               disabled={isEditing}
               className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
               value={form.type}
@@ -292,22 +294,20 @@ function Editor({
             >
               {Object.entries(TYPES).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v.label} ({v.codePrefix})
+                  {ui(v.label)} ({ui(v.codePrefix)})
                 </option>
               ))}
             </select>
             <span className="mt-1 block text-[11px] text-slate-500 font-normal">
-              يحدد الباب الرئيسي للحساب في ميزان المراجعة وقائمة الدخل.
-            </span>
+              {ui("يحدد الباب الرئيسي للحساب في ميزان المراجعة وقائمة الدخل.")}</span>
           </label>
 
           {/* Arabic Name */}
           <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            الاسم العربي للحساب *
-            <input
+            {ui("الاسم العربي للحساب *")}<input
               required
               maxLength={300}
-              placeholder="مثال: مصروف وقود حافلات كبار الشخصيات"
+              placeholder={ui("مثال: مصروف وقود حافلات كبار الشخصيات")}
               className={INPUT}
               value={form.nameAr}
               onChange={(e) => update({ nameAr: e.target.value })}
@@ -316,8 +316,7 @@ function Editor({
 
           {/* English Name */}
           <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            الاسم الإنجليزي للحساب *
-            <input
+            {ui("الاسم الإنجليزي للحساب *")}<input
               required
               maxLength={300}
               dir="ltr"
@@ -330,33 +329,29 @@ function Editor({
 
           {/* Parent Account */}
           <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            الحساب الرئيسي الأب (التجميعي)
-            <select
+            {ui("الحساب الرئيسي الأب (التجميعي)")}<select
               disabled={isEditing}
               className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
               value={form.parentId || ""}
               onChange={(e) => update({ parentId: e.target.value || null })}
             >
               <option value="">
-                (بدون حساب أب — حساب رئيسي من المستوى الأول)
-              </option>
+                {ui("(بدون حساب أب — حساب رئيسي من المستوى الأول)")}</option>
               {accounts
                 .filter((a) => !a.isPosting && a.type === form.type)
                 .map((a) => (
                   <option key={a.id} value={a.id}>
-                    {a.code} · {a.nameAr}
+                    {ui(a.code)} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                   </option>
                 ))}
             </select>
             <span className="mt-1 block text-[11px] text-slate-500 font-normal">
-              اختر الحساب التجميعي الذي ينتمي إليه هذا الحساب.
-            </span>
+              {ui("اختر الحساب التجميعي الذي ينتمي إليه هذا الحساب.")}</span>
           </label>
 
           {/* Normal Balance */}
           <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            طبيعة الرصيد *
-            <select
+            {ui("طبيعة الرصيد *")}<select
               disabled={isEditing}
               className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
               value={form.normalBalance}
@@ -367,19 +362,16 @@ function Editor({
               }
             >
               <option value="DEBIT">
-                مدين (Debit) — طبيعي للأصول والمصروفات
-              </option>
+                {ui("مدين (Debit) — طبيعي للأصول والمصروفات")}</option>
               <option value="CREDIT">
-                دائن (Credit) — طبيعي للالتزامات والملكية والإيرادات
-              </option>
+                {ui("دائن (Credit) — طبيعي للالتزامات والملكية والإيرادات")}</option>
             </select>
           </label>
 
           {/* Profit Section (Only for Expenses) */}
           {form.type === "EXPENSE" && (
             <label className="text-xs font-bold text-slate-700 dark:text-slate-200 sm:col-span-2">
-              تصنيف قائمة الدخل
-              <select
+              {ui("تصنيف قائمة الدخل")}<select
                 className={INPUT}
                 value={form.profitSection}
                 onChange={(e) =>
@@ -390,11 +382,9 @@ function Editor({
                 }
               >
                 <option value="OPERATING">
-                  مصروف تشغيلي / إداري مباشر (ضمن الأرباح التشغيلية)
-                </option>
+                  {ui("مصروف تشغيلي / إداري مباشر (ضمن الأرباح التشغيلية)")}</option>
                 <option value="TAX">
-                  مصروف زكاة شرعية / ضريبة دخل مُسجل يدويًا (بعد صافي الربح)
-                </option>
+                  {ui("مصروف زكاة شرعية / ضريبة دخل مُسجل يدويًا (بعد صافي الربح)")}</option>
               </select>
             </label>
           )}
@@ -412,13 +402,9 @@ function Editor({
             />
             <div>
               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                حساب فرعي يقبل الترحيل المباشر (Posting Sub-Account)
-              </span>
+                {ui("حساب فرعي يقبل الترحيل المباشر (Posting Sub-Account)")}</span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                إذا تم تفعيل هذا الخيار، سيظهر هذا الحساب في شاشات تسجيل
-                الفواتير والمشتريات ومصروفات الأسطول وسندات القبض وقيود اليومية.
-                إذا عطلته، سيصبح حساباً تجميعياً لحساب مجاميع الفروع فقط.
-              </p>
+                {ui("إذا تم تفعيل هذا الخيار، سيظهر هذا الحساب في شاشات تسجيل الفواتير والمشتريات ومصروفات الأسطول وسندات القبض وقيود اليومية. إذا عطلته، سيصبح حساباً تجميعياً لحساب مجاميع الفروع فقط.")}</p>
             </div>
           </label>
 
@@ -432,12 +418,9 @@ function Editor({
             />
             <div>
               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                الحساب نشط وجاهز للاستخدام
-              </span>
+                {ui("الحساب نشط وجاهز للاستخدام")}</span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                الحسابات النشطة فقط هي التي تظهر في القوائم المنسدلة للعمليات
-                المحاسبية. الحسابات النظامية الأساسية تظل نشطة دائماً.
-              </p>
+                {ui("الحسابات النشطة فقط هي التي تظهر في القوائم المنسدلة للعمليات المحاسبية. الحسابات النظامية الأساسية تظل نشطة دائماً.")}</p>
             </div>
           </label>
         </div>
@@ -448,7 +431,7 @@ function Editor({
             className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2"
           >
             <AlertCircle className="size-4 shrink-0" />
-            <span>{error}</span>
+            <span>{ui(error)}</span>
           </div>
         )}
 
@@ -459,17 +442,16 @@ function Editor({
             className="theme-card rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold cursor-pointer transition disabled:opacity-50"
             onClick={onClose}
           >
-            إلغاء
-          </button>
+            {ui("إلغاء")}</button>
           <button
             disabled={saving}
             className="gold-gradient-btn rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer transition shadow-sm"
           >
-            {saving
+            {ui(saving
               ? "جارٍ الحفظ…"
               : isEditing
                 ? "حفظ التعديلات"
-                : "حفظ وإضافة الحساب"}
+                : "حفظ وإضافة الحساب")}
           </button>
         </footer>
       </form>
@@ -478,6 +460,8 @@ function Editor({
 }
 
 export default function AccountsPage() {
+  const ui = useUiText();
+
   const { t, dir, isRTL } = useLanguage();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
@@ -668,12 +652,10 @@ export default function AccountsPage() {
     <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Header with On-Demand Help Guide */}
       <PageHeader
-        title={`${t("nav.accounts")} (Chart of Accounts)`}
-        subtitle={
-          isRTL
+        title={ui(`${t("nav.accounts")} (Chart of Accounts)`)}
+        subtitle={ui(isRTL
             ? "الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق الملكية، الإيرادات، والمصروفات"
-            : "Unified Chart of Accounts: Assets, Liabilities, Equity, Revenues, and Expenses"
-        }
+            : "Unified Chart of Accounts: Assets, Liabilities, Equity, Revenues, and Expenses")}
         badge={t("section.financeReview")}
         icon={BookOpen}
         onRefresh={() => setReload((v) => v + 1)}
@@ -695,7 +677,7 @@ export default function AccountsPage() {
               className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
               <Landmark className="size-4 text-amber-500" />
-              <span>{t("accounting.title")}</span>
+              <span>{ui(t("accounting.title"))}</span>
             </Link>
 
             <button
@@ -704,7 +686,7 @@ export default function AccountsPage() {
               onClick={() => setEditor({ account: "NEW" })}
             >
               <Plus className="size-4" />
-              <span>+ {t("common.create")}</span>
+              <span>+ {ui(t("common.create"))}</span>
             </button>
           </>
         }
@@ -718,7 +700,7 @@ export default function AccountsPage() {
         >
           <div className="flex items-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>{seedMessage}</span>
+            <span>{ui(seedMessage)}</span>
           </div>
           <button
             type="button"
@@ -736,7 +718,7 @@ export default function AccountsPage() {
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span>{seedError}</span>
+            <span>{ui(seedError)}</span>
           </div>
           <button
             type="button"
@@ -751,7 +733,7 @@ export default function AccountsPage() {
       {/* Prominent Quick-Fix Callout Banner */}
       {showFaqGuide && (
         <section
-          aria-label="تنبيه حل المشكلة"
+          aria-label={ui("تنبيه حل المشكلة")}
           className="theme-card rounded-2xl border border-blue-500/30 bg-blue-500/[0.04] p-4 sm:p-5 flex flex-col sm:flex-row items-start justify-between gap-4"
         >
           <div className="flex items-start gap-3 min-w-0">
@@ -761,38 +743,32 @@ export default function AccountsPage() {
             <div className="space-y-1">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span>
-                  لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟
-                </span>
+                  {ui("لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟")}</span>
                 <span className="rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 border border-blue-500/20">
-                  حل فوري
-                </span>
+                  {ui("حل فوري")}</span>
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل{" "}
+                {ui("يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل")}{ui(" ")}
                 <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
                   1000
-                </code>{" "}
-                أو{" "}
+                </code>{ui(" ")}
+                {ui("أو")}{ui(" ")}
                 <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
                   2000
-                </code>{" "}
-                أو{" "}
+                </code>{ui(" ")}
+                {ui("أو")}{ui(" ")}
                 <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
                   5000
-                </code>{" "}
-                في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط
-                التابع له (مثل{" "}
+                </code>{ui(" ")}
+                {ui("في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط التابع له (مثل")}{ui(" ")}
                 <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                  1102 البنك
-                </code>
-                ،{" "}
+                  {ui("1102 البنك")}</code>
+                {ui("،")}{ui(" ")}
                 <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                  4101 الإيرادات
-                </code>
-                ، أو{" "}
+                  {ui("4101 الإيرادات")}</code>
+                {ui("، أو")}{ui(" ")}
                 <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                  5101 الوقود
-                </code>
+                  {ui("5101 الوقود")}</code>
                 ).
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -802,7 +778,7 @@ export default function AccountsPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-bold transition cursor-pointer"
                 >
                   <CheckCircle2 className="size-3.5" />
-                  <span>تصفية الحسابات الفرعية القابلة للترحيل الآن</span>
+                  <span>{ui("تصفية الحسابات الفرعية القابلة للترحيل الآن")}</span>
                 </button>
                 <button
                   type="button"
@@ -813,8 +789,7 @@ export default function AccountsPage() {
                   }}
                   className="theme-card rounded-lg border theme-border px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-amber-500 transition cursor-pointer"
                 >
-                  إلغاء الفلترة وعرض الكل
-                </button>
+                  {ui("إلغاء الفلترة وعرض الكل")}</button>
               </div>
             </div>
           </div>
@@ -822,7 +797,7 @@ export default function AccountsPage() {
             type="button"
             onClick={() => setShowFaqGuide(false)}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition shrink-0"
-            title="إخفاء التنبيه"
+            title={ui("إخفاء التنبيه")}
           >
             <X className="size-4" />
           </button>
@@ -838,19 +813,18 @@ export default function AccountsPage() {
             setTypeFilter("ALL");
             setPostingFilter("ALL");
           }}
-          className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "ALL" && postingFilter === "ALL"
               ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30"
               : "theme-card theme-border hover:border-amber-500/30"
           }`}
         >
           <span className="text-[11px] font-bold text-slate-500">
-            إجمالي الحسابات
-          </span>
+            {ui("إجمالي الحسابات")}</span>
           <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
-            {isLoading ? "—" : stats.total}
+            {ui(isLoading ? "—" : stats.total)}
           </div>
-          <span className="text-[10px] text-slate-400">شاملة الفئات الـ 5</span>
+          <span className="text-[10px] text-slate-400">{ui("شاملة الفئات الـ 5")}</span>
         </button>
 
         {/* Posting Sub-Accounts */}
@@ -859,7 +833,7 @@ export default function AccountsPage() {
           onClick={() =>
             setPostingFilter(postingFilter === "POSTING" ? "ALL" : "POSTING")
           }
-          className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             postingFilter === "POSTING"
               ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
               : "theme-card theme-border hover:border-emerald-500/30"
@@ -867,16 +841,14 @@ export default function AccountsPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-              يقبل الترحيل (فرعي)
-            </span>
+              {ui("يقبل الترحيل (فرعي)")}</span>
             <CheckCircle2 className="size-3.5 text-emerald-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
-            {isLoading ? "—" : stats.posting}
+            {ui(isLoading ? "—" : stats.posting)}
           </div>
           <span className="text-[10px] text-emerald-600/80">
-            صالحة للقيود والفواتير
-          </span>
+            {ui("صالحة للقيود والفواتير")}</span>
         </button>
 
         {/* Group Accounts */}
@@ -885,7 +857,7 @@ export default function AccountsPage() {
           onClick={() =>
             setPostingFilter(postingFilter === "GROUP" ? "ALL" : "GROUP")
           }
-          className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             postingFilter === "GROUP"
               ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30"
               : "theme-card theme-border hover:border-amber-500/30"
@@ -893,16 +865,14 @@ export default function AccountsPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
-              تجميعي (رئيسي)
-            </span>
+              {ui("تجميعي (رئيسي)")}</span>
             <Folder className="size-3.5 text-amber-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black font-mono text-amber-600 dark:text-amber-400 mt-1">
-            {isLoading ? "—" : stats.group}
+            {ui(isLoading ? "—" : stats.group)}
           </div>
           <span className="text-[10px] text-amber-600/80">
-            لحساب مجاميع الفروع
-          </span>
+            {ui("لحساب مجاميع الفروع")}</span>
         </button>
 
         {/* Assets 1xxx */}
@@ -911,21 +881,19 @@ export default function AccountsPage() {
           onClick={() =>
             setTypeFilter(typeFilter === "ASSET" ? "ALL" : "ASSET")
           }
-          className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "ASSET"
               ? "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30"
               : "theme-card theme-border hover:border-blue-500/30"
           }`}
         >
           <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400">
-            1000 الأصول
-          </span>
+            {ui("1000 الأصول")}</span>
           <div className="text-xl sm:text-2xl font-black font-mono text-blue-600 dark:text-blue-400 mt-1">
-            {isLoading ? "—" : stats.assets}
+            {ui(isLoading ? "—" : stats.assets)}
           </div>
           <span className="text-[10px] text-slate-400">
-            الصندوق، البنك، الأسطول
-          </span>
+            {ui("الصندوق، البنك، الأسطول")}</span>
         </button>
 
         {/* Revenues 4xxx */}
@@ -934,21 +902,19 @@ export default function AccountsPage() {
           onClick={() =>
             setTypeFilter(typeFilter === "REVENUE" ? "ALL" : "REVENUE")
           }
-          className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "REVENUE"
               ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
               : "theme-card theme-border hover:border-emerald-500/30"
           }`}
         >
           <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-            4000 الإيرادات
-          </span>
+            {ui("4000 الإيرادات")}</span>
           <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
-            {isLoading ? "—" : stats.revenues}
+            {ui(isLoading ? "—" : stats.revenues)}
           </div>
           <span className="text-[10px] text-slate-400">
-            نقل، VIP، عمرة، صادرات
-          </span>
+            {ui("نقل، VIP، عمرة، صادرات")}</span>
         </button>
 
         {/* Expenses 5xxx */}
@@ -957,21 +923,19 @@ export default function AccountsPage() {
           onClick={() =>
             setTypeFilter(typeFilter === "EXPENSE" ? "ALL" : "EXPENSE")
           }
-          className={`p-3.5 rounded-2xl border text-right transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "EXPENSE"
               ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30"
               : "theme-card theme-border hover:border-rose-500/30"
           }`}
         >
           <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
-            5000 المصروفات
-          </span>
+            {ui("5000 المصروفات")}</span>
           <div className="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400 mt-1">
-            {isLoading ? "—" : stats.expenses}
+            {ui(isLoading ? "—" : stats.expenses)}
           </div>
           <span className="text-[10px] text-slate-400">
-            وقود، صيانة، رواتب، TGA
-          </span>
+            {ui("وقود، صيانة، رواتب، TGA")}</span>
         </button>
       </div>
 
@@ -984,15 +948,15 @@ export default function AccountsPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث بالرمز (1102)، الاسم العربي (البنك الأهلي)، أو الإنجليزي (Fuel)..."
-            className="theme-input w-full pr-10 pl-8 py-2.5 text-xs sm:text-sm rounded-xl"
+            placeholder={ui("ابحث بالرمز (1102)، الاسم العربي (البنك الأهلي)، أو الإنجليزي (Fuel)...")}
+            className="theme-input w-full ps-10 pe-8 py-2.5 text-xs sm:text-sm rounded-xl"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
-              aria-label="مسح البحث"
+              aria-label={ui("مسح البحث")}
             >
               <X className="size-3.5" />
             </button>
@@ -1005,12 +969,12 @@ export default function AccountsPage() {
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             className="theme-input h-10 rounded-xl px-3 text-xs font-bold border theme-border"
-            aria-label="فلترة بنوع الحساب"
+            aria-label={ui("فلترة بنوع الحساب")}
           >
-            <option value="ALL">جميع الأبواب الرئيسية</option>
+            <option value="ALL">{ui("جميع الأبواب الرئيسية")}</option>
             {Object.entries(TYPES).map(([k, v]) => (
               <option key={k} value={k}>
-                {v.label} ({v.codePrefix})
+                {ui(v.label)} ({ui(v.codePrefix)})
               </option>
             ))}
           </select>
@@ -1021,11 +985,11 @@ export default function AccountsPage() {
               setPostingFilter(e.target.value as "ALL" | "POSTING" | "GROUP")
             }
             className="theme-input h-10 rounded-xl px-3 text-xs font-bold border theme-border"
-            aria-label="فلترة بطبيعة الترحيل"
+            aria-label={ui("فلترة بطبيعة الترحيل")}
           >
-            <option value="ALL">كافة الحسابات (فرعي ورئيسي)</option>
-            <option value="POSTING">حسابات فرعية فقط (يقبل القيود)</option>
-            <option value="GROUP">حسابات رئيسية تجميعية فقط</option>
+            <option value="ALL">{ui("كافة الحسابات (فرعي ورئيسي)")}</option>
+            <option value="POSTING">{ui("حسابات فرعية فقط (يقبل القيود)")}</option>
+            <option value="GROUP">{ui("حسابات رئيسية تجميعية فقط")}</option>
           </select>
 
           {/* View Mode Toggle */}
@@ -1040,7 +1004,7 @@ export default function AccountsPage() {
               }`}
             >
               <FolderTree className="size-3.5 text-amber-500" />
-              <span>شجرة هرمية</span>
+              <span>{ui("شجرة هرمية")}</span>
             </button>
             <button
               type="button"
@@ -1052,7 +1016,7 @@ export default function AccountsPage() {
               }`}
             >
               <Layers className="size-3.5 text-amber-500" />
-              <span>جدول منبسط</span>
+              <span>{ui("جدول منبسط")}</span>
             </button>
           </div>
         </div>
@@ -1061,7 +1025,7 @@ export default function AccountsPage() {
       {/* Error & Loading Indicators */}
       {error && (
         <p role="alert" className="text-sm font-bold text-rose-600">
-          {error}
+          {ui(error)}
         </p>
       )}
       {isLoading && (
@@ -1071,7 +1035,7 @@ export default function AccountsPage() {
         >
           <div className="flex flex-col items-center gap-2 text-slate-400">
             <RefreshCw className="size-6 animate-spin text-amber-500" />
-            <span className="text-xs font-bold">جارٍ تحميل شجرة الحسابات…</span>
+            <span className="text-xs font-bold">{ui("جارٍ تحميل شجرة الحسابات…")}</span>
           </div>
         </div>
       )}
@@ -1102,21 +1066,19 @@ export default function AccountsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
-                      {typeInfo.codePrefix.charAt(0)}
+                      {ui(typeInfo.codePrefix.charAt(0))}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                          {typeInfo.label}
+                          {ui(typeInfo.label)}
                         </h2>
                         <span className="font-mono text-xs font-bold text-slate-400">
-                          ({typeInfo.codePrefix})
+                          ({ui(typeInfo.codePrefix)})
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        {typeAccounts.length} حساب مسجل · {postingCount} حساب
-                        فرعي يقبل الترحيل
-                      </p>
+                        {ui(typeAccounts.length)} {ui("حساب مسجل ·")}{ui(postingCount)} {ui("حساب فرعي يقبل الترحيل")}</p>
                     </div>
                   </div>
 
@@ -1137,7 +1099,7 @@ export default function AccountsPage() {
                       className="inline-flex items-center gap-1 rounded-lg border theme-border bg-white dark:bg-slate-800 hover:border-amber-500 px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
                     >
                       <Plus className="size-3 text-amber-500" />
-                      <span>+ حساب فرعي</span>
+                      <span>{ui("+ حساب فرعي")}</span>
                     </button>
                     <div className="p-1 text-slate-400">
                       {isCollapsed ? (
@@ -1154,8 +1116,7 @@ export default function AccountsPage() {
                   <div className="divide-y theme-border">
                     {typeAccounts.length === 0 ? (
                       <p className="p-5 text-center text-xs text-slate-400">
-                        لا توجد حسابات مطابقة للبحث في هذا الباب.
-                      </p>
+                        {ui("لا توجد حسابات مطابقة للبحث في هذا الباب.")}</p>
                     ) : (
                       typeAccounts.map((a) => {
                         const accountDepth = depth(a);
@@ -1196,13 +1157,13 @@ export default function AccountsPage() {
                               {/* Code with Copy Button */}
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <code className="font-mono text-xs font-black text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                                  {a.code}
+                                  {ui(a.code)}
                                 </code>
                                 <button
                                   type="button"
                                   onClick={(e) => handleCopyCode(a.code, e)}
                                   className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
-                                  title="نسخ رمز الحساب"
+                                  title={ui("نسخ رمز الحساب")}
                                 >
                                   {copiedCode === a.code ? (
                                     <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
@@ -1215,13 +1176,13 @@ export default function AccountsPage() {
                               {/* Name & English Subtitle */}
                               <div className="min-w-0">
                                 <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                                  {a.nameAr}
+                                  {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                                 </p>
                                 <p
                                   className="text-[11px] text-slate-400 dark:text-slate-500 truncate"
-                                  dir="ltr"
+                                  dir={ui.language === "en" ? "rtl" : "ltr"}
                                 >
-                                  {a.nameEn}
+                                  {ui.language === "en" ? a.nameAr : a.nameEn}
                                 </p>
                               </div>
                             </div>
@@ -1232,20 +1193,20 @@ export default function AccountsPage() {
                               {a.isPosting ? (
                                 <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
                                   <CheckCircle2 className="size-3" />
-                                  <span>يقبل القيود (فرعي)</span>
+                                  <span>{ui("يقبل القيود (فرعي)")}</span>
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
                                   <Folder className="size-3" />
-                                  <span>تجميعي (رئيسي)</span>
+                                  <span>{ui("تجميعي (رئيسي)")}</span>
                                 </span>
                               )}
 
                               {/* Balance Nature */}
                               <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                {a.normalBalance === "DEBIT"
+                                {ui(a.normalBalance === "DEBIT"
                                   ? "طبيعة: مدين"
-                                  : "طبيعة: دائن"}
+                                  : "طبيعة: دائن")}
                               </span>
 
                               {/* Active Status */}
@@ -1256,14 +1217,13 @@ export default function AccountsPage() {
                                     : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
                                 }`}
                               >
-                                {a.isActive ? "نشط" : "معطل"}
+                                {ui(a.isActive ? "نشط" : "معطل")}
                               </span>
 
                               {/* System Badge */}
                               {a.isSystem && (
                                 <span className="rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                  نظامي
-                                </span>
+                                  {ui("نظامي")}</span>
                               )}
 
                               {/* Add Child Sub-Account (Only on Group Accounts) */}
@@ -1277,10 +1237,10 @@ export default function AccountsPage() {
                                     })
                                   }
                                   className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 transition"
-                                  title={`إضافة حساب فرعي تحت ${a.code}`}
+                                  title={ui(`إضافة حساب فرعي تحت ${a.code}`)}
                                 >
                                   <Plus className="size-3" />
-                                  <span>+ فرعي</span>
+                                  <span>{ui("+ فرعي")}</span>
                                 </button>
                               )}
 
@@ -1290,8 +1250,7 @@ export default function AccountsPage() {
                                 className="theme-card rounded-lg border theme-border hover:border-amber-500 px-3 py-1 text-xs font-bold cursor-pointer transition shadow-2xs"
                                 onClick={() => setEditor({ account: a })}
                               >
-                                تعديل
-                              </button>
+                                {ui("تعديل")}</button>
                             </div>
                           </div>
                         );
@@ -1308,15 +1267,15 @@ export default function AccountsPage() {
       {/* View Mode 2: Flat Data Table View */}
       {viewMode === "TABLE" && !isLoading && (
         <div className="theme-card overflow-x-auto rounded-2xl border theme-border shadow-xs">
-          <table className="w-full min-w-[760px] text-right text-xs sm:text-sm">
+          <table className="w-full min-w-[760px] text-start text-xs sm:text-sm">
             <thead className="theme-card-subtle text-xs text-slate-500 font-bold border-b theme-border">
               <tr>
-                <th className="px-5 py-3.5">الرمز</th>
-                <th className="px-5 py-3.5">اسم الحساب</th>
-                <th className="px-5 py-3.5">الباب / الطبيعة</th>
-                <th className="px-5 py-3.5">صلاحية الترحيل</th>
-                <th className="px-5 py-3.5">الحالة</th>
-                <th className="px-5 py-3.5 text-left">الإجراءات</th>
+                <th className="px-5 py-3.5">{ui("الرمز")}</th>
+                <th className="px-5 py-3.5">{ui("اسم الحساب")}</th>
+                <th className="px-5 py-3.5">{ui("الباب / الطبيعة")}</th>
+                <th className="px-5 py-3.5">{ui("صلاحية الترحيل")}</th>
+                <th className="px-5 py-3.5">{ui("الحالة")}</th>
+                <th className="px-5 py-3.5 text-end">{ui("الإجراءات")}</th>
               </tr>
             </thead>
             <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
@@ -1326,8 +1285,7 @@ export default function AccountsPage() {
                     colSpan={6}
                     className="p-8 text-center text-slate-400 text-xs"
                   >
-                    لا توجد حسابات مطابقة لشروط البحث.
-                  </td>
+                    {ui("لا توجد حسابات مطابقة لشروط البحث.")}</td>
                 </tr>
               ) : (
                 filteredAccounts.map((a) => (
@@ -1343,13 +1301,13 @@ export default function AccountsPage() {
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <code className="font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                          {a.code}
+                          {ui(a.code)}
                         </code>
                         <button
                           type="button"
                           onClick={(e) => handleCopyCode(a.code, e)}
                           className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
-                          title="نسخ رمز الحساب"
+                          title={ui("نسخ رمز الحساب")}
                         >
                           {copiedCode === a.code ? (
                             <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
@@ -1364,10 +1322,10 @@ export default function AccountsPage() {
                     <td className="px-5 py-3.5">
                       <div className="min-w-0">
                         <p className="font-bold text-slate-900 dark:text-white">
-                          {a.nameAr}
+                          {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                         </p>
-                        <p className="text-[11px] text-slate-400" dir="ltr">
-                          {a.nameEn}
+                        <p className="text-[11px] text-slate-400" dir={ui.language === "en" ? "rtl" : "ltr"}>
+                          {ui.language === "en" ? a.nameAr : a.nameEn}
                         </p>
                       </div>
                     </td>
@@ -1375,12 +1333,12 @@ export default function AccountsPage() {
                     {/* Type & Balance */}
                     <td className="px-5 py-3.5 text-xs whitespace-nowrap">
                       <p className="font-bold">
-                        {TYPES[a.type]?.label || a.type}
+                        {ui(TYPES[a.type]?.label || a.type)}
                       </p>
                       <p className="text-slate-400 text-[11px] mt-0.5">
-                        {a.normalBalance === "DEBIT"
+                        {ui(a.normalBalance === "DEBIT"
                           ? "طبيعة رصيد: مدين"
-                          : "طبيعة رصيد: دائن"}
+                          : "طبيعة رصيد: دائن")}
                       </p>
                     </td>
 
@@ -1389,12 +1347,12 @@ export default function AccountsPage() {
                       {a.isPosting ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
                           <CheckCircle2 className="size-3" />
-                          <span>فرعي (يقبل القيود)</span>
+                          <span>{ui("فرعي (يقبل القيود)")}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
                           <Folder className="size-3" />
-                          <span>تجميعي (رئيسي)</span>
+                          <span>{ui("تجميعي (رئيسي)")}</span>
                         </span>
                       )}
                     </td>
@@ -1408,17 +1366,16 @@ export default function AccountsPage() {
                             : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
                         }`}
                       >
-                        {a.isActive ? "نشط" : "معطل"}
+                        {ui(a.isActive ? "نشط" : "معطل")}
                       </span>
                       {a.isSystem && (
                         <span className="ms-1.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                          نظامي
-                        </span>
+                          {ui("نظامي")}</span>
                       )}
                     </td>
 
                     {/* Actions */}
-                    <td className="px-5 py-3.5 text-left whitespace-nowrap">
+                    <td className="px-5 py-3.5 text-end whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
                         {!a.isPosting && (
                           <button
@@ -1427,10 +1384,10 @@ export default function AccountsPage() {
                               setEditor({ account: "NEW", prefillParent: a })
                             }
                             className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
-                            title={`إضافة حساب فرعي تحت ${a.code}`}
+                            title={ui(`إضافة حساب فرعي تحت ${a.code}`)}
                           >
                             <Plus className="size-3" />
-                            <span>+ فرعي</span>
+                            <span>{ui("+ فرعي")}</span>
                           </button>
                         )}
                         <button
@@ -1438,8 +1395,7 @@ export default function AccountsPage() {
                           className="theme-card rounded-lg border theme-border hover:border-amber-500 px-3 py-1.5 text-xs font-bold cursor-pointer transition shadow-2xs"
                           onClick={() => setEditor({ account: a })}
                         >
-                          تعديل
-                        </button>
+                          {ui("تعديل")}</button>
                       </div>
                     </td>
                   </tr>

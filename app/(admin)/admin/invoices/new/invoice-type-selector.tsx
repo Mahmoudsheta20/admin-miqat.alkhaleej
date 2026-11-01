@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { FileSpreadsheet, MinusCircle, PlusCircle, ReceiptText } from "lucide-react";
 import type { InvoiceDocumentType, TaxDocument } from "@/lib/invoices";
@@ -29,7 +31,7 @@ const CHOICES: {
     id: "PROFORMA",
     title: "فاتورة مبدئية",
     badge: "عرض أسعار",
-    description: "عرض أسعار أولي يتضمن بيانات الرحلة والآيبان البنكي SNB؛ لا يدخل في المحاسبة أو الضريبة حتى يعتمد.",
+    description: "عرض أسعار أولي يتضمن بيانات الرحلة والبيانات البنكية؛ لا يدخل في المحاسبة أو الضريبة. لإثبات المبيعات، أصدر فاتورة فعلية.",
     icon: FileSpreadsheet,
   },
   {
@@ -53,6 +55,8 @@ export default function InvoiceTypeSelector({
   taxKind = "INVOICE",
   onChangeType,
 }: InvoiceTypeSelectorProps) {
+  const ui = useUiText();
+
   const currentChoice: UnifiedDocChoice =
     documentType === "PROFORMA"
       ? "PROFORMA"
@@ -64,15 +68,13 @@ export default function InvoiceTypeSelector({
 
   return (
     <fieldset className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
-      <legend className="sr-only">نوع المستند المطلوب إنشاؤه</legend>
+      <legend className="sr-only">{ui("نوع المستند المطلوب إنشاؤه")}</legend>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div>
           <h2 className="text-base font-black text-slate-900 dark:text-white">
-            نوع المستند المطلوب
-          </h2>
+            {ui("نوع المستند المطلوب")}</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            اختر طبيعة الفاتورة؛ يحدد هذا الاختيار كيفية معالجة المستند ضريبياً ومحاسبياً.
-          </p>
+            {ui("اختر طبيعة الفاتورة؛ يحدد هذا الاختيار كيفية معالجة المستند ضريبياً ومحاسبياً.")}</p>
         </div>
       </div>
 
@@ -103,7 +105,7 @@ export default function InvoiceTypeSelector({
                   <div className="flex items-center gap-2">
                     <Icon className={`size-4 ${isSelected ? "text-amber-600 dark:text-amber-400" : "text-slate-400"}`} />
                     <span className="text-sm font-black text-slate-900 dark:text-white">
-                      {choice.title}
+                      {ui(choice.title)}
                     </span>
                   </div>
                   {choice.badge && (
@@ -114,12 +116,12 @@ export default function InvoiceTypeSelector({
                           : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                       }`}
                     >
-                      {choice.badge}
+                      {ui(choice.badge)}
                     </span>
                   )}
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  {choice.description}
+                  {ui(choice.description)}
                 </p>
               </div>
             </label>

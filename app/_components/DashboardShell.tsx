@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -76,6 +78,8 @@ export default function DashboardShell({
   children,
   role,
 }: DashboardShellProps) {
+  const ui = useUiText();
+
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading } = useAuth();
@@ -117,7 +121,7 @@ export default function DashboardShell({
         className="grid min-h-dvh place-content-center gap-3 text-center theme-card-subtle"
       >
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-3 border-amber-500/20 border-t-amber-500" />
-        <p>جاري تهيئة مساحة العمل...</p>
+        <p>{ui("جاري تهيئة مساحة العمل...")}</p>
       </div>
     );
   }
@@ -127,8 +131,7 @@ export default function DashboardShell({
   return (
     <div className="app-shell flex h-dvh overflow-hidden bg-slate-50 dark:bg-[#080c14]">
       <a href="#main-content" className="skip-link">
-        الانتقال إلى المحتوى
-      </a>
+        {ui("الانتقال إلى المحتوى")}</a>
       <Sidebar
         collapsed={isCollapsed}
         onToggle={() => setIsCollapsed((value) => !value)}
@@ -150,11 +153,11 @@ export default function DashboardShell({
               role === "ADMIN" ? "max-w-7xl" : "max-w-5xl"
             }`}
           >
-            {children}
+            {ui(children)}
           </div>
         </main>
         <nav
-          aria-label="التنقل السريع للجوال"
+          aria-label={ui("التنقل السريع للجوال")}
           className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t theme-border bg-white px-2 py-1.5 shadow-lg lg:hidden dark:bg-[#090e17]"
         >
           {links.map(({ href, label, icon: Icon }) => (
@@ -171,7 +174,7 @@ export default function DashboardShell({
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="truncate max-w-full text-center leading-tight">{label}</span>
+              <span className="truncate max-w-full text-center leading-tight">{ui(label)}</span>
             </Link>
           ))}
         </nav>

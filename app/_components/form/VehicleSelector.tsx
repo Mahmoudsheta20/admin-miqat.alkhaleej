@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -36,6 +38,8 @@ export function VehicleSelector({
   disabled = false,
   className = "",
 }: VehicleSelectorProps) {
+  const ui = useUiText();
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -88,22 +92,21 @@ export function VehicleSelector({
     <div ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-          <span>{label}</span>
+          <span>{ui(label)}</span>
           {required && <span className="text-rose-500 font-black">*</span>}
         </label>
         {isCaptainVehicle ? (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
             <ShieldCheck className="w-3 h-3" />
-            مركبة الكابتن المعتمدة
-          </span>
+            {ui("مركبة الكابتن المعتمدة")}</span>
         ) : (
-          <span className="text-[10px] text-slate-400">مركبة من الأسطول</span>
+          <span className="text-[10px] text-slate-400">{ui("مركبة من الأسطول")}</span>
         )}
       </div>
 
       {/* Trigger Card */}
       <select
-        aria-label={label}
+        aria-label={ui(label)}
         aria-required={required}
         aria-invalid={Boolean(error)}
         disabled={disabled}
@@ -114,14 +117,14 @@ export function VehicleSelector({
         }}
         className="theme-input sm:hidden min-h-12 w-full min-w-0 rounded-xl px-3 py-2 text-base"
       >
-        <option value="">اختر المركبة</option>
-        {selectedPlate && !currentVehicle && <option value={selectedPlate}>{selectedPlate}</option>}
-        {vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.plateNumberAr}>{vehicle.plateNumberAr} — {vehicle.make} {vehicle.model}</option>)}
+        <option value="">{ui("اختر المركبة")}</option>
+        {selectedPlate && !currentVehicle && <option value={selectedPlate}>{ui(selectedPlate)}</option>}
+        {vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.plateNumberAr}>{vehicle.plateNumberAr} — {ui(vehicle.make)} {ui(vehicle.model)}</option>)}
       </select>
 
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`hidden sm:flex w-full h-[72px] p-3 rounded-2xl transition-all duration-200 border text-right items-center justify-between
+        className={`hidden sm:flex w-full h-[72px] p-3 rounded-2xl transition-all duration-200 border text-start items-center justify-between
           ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
           ${
             error
@@ -143,7 +146,7 @@ export function VehicleSelector({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                    {currentVehicle.make} {currentVehicle.model} ({currentVehicle.year})
+                    {ui(currentVehicle.make)} {ui(currentVehicle.model)} ({ui(currentVehicle.year)})
                   </h4>
                 </div>
 
@@ -156,8 +159,7 @@ export function VehicleSelector({
                   {currentVehicle.capacity && (
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Users className="w-3 h-3" />
-                      {currentVehicle.capacity} ركاب
-                    </span>
+                      {ui(currentVehicle.capacity)} {ui("ركاب")}</span>
                   )}
                 </div>
               </div>
@@ -165,7 +167,7 @@ export function VehicleSelector({
 
             {!disabled && (
               <div className="flex items-center gap-1.5 shrink-0 text-xs font-bold text-amber-600 dark:text-amber-400">
-                <span className="hidden sm:inline">تغيير المركبة</span>
+                <span className="hidden sm:inline">{ui("تغيير المركبة")}</span>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${
                     isOpen ? "rotate-180" : ""
@@ -179,7 +181,7 @@ export function VehicleSelector({
             <div className="flex items-center gap-2 text-slate-400">
               <Car className="w-4 h-4" />
               <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
-                {selectedPlate || "اختر مركبة من الأسطول"}
+                {ui(selectedPlate || "اختر مركبة من الأسطول")}
               </span>
             </div>
             {!disabled && <ChevronDown className="w-4 h-4 text-slate-400" />}
@@ -197,8 +199,8 @@ export function VehicleSelector({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث باللوحة أو نوع المركبة..."
-              className="w-full pr-9 pl-8 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border theme-border focus:border-amber-500 focus:outline-hidden font-medium"
+              placeholder={ui("ابحث باللوحة أو نوع المركبة...")}
+              className="w-full ps-9 pe-8 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border theme-border focus:border-amber-500 focus:outline-hidden font-medium"
               autoFocus
             />
             {searchQuery && (
@@ -213,11 +215,10 @@ export function VehicleSelector({
           </div>
 
           {/* Vehicles List from Fleet */}
-          <div className="max-h-60 overflow-y-auto space-y-1.5 pr-0.5">
+          <div className="max-h-60 overflow-y-auto space-y-1.5 ps-0.5">
             {filteredVehicles.length === 0 ? (
               <div className="text-center py-6 text-xs text-slate-400">
-                لم يتم العثور على مركبة مطابقة في الأسطول
-              </div>
+                {ui("لم يتم العثور على مركبة مطابقة في الأسطول")}</div>
             ) : (
               filteredVehicles.map((v) => {
                 const isSelected =
@@ -235,7 +236,7 @@ export function VehicleSelector({
                       onSelectVehicle(v);
                       setIsOpen(false);
                     }}
-                    className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 text-right
+                    className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 text-start
                       ${
                         isSelected
                           ? "bg-amber-500/15 border border-amber-500/30 text-amber-950 dark:text-amber-100"
@@ -250,12 +251,11 @@ export function VehicleSelector({
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-black text-slate-900 dark:text-white truncate">
-                            {v.make} {v.model} ({v.year})
+                            {ui(v.make)} {ui(v.model)} ({ui(v.year)})
                           </span>
                           {isCaptainAssigned && (
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                              مركبة الكابتن
-                            </span>
+                              {ui("مركبة الكابتن")}</span>
                           )}
                         </div>
 
@@ -264,9 +264,9 @@ export function VehicleSelector({
                             {v.plateNumberAr}
                           </span>
                           <span>•</span>
-                          <span>{v.capacity} ركاب</span>
+                          <span>{ui(v.capacity)} {ui("ركاب")}</span>
                           <span>•</span>
-                          <span>{v.category}</span>
+                          <span>{ui(v.category)}</span>
                         </div>
                       </div>
                     </div>
@@ -276,8 +276,7 @@ export function VehicleSelector({
                         <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       ) : (
                         <span className="text-[10px] text-slate-400 font-bold">
-                          اختيار
-                        </span>
+                          {ui("اختيار")}</span>
                       )}
                     </div>
                   </div>
@@ -291,7 +290,7 @@ export function VehicleSelector({
       {error && (
         <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <AlertCircle className="w-3 h-3 shrink-0" />
-          <span>{error}</span>
+          <span>{ui(error)}</span>
         </p>
       )}
     </div>

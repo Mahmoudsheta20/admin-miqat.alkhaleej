@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, useRef, useId } from "react";
 import {
@@ -64,6 +66,8 @@ export function CustomDatePicker({
   hint,
   className = "",
 }: CustomDatePickerProps) {
+  const ui = useUiText();
+
   const controlId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [manualView, setManualView] = useState<{ year: number; month: number } | null>(null);
@@ -153,7 +157,7 @@ export function CustomDatePicker({
     if (!p) return "";
     try {
       const dateObj = new Date(p.year, p.month, p.day);
-      return dateObj.toLocaleDateString("ar-SA", {
+      return dateObj.toLocaleDateString(ui.locale, {
         calendar: "gregory",
         weekday: "short",
         day: "numeric",
@@ -172,15 +176,15 @@ export function CustomDatePicker({
       {label && (
         <div className="flex items-center justify-between gap-1.5 min-w-0">
           <label htmlFor={controlId} className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
-            <span>{label}</span>
+            <span>{ui(label)}</span>
             {required && <span className="text-rose-500 font-black">*</span>}
           </label>
           {value && (
             <span
-              className="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate text-left"
-              title={formattedArabicDate()}
+              className="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate text-end"
+              title={ui(formattedArabicDate())}
             >
-              {formattedArabicDate()}
+              {ui(formattedArabicDate())}
             </span>
           )}
         </div>
@@ -191,13 +195,13 @@ export function CustomDatePicker({
         id={controlId}
         aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
-        aria-label={label || "حدد التاريخ"}
+        aria-label={ui(label || "حدد التاريخ")}
         aria-expanded={isOpen}
         onClick={() => {
           setManualView(null);
           setIsOpen(!isOpen);
         }}
-        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-right cursor-pointer
+        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
           ${
             error
               ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
@@ -211,11 +215,11 @@ export function CustomDatePicker({
             <CalendarIcon className="w-3.5 h-3.5" />
           </div>
           <span className="text-xs font-bold font-mono tracking-wide truncate">
-            {value || "حدد التاريخ"}
+            {ui(value || "حدد التاريخ")}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 text-slate-400 mr-2">
+        <div className="flex items-center gap-1 shrink-0 text-slate-400 ms-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-amber-500" : ""
@@ -235,32 +239,28 @@ export function CustomDatePicker({
               disabled={isBeforeMinDate(quickDate(0))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold transition text-center"
             >
-              اليوم
-            </button>
+              {ui("اليوم")}</button>
             <button
               type="button"
               onClick={() => selectQuickDate(1)}
               disabled={isBeforeMinDate(quickDate(1))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
-              غداً
-            </button>
+              {ui("غداً")}</button>
             <button
               type="button"
               onClick={() => selectQuickDate(2)}
               disabled={isBeforeMinDate(quickDate(2))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
-              بعد غد
-            </button>
+              {ui("بعد غد")}</button>
             <button
               type="button"
               onClick={() => selectQuickDate(7)}
               disabled={isBeforeMinDate(quickDate(7))}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
-              +أسبوع
-            </button>
+              {ui("+أسبوع")}</button>
           </div>
 
           {/* Month/Year Navigation */}
@@ -269,15 +269,15 @@ export function CustomDatePicker({
               type="button"
               onClick={handleNextMonth}
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
-              title="الشهر التالي"
+              title={ui("الشهر التالي")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
 
             <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>{ARABIC_MONTHS[viewMonth]}</span>
+              <span>{ui(ARABIC_MONTHS[viewMonth])}</span>
               <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">
-                {viewYear}
+                {ui(viewYear)}
               </span>
             </div>
 
@@ -285,7 +285,7 @@ export function CustomDatePicker({
               type="button"
               onClick={handlePrevMonth}
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
-              title="الشهر السابق"
+              title={ui("الشهر السابق")}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -298,7 +298,7 @@ export function CustomDatePicker({
                 key={day}
                 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 py-1"
               >
-                {day}
+                {ui(day)}
               </span>
             ))}
           </div>
@@ -338,7 +338,7 @@ export function CustomDatePicker({
                         : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                     }`}
                 >
-                  {day}
+                  {ui(day)}
                   {isToday && !isSelected && (
                     <span className="w-1 h-1 rounded-full bg-amber-500 absolute bottom-1" />
                   )}
@@ -349,9 +349,9 @@ export function CustomDatePicker({
 
           {/* Footer date summary */}
           <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between text-[11px] text-slate-400">
-            <span>التاريخ المحدد:</span>
+            <span>{ui("التاريخ المحدد:")}</span>
             <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
-              {value}
+              {ui(value)}
             </span>
           </div>
         </div>
@@ -360,12 +360,12 @@ export function CustomDatePicker({
       {error && (
         <p id={`${controlId}-description`} role="alert" className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <AlertCircle className="w-3 h-3 shrink-0" />
-          <span>{error}</span>
+          <span>{ui(error)}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
+        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{ui(hint)}</p>
       )}
     </div>
   );

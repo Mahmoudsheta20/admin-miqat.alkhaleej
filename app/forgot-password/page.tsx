@@ -1,4 +1,7 @@
 "use client";
+import LanguageSwitcher from "@/app/_components/LanguageSwitcher";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState } from "react";
 import Image from "next/image";
@@ -18,6 +21,8 @@ import { useTheme } from "@/lib/themeContext";
 import { requestPasswordResetAction } from "@/app/_actions/auth";
 
 export default function ForgotPasswordPage() {
+  const ui = useUiText();
+
   const { theme, toggleTheme } = useTheme();
 
   const [email, setEmail] = useState("");
@@ -71,7 +76,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative overflow-hidden" dir={ui.dir}>
       {/* Subtle Background Glows */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-slate-400/5 dark:bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
@@ -83,23 +88,23 @@ export default function ForgotPasswordPage() {
           className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition"
         >
           <ArrowRight className="w-4 h-4" />
-          <span>العودة لتسجيل الدخول</span>
+          <span>{ui("العودة لتسجيل الدخول")}</span>
         </Link>
 
         {/* Theme Toggle */}
-        <button
+        <div className="flex items-center gap-2 [&_button]:flex"><LanguageSwitcher/><button
           onClick={toggleTheme}
           type="button"
           className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition shadow-xs"
-          title={theme === "dark" ? "الوضع النهاري" : "الوضع الليلي"}
-          aria-label="تبديل المظهر"
+          title={ui(theme === "dark" ? "الوضع النهاري" : "الوضع الليلي")}
+          aria-label={ui("تبديل المظهر")}
         >
           {theme === "dark" ? (
             <Sun className="w-4 h-4 text-amber-400" />
           ) : (
             <Moon className="w-4 h-4 text-slate-700" />
           )}
-        </button>
+        </button></div>
       </header>
 
       {/* Main Content */}
@@ -111,7 +116,7 @@ export default function ForgotPasswordPage() {
               <div className="inline-flex justify-center mb-4">
                 <Image
                   src="/logo.svg"
-                  alt="ميقات الخليج"
+                  alt={ui("ميقات الخليج")}
                   width={150}
                   height={45}
                   className="h-9 w-auto object-contain"
@@ -121,22 +126,20 @@ export default function ForgotPasswordPage() {
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold mb-3">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>استعادة حساب النظام</span>
+                <span>{ui("استعادة حساب النظام")}</span>
               </div>
 
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                نسيت كلمة المرور؟
-              </h1>
+                {ui("نسيت كلمة المرور؟")}</h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-                أدخل بريدك الإلكتروني وسنرسل لك رمزاً ورابطاً آمناً لإعادة تعيين كلمة المرور
-              </p>
+                {ui("أدخل بريدك الإلكتروني وسنرسل لك رمزاً ورابطاً آمناً لإعادة تعيين كلمة المرور")}</p>
             </div>
 
             {/* Error Message Alert */}
             {errorMessage && (
               <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2 animate-in fade-in-50">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-                <span className="font-semibold">{errorMessage}</span>
+                <span className="font-semibold">{ui(errorMessage)}</span>
               </div>
             )}
 
@@ -149,15 +152,12 @@ export default function ForgotPasswordPage() {
 
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    تم إرسال رمز ورابط إعادة التعيين بنجاح!
-                  </h3>
+                    {ui("تم إرسال رمز ورابط إعادة التعيين بنجاح!")}</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                    يُرجى فحص صندوق الوارد (أو مجلد الرسائل غير المرغوب فيها) في بريدك الإلكتروني
-                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400 mx-1" dir="ltr">
-                      {email}
+                    {ui("يُرجى فحص صندوق الوارد (أو مجلد الرسائل غير المرغوب فيها) في بريدك الإلكتروني")}<span className="font-mono font-bold text-amber-600 dark:text-amber-400 mx-1" dir="ltr">
+                      {ui(email)}
                     </span>
-                    يمكنك إما الضغط على الرابط في البريد، أو إدخال رمز التحقق المكون من 6 أرقام مباشرة.
-                  </p>
+                    {ui("يمكنك إما الضغط على الرابط في البريد، أو إدخال رمز التحقق المكون من 6 أرقام مباشرة.")}</p>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
@@ -165,7 +165,7 @@ export default function ForgotPasswordPage() {
                     href={`/reset-password?email=${encodeURIComponent(email.trim().toLowerCase())}`}
                     className="w-full py-2.5 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-xs font-bold text-white shadow-xs"
                   >
-                    <span>إدخال رمز التحقق وإعادة التعيين</span>
+                    <span>{ui("إدخال رمز التحقق وإعادة التعيين")}</span>
                     <ArrowLeft className="w-4 h-4" />
                   </Link>
 
@@ -178,15 +178,13 @@ export default function ForgotPasswordPage() {
                       }}
                       className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition cursor-pointer"
                     >
-                      إعادة إرسال لبريد آخر
-                    </button>
+                      {ui("إعادة إرسال لبريد آخر")}</button>
 
                     <Link
                       href="/login"
                       className="text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 transition"
                     >
-                      العودة لشاشة الدخول
-                    </Link>
+                      {ui("العودة لشاشة الدخول")}</Link>
                   </div>
                 </div>
               </div>
@@ -198,8 +196,7 @@ export default function ForgotPasswordPage() {
                     htmlFor="email"
                     className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
                   >
-                    البريد الإلكتروني المعتمد
-                  </label>
+                    {ui("البريد الإلكتروني المعتمد")}</label>
 
                   <div
                     className={`relative flex items-center rounded-xl border transition-all duration-200 ${
@@ -208,7 +205,7 @@ export default function ForgotPasswordPage() {
                         : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
                     }`}
                   >
-                    <div className="pr-3 text-slate-400">
+                    <div className="ps-3 text-slate-400">
                       <Mail className="w-4 h-4" />
                     </div>
 
@@ -225,14 +222,14 @@ export default function ForgotPasswordPage() {
                       }}
                       onBlur={() => setEmailTouched(true)}
                       placeholder="example@miqat.com"
-                      className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-end"
                     />
                   </div>
 
                   {emailError && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{emailError}</span>
+                      <span>{ui(emailError)}</span>
                     </p>
                   )}
                 </div>
@@ -245,11 +242,11 @@ export default function ForgotPasswordPage() {
                   {loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>جاري إرسال الرابط...</span>
+                      <span>{ui("جاري إرسال الرابط...")}</span>
                     </>
                   ) : (
                     <>
-                      <span>إرسال رابط إعادة التعيين</span>
+                      <span>{ui("إرسال رابط إعادة التعيين")}</span>
                       <Sparkles className="w-4 h-4" />
                     </>
                   )}
@@ -260,8 +257,7 @@ export default function ForgotPasswordPage() {
                     href="/login"
                     className="text-xs font-bold text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 transition"
                   >
-                    تذكرت كلمة المرور؟ تسجيل الدخول
-                  </Link>
+                    {ui("تذكرت كلمة المرور؟ تسجيل الدخول")}</Link>
                 </div>
               </form>
             )}
@@ -271,8 +267,8 @@ export default function ForgotPasswordPage() {
 
       {/* Footer */}
       <footer className="max-w-6xl w-full mx-auto py-3 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400 px-4 relative z-10 font-medium">
-        <span>شركة ميقات الخليج للنقل البري © 2026 - جميع الحقوق محفوظة</span>
-        <span className="font-mono text-[11px] text-slate-400">نظام المصادقة الآمن عبر Supabase & Gmail SMTP</span>
+        <span>{ui("شركة ميقات الخليج للنقل البري © 2026 - جميع الحقوق محفوظة")}</span>
+        <span className="font-mono text-[11px] text-slate-400">{ui("نظام المصادقة الآمن عبر Supabase & Gmail SMTP")}</span>
       </footer>
     </div>
   );

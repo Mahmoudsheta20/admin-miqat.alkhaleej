@@ -1,4 +1,6 @@
 "use client";
+import { LocalizedText } from "@/lib/ui-text";
+
 
 import React, { forwardRef, useId } from "react";
 import { ChevronDown } from "lucide-react";
@@ -47,7 +49,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
         <div className="relative flex items-center">
           {icon && (
             <div className="absolute right-3 text-slate-400 pointer-events-none flex items-center justify-center">
-              {icon}
+              <LocalizedText value={icon}/>
             </div>
           )}
 
@@ -60,8 +62,8 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
             aria-invalid={error ? true : props["aria-invalid"]}
             aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
             className={`min-w-0 w-full h-11 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium appearance-none cursor-pointer
-              ${icon ? "pr-9" : "pr-3.5"}
-              pl-9
+              ${icon ? "ps-9" : "ps-3.5"}
+              pe-9
               ${
                 error
                   ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
@@ -77,7 +79,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
                 disabled={opt.disabled}
                 className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5"
               >
-                {opt.label}
+                <LocalizedText value={opt.label}/>
               </option>
             ))}
           </select>

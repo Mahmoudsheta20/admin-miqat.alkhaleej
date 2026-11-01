@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -30,6 +32,8 @@ import { useLanguage } from "@/lib/languageContext";
 const CONTROL = "theme-input h-11 rounded-xl px-3 text-xs sm:text-sm";
 
 export default function PurchasesPage() {
+  const ui = useUiText();
+
   const { t, dir, isRTL } = useLanguage();
   const current = currentSaudiPeriod();
   const [year, setYear] = useState(current.year);
@@ -136,8 +140,8 @@ export default function PurchasesPage() {
     <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Page Header with Slide-Over Help */}
       <PageHeader
-        title={t("purchases.title")}
-        subtitle={t("purchases.subtitle")}
+        title={ui(t("purchases.title"))}
+        subtitle={ui(t("purchases.subtitle"))}
         badge={t("section.financeDaily")}
         icon={ShoppingBag}
         onRefresh={() => setReload((value) => value + 1)}
@@ -155,7 +159,7 @@ export default function PurchasesPage() {
               className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
               <Calculator className="size-4 text-amber-500" />
-              <span>{t("nav.vatReturnsShort")}</span>
+              <span>{ui(t("nav.vatReturnsShort"))}</span>
             </Link>
 
             <button
@@ -167,7 +171,7 @@ export default function PurchasesPage() {
               className="theme-card inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
             >
               <RotateCcw className="size-4" />
-              <span>+ {t("purchases.newReturn")}</span>
+              <span>+ {ui(t("purchases.newReturn"))}</span>
             </button>
 
             <button
@@ -179,7 +183,7 @@ export default function PurchasesPage() {
               className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black shadow-sm hover:shadow-md transition cursor-pointer"
             >
               <Plus className="size-4" />
-              <span>{t("purchases.newPurchase")}</span>
+              <span>{ui(t("purchases.newPurchase"))}</span>
             </button>
           </>
         }
@@ -189,9 +193,8 @@ export default function PurchasesPage() {
       <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5 space-y-4">
         <div className="flex flex-wrap items-end gap-3">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            السنة المالية
-            <select
-              aria-label="السنة"
+            {ui("السنة المالية")}<select
+              aria-label={ui("السنة")}
               className={`${CONTROL} ms-2 font-mono`}
               value={year}
               onChange={(e) => {
@@ -204,15 +207,14 @@ export default function PurchasesPage() {
                 (_, i) => 2020 + i,
               ).map((val) => (
                 <option key={val} value={val}>
-                  {val}
+                  {ui(val)}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            الربع الضريبي
-            <select
+            {ui("الربع الضريبي")}<select
               className={`${CONTROL} ms-2`}
               value={quarter}
               onChange={(e) => {
@@ -222,15 +224,14 @@ export default function PurchasesPage() {
             >
               {[1, 2, 3, 4].map((q) => (
                 <option value={q} key={q}>
-                  الربع {q}
+                  {ui("الربع")} {ui(q)}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            تصنيف المصروف
-            <select
+            {ui("تصنيف المصروف")}<select
               className={`${CONTROL} ms-2`}
               value={category}
               onChange={(e) => {
@@ -238,10 +239,10 @@ export default function PurchasesPage() {
                 setPage(1);
               }}
             >
-              <option value="">جميع المصروفات</option>
+              <option value="">{ui("جميع المصروفات")}</option>
               {Object.entries(EXPENSE_CATEGORIES).map(([catKey, label]) => (
                 <option key={catKey} value={catKey}>
-                  {label}
+                  {ui(label)}
                 </option>
               ))}
             </select>
@@ -257,8 +258,8 @@ export default function PurchasesPage() {
           >
             <input
               className={`${CONTROL} min-w-0 flex-1`}
-              aria-label="بحث بالمورد أو الفاتورة أو اللوحة"
-              placeholder="بحث بالمورد، رقم الفاتورة أو لوحة المركبة..."
+              aria-label={ui("بحث بالمورد أو الفاتورة أو اللوحة")}
+              placeholder={ui("بحث بالمورد، رقم الفاتورة أو لوحة المركبة...")}
               maxLength={200}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -266,7 +267,7 @@ export default function PurchasesPage() {
             <button
               type="submit"
               className="theme-card rounded-xl border theme-border hover:border-amber-500 px-3.5 cursor-pointer text-slate-600 dark:text-slate-300 transition"
-              aria-label="بحث"
+              aria-label={ui("بحث")}
             >
               <Search className="size-4" />
             </button>
@@ -275,7 +276,7 @@ export default function PurchasesPage() {
           <button
             type="button"
             className="theme-card rounded-xl border theme-border hover:border-amber-500 p-3 cursor-pointer text-slate-600 dark:text-slate-300 transition"
-            aria-label="تحديث السجل"
+            aria-label={ui("تحديث السجل")}
             onClick={() => setReload((value) => value + 1)}
           >
             <RefreshCw
@@ -297,11 +298,10 @@ export default function PurchasesPage() {
               }}
               className="size-3.5 accent-amber-600 rounded cursor-pointer"
             />
-            <span>إظهار القيود الملغاة</span>
+            <span>{ui("إظهار القيود الملغاة")}</span>
           </label>
           <p className="text-[11px] text-slate-400">
-            تُحتسب الإجماليات حسب تاريخ احتساب الضريبة، وتستبعد القيود الملغاة.
-          </p>
+            {ui("تُحتسب الإجماليات حسب تاريخ احتساب الضريبة، وتستبعد القيود الملغاة.")}</p>
         </div>
       </div>
 
@@ -311,7 +311,7 @@ export default function PurchasesPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {message}
+          {ui(message)}
         </p>
       )}
       {error && (
@@ -319,21 +319,21 @@ export default function PurchasesPage() {
           role="alert"
           className="theme-card rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400"
         >
-          {error}
+          {ui(error)}
         </p>
       )}
 
       {/* KPI Cards Ribbon */}
       <StatRow columns={4}>
         <StatCard
-          label={t("purchases.subtotal")}
+          label={ui(t("purchases.subtotal"))}
           value={data?.totals.netAmount ? amountLabel(data.totals.netAmount) : "0.00"}
           unit={t("common.sar")}
           icon={ShoppingBag}
           isLoading={isLoading && !data}
         />
         <StatCard
-          label={t("purchases.totalVat")}
+          label={ui(t("purchases.totalVat"))}
           value={data?.totals.vatAmount ? amountLabel(data.totals.vatAmount) : "0.00"}
           unit={t("common.sar")}
           icon={Calculator}
@@ -341,7 +341,7 @@ export default function PurchasesPage() {
           isLoading={isLoading && !data}
         />
         <StatCard
-          label={t("purchases.recoverableVat")}
+          label={ui(t("purchases.recoverableVat"))}
           value={data?.totals.recoverableVat ? amountLabel(data.totals.recoverableVat) : "0.00"}
           unit={t("common.sar")}
           icon={RotateCcw}
@@ -349,7 +349,7 @@ export default function PurchasesPage() {
           isLoading={isLoading && !data}
         />
         <StatCard
-          label={t("purchases.total")}
+          label={ui(t("purchases.total"))}
           value={data?.totals.totalAmount ? amountLabel(data.totals.totalAmount) : "0.00"}
           unit={t("common.sar")}
           icon={ShoppingBag}
@@ -362,26 +362,25 @@ export default function PurchasesPage() {
       <div className="theme-card overflow-hidden rounded-2xl sm:rounded-3xl border theme-border shadow-xs">
         <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
           <span className="font-bold text-slate-700 dark:text-slate-300">
-            قائمة فواتير المصروفات ({data?.items.length ?? 0} قيد)
-          </span>
+            {ui("قائمة فواتير المصروفات (")}{ui(data?.items.length ?? 0)} {ui("قيد)")}</span>
           <span className="text-slate-400 font-mono">
-            الربع {quarter} لسنة {year}
+            {ui("الربع")} {ui(quarter)} {ui("لسنة")} {ui(year)}
           </span>
         </div>
 
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
-          <table className={`w-full min-w-[900px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}>
+          <table className={`w-full min-w-[900px] ${"text-start"} text-xs sm:text-sm border-collapse`}>
             <thead>
               <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-                <th className="px-4 py-3.5">{t("purchases.supplier")}</th>
-                <th className="px-4 py-3.5">{t("purchases.category")}</th>
-                <th className="px-4 py-3.5">{t("purchases.date")}</th>
-                <th className="px-4 py-3.5">{t("purchases.subtotal")}</th>
-                <th className="px-4 py-3.5">{t("invoice.vat")}</th>
-                <th className="px-4 py-3.5">{t("purchases.recoverableVat")}</th>
-                <th className="px-4 py-3.5">{t("purchases.total")}</th>
-                <th className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}>{t("common.actions")}</th>
+                <th className="px-4 py-3.5">{ui(t("purchases.supplier"))}</th>
+                <th className="px-4 py-3.5">{ui(t("purchases.category"))}</th>
+                <th className="px-4 py-3.5">{ui(t("purchases.date"))}</th>
+                <th className="px-4 py-3.5">{ui(t("purchases.subtotal"))}</th>
+                <th className="px-4 py-3.5">{ui(t("invoice.vat"))}</th>
+                <th className="px-4 py-3.5">{ui(t("purchases.recoverableVat"))}</th>
+                <th className="px-4 py-3.5">{ui(t("purchases.total"))}</th>
+                <th className={`px-4 py-3.5 ${"text-end"}`}>{ui(t("common.actions"))}</th>
               </tr>
             </thead>
             <tbody className="divide-y theme-border">
@@ -407,27 +406,27 @@ export default function PurchasesPage() {
                           {isReturn && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
                               <RotateCcw className="w-3 h-3" />
-                              <span>مرتجع</span>
+                              <span>{ui("مرتجع")}</span>
                             </span>
                           )}
                         </div>
                         <p className="text-xs text-slate-500 font-mono">
                           <span className="text-amber-700 dark:text-amber-400 font-bold">
-                            {row.voucher}
+                            {ui(row.voucher)}
                           </span>
-                          {" · "}
-                          <span>{row.invoiceNumber}</span>
+                          {ui(" · ")}
+                          <span>{ui(row.invoiceNumber)}</span>
                           {row.supplierVatNumber && (
                             <span className="text-slate-400">
-                              {" "}
-                              ({row.supplierVatNumber})
+                              {ui(" ")}
+                              ({ui(row.supplierVatNumber)})
                             </span>
                           )}
                         </p>
                         {isVoided && (
                           <p className="text-[11px] text-rose-600 font-bold flex items-center gap-1">
                             <ShieldAlert className="w-3 h-3" />
-                            <span>ملغى: {row.voidReason}</span>
+                            <span>{ui("ملغى:")}{row.voidReason}</span>
                           </p>
                         )}
                       </div>
@@ -435,7 +434,7 @@ export default function PurchasesPage() {
 
                     <td className="px-4 py-3.5 text-xs whitespace-nowrap">
                       <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300">
-                        {EXPENSE_CATEGORIES[row.category]}
+                        {ui(EXPENSE_CATEGORIES[row.category])}
                       </span>
                       {row.vehiclePlate && (
                         <span className="mt-1 flex items-center gap-1 text-[11px] font-mono text-slate-500">
@@ -447,10 +446,10 @@ export default function PurchasesPage() {
 
                     <td className="px-4 py-3.5 font-mono text-xs whitespace-nowrap">
                       <span className="text-slate-800 dark:text-slate-200 block">
-                        {row.issueDate}
+                        {ui(row.issueDate)}
                       </span>
                       <span className="text-[11px] text-slate-400">
-                        الضريبة: {row.vatDate}
+                        {ui("الضريبة:")}{ui(row.vatDate)}
                       </span>
                     </td>
 
@@ -486,30 +485,30 @@ export default function PurchasesPage() {
                       />
                     </td>
 
-                    <td className={`px-4 py-3.5 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}>
+                    <td className={`px-4 py-3.5 whitespace-nowrap ${"text-end"}`}>
                       <div className="inline-flex items-center gap-1.5">
                         {!row.voidedAt && (
                           <button
                             type="button"
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
-                            aria-label={`تعديل ${row.invoiceNumber}`}
+                            aria-label={ui(`تعديل ${row.invoiceNumber}`)}
                             onClick={() => setEditor(row)}
-                            title={t("common.edit")}
+                            title={ui(t("common.edit"))}
                           >
                             <Pencil className="size-3.5 text-amber-500" />
-                            <span>{t("common.edit")}</span>
+                            <span>{ui(t("common.edit"))}</span>
                           </button>
                         )}
 
                         <button
                           type="button"
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
-                          aria-label={`سجل ومرفقات ${row.invoiceNumber}`}
+                          aria-label={ui(`سجل ومرفقات ${row.invoiceNumber}`)}
                           onClick={() => setHistory(row.id)}
-                          title={t("common.details")}
+                          title={ui(t("common.details"))}
                         >
                           <History className="size-3.5 text-slate-400" />
-                          <span>{t("common.details")}</span>
+                          <span>{ui(t("common.details"))}</span>
                         </button>
                       </div>
                     </td>
@@ -540,20 +539,20 @@ export default function PurchasesPage() {
                     </strong>
                     <p className="text-[11px] font-mono text-slate-500 mt-0.5 truncate">
                       <span className="text-amber-700 dark:text-amber-400 font-bold">
-                        {row.voucher}
+                        {ui(row.voucher)}
                       </span>
-                      {" · "}
-                      <span>{row.invoiceNumber}</span>
+                      {ui(" · ")}
+                      <span>{ui(row.invoiceNumber)}</span>
                     </p>
                   </div>
                   {isReturn ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 shrink-0">
                       <RotateCcw className="w-3 h-3" />
-                      <span>مرتجع</span>
+                      <span>{ui("مرتجع")}</span>
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-700 dark:text-slate-300 shrink-0">
-                      {EXPENSE_CATEGORIES[row.category]}
+                      {ui(EXPENSE_CATEGORIES[row.category])}
                     </span>
                   )}
                 </div>
@@ -561,15 +560,15 @@ export default function PurchasesPage() {
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <div className="space-y-0.5">
                     <span className="text-[11px] text-slate-400 block">
-                      {t("purchases.date")}:
+                      {ui(t("purchases.date"))}:
                     </span>
                     <span className="font-mono text-slate-700 dark:text-slate-300">
-                      {row.issueDate}
+                      {ui(row.issueDate)}
                     </span>
                   </div>
-                  <div className="text-left space-y-0.5">
+                  <div className="text-end space-y-0.5">
                     <span className="text-[11px] text-slate-400 block">
-                      {t("purchases.total")}:
+                      {ui(t("purchases.total"))}:
                     </span>
                     <Money
                       amount={isReturn ? -Number(row.totalAmount) : row.totalAmount}
@@ -581,7 +580,7 @@ export default function PurchasesPage() {
 
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-[11px] text-slate-600 dark:text-slate-300 font-mono">
                   <span className="flex items-center gap-1">
-                    <span>{t("purchases.subtotal")}:</span>
+                    <span>{ui(t("purchases.subtotal"))}:</span>
                     <Money
                       amount={isReturn ? -Number(row.netAmount) : row.netAmount}
                       size="xs"
@@ -589,7 +588,7 @@ export default function PurchasesPage() {
                     />
                   </span>
                   <span className="flex items-center gap-1">
-                    <span>{t("purchases.recoverableVat")}:</span>
+                    <span>{ui(t("purchases.recoverableVat"))}:</span>
                     <Money
                       amount={isReturn ? -Number(row.recoverableVat) : row.recoverableVat}
                       size="xs"
@@ -601,14 +600,14 @@ export default function PurchasesPage() {
                 {row.vehiclePlate && (
                   <p className="flex items-center gap-1 text-[11px] font-mono text-slate-500">
                     <Truck className="w-3 h-3 text-amber-500 shrink-0" />
-                    <span>المركبة: {row.vehiclePlate}</span>
+                    <span>{ui("المركبة:")}{row.vehiclePlate}</span>
                   </p>
                 )}
 
                 {isVoided && (
                   <p className="text-[11px] text-rose-600 font-bold flex items-center gap-1">
                     <ShieldAlert className="w-3 h-3 shrink-0" />
-                    <span>ملغى: {row.voidReason}</span>
+                    <span>{ui("ملغى:")}{row.voidReason}</span>
                   </p>
                 )}
 
@@ -620,7 +619,7 @@ export default function PurchasesPage() {
                       onClick={() => setEditor(row)}
                     >
                       <Pencil className="size-3.5 text-amber-500" />
-                      <span>تعديل</span>
+                      <span>{ui("تعديل")}</span>
                     </button>
                   )}
                   <button
@@ -629,7 +628,7 @@ export default function PurchasesPage() {
                     onClick={() => setHistory(row.id)}
                   >
                     <History className="size-3.5 text-slate-400" />
-                    <span>السجل والمرفقات</span>
+                    <span>{ui("السجل والمرفقات")}</span>
                   </button>
                 </div>
               </div>
@@ -645,7 +644,7 @@ export default function PurchasesPage() {
                 className="theme-card-subtle h-12 animate-pulse rounded-xl"
               />
             ))}
-            <span className="sr-only">جارٍ تحميل فواتير الموردين</span>
+            <span className="sr-only">{ui("جارٍ تحميل فواتير الموردين")}</span>
           </div>
         )}
 
@@ -655,12 +654,9 @@ export default function PurchasesPage() {
               <ShoppingBag className="w-6 h-6" />
             </div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white">
-              لا توجد فواتير موردين مسجلة لهذه الفترة
-            </h3>
+              {ui("لا توجد فواتير موردين مسجلة لهذه الفترة")}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              سجّل مصروفات الوقود والصيانة وتكاليف الأسطول لاحتساب ضريبة
-              المدخلات تلقائياً في الإقرار الضريبي.
-            </p>
+              {ui("سجّل مصروفات الوقود والصيانة وتكاليف الأسطول لاحتساب ضريبة المدخلات تلقائياً في الإقرار الضريبي.")}</p>
             <button
               type="button"
               onClick={() => {
@@ -670,7 +666,7 @@ export default function PurchasesPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>تسجيل أول مصروف</span>
+              <span>{ui("تسجيل أول مصروف")}</span>
             </button>
           </div>
         )}
@@ -683,12 +679,12 @@ export default function PurchasesPage() {
             onClick={() => setPage((v) => v - 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            {t("common.back")}
+            {ui(t("common.back"))}
           </button>
 
           <span className="font-bold text-slate-600 dark:text-slate-300">
-            {data?.total ?? 0} · {t("common.page")}{" "}
-            <span className="font-mono">{page}</span>
+            {ui(data?.total ?? 0)} · {ui(t("common.page"))}{ui(" ")}
+            <span className="font-mono">{ui(page)}</span>
           </span>
 
           <button
@@ -697,7 +693,7 @@ export default function PurchasesPage() {
             onClick={() => setPage((v) => v + 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            {t("common.next")}
+            {ui(t("common.next"))}
           </button>
         </div>
       </div>

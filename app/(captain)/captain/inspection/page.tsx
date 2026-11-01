@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import dynamic from "next/dynamic";
 
 import React, { useState, useEffect } from "react";
@@ -74,6 +76,8 @@ const SAFETY_ITEMS: CheckItemConfig[] = [
 ];
 
 export default function CaptainInspectionPage() {
+  const ui = useUiText();
+
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"form" | "history">("form");
@@ -255,12 +259,10 @@ export default function CaptainInspectionPage() {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              سجل الفحص التشغيلي للمركبة
-            </h1>
+              {ui("سجل الفحص التشغيلي للمركبة")}</h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 mr-7">
-            الفحص الإلزامي قبل التشغيل (16 بنداً معتمداً في الصفحة 3 من العقد الرسمي) • يدوي وتلقائي
-          </p>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 ms-7">
+            {ui("الفحص الإلزامي قبل التشغيل (16 بنداً معتمداً في الصفحة 3 من العقد الرسمي) • يدوي وتلقائي")}</p>
         </div>
 
         {activeTab === "form" && (
@@ -271,8 +273,7 @@ export default function CaptainInspectionPage() {
               className="w-full sm:w-auto justify-center px-3.5 py-2 sm:py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" />
-              تحديد الكل سليم ✓
-            </button>
+              {ui("تحديد الكل سليم ✓")}</button>
           </div>
         )}
       </div>
@@ -289,7 +290,7 @@ export default function CaptainInspectionPage() {
           }`}
         >
           <ClipboardCheck className="w-4 h-4" />
-          <span>تسجيل فحص جديد (تلقائي / يدوي)</span>
+          <span>{ui("تسجيل فحص جديد (تلقائي / يدوي)")}</span>
         </button>
 
         <button
@@ -302,10 +303,10 @@ export default function CaptainInspectionPage() {
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>سجل الفحوصات السابقة</span>
+          <span>{ui("سجل الفحوصات السابقة")}</span>
           {historyList.length > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300">
-              {historyList.length}
+              {ui(historyList.length)}
             </span>
           )}
         </button>
@@ -323,8 +324,7 @@ export default function CaptainInspectionPage() {
               <div className="flex items-center gap-2.5 font-bold">
                 <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />
                 <span>
-                  لقد قمت بالفعل بتسجيل فحص اليوم بنجاح. يمكنك تحديث الفحص أو اختيار نمط &quot;يدوي&quot; لتسجيل فحص بتاريخ مخصص.
-                </span>
+                  {ui("لقد قمت بالفعل بتسجيل فحص اليوم بنجاح. يمكنك تحديث الفحص أو اختيار نمط &quot;يدوي&quot; لتسجيل فحص بتاريخ مخصص.")}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button
@@ -333,14 +333,12 @@ export default function CaptainInspectionPage() {
                   className="px-3 py-1.5 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                 >
                   <Edit3 className="w-3.5 h-3.5 text-amber-500" />
-                  تحديد تاريخ يدوي
-                </button>
+                  {ui("تحديد تاريخ يدوي")}</button>
                 <Link
                   href="/captain/contract"
                   className="px-3 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold"
                 >
-                  الانتقال للعقد ←
-                </Link>
+                  {ui("الانتقال للعقد ←")}</Link>
               </div>
             </div>
           )}
@@ -351,11 +349,9 @@ export default function CaptainInspectionPage() {
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                تم توثيق فحص المركبة بنجاح!
-              </h2>
+                {ui("تم توثيق فحص المركبة بنجاح!")}</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                تم اعتماد جاهزية الحافلة ({vehiclePlate}) {inspectionDateMode === "MANUAL" ? `بتاريخ (${formatOfficialDate(inspectionDate)})` : "ليومنا هذا"}. تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.
-              </p>
+                {ui("تم اعتماد جاهزية الحافلة (")}{vehiclePlate}) {ui(inspectionDateMode === "MANUAL" ? `بتاريخ (${formatOfficialDate(inspectionDate)})` : "ليومنا هذا")}{ui(". تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.")}</p>
               <div className="pt-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3">
                 {inspection && <InspectionDownloadButton key={inspection.id} inspectionId={inspection.id} />}
                 <button
@@ -367,15 +363,13 @@ export default function CaptainInspectionPage() {
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-center cursor-pointer flex items-center justify-center gap-2"
                 >
                   <RotateCw className="w-3.5 h-3.5" />
-                  إجراء فحص جديد
-                </button>
+                  {ui("إجراء فحص جديد")}</button>
                 <Link
                   href="/captain/contract"
                   className="w-full sm:w-auto justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
                 >
                   <FilePlus2 className="w-4 h-4" />
-                  إنشاء عقد رحلة الآن
-                </Link>
+                  {ui("إنشاء عقد رحلة الآن")}</Link>
               </div>
             </div>
           ) : (
@@ -383,7 +377,7 @@ export default function CaptainInspectionPage() {
               {errorMessage && (
                 <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  {errorMessage}
+                  {ui(errorMessage)}
                 </div>
               )}
 
@@ -391,17 +385,15 @@ export default function CaptainInspectionPage() {
               <div className="theme-card p-5 rounded-2xl border theme-border grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs text-slate-400 font-bold block mb-1">
-                    اسم الكابتن الفاحص
-                  </label>
+                    {ui("اسم الكابتن الفاحص")}</label>
                   <div className="font-bold text-slate-900 dark:text-white text-sm">
-                    {user?.name}
+                    {ui(user?.name)}
                   </div>
                 </div>
 
                 <div>
                   <label className="text-xs text-slate-400 font-bold block mb-1">
-                    رقم الهوية الوطنية
-                  </label>
+                    {ui("رقم الهوية الوطنية")}</label>
                   <div className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm" dir="ltr">
                     {user?.nationalId || "2553660073"}
                   </div>
@@ -409,15 +401,14 @@ export default function CaptainInspectionPage() {
 
                 <div>
                   <label className="text-xs text-slate-700 dark:text-slate-300 font-bold block mb-1">
-                    رقم لوحة المركبة *
-                  </label>
+                    {ui("رقم لوحة المركبة *")}</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       required
                       value={vehiclePlate}
                       onChange={(e) => setVehiclePlate(e.target.value)}
-                      placeholder="ا ص ل 7223"
+                      placeholder={ui("ا ص ل 7223")}
                       className="flex-1 px-3 py-1.5 text-xs font-mono font-bold rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                     />
                     {vehicles.length > 0 && (
@@ -428,10 +419,10 @@ export default function CaptainInspectionPage() {
                         value=""
                         className="px-2 py-1.5 text-xs rounded-xl border theme-card font-mono text-slate-500 dark:text-slate-400 focus:border-amber-500 focus:outline-hidden"
                       >
-                        <option value="">من الأسطول...</option>
+                        <option value="">{ui("من الأسطول...")}</option>
                         {vehicles.map((v) => (
                           <option key={v.id} value={v.plateNumberAr}>
-                            {v.plateNumberAr} ({v.make} {v.model})
+                            {v.plateNumberAr} ({ui(v.make)} {ui(v.model)})
                           </option>
                         ))}
                       </select>
@@ -446,11 +437,9 @@ export default function CaptainInspectionPage() {
                   <div>
                     <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                      تاريخ الفحص التشغيلي المعتمد (يدوي / مانيوال)
-                    </label>
+                      {ui("تاريخ الفحص التشغيلي المعتمد (يدوي / مانيوال)")}</label>
                     <p className="text-[11px] text-slate-400">
-                      يمكن اعتماد تاريخ اليوم الفعلي تلقائياً أو اختيار تاريخ يدوي مخصص في السجلات
-                    </p>
+                      {ui("يمكن اعتماد تاريخ اليوم الفعلي تلقائياً أو اختيار تاريخ يدوي مخصص في السجلات")}</p>
                   </div>
 
                   <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border theme-border self-start sm:self-auto shadow-2xs">
@@ -464,8 +453,7 @@ export default function CaptainInspectionPage() {
                       }`}
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      اليوم (تلقائي)
-                    </button>
+                      {ui("اليوم (تلقائي)")}</button>
                     <button
                       type="button"
                       onClick={() => setInspectionDateMode("MANUAL")}
@@ -476,26 +464,23 @@ export default function CaptainInspectionPage() {
                       }`}
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                      يدوي (تاريخ مخصص)
-                    </button>
+                      {ui("يدوي (تاريخ مخصص)")}</button>
                   </div>
                 </div>
 
                 {inspectionDateMode === "AUTO" ? (
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
                     <span className="text-slate-500 dark:text-slate-400">
-                      تاريخ الفحص المعتمد في السجلات والوثيقة:
-                    </span>
+                      {ui("تاريخ الفحص المعتمد في السجلات والوثيقة:")}</span>
                     <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      {formatOfficialDate(getSaudiTodayDateStr())} (تاريخ اليوم الفعلي بتوقيت المملكة)
-                    </span>
+                      {ui(formatOfficialDate(getSaudiTodayDateStr()))} {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
                     <div className="w-full sm:w-64">
                       <CustomDatePicker
-                        label="تاريخ الفحص المعتمد (يدوي)"
+                        label={ui("تاريخ الفحص المعتمد (يدوي)")}
                         required
                         value={inspectionDate}
                         onChange={setInspectionDate}
@@ -504,8 +489,7 @@ export default function CaptainInspectionPage() {
                     <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                       <span>
-                        سيتم توثيق الفحص واعتماده بهذا التاريخ المخصص في السجلات وتقارير الفحص ووثيقة الـ PDF الرسمية.
-                      </span>
+                        {ui("سيتم توثيق الفحص واعتماده بهذا التاريخ المخصص في السجلات وتقارير الفحص ووثيقة الـ PDF الرسمية.")}</span>
                     </div>
                   </div>
                 )}
@@ -516,15 +500,13 @@ export default function CaptainInspectionPage() {
                 <div className="p-4 border-b theme-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
                   <div>
                     <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      أولاً: فحص مؤشرات لوحة القيادة
-                    </h3>
+                      {ui("أولاً: فحص مؤشرات لوحة القيادة")}</h3>
                     <span className="text-[11px] text-slate-400 font-mono">
                       First Check the dashboard indicator
                     </span>
                   </div>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                    6 بنود
-                  </span>
+                    {ui("6 بنود")}</span>
                 </div>
 
                 <div className="divide-y theme-border">
@@ -538,12 +520,12 @@ export default function CaptainInspectionPage() {
                       >
                         <div>
                           <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {item.titleAr}
+                            {ui(item.titleAr)}
                             <span className="text-xs text-slate-400 font-normal font-mono" dir="ltr">
-                              ({item.titleEn})
+                              ({ui(item.titleEn)})
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{ui(item.description)}</p>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -560,8 +542,7 @@ export default function CaptainInspectionPage() {
                             }`}
                           >
                             <Check className="w-3.5 h-3.5" />
-                            سليم
-                          </button>
+                            {ui("سليم")}</button>
 
                           <button
                             type="button"
@@ -576,8 +557,7 @@ export default function CaptainInspectionPage() {
                             }`}
                           >
                             <XCircle className="w-3.5 h-3.5" />
-                            غير سليم
-                          </button>
+                            {ui("غير سليم")}</button>
                         </div>
                       </div>
                     );
@@ -590,15 +570,13 @@ export default function CaptainInspectionPage() {
                 <div className="p-4 border-b theme-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
                   <div>
                     <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      ثانياً: الفحص الخارجي للحافلة
-                    </h3>
+                      {ui("ثانياً: الفحص الخارجي للحافلة")}</h3>
                     <span className="text-[11px] text-slate-400 font-mono">
                       Second External inspection
                     </span>
                   </div>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-                    5 بنود
-                  </span>
+                    {ui("5 بنود")}</span>
                 </div>
 
                 <div className="divide-y theme-border">
@@ -612,12 +590,12 @@ export default function CaptainInspectionPage() {
                       >
                         <div>
                           <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {item.titleAr}
+                            {ui(item.titleAr)}
                             <span className="text-xs text-slate-400 font-normal font-mono" dir="ltr">
-                              ({item.titleEn})
+                              ({ui(item.titleEn)})
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{ui(item.description)}</p>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -634,8 +612,7 @@ export default function CaptainInspectionPage() {
                             }`}
                           >
                             <Check className="w-3.5 h-3.5" />
-                            سليم
-                          </button>
+                            {ui("سليم")}</button>
 
                           <button
                             type="button"
@@ -650,8 +627,7 @@ export default function CaptainInspectionPage() {
                             }`}
                           >
                             <XCircle className="w-3.5 h-3.5" />
-                            غير سليم
-                          </button>
+                            {ui("غير سليم")}</button>
                         </div>
                       </div>
                     );
@@ -664,15 +640,13 @@ export default function CaptainInspectionPage() {
                 <div className="p-4 border-b theme-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
                   <div>
                     <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      ثالثاً: أدوات ومتطلبات الأمن والسلامة
-                    </h3>
+                      {ui("ثالثاً: أدوات ومتطلبات الأمن والسلامة")}</h3>
                     <span className="text-[11px] text-slate-400 font-mono">
                       Third Safety and security tools
                     </span>
                   </div>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    5 بنود
-                  </span>
+                    {ui("5 بنود")}</span>
                 </div>
 
                 <div className="divide-y theme-border">
@@ -686,12 +660,12 @@ export default function CaptainInspectionPage() {
                       >
                         <div>
                           <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {item.titleAr}
+                            {ui(item.titleAr)}
                             <span className="text-xs text-slate-400 font-normal font-mono" dir="ltr">
-                              ({item.titleEn})
+                              ({ui(item.titleEn)})
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{ui(item.description)}</p>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -708,8 +682,7 @@ export default function CaptainInspectionPage() {
                             }`}
                           >
                             <Check className="w-3.5 h-3.5" />
-                            سليم
-                          </button>
+                            {ui("سليم")}</button>
 
                           <button
                             type="button"
@@ -724,8 +697,7 @@ export default function CaptainInspectionPage() {
                             }`}
                           >
                             <XCircle className="w-3.5 h-3.5" />
-                            غير سليم
-                          </button>
+                            {ui("غير سليم")}</button>
                         </div>
                       </div>
                     );
@@ -737,13 +709,12 @@ export default function CaptainInspectionPage() {
               <div className="theme-card p-6 rounded-2xl border theme-border space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    ملاحظات الفحص الإضافية (اختياري)
-                  </label>
+                    {ui("ملاحظات الفحص الإضافية (اختياري)")}</label>
                   <textarea
                     rows={2}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="أية ملاحظات ميدانية عن حالة المركبة..."
+                    placeholder={ui("أية ملاحظات ميدانية عن حالة المركبة...")}
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden resize-none"
                   />
                 </div>
@@ -759,11 +730,9 @@ export default function CaptainInspectionPage() {
                     />
                     <div className="text-xs">
                       <span className="font-bold text-slate-900 dark:text-white block mb-0.5">
-                        إقرار وتعهد الكابتن (مدرج رسمياً في نموذج هيئة النقل)
-                      </span>
+                        {ui("إقرار وتعهد الكابتن (مدرج رسمياً في نموذج هيئة النقل)")}</span>
                       <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                        &quot;أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها التامة قبل التشغيل والانطلاق على الطرق البرية.&quot;
-                      </p>
+                        {ui("&quot;أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها التامة قبل التشغيل والانطلاق على الطرق البرية.&quot;")}</p>
                     </div>
                   </label>
                 </div>
@@ -775,15 +744,14 @@ export default function CaptainInspectionPage() {
                   href="/captain"
                   className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
-                  إلغاء
-                </Link>
+                  {ui("إلغاء")}</Link>
                 <button
                   type="submit"
                   disabled={isSubmitting || !driverDeclared}
                   className="w-full sm:w-auto justify-center px-7 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   <ClipboardCheck className="w-4 h-4" />
-                  {isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص التشغيلي"}
+                  {ui(isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص التشغيلي")}
                 </button>
               </div>
             </form>
@@ -797,32 +765,28 @@ export default function CaptainInspectionPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-500" />
-              سجل الفحوصات التشغيلية المعتمدة
-            </h2>
+              {ui("سجل الفحوصات التشغيلية المعتمدة")}</h2>
             <span className="text-xs text-slate-400">
-              {historyList.length} فحص موثق
-            </span>
+              {ui(historyList.length)} {ui("فحص موثق")}</span>
           </div>
 
           {isLoadingHistory ? (
             <div className="p-8 text-center theme-card rounded-2xl border theme-border">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto" />
-              <p className="text-xs text-slate-400 mt-2">جاري تحميل سجل الفحوصات...</p>
+              <p className="text-xs text-slate-400 mt-2">{ui("جاري تحميل سجل الفحوصات...")}</p>
             </div>
           ) : historyList.length === 0 ? (
             <div className="p-8 text-center theme-card rounded-2xl border theme-border space-y-3">
               <ClipboardCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                لا توجد فحوصات تشغيلية مسجلة حتى الآن
-              </p>
+                {ui("لا توجد فحوصات تشغيلية مسجلة حتى الآن")}</p>
               <button
                 type="button"
                 onClick={() => setActiveTab("form")}
                 className="px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
               >
                 <ClipboardCheck className="w-3.5 h-3.5" />
-                تسجيل أول فحص تشغيلي الآن
-              </button>
+                {ui("تسجيل أول فحص تشغيلي الآن")}</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -841,25 +805,24 @@ export default function CaptainInspectionPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-slate-900 dark:text-white text-sm">
-                              حافلة {item.vehiclePlate}
+                              {ui("حافلة")}{item.vehiclePlate}
                             </span>
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border theme-border font-bold">
-                              #{shortCode}
+                              #{ui(shortCode)}
                             </span>
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
                             <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                            <span>تاريخ الفحص: </span>
+                            <span>{ui("تاريخ الفحص:")}</span>
                             <strong className="font-mono font-bold text-slate-700 dark:text-slate-200" dir="ltr">
-                              {formatOfficialDate(item.inspectionDate)}
+                              {ui(formatOfficialDate(item.inspectionDate))}
                             </strong>
                           </div>
                         </div>
                       </div>
 
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                        16/16 سليم
-                      </span>
+                        {ui("16/16 سليم")}</span>
                     </div>
 
                     {item.notes && (
@@ -881,8 +844,7 @@ export default function CaptainInspectionPage() {
                         className="flex-1 px-3 py-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5 text-amber-500" />
-                        معاينة الوثيقة
-                      </button>
+                        {ui("معاينة الوثيقة")}</button>
 
                       <div className="shrink-0">
                         <InspectionDownloadButton inspectionId={item.id} />

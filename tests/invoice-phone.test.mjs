@@ -33,3 +33,10 @@ test('Arabic and Persian digits normalize while malformed, short and mismatched 
   for (const number of ['', '123', 'call 0551234567', '1e10', '0551234567 ext 12', '9'.repeat(25), '+201012345678']) assert.equal(invoicePhoneNumber({ country: 'SA', number }), undefined);
   assert.deepEqual(updateInvoicePhone({ country: 'EG', number: '' }, '0101'), { country: 'EG', number: '0101' });
 });
+
+test('country names follow the UI language without changing calling codes', () => {
+  const english = exports.phoneCountries('en'), arabic = exports.phoneCountries('ar');
+  assert.equal(english[0].name, 'Saudi Arabia');
+  assert.equal(arabic[0].name, 'المملكة العربية السعودية');
+  assert.deepEqual(english.map(item => [item.country, item.callingCode]).sort(), arabic.map(item => [item.country, item.callingCode]).sort());
+});

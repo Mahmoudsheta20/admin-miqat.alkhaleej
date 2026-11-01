@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import Link from "next/link";
 import { useState, useMemo, type FormEvent } from "react";
@@ -37,6 +39,8 @@ function LegacyReview({
   report: FinancialReport;
   onChanged: () => void;
 }) {
+  const ui = useUiText();
+
   const [id, setId] = useState("");
   const [settlement, setSettlement] = useState("1103");
   const [revenue, setRevenue] = useState("4101");
@@ -63,64 +67,56 @@ function LegacyReview({
   return report.unpostedInvoices.length ? (
     <section className="rounded-2xl border border-amber-300 bg-amber-500/5 p-5">
       <h2 className="font-bold">
-        مستندات حتى نهاية الفترة تحتاج مراجعة محاسبية (
-        {report.unpostedInvoices.length})
+        {ui("مستندات حتى نهاية الفترة تحتاج مراجعة محاسبية (")}{ui(report.unpostedInvoices.length)})
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-slate-500">
-        الفواتير القديمة تظهر في VAT كما سُجلت، وتحتاج اعتماد حساب التسوية
-        لإدراجها في دفتر الأستاذ، بما يشمل المستندات الأقدم التي تؤثر في الرصيد
-        الافتتاحي. راجع التحصيل الفعلي قبل الترحيل.
-      </p>
+        {ui("الفواتير القديمة تظهر في VAT كما سُجلت، وتحتاج اعتماد حساب التسوية لإدراجها في دفتر الأستاذ، بما يشمل المستندات الأقدم التي تؤثر في الرصيد الافتتاحي. راجع التحصيل الفعلي قبل الترحيل.")}</p>
       <form onSubmit={post} className="mt-4 flex flex-wrap items-end gap-3">
         <label className="flex-1 text-xs font-bold">
-          الفاتورة
-          <select
+          {ui("الفاتورة")}<select
             required
             className={`${INPUT} mt-2 w-full`}
             value={id}
             onChange={(e) => setId(e.target.value)}
           >
-            <option value="">اختر فاتورة للمراجعة</option>
+            <option value="">{ui("اختر فاتورة للمراجعة")}</option>
             {report.unpostedInvoices.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.number} · {v.customerName} · {v.invoiceDate.slice(0, 10)}
+                {ui(v.number)} · {v.customerName} · {ui(v.invoiceDate.slice(0, 10))}
               </option>
             ))}
           </select>
         </label>
         <label className="text-xs font-bold">
-          الإيراد
-          <select
+          {ui("الإيراد")}<select
             className={`${INPUT} mt-2 block`}
             value={revenue}
             onChange={(e) => setRevenue(e.target.value)}
           >
-            <option value="4101">4101 · النقل</option>
-            <option value="4102">4102 · كبار الشخصيات والعمرة</option>
+            <option value="4101">{ui("4101 · النقل")}</option>
+            <option value="4102">{ui("4102 · كبار الشخصيات والعمرة")}</option>
           </select>
         </label>
         <label className="text-xs font-bold">
-          تسوية المستند
-          <select
+          {ui("تسوية المستند")}<select
             className={`${INPUT} mt-2 block`}
             value={settlement}
             onChange={(e) => setSettlement(e.target.value)}
           >
-            <option value="1103">1103 · ذمم العملاء</option>
-            <option value="1101">1101 · نقد مستلم / مسترد</option>
-            <option value="1102">1102 · بنك مستلم / مسترد</option>
+            <option value="1103">{ui("1103 · ذمم العملاء")}</option>
+            <option value="1101">{ui("1101 · نقد مستلم / مسترد")}</option>
+            <option value="1102">{ui("1102 · بنك مستلم / مسترد")}</option>
           </select>
         </label>
         <button
           disabled={saving}
           className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
         >
-          اعتماد ترحيل الفاتورة
-        </button>
+          {ui("اعتماد ترحيل الفاتورة")}</button>
       </form>
       {error && (
         <p role="alert" className="mt-3 text-sm text-rose-600">
-          {error}
+          {ui(error)}
         </p>
       )}
     </section>
@@ -138,6 +134,8 @@ function PeriodArchive({
   reload: number;
   onChanged: () => void;
 }) {
+  const ui = useUiText();
+
   const [reason, setReason] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
@@ -170,36 +168,30 @@ function PeriodArchive({
     <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
       <div>
         <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-          حفظ الفترة ومنع تعديلها (إقفال الفترة)
-        </h2>
+          {ui("حفظ الفترة ومنع تعديلها (إقفال الفترة)")}</h2>
         <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-          تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة
-          الأرباح. بعد الإقفال تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ
-          نهاية الفترة لضمان مطابقة الدفاتر مع إقرارات هيئة الزكاة؛ تُسجل أي
-          تسويات لاحقة في فترة جديدة مفتوحة.
-        </p>
+          {ui("تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة الأرباح. بعد الإقفال تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ نهاية الفترة لضمان مطابقة الدفاتر مع إقرارات هيئة الزكاة؛ تُسجل أي تسويات لاحقة في فترة جديدة مفتوحة.")}</p>
       </div>
       <form onSubmit={close} className="mt-5 space-y-4">
         <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-xs font-bold text-slate-700 dark:text-slate-300">
-          نطاق الفترة المطلوب إقفالها:{" "}
+          {ui("نطاق الفترة المطلوب إقفالها:")}{ui(" ")}
           <bdi className="font-mono text-amber-700 dark:text-amber-400">
-            {report.range.start}
-          </bdi>{" "}
-          إلى{" "}
+            {ui(report.range.start)}
+          </bdi>{ui(" ")}
+          {ui("إلى")}{ui(" ")}
           <bdi className="font-mono text-amber-700 dark:text-amber-400">
-            {report.range.endInclusive}
+            {ui(report.range.endInclusive)}
           </bdi>
         </div>
         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          مرجع المراجعة وسبب الإقفال *
-          <input
+          {ui("مرجع المراجعة وسبب الإقفال *")}<input
             required
             minLength={5}
             maxLength={300}
             className={`${INPUT} mt-2 w-full`}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="مثال: تمت مطابقة السجل والمستندات وتقديم الإقرار الضريبي"
+            placeholder={ui("مثال: تمت مطابقة السجل والمستندات وتقديم الإقرار الضريبي")}
           />
         </label>
         <label className="flex items-start gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
@@ -211,20 +203,18 @@ function PeriodArchive({
             className="size-4 accent-amber-600 rounded mt-0.5 cursor-pointer"
           />
           <span>
-            أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه
-            الفترة وحفظها ومنع تعديلها لاحقاً.
-          </span>
+            {ui("أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه الفترة وحفظها ومنع تعديلها لاحقاً.")}</span>
         </label>
         <button
           disabled={saving || !confirmed || report.unpostedInvoices.length > 0}
           className="gold-gradient-btn rounded-xl px-5 py-3 text-xs sm:text-sm font-black disabled:opacity-40 cursor-pointer shadow-sm"
         >
-          {saving ? "جارٍ إقفال الفترة…" : "تأكيد إقفال الفترة وحفظ الأرشيف"}
+          {ui(saving ? "جارٍ إقفال الفترة…" : "تأكيد إقفال الفترة وحفظ الأرشيف")}
         </button>
       </form>
       {(error || closed.error) && (
         <p role="alert" className="mt-4 text-sm text-rose-600">
-          {error || closed.error}
+          {ui(error || closed.error)}
         </p>
       )}
       <ul className="mt-6 space-y-3">
@@ -236,7 +226,7 @@ function PeriodArchive({
             <div>
               <p>
                 <bdi className="font-mono">
-                  {v.startDate.slice(0, 10)} — {v.endDate.slice(0, 10)}
+                  {ui(v.startDate.slice(0, 10))} — {ui(v.endDate.slice(0, 10))}
                 </bdi>
               </p>
               <p className="mt-1 text-xs text-slate-500">{v.reason}</p>
@@ -255,8 +245,7 @@ function PeriodArchive({
                 )
               }
             >
-              تنزيل النسخة المحفوظة
-            </button>
+              {ui("تنزيل النسخة المحفوظة")}</button>
           </li>
         ))}
       </ul>
@@ -265,6 +254,8 @@ function PeriodArchive({
 }
 
 export default function AccountingPage() {
+  const ui = useUiText();
+
   const { t, dir, isRTL } = useLanguage();
   const [period, setPeriod] = useState(defaultReportPeriod);
   const [tab, setTab] = useState("REPORTS");
@@ -371,8 +362,8 @@ export default function AccountingPage() {
     <div className="space-y-6 pb-12" dir={dir}>
       {/* Page Header with On-Demand Guide */}
       <PageHeader
-        title={t("accounting.title")}
-        subtitle={t("accounting.subtitle")}
+        title={ui(t("accounting.title"))}
+        subtitle={ui(t("accounting.subtitle"))}
         badge={t("mode.finance")}
         icon={Landmark}
         onRefresh={changed}
@@ -394,7 +385,7 @@ export default function AccountingPage() {
               className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
               <BookOpen className="size-4 text-amber-500" />
-              <span>{t("nav.accounts")}</span>
+              <span>{ui(t("nav.accounts"))}</span>
             </Link>
 
             <Link
@@ -402,7 +393,7 @@ export default function AccountingPage() {
               className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
               <Calculator className="size-4 text-amber-500" />
-              <span>{t("nav.vatReturns")}</span>
+              <span>{ui(t("nav.vatReturns"))}</span>
             </Link>
           </>
         }
@@ -413,12 +404,12 @@ export default function AccountingPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {seedMessage}
+          {ui(seedMessage)}
         </p>
       )}
 
       <nav
-        aria-label="صفحات المحاسبة"
+        aria-label={ui("صفحات المحاسبة")}
         className="flex flex-wrap gap-2 border-b theme-border pb-4"
       >
         {(
@@ -440,7 +431,7 @@ export default function AccountingPage() {
                 : "theme-card border theme-border hover:border-amber-500/40"
             }`}
           >
-            {label}
+            {ui(label)}
           </button>
         ))}
       </nav>
@@ -454,7 +445,7 @@ export default function AccountingPage() {
               className="theme-card rounded-xl border theme-border hover:border-amber-500 px-4 py-3 text-sm font-bold cursor-pointer"
               onClick={changed}
             >
-              {t("common.refresh")}
+              {ui(t("common.refresh"))}
             </button>
             {(["pdf", "csv"] as const).map((f) => (
               <button
@@ -464,9 +455,9 @@ export default function AccountingPage() {
                 onClick={() => void download(f)}
                 className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
               >
-                {f === "pdf"
+                {ui(f === "pdf"
                   ? t("accounting.exportPdf")
-                  : t("accounting.exportCsv")}
+                  : t("accounting.exportCsv"))}
               </button>
             ))}
           </div>
@@ -475,7 +466,7 @@ export default function AccountingPage() {
 
       {(error || failure) && (
         <p role="alert" className="theme-card rounded-xl p-4 text-rose-600">
-          {error || failure}
+          {ui(error || failure)}
         </p>
       )}
 
@@ -526,10 +517,10 @@ export default function AccountingPage() {
                 <p
                   className={`text-xs font-bold ${i === 3 ? "text-slate-300" : "text-slate-500"}`}
                 >
-                  {label}
+                  {ui(label)}
                 </p>
                 <p className="mt-4 font-mono text-2xl font-black" dir="ltr">
-                  {amountLabel(value)}{" "}
+                  {ui(amountLabel(value))}{ui(" ")}
                   <span className="text-xs font-normal opacity-60">SAR</span>
                 </p>
               </div>
@@ -538,25 +529,17 @@ export default function AccountingPage() {
 
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm leading-relaxed text-amber-900 dark:text-amber-200 space-y-1">
             <strong className="font-black text-slate-900 dark:text-white block">
-              💡 إيضاح مالي هام بشأن حساب الأرباح وضريبة القيمة المضافة:
-            </strong>
+              {ui("💡 إيضاح مالي هام بشأن حساب الأرباح وضريبة القيمة المضافة:")}</strong>
             <p>
-              ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة
-              الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم
-              من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات
-              الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول
-              والإدارة.
-            </p>
+              {ui("ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول والإدارة.")}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono pt-1">
-              مصروف الزكاة / ضريبة الدخل التقديري المسجل:{" "}
-              {amountLabel(data.profit.taxExpense)} ر.س (لا يُحسب تلقائياً من
-              ضريبة القيمة المضافة).
-            </p>
+              {ui("مصروف الزكاة / ضريبة الدخل التقديري المسجل:")}{ui(" ")}
+              {ui(amountLabel(data.profit.taxExpense))} {ui("ر.س (لا يُحسب تلقائياً من ضريبة القيمة المضافة).")}</p>
           </div>
 
           <section className="theme-card overflow-hidden rounded-2xl border theme-border">
             <header className="p-5">
-              <h2 className="text-lg font-bold">قائمة الدخل حسب الحساب</h2>
+              <h2 className="text-lg font-bold">{ui("قائمة الدخل حسب الحساب")}</h2>
             </header>
             <div className="divide-y divide-[var(--border-color)]">
               {data.trial
@@ -571,17 +554,17 @@ export default function AccountingPage() {
                     className="flex justify-between gap-4 border-t theme-border px-5 py-3 text-sm"
                   >
                     <p>
-                      <bdi className="font-mono text-slate-500">{a.code}</bdi> ·{" "}
-                      {a.nameAr}
+                      <bdi className="font-mono text-slate-500">{ui(a.code)}</bdi> ·{ui(" ")}
+                      {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                     </p>
                     <bdi className="font-mono font-bold">
-                      {amountLabel(
+                      {ui(amountLabel(
                         String(
                           a.type === "REVENUE"
                             ? Number(a.credit) - Number(a.debit)
                             : Number(a.debit) - Number(a.credit),
                         ),
-                      )}
+                      ))}
                     </bdi>
                   </div>
                 ))}
@@ -589,9 +572,9 @@ export default function AccountingPage() {
           </section>
 
           <section className="theme-card overflow-hidden rounded-2xl border theme-border">
-            <h2 className="p-5 text-lg font-bold">ميزان المراجعة</h2>
+            <h2 className="p-5 text-lg font-bold">{ui("ميزان المراجعة")}</h2>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] text-right text-sm">
+              <table className="w-full min-w-[980px] text-start text-sm">
                 <thead className="theme-card-subtle text-xs text-slate-500">
                   <tr>
                     {[
@@ -604,7 +587,7 @@ export default function AccountingPage() {
                       "ختامي دائن",
                     ].map((v) => (
                       <th key={v} className="px-4 py-3">
-                        {v}
+                        {ui(v)}
                       </th>
                     ))}
                   </tr>
@@ -614,9 +597,9 @@ export default function AccountingPage() {
                     <tr key={a.code} className="border-t theme-border">
                       <td className="px-4 py-3">
                         <bdi className="font-mono font-bold text-amber-700 dark:text-amber-400">
-                          {a.code}
-                        </bdi>{" "}
-                        · {a.nameAr}
+                          {ui(a.code)}
+                        </bdi>{ui(" ")}
+                        · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                       </td>
                       {[
                         a.openingDebit,
@@ -627,15 +610,14 @@ export default function AccountingPage() {
                         a.closingCredit,
                       ].map((v, i) => (
                         <td className="px-4 py-3 font-mono" key={i}>
-                          {amountLabel(v)}
+                          {ui(amountLabel(v))}
                         </td>
                       ))}
                     </tr>
                   ))}
                   <tr className="theme-card-subtle font-bold">
                     <td colSpan={3} className="px-4 py-4">
-                      الإجمالي
-                    </td>
+                      {ui("الإجمالي")}</td>
                     {[
                       data.totals.debit,
                       data.totals.credit,
@@ -643,7 +625,7 @@ export default function AccountingPage() {
                       data.totals.closingCredit,
                     ].map((v, i) => (
                       <td key={i} className="px-4 py-4 font-mono">
-                        {amountLabel(v)}
+                        {ui(amountLabel(v))}
                       </td>
                     ))}
                   </tr>
@@ -653,19 +635,17 @@ export default function AccountingPage() {
           </section>
 
           <section className="theme-card rounded-2xl border theme-border p-5">
-            <h2 className="text-lg font-bold">تكلفة وربحية المركبات</h2>
+            <h2 className="text-lg font-bold">{ui("تكلفة وربحية المركبات")}</h2>
             <p className="mt-2 text-xs text-slate-500">
-              تعتمد على لوحة المركبة المسجلة في الفواتير والمصروفات والقيود.
-              المصروفات العامة غير المخصصة لا توزع تلقائيًا.
-            </p>
+              {ui("تعتمد على لوحة المركبة المسجلة في الفواتير والمصروفات والقيود. المصروفات العامة غير المخصصة لا توزع تلقائيًا.")}</p>
             {data.vehicles.length ? (
               <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[500px] text-right text-sm">
+                <table className="w-full min-w-[500px] text-start text-sm">
                   <thead>
                     <tr>
                       {["اللوحة", "الإيراد", "التكلفة", "الربح"].map((v) => (
                         <th key={v} className="py-3">
-                          {v}
+                          {ui(v)}
                         </th>
                       ))}
                     </tr>
@@ -675,7 +655,7 @@ export default function AccountingPage() {
                       <tr key={v.plate} className="border-t theme-border">
                         {[v.plate, v.revenue, v.cost, v.profit].map((x, i) => (
                           <td key={i} className="py-3 font-mono">
-                            {i ? amountLabel(x) : x}
+                            {ui(i ? amountLabel(x) : x)}
                           </td>
                         ))}
                       </tr>
@@ -685,8 +665,7 @@ export default function AccountingPage() {
               </div>
             ) : (
               <p className="mt-5 text-sm text-slate-500">
-                لا توجد قيود مرتبطة بلوحات مركبات في الفترة.
-              </p>
+                {ui("لا توجد قيود مرتبطة بلوحات مركبات في الفترة.")}</p>
             )}
           </section>
         </>

@@ -1,5 +1,10 @@
+"use client";
+import { useUiText } from "@/lib/ui-text";
+
 export default function NewInvoiceLoading() {
-  return <div className="mx-auto max-w-[1380px] animate-pulse pb-6 motion-reduce:animate-none" role="status" aria-label="جارٍ تحميل نموذج الفاتورة">
+  const ui = useUiText();
+
+  return <div className="mx-auto max-w-[1380px] animate-pulse pb-6 motion-reduce:animate-none" role="status" aria-label={ui("جارٍ تحميل نموذج الفاتورة")}>
     <div className="mb-6 h-3 w-28 rounded bg-slate-200 dark:bg-slate-800" />
     <div className="mb-3 h-7 w-52 rounded bg-slate-200 dark:bg-slate-800" />
     <div className="mb-8 h-4 w-72 max-w-full rounded bg-slate-100 dark:bg-slate-800" />

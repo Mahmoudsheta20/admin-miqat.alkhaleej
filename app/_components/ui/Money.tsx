@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React from "react";
 import { useLanguage } from "@/lib/languageContext";
@@ -48,6 +50,8 @@ export default function Money({
   size,
   color,
 }: MoneyProps) {
+  const ui = useUiText();
+
   const { t } = useLanguage();
   const curr = currency || t("common.sar");
   const formatted = formatMoneyValue(amount);
@@ -59,11 +63,11 @@ export default function Money({
   return (
     <span className={`inline-flex items-baseline gap-1 font-mono ${colorClass} ${sizeClass} ${className}`.trim()}>
       <bdi dir="ltr">
-        {isNegative && !formatted.startsWith("-") ? `-${formatted}` : formatted}
+        {ui(isNegative && !formatted.startsWith("-") ? `-${formatted}` : formatted)}
       </bdi>
       {showCurrency && (
         <span className="text-[11px] font-sans font-bold text-amber-600 dark:text-amber-400">
-          {curr}
+          {ui(curr)}
         </span>
       )}
     </span>

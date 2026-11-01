@@ -1,9 +1,13 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { backendUrl, getAuthToken } from "@/lib/backend";
 interface InvoiceQrProps { invoiceId: string; isTax?: boolean }
 export default function InvoiceQr({ invoiceId, isTax = false }: InvoiceQrProps) {
+  const ui = useUiText();
+
   const [image, setImage] = useState(""), [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController(); let url = "";
@@ -17,7 +21,7 @@ export default function InvoiceQr({ invoiceId, isTax = false }: InvoiceQrProps) 
     <figure className="text-center">
       <Image
         src={image}
-        alt={isTax ? "رمز الفاتورة الضريبية | Tax Invoice QR" : "رمز رابط الفاتورة"}
+        alt={ui(isTax ? "رمز الفاتورة الضريبية | Tax Invoice QR" : "رمز رابط الفاتورة")}
         width={180}
         height={180}
         unoptimized
@@ -25,11 +29,11 @@ export default function InvoiceQr({ invoiceId, isTax = false }: InvoiceQrProps) 
       />
       {isTax && (
         <figcaption className="mt-2 text-xs font-bold text-slate-600 dark:text-slate-300">
-          رمز الفاتورة الضريبية | <span dir="ltr">Tax Invoice QR</span>
+          {ui("رمز الفاتورة الضريبية |")}<span dir="ltr">Tax Invoice QR</span>
         </figcaption>
       )}
     </figure>
   ) : (
-    <p className="text-sm text-slate-500">{error || "جارٍ تحميل الرمز…"}</p>
+    <p className="text-sm text-slate-500">{ui(error || "جارٍ تحميل الرمز…")}</p>
   );
 }

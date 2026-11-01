@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -44,6 +46,8 @@ interface OriginalOption {
 const INPUT_STYLE = "theme-input mt-1.5 h-11 w-full rounded-xl px-3 text-xs sm:text-sm";
 
 export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
+  const ui = useUiText();
+
   const dialog = useRef<HTMLDialogElement>(null);
   const key = useRef("");
 
@@ -221,7 +225,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
       onClose={onClose}
       aria-labelledby="purchase-title"
       className="theme-card m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-3xl rounded-3xl p-0 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/60 overflow-hidden"
-      dir="rtl"
+      dir={ui.dir}
     >
       <form onSubmit={submit} className="flex flex-col max-h-[92dvh]">
         {/* Modal Header */}
@@ -232,22 +236,21 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             </div>
             <div>
               <h2 id="purchase-title" className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                {existing
+                {ui(existing
                   ? `تعديل مستند ${existing.voucher}`
                   : isReturn
                     ? "تسجيل مرتجع مشتريات (إشعار دائن من مورد)"
-                    : "تسجيل فاتورة مصروف أو مشتريات"}
+                    : "تسجيل فاتورة مصروف أو مشتريات")}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                تُحفظ الفاتورة والضريبة والقيود المحاسبية بالريال السعودي تلقائياً.
-              </p>
+                {ui("تُحفظ الفاتورة والضريبة والقيود المحاسبية بالريال السعودي تلقائياً.")}</p>
             </div>
           </div>
           <button
             type="button"
             disabled={isSaving}
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label={ui("إغلاق")}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="size-4" />
@@ -262,7 +265,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               type="button"
               disabled={Boolean(existing)}
               onClick={() => update({ documentType: "PURCHASE_INVOICE", originalPurchaseId: undefined })}
-              className={`p-3 rounded-2xl border text-right transition cursor-pointer flex items-center gap-2.5 ${
+              className={`p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 !isReturn
                   ? "bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30"
                   : "theme-card theme-border opacity-70 hover:opacity-100"
@@ -271,9 +274,8 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               <Receipt className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <div>
                 <strong className="text-xs font-black block text-slate-900 dark:text-white">
-                  فاتورة مشتريات / مصروف
-                </strong>
-                <span className="text-[10px] text-slate-400">إثبات تكلفة جديدة للأسطول</span>
+                  {ui("فاتورة مشتريات / مصروف")}</strong>
+                <span className="text-[10px] text-slate-400">{ui("إثبات تكلفة جديدة للأسطول")}</span>
               </div>
             </button>
 
@@ -281,7 +283,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               type="button"
               disabled={Boolean(existing)}
               onClick={() => update({ documentType: "PURCHASE_RETURN" })}
-              className={`p-3 rounded-2xl border text-right transition cursor-pointer flex items-center gap-2.5 ${
+              className={`p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 isReturn
                   ? "bg-rose-500/10 border-rose-500/50 ring-1 ring-rose-500/30"
                   : "theme-card theme-border opacity-70 hover:opacity-100"
@@ -290,9 +292,8 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               <RotateCcw className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
               <div>
                 <strong className="text-xs font-black block text-slate-900 dark:text-white">
-                  مرتجع مورد (إشعار دائن)
-                </strong>
-                <span className="text-[10px] text-slate-400">رد بضاعة أو تخفيض مصروف</span>
+                  {ui("مرتجع مورد (إشعار دائن)")}</strong>
+                <span className="text-[10px] text-slate-400">{ui("رد بضاعة أو تخفيض مصروف")}</span>
               </div>
             </button>
           </div>
@@ -302,48 +303,45 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <section className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 space-y-3">
               <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 text-xs font-black">
                 <RotateCcw className="w-4 h-4" />
-                <span>ربط المرتجع بفاتورة المورد الأصلية *</span>
+                <span>{ui("ربط المرتجع بفاتورة المورد الأصلية *")}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  بحث عن الفاتورة الأصلية
-                  <input
+                  {ui("بحث عن الفاتورة الأصلية")}<input
                     disabled={Boolean(existing)}
                     className={INPUT_STYLE}
                     value={originalSearch}
                     onChange={(e) => setOriginalSearch(e.target.value)}
-                    placeholder="اسم المورد أو رقم الفاتورة..."
+                    placeholder={ui("اسم المورد أو رقم الفاتورة...")}
                   />
                 </label>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  اختر فاتورة مرحّلة *
-                  <select
+                  {ui("اختر فاتورة مرحّلة *")}<select
                     required
                     disabled={Boolean(existing) || isSelecting}
-                    aria-label="فاتورة المورد الأصلية"
+                    aria-label={ui("فاتورة المورد الأصلية")}
                     className={INPUT_STYLE}
                     value={form.originalPurchaseId || ""}
                     onChange={(e) => void selectOriginal(e.target.value)}
                   >
-                    <option value="">اختر فاتورة من القائمة</option>
+                    <option value="">{ui("اختر فاتورة من القائمة")}</option>
                     {form.originalPurchaseId &&
                       !originals.data?.items.some((v) => v.id === form.originalPurchaseId) && (
                         <option value={form.originalPurchaseId}>
-                          الفاتورة الأصلية المحددة · {form.supplierName}
+                          {ui("الفاتورة الأصلية المحددة ·")}{form.supplierName}
                         </option>
                       )}
                     {originals.data?.items.map((v) => (
                       <option key={v.id} value={v.id}>
-                        EXP-{String(v.voucherNumber).padStart(5, "0")} · {v.supplierName} ·{" "}
-                        {v.invoiceNumber}
+                        EXP-{ui(String(v.voucherNumber).padStart(5, "0"))} · {v.supplierName} ·{ui(" ")}
+                        {ui(v.invoiceNumber)}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
               <p className="text-[11px] text-rose-700/80 dark:text-rose-400/80">
-                يتم نسخ بيانات المورد والحساب والضريبة تلقائياً من الأصل، ولا يتجاوز مبلغ المرتجع الرصيد المتبقي.
-              </p>
+                {ui("يتم نسخ بيانات المورد والحساب والضريبة تلقائياً من الأصل، ولا يتجاوز مبلغ المرتجع الرصيد المتبقي.")}</p>
             </section>
           )}
 
@@ -352,29 +350,27 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <div className="border-b theme-border pb-2.5">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-amber-500" />
-                <span>١. بيانات المصروف والمورد</span>
+                <span>{ui("١. بيانات المصروف والمورد")}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                أدخل بيانات المورد ورقم المستند الورقي وتصنيف الخدمة أو الشراء.
-              </p>
+                {ui("أدخل بيانات المورد ورقم المستند الورقي وتصنيف الخدمة أو الشراء.")}</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                اسم المورد *
-                <input
+                {ui("اسم المورد *")}<input
                   required
                   readOnly={isReturn}
                   maxLength={200}
                   className={INPUT_STYLE}
-                  placeholder="مثال: شركة نفط للوقود، ورشة السلامة..."
+                  placeholder={ui("مثال: شركة نفط للوقود، ورشة السلامة...")}
                   value={form.supplierName}
                   onChange={(e) => update({ supplierName: e.target.value })}
                 />
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                الرقم الضريبي للمورد {isRecoverable ? "*" : "(اختياري)"}
+                {ui("الرقم الضريبي للمورد")} {ui(isRecoverable ? "*" : "(اختياري)")}
                 <input
                   required={isRecoverable}
                   readOnly={isReturn}
@@ -390,20 +386,18 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                رقم مستند المورد (رقم الفاتورة) *
-                <input
+                {ui("رقم مستند المورد (رقم الفاتورة) *")}<input
                   required
                   maxLength={200}
                   className={INPUT_STYLE}
-                  placeholder="مثال: INV-9842"
+                  placeholder={ui("مثال: INV-9842")}
                   value={form.invoiceNumber}
                   onChange={(e) => update({ invoiceNumber: e.target.value })}
                 />
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                تصنيف المصروف *
-                <select
+                {ui("تصنيف المصروف *")}<select
                   disabled={isReturn}
                   className={INPUT_STYLE}
                   value={form.category}
@@ -411,15 +405,14 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                 >
                   {Object.entries(EXPENSE_CATEGORIES).map(([catKey, label]) => (
                     <option key={catKey} value={catKey}>
-                      {label}
+                      {ui(label)}
                     </option>
                   ))}
                 </select>
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                تاريخ فاتورة المورد *
-                <input
+                {ui("تاريخ فاتورة المورد *")}<input
                   required
                   type="date"
                   className={INPUT_STYLE}
@@ -434,8 +427,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                تاريخ احتساب الضريبة والترحيل *
-                <input
+                {ui("تاريخ احتساب الضريبة والترحيل *")}<input
                   required
                   type="date"
                   min={form.issueDate}
@@ -446,13 +438,13 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 sm:col-span-2">
-                لوحة المركبة المرتبطة <span className="text-slate-400 font-normal">(اختياري للمصروفات الخاصة بمركبة معينة)</span>
+                {ui("لوحة المركبة المرتبطة")}<span className="text-slate-400 font-normal">{ui("(اختياري للمصروفات الخاصة بمركبة معينة)")}</span>
                 <div className="relative">
                   <Truck className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     maxLength={50}
-                    className={`${INPUT_STYLE} pr-10`}
-                    placeholder="مثال: أ ب ج 1234"
+                    className={`${INPUT_STYLE} ps-10`}
+                    placeholder={ui("مثال: أ ب ج 1234")}
                     value={form.vehiclePlate || ""}
                     onChange={(e) => update({ vehiclePlate: e.target.value })}
                   />
@@ -466,11 +458,10 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <div className="border-b theme-border pb-2.5">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Percent className="w-4 h-4 text-amber-500" />
-                <span>٢. المبلغ والضريبة</span>
+                <span>{ui("٢. المبلغ والضريبة")}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                حدد طريقة إدخال السعر وخصم ضريبة المدخلات 15% في الإقرار الضريبي.
-              </p>
+                {ui("حدد طريقة إدخال السعر وخصم ضريبة المدخلات 15% في الإقرار الضريبي.")}</p>
             </div>
 
             {/* Input Mode Toggle (Before VAT vs Inclusive 15%) */}
@@ -488,11 +479,10 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                   className="size-4 accent-amber-600 rounded cursor-pointer"
                 />
                 <label htmlFor="inclusive-toggle" className="text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
-                  إدخال الإجمالي شامل 15% من الإيصال أو الفاتورة
-                </label>
+                  {ui("إدخال الإجمالي شامل 15% من الإيصال أو الفاتورة")}</label>
               </div>
               <span className="text-[11px] text-slate-400">
-                {inclusive ? "احتساب الصافي والضريبة عكسياً" : "إدخال الصافي قبل الضريبة"}
+                {ui(inclusive ? "احتساب الصافي والضريبة عكسياً" : "إدخال الصافي قبل الضريبة")}
               </span>
             </div>
 
@@ -500,15 +490,14 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <div className="grid gap-4 sm:grid-cols-3">
               {inclusive && (
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  الإجمالي المدفوع شامل الضريبة *
-                  <div className="relative">
+                  {ui("الإجمالي المدفوع شامل الضريبة *")}<div className="relative">
                     <input
                       required
                       type="number"
                       min="0.01"
                       step="0.01"
                       dir="ltr"
-                      className={`${INPUT_STYLE} font-mono font-bold pr-3 pl-10`}
+                      className={`${INPUT_STYLE} font-mono font-bold ps-3 pe-10`}
                       value={gross}
                       onChange={(e) => {
                         setGross(e.target.value);
@@ -517,15 +506,13 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                       }}
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
-                      ر.س
-                    </span>
+                      {ui("ر.س")}</span>
                   </div>
                 </label>
               )}
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                المبلغ قبل الضريبة (الصافي) *
-                <div className="relative">
+                {ui("المبلغ قبل الضريبة (الصافي) *")}<div className="relative">
                   <input
                     required
                     readOnly={inclusive}
@@ -533,7 +520,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     min="0.01"
                     step="0.01"
                     dir="ltr"
-                    className={`${INPUT_STYLE} font-mono font-bold pr-3 pl-10 ${inclusive ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
+                    className={`${INPUT_STYLE} font-mono font-bold ps-3 pe-10 ${inclusive ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
                     value={form.netAmount}
                     onChange={(e) =>
                       update({
@@ -546,14 +533,12 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     }
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
-                    ر.س
-                  </span>
+                    {ui("ر.س")}</span>
                 </div>
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                ضريبة 15% *
-                <div className="relative">
+                {ui("ضريبة 15% *")}<div className="relative">
                   <input
                     required
                     readOnly={inclusive || form.taxTreatment !== "STANDARD"}
@@ -561,22 +546,20 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     min="0"
                     step="0.01"
                     dir="ltr"
-                    className={`${INPUT_STYLE} font-mono font-bold pr-3 pl-10 ${inclusive || form.taxTreatment !== "STANDARD" ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
+                    className={`${INPUT_STYLE} font-mono font-bold ps-3 pe-10 ${inclusive || form.taxTreatment !== "STANDARD" ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
                     value={form.vatAmount}
                     onChange={(e) => update({ vatAmount: e.target.value })}
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
-                    ر.س
-                  </span>
+                    {ui("ر.س")}</span>
                 </div>
               </label>
 
               {!inclusive && (
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border theme-border flex flex-col justify-center">
-                  <span className="text-[11px] text-slate-400">الإجمالي الشامل المحسوب:</span>
+                  <span className="text-[11px] text-slate-400">{ui("الإجمالي الشامل المحسوب:")}</span>
                   <strong className="text-base font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                    {totals.total} ر.س
-                  </strong>
+                    {ui(totals.total)} {ui("ر.س")}</strong>
                 </div>
               )}
             </div>
@@ -593,18 +576,16 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     className="size-4 accent-amber-600 rounded mt-0.5 cursor-pointer"
                   />
                   <div>
-                    <span>هل يمكن خصم ضريبة هذه الفاتورة في الإقرار الضريبي؟</span>
+                    <span>{ui("هل يمكن خصم ضريبة هذه الفاتورة في الإقرار الضريبي؟")}</span>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
-                      يُشترط توفر فاتورة ضريبية رسمية باسم المنشأة وتحتوي على الرقم الضريبي للمورد.
-                    </p>
+                      {ui("يُشترط توفر فاتورة ضريبية رسمية باسم المنشأة وتحتوي على الرقم الضريبي للمورد.")}</p>
                   </div>
                 </label>
 
                 {isRecoverable && (
                   <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-amber-500/20">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      نسبة الخصم القابلة للاسترداد (%) *
-                      <input
+                      {ui("نسبة الخصم القابلة للاسترداد (%) *")}<input
                         required
                         readOnly={isReturn}
                         type="number"
@@ -618,11 +599,10 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     </label>
 
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      مرجع المستند الضريبي المؤيد *
-                      <input
+                      {ui("مرجع المستند الضريبي المؤيد *")}<input
                         required
                         maxLength={200}
-                        placeholder="مثال: فاتورة ضريبية 9481 / إيصال إلكتروني"
+                        placeholder={ui("مثال: فاتورة ضريبية 9481 / إيصال إلكتروني")}
                         className={INPUT_STYLE}
                         value={form.evidenceReference || ""}
                         onChange={(e) => update({ evidenceReference: e.target.value })}
@@ -635,8 +615,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-center gap-2 text-xs text-slate-500">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>
-                  هذا المصروف ({TAX_TREATMENTS[form.taxTreatment]}) غير خاضع لضريبة المدخلات وتم ضبط الضريبة على 0.00 ر.س لضمان دقة إقرار هيئة الزكاة.
-                </span>
+                  {ui("هذا المصروف (")}{ui(TAX_TREATMENTS[form.taxTreatment])}{ui(") غير خاضع لضريبة المدخلات وتم ضبط الضريبة على 0.00 ر.س لضمان دقة إقرار هيئة الزكاة.")}</span>
               </div>
             )}
           </section>
@@ -646,30 +625,27 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <div className="border-b theme-border pb-2.5">
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-amber-500" />
-                <span>٣. طريقة الدفع والمرفقات</span>
+                <span>{ui("٣. طريقة الدفع والمرفقات")}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                حدد وسيلة السداد للمورد وأرفق صورة أو PDF الفاتورة للأرشفة.
-              </p>
+                {ui("حدد وسيلة السداد للمورد وأرفق صورة أو PDF الفاتورة للأرشفة.")}</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                كيف تم سداد المبلغ؟ *
-                <select
+                {ui("كيف تم سداد المبلغ؟ *")}<select
                   className={INPUT_STYLE}
                   value={form.paymentAccountCode}
                   onChange={(e) => update({ paymentAccountCode: e.target.value })}
                 >
-                  <option value="2101">آجل على حساب المورد (ذمم دائنة)</option>
-                  <option value="1102">تحويل بنكي - البنك الأهلي SNB</option>
-                  <option value="1101">نقداً من الصندوق الرئيسي</option>
+                  <option value="2101">{ui("آجل على حساب المورد (ذمم دائنة)")}</option>
+                  <option value="1102">{ui("تحويل بنكي - البنك الأهلي SNB")}</option>
+                  <option value="1101">{ui("نقداً من الصندوق الرئيسي")}</option>
                 </select>
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                مرفق فاتورة المورد (PDF أو صورة)
-                <div className="relative mt-1.5">
+                {ui("مرفق فاتورة المورد (PDF أو صورة)")}<div className="relative mt-1.5">
                   <input
                     type="file"
                     accept="application/pdf,image/png,image/jpeg,image/webp"
@@ -680,12 +656,12 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 sm:col-span-2">
-                ملاحظات أو بيان إضافي <span className="text-slate-400 font-normal">(اختياري)</span>
+                {ui("ملاحظات أو بيان إضافي")}<span className="text-slate-400 font-normal">{ui("(اختياري)")}</span>
                 <textarea
                   maxLength={1000}
                   rows={2}
                   className="theme-input mt-1.5 w-full rounded-xl p-3 text-xs sm:text-sm"
-                  placeholder="ملاحظات توضيحية حول الخدمة أو الفاتورة..."
+                  placeholder={ui("ملاحظات توضيحية حول الخدمة أو الفاتورة...")}
                   value={form.notes || ""}
                   onChange={(e) => update({ notes: e.target.value })}
                 />
@@ -701,7 +677,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                 onChange={(e) => update({ postImmediately: e.target.checked })}
                 className="size-4 accent-amber-600 rounded cursor-pointer"
               />
-              <span>اعتماد وترحيل المصروف فوراً إلى الحسابات والإقرار الضريبي</span>
+              <span>{ui("اعتماد وترحيل المصروف فوراً إلى الحسابات والإقرار الضريبي")}</span>
             </label>
 
             {/* Collapsible Details for Accountant (§2, §9) */}
@@ -712,14 +688,13 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
               >
                 <ChevronDown className={`size-3.5 transition-transform ${showAccountantDetails ? "rotate-180" : ""}`} />
-                <span>تفاصيل للمحاسب (تلقائية)</span>
+                <span>{ui("تفاصيل للمحاسب (تلقائية)")}</span>
               </button>
 
               {showAccountantDetails && (
                 <div className="mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border grid gap-3 sm:grid-cols-2 text-xs animate-in fade-in">
                   <label className="font-bold text-slate-600 dark:text-slate-300">
-                    حساب المصروف (المدين):
-                    <select
+                    {ui("حساب المصروف (المدين):")}<select
                       disabled={isReturn}
                       className={INPUT_STYLE}
                       value={form.accountCode}
@@ -735,15 +710,14 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                         )
                         .map((a) => (
                           <option key={a.code} value={a.code}>
-                            {a.code} · {a.nameAr}
+                            {ui(a.code)} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                           </option>
                         ))}
                     </select>
                   </label>
 
                   <label className="font-bold text-slate-600 dark:text-slate-300">
-                    المعاملة الضريبية الرسمية:
-                    <select
+                    {ui("المعاملة الضريبية الرسمية:")}<select
                       disabled={isReturn || isZeroTaxExpense}
                       className={INPUT_STYLE}
                       value={form.taxTreatment}
@@ -753,7 +727,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     >
                       {Object.entries(TAX_TREATMENTS).map(([tKey, label]) => (
                         <option key={tKey} value={tKey}>
-                          {label}
+                          {ui(label)}
                         </option>
                       ))}
                     </select>
@@ -770,7 +744,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               className="p-3.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2"
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error || accounts.error || originals.error}</span>
+              <span>{ui(error || accounts.error || originals.error)}</span>
             </div>
           )}
         </div>
@@ -778,10 +752,9 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
         {/* Modal Footer */}
         <footer className="flex items-center justify-between border-t theme-border px-6 py-4 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
           <div className="text-xs">
-            <span className="text-slate-400">الإجمالي النهائي: </span>
+            <span className="text-slate-400">{ui("الإجمالي النهائي:")}</span>
             <strong className="font-mono font-black text-slate-900 dark:text-white text-sm">
-              {totals.total} ر.س
-            </strong>
+              {ui(totals.total)} {ui("ر.س")}</strong>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -791,8 +764,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               onClick={onClose}
               className="px-4 py-2.5 rounded-xl border theme-border text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
-              إلغاء
-            </button>
+              {ui("إلغاء")}</button>
             <button
               type="submit"
               disabled={isSaving || isSelecting || accounts.isLoading}
@@ -801,12 +773,12 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               {isSaving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  <span>جارٍ الحفظ…</span>
+                  <span>{ui("جارٍ الحفظ…")}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="size-4" />
-                  <span>{existing ? "تحديث المستند" : "حفظ المستند"}</span>
+                  <span>{ui(existing ? "تحديث المستند" : "حفظ المستند")}</span>
                 </>
               )}
             </button>

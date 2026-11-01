@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React from "react";
 import { Car, ReceiptText } from "lucide-react";
@@ -14,6 +16,8 @@ export default function WorkspaceModeSwitcher({
   variant = "header",
   collapsed = false,
 }: WorkspaceModeSwitcherProps) {
+  const ui = useUiText();
+
   const { mode, switchAndNavigate } = useWorkspaceMode();
   const { t } = useLanguage();
   const isFinance = mode === "FINANCE";
@@ -32,12 +36,10 @@ export default function WorkspaceModeSwitcher({
                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:border-emerald-500 shadow-2xs"
                 : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:border-amber-500 shadow-2xs"
             }`}
-            title={
-              isFinance
+            title={ui(isFinance
                 ? `${t("mode.finance")}: ${t("mode.switchTip")}`
-                : `${t("mode.operations")}: ${t("mode.switchTip")}`
-            }
-            aria-label="تبديل وضع مساحة العمل"
+                : `${t("mode.operations")}: ${t("mode.switchTip")}`)}
+            aria-label={ui("تبديل وضع مساحة العمل")}
           >
             {isFinance ? (
               <ReceiptText className="w-4 h-4" />
@@ -55,27 +57,27 @@ export default function WorkspaceModeSwitcher({
           <button
             type="button"
             onClick={() => switchAndNavigate("OPERATIONS")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+            className={`min-w-0 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
               !isFinance
                 ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-xs border border-amber-500/30 font-black"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/40"
             }`}
           >
             <Car className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{t("mode.operations")}</span>
+            <span className="truncate" title={t("mode.operations")}>{t("mode.operationsShort")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => switchAndNavigate("FINANCE")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+            className={`min-w-0 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
               isFinance
                 ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 shadow-xs border border-emerald-500/30 font-black"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/40"
             }`}
           >
             <ReceiptText className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{t("mode.finance")}</span>
+            <span className="truncate" title={t("mode.finance")}>{t("mode.financeShort")}</span>
           </button>
         </div>
       </div>
@@ -84,38 +86,38 @@ export default function WorkspaceModeSwitcher({
 
   // Header variant
   return (
-    <div className="flex items-center">
+    <div className="flex shrink-0 items-center">
       <div className="p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-1 shadow-2xs">
         <button
           type="button"
           onClick={() => switchAndNavigate("OPERATIONS")}
-          className={`flex items-center gap-1.5 py-1.5 px-2 sm:px-2.5 md:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+          className={`flex shrink-0 items-center whitespace-nowrap gap-1.5 py-1.5 px-2 sm:px-2.5 md:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
             !isFinance
               ? "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 shadow-xs border border-amber-500/30 font-black"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
-          title={t("mode.operations")}
-          aria-label={t("mode.operations")}
+          title={ui(t("mode.operations"))}
+          aria-label={ui(t("mode.operations"))}
         >
           <Car className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden md:inline">{t("mode.operations")}</span>
-          <span className="hidden min-[380px]:inline md:hidden">{t("mode.operationsShort")}</span>
+          <span className="hidden 2xl:inline">{ui(t("mode.operations"))}</span>
+          <span className="hidden sm:inline 2xl:hidden">{ui(t("mode.operationsShort"))}</span>
         </button>
 
         <button
           type="button"
           onClick={() => switchAndNavigate("FINANCE")}
-          className={`flex items-center gap-1.5 py-1.5 px-2 sm:px-2.5 md:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+          className={`flex shrink-0 items-center whitespace-nowrap gap-1.5 py-1.5 px-2 sm:px-2.5 md:px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
             isFinance
               ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 shadow-xs border border-emerald-500/30 font-black"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
-          title={t("mode.finance")}
-          aria-label={t("mode.finance")}
+          title={ui(t("mode.finance"))}
+          aria-label={ui(t("mode.finance"))}
         >
           <ReceiptText className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden md:inline">{t("mode.finance")}</span>
-          <span className="hidden min-[380px]:inline md:hidden">{t("mode.financeShort")}</span>
+          <span className="hidden 2xl:inline">{ui(t("mode.finance"))}</span>
+          <span className="hidden sm:inline 2xl:hidden">{ui(t("mode.financeShort"))}</span>
         </button>
       </div>
     </div>

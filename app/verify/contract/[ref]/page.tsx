@@ -1,3 +1,5 @@
+import { LocalizedText } from "@/lib/ui-text";
+import { localizedMetadataTitle } from "@/lib/metadata";
 import { notFound } from "next/navigation";
 import { backendUrl } from "@/lib/backend";
 import type { ApiResult } from "@/lib/backend";
@@ -11,7 +13,7 @@ const STATUS_LABELS: Record<ContractStatus, string> = {
 };
 export async function generateMetadata({ params }: PageProps) {
   const { ref } = await params;
-  return { title: `توثيق العقد ${ref} | ميقات الخليج` };
+  return { title: await localizedMetadataTitle(`توثيق العقد ${ref} | ميقات الخليج`) };
 }
 export default async function ContractVerificationPage({ params }: PageProps) {
   const { ref } = await params;
@@ -24,13 +26,13 @@ export default async function ContractVerificationPage({ params }: PageProps) {
   if (!result.success || !result.data) throw new Error("تعذر التحقق من العقد");
   const contract = result.data;
   return (
-    <main className="min-h-screen flex items-center justify-center p-6" dir="rtl">
+    <main className="min-h-screen flex items-center justify-center p-6">
       <section className="theme-card rounded-2xl p-8 max-w-lg w-full">
-        <h1 className="text-2xl font-bold mb-6">توثيق عقد ميقات الخليج</h1>
+        <h1 className="text-2xl font-bold mb-6"><LocalizedText value="توثيق عقد ميقات الخليج"/></h1>
         <dl className="space-y-3">
-          <dt>الرقم المرجعي</dt><dd className="font-mono">{contract.referenceNumber}</dd>
-          <dt>الحالة</dt><dd>{STATUS_LABELS[contract.status]}</dd>
-          {contract.issueDate && <><dt>تاريخ الإصدار</dt><dd className="font-mono">{contract.issueDate}</dd></>}
+          <dt><LocalizedText value="الرقم المرجعي"/></dt><dd className="font-mono">{contract.referenceNumber}</dd>
+          <dt><LocalizedText value="الحالة"/></dt><dd><LocalizedText value={STATUS_LABELS[contract.status]}/></dd>
+          {contract.issueDate && <><dt><LocalizedText value="تاريخ الإصدار"/></dt><dd className="font-mono">{contract.issueDate}</dd></>}
         </dl>
       </section>
     </main>

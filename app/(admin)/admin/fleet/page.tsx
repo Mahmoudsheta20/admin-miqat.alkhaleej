@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import LoadError from "@/app/_components/LoadError";
 
 import Modal from "@/app/_components/Modal";
@@ -32,6 +34,8 @@ import {
 import { useLanguage } from "@/lib/languageContext";
 
 export default function FleetManagementPage() {
+  const ui = useUiText();
+
   const { t, isRTL } = useLanguage();
   const cachedFleet =
     getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
@@ -281,8 +285,8 @@ export default function FleetManagementPage() {
 
       {/* Page Header with On-Demand Guide */}
       <PageHeader
-        title={t("fleet.title")}
-        subtitle={t("fleet.subtitle")}
+        title={ui(t("fleet.title"))}
+        subtitle={ui(t("fleet.subtitle"))}
         badge={isRTL ? "إدارة أسطول النقل" : "Fleet Management"}
         icon={Car}
         onRefresh={() => void loadVehicles(true)}
@@ -311,7 +315,7 @@ export default function FleetManagementPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {seedMessage}
+          {ui(seedMessage)}
         </p>
       )}
 
@@ -319,7 +323,7 @@ export default function FleetManagementPage() {
       <FilterBar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder={isRTL ? "البحث باللوحة، الشركة المصنعة، أو الطراز..." : "Search by plate, make, or model..."}
+        searchPlaceholder={ui(isRTL ? "البحث باللوحة، الشركة المصنعة، أو الطراز..." : "Search by plate, make, or model...")}
         tabs={[
           { id: "ALL", label: t("common.all"), count: safeVehicles.length },
           { id: "AVAILABLE", label: isRTL ? "جاهزة" : "Available", count: availableCount },
@@ -334,12 +338,11 @@ export default function FleetManagementPage() {
       {isLoading ? (
         <div className="p-12 flex flex-col items-center justify-center theme-card rounded-2xl border theme-border">
           <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-          <p className="text-xs text-slate-400">جاري تحميل أسطول المركبات...</p>
+          <p className="text-xs text-slate-400">{ui("جاري تحميل أسطول المركبات...")}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="p-12 text-center text-slate-400 text-sm theme-card rounded-2xl border theme-border">
-          لا توجد مركبات تطابق شروط البحث.
-        </div>
+          {ui("لا توجد مركبات تطابق شروط البحث.")}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {filtered.map((v) => (
@@ -351,11 +354,10 @@ export default function FleetManagementPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                      {v.make} {v.model}
+                      {ui(v.make)} {ui(v.model)}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      موديل {v.year} • سعة {v.capacity} ركاب
-                    </p>
+                      {ui("موديل")}{ui(v.year)} {ui("• سعة")}{ui(v.capacity)} {ui("ركاب")}</p>
                   </div>
                   <StatusBadge type="vehicle" status={v.status} />
                 </div>
@@ -364,8 +366,7 @@ export default function FleetManagementPage() {
                 <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border flex items-center justify-between">
                   <div className="text-center">
                     <span className="text-[10px] text-slate-400 block">
-                      اللوحة بالعربية
-                    </span>
+                      {ui("اللوحة بالعربية")}</span>
                     <span className="font-bold text-sm text-slate-900 dark:text-white">
                       {v.plateNumberAr}
                     </span>
@@ -386,30 +387,26 @@ export default function FleetManagementPage() {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-slate-500">
                       <Gauge className="w-3.5 h-3.5 text-amber-500" />
-                      العداد الحالي
-                    </span>
+                      {ui("العداد الحالي")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {v.currentMileage?.toLocaleString() || 0} كم
-                    </span>
+                      {ui(v.currentMileage?.toLocaleString() || 0)} {ui("كم")}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-slate-500">
                       <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                      انتهاء الاستمارة
-                    </span>
+                      {ui("انتهاء الاستمارة")}</span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">
-                      {v.registrationExpiry}
+                      {ui(v.registrationExpiry)}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-slate-500">
                       <Calendar className="w-3.5 h-3.5 text-emerald-500" />
-                      انتهاء التأمين
-                    </span>
+                      {ui("انتهاء التأمين")}</span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">
-                      {v.insuranceExpiry}
+                      {ui(v.insuranceExpiry)}
                     </span>
                   </div>
                 </div>
@@ -422,15 +419,13 @@ export default function FleetManagementPage() {
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 text-xs font-bold transition"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  تعديل
-                </button>
+                  {ui("تعديل")}</button>
                 <button
                   onClick={() => setDeleteId(v.id)}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border theme-card hover:border-rose-500 text-rose-600 dark:text-rose-400 text-xs font-bold transition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  حذف
-                </button>
+                  {ui("حذف")}</button>
               </div>
             </div>
           ))}
@@ -440,7 +435,7 @@ export default function FleetManagementPage() {
       {/* Add/Edit Modal */}
       {(isAddModalOpen || editingVehicle) && (
         <Modal
-          label="بيانات المركبة"
+          label={ui("بيانات المركبة")}
           onClose={() => {
             setIsAddModalOpen(false);
             setEditingVehicle(null);
@@ -450,9 +445,9 @@ export default function FleetManagementPage() {
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {editingVehicle
+                {ui(editingVehicle
                   ? "تعديل بيانات المركبة"
-                  : "إضافة مركبة جديدة للأسطول"}
+                  : "إضافة مركبة جديدة للأسطول")}
               </h3>
               <button
                 onClick={() => {
@@ -471,15 +466,14 @@ export default function FleetManagementPage() {
             >
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
-                  {formError}
+                  {ui(formError)}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    رقم اللوحة (عربي) *
-                  </label>
+                    {ui("رقم اللوحة (عربي) *")}</label>
                   <input
                     type="text"
                     required
@@ -490,15 +484,14 @@ export default function FleetManagementPage() {
                         plateNumberAr: e.target.value,
                       })
                     }
-                    placeholder="ا ص ل 7223"
+                    placeholder={ui("ا ص ل 7223")}
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    رقم اللوحة (إنجليزي) *
-                  </label>
+                    {ui("رقم اللوحة (إنجليزي) *")}</label>
                   <input
                     type="text"
                     required
@@ -511,14 +504,13 @@ export default function FleetManagementPage() {
                     }
                     placeholder="ASL 7223"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
+                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    الشركة المصنعة *
-                  </label>
+                    {ui("الشركة المصنعة *")}</label>
                   <input
                     type="text"
                     required
@@ -533,8 +525,7 @@ export default function FleetManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    الموديل والطراز *
-                  </label>
+                    {ui("الموديل والطراز *")}</label>
                   <input
                     type="text"
                     required
@@ -549,8 +540,7 @@ export default function FleetManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    سنة الصنع
-                  </label>
+                    {ui("سنة الصنع")}</label>
                   <input
                     type="number"
                     value={formData.year}
@@ -563,8 +553,7 @@ export default function FleetManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    سعة الركاب
-                  </label>
+                    {ui("سعة الركاب")}</label>
                   <input
                     type="number"
                     value={formData.capacity}
@@ -580,8 +569,7 @@ export default function FleetManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    حالة المركبة
-                  </label>
+                    {ui("حالة المركبة")}</label>
                   <select
                     value={formData.status}
                     onChange={(e) =>
@@ -592,16 +580,15 @@ export default function FleetManagementPage() {
                     }
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   >
-                    <option value="AVAILABLE">جاهزة</option>
-                    <option value="ON_TRIP">في رحلة</option>
-                    <option value="MAINTENANCE">صيانة</option>
+                    <option value="AVAILABLE">{ui("جاهزة")}</option>
+                    <option value="ON_TRIP">{ui("في رحلة")}</option>
+                    <option value="MAINTENANCE">{ui("صيانة")}</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    العداد الحالي (كم)
-                  </label>
+                    {ui("العداد الحالي (كم)")}</label>
                   <input
                     type="number"
                     value={formData.currentMileage}
@@ -617,8 +604,7 @@ export default function FleetManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    تاريخ انتهاء الاستمارة
-                  </label>
+                    {ui("تاريخ انتهاء الاستمارة")}</label>
                   <input
                     type="text"
                     value={formData.registrationExpiry}
@@ -635,8 +621,7 @@ export default function FleetManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    تاريخ انتهاء التأمين
-                  </label>
+                    {ui("تاريخ انتهاء التأمين")}</label>
                   <input
                     type="text"
                     value={formData.insuranceExpiry}
@@ -661,18 +646,17 @@ export default function FleetManagementPage() {
                   }}
                   className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
-                  إلغاء
-                </button>
+                  {ui("إلغاء")}</button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
                 >
-                  {isSubmitting
+                  {ui(isSubmitting
                     ? "جاري الحفظ..."
                     : editingVehicle
                       ? "حفظ التعديلات"
-                      : "إضافة المركبة"}
+                      : "إضافة المركبة")}
                 </button>
               </div>
             </form>
@@ -683,10 +667,10 @@ export default function FleetManagementPage() {
       {/* Confirm Delete Dialog */}
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="تأكيد حذف المركبة"
+        title={ui("تأكيد حذف المركبة")}
         message="هل أنت متأكد من رغبتك في حذف هذه المركبة من الأسطول بشكل نهائي؟"
         variant="danger"
-        confirmText="تأكيد الحذف"
+        confirmText={ui("تأكيد الحذف")}
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
       />

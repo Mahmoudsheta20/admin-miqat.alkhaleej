@@ -1,4 +1,7 @@
 "use client";
+import LanguageSwitcher from "@/app/_components/LanguageSwitcher";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
@@ -26,6 +29,8 @@ import {
 } from "@/app/_actions/auth";
 
 function ResetPasswordContent() {
+  const ui = useUiText();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, toggleTheme } = useTheme();
@@ -197,7 +202,7 @@ function ResetPasswordContent() {
   return (
     <div
       className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative overflow-hidden"
-      dir="rtl"
+      dir={ui.dir}
     >
       {/* Subtle Background Glows */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -210,22 +215,22 @@ function ResetPasswordContent() {
           className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition"
         >
           <ArrowRight className="w-4 h-4" />
-          <span>العودة لتسجيل الدخول</span>
+          <span>{ui("العودة لتسجيل الدخول")}</span>
         </Link>
 
-        <button
+        <div className="flex items-center gap-2 [&_button]:flex"><LanguageSwitcher/><button
           onClick={toggleTheme}
           type="button"
           className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition shadow-xs cursor-pointer"
-          title={theme === "dark" ? "الوضع النهاري" : "الوضع الليلي"}
-          aria-label="تبديل المظهر"
+          title={ui(theme === "dark" ? "الوضع النهاري" : "الوضع الليلي")}
+          aria-label={ui("تبديل المظهر")}
         >
           {theme === "dark" ? (
             <Sun className="w-4 h-4 text-amber-400" />
           ) : (
             <Moon className="w-4 h-4 text-slate-700" />
           )}
-        </button>
+        </button></div>
       </header>
 
       {/* Main Card */}
@@ -237,7 +242,7 @@ function ResetPasswordContent() {
               <div className="inline-flex justify-center mb-4">
                 <Image
                   src="/logo.svg"
-                  alt="ميقات الخليج"
+                  alt={ui("ميقات الخليج")}
                   width={150}
                   height={45}
                   className="h-9 w-auto object-contain"
@@ -247,15 +252,13 @@ function ResetPasswordContent() {
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold mb-3">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>تعيين كلمة المرور</span>
+                <span>{ui("تعيين كلمة المرور")}</span>
               </div>
 
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                إعادة تعيين كلمة المرور
-              </h1>
+                {ui("إعادة تعيين كلمة المرور")}</h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-                أدخل كلمة المرور الجديدة لحسابك لتأكيد التحديث والولوج للنظام
-              </p>
+                {ui("أدخل كلمة المرور الجديدة لحسابك لتأكيد التحديث والولوج للنظام")}</p>
             </div>
 
             {/* Verifying Session Loader */}
@@ -263,8 +266,7 @@ function ResetPasswordContent() {
               <div className="py-10 text-center space-y-3">
                 <div className="w-8 h-8 mx-auto border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                  جاري التحقق من صلاحية الرابط...
-                </p>
+                  {ui("جاري التحقق من صلاحية الرابط...")}</p>
               </div>
             )}
 
@@ -272,7 +274,7 @@ function ResetPasswordContent() {
             {!isVerifyingSession && infoMessage && (
               <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
-                <span className="font-semibold">{infoMessage}</span>
+                <span className="font-semibold">{ui(infoMessage)}</span>
               </div>
             )}
 
@@ -280,7 +282,7 @@ function ResetPasswordContent() {
             {!isVerifyingSession && errorMessage && (
               <div className="mb-4 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-                <span className="font-semibold">{errorMessage}</span>
+                <span className="font-semibold">{ui(errorMessage)}</span>
               </div>
             )}
 
@@ -293,11 +295,10 @@ function ResetPasswordContent() {
 
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {successMessage}
+                    {ui(successMessage)}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    جاري توجيهك تلقائياً إلى صفحة تسجيل الدخول...
-                  </p>
+                    {ui("جاري توجيهك تلقائياً إلى صفحة تسجيل الدخول...")}</p>
                 </div>
 
                 <div className="pt-2">
@@ -305,7 +306,7 @@ function ResetPasswordContent() {
                     href="/login"
                     className="w-full py-2.5 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-xs font-bold text-white shadow-xs"
                   >
-                    <span>الانتقال لتسجيل الدخول الآن</span>
+                    <span>{ui("الانتقال لتسجيل الدخول الآن")}</span>
                   </Link>
                 </div>
               </div>
@@ -320,10 +321,10 @@ function ResetPasswordContent() {
                     htmlFor="reset-email"
                     className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
                   >
-                    البريد الإلكتروني <span className="text-rose-500">*</span>
+                    {ui("البريد الإلكتروني")}<span className="text-rose-500">*</span>
                   </label>
                   <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/80 focus-within:bg-white dark:bg-slate-900/70 focus-within:border-amber-500 transition-all">
-                    <div className="pr-3 text-slate-400">
+                    <div className="ps-3 text-slate-400">
                       <Mail className="w-4 h-4" />
                     </div>
                     <input
@@ -335,7 +336,7 @@ function ResetPasswordContent() {
                       onChange={(e) => setEmailInput(e.target.value)}
                       placeholder="name@example.com"
                       readOnly={isAutoVerified}
-                      className={`w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left ${
+                      className={`w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-end ${
                         isAutoVerified ? "opacity-75 cursor-not-allowed" : ""
                       }`}
                     />
@@ -349,7 +350,7 @@ function ResetPasswordContent() {
                       htmlFor="reset-token"
                       className="text-xs font-bold text-slate-800 dark:text-slate-200"
                     >
-                      رمز التحقق <span className="text-rose-500">*</span>
+                      {ui("رمز التحقق")}<span className="text-rose-500">*</span>
                     </label>
                     <button
                       type="button"
@@ -358,17 +359,17 @@ function ResetPasswordContent() {
                       className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline disabled:opacity-50 cursor-pointer flex items-center gap-1"
                     >
                       {resendingCode ? (
-                        <span>جاري الإرسال...</span>
+                        <span>{ui("جاري الإرسال...")}</span>
                       ) : (
                         <>
                           <Send className="w-3 h-3" />
-                          <span>إرسال رمز جديد</span>
+                          <span>{ui("إرسال رمز جديد")}</span>
                         </>
                       )}
                     </button>
                   </div>
                   <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/80 focus-within:bg-white dark:bg-slate-900/70 focus-within:border-amber-500 transition-all">
-                    <div className="pr-3 text-slate-400">
+                    <div className="ps-3 text-slate-400">
                       <KeyRound className="w-4 h-4" />
                     </div>
                     <input
@@ -382,7 +383,7 @@ function ResetPasswordContent() {
                         setTokenInput(val);
                         if (errorMessage) setErrorMessage("");
                       }}
-                      placeholder="أدخل رمز التحقق (مثل: 739104)"
+                      placeholder={ui("أدخل رمز التحقق (مثل: 739104)")}
                       readOnly={isAutoVerified && tokenInput.length > 0}
                       className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-center tracking-widest font-bold"
                     />
@@ -395,10 +396,10 @@ function ResetPasswordContent() {
                     htmlFor="new-password"
                     className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
                   >
-                    كلمة المرور الجديدة <span className="text-rose-500">*</span>
+                    {ui("كلمة المرور الجديدة")}<span className="text-rose-500">*</span>
                   </label>
                   <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/80 focus-within:bg-white dark:bg-slate-900/70 focus-within:border-amber-500 transition-all">
-                    <div className="pr-3 text-slate-400">
+                    <div className="ps-3 text-slate-400">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -408,14 +409,14 @@ function ResetPasswordContent() {
                       dir="ltr"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="أدخل 8 خانات على الأقل"
-                      className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      placeholder={ui("أدخل 8 خانات على الأقل")}
+                      className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-end"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                       className="px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 transition cursor-pointer"
-                      aria-label={showNewPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      aria-label={ui(showNewPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                     >
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -428,10 +429,10 @@ function ResetPasswordContent() {
                     htmlFor="confirm-password"
                     className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
                   >
-                    تأكيد كلمة المرور الجديدة <span className="text-rose-500">*</span>
+                    {ui("تأكيد كلمة المرور الجديدة")}<span className="text-rose-500">*</span>
                   </label>
                   <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/80 focus-within:bg-white dark:bg-slate-900/70 focus-within:border-amber-500 transition-all">
-                    <div className="pr-3 text-slate-400">
+                    <div className="ps-3 text-slate-400">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -441,14 +442,14 @@ function ResetPasswordContent() {
                       dir="ltr"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="أعد إدخال كلمة المرور للتأكيد"
-                      className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-left"
+                      placeholder={ui("أعد إدخال كلمة المرور للتأكيد")}
+                      className="w-full px-3 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-end"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="px-3 text-slate-500 hover:text-slate-800 dark:text-slate-400 transition cursor-pointer"
-                      aria-label={showConfirmPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      aria-label={ui(showConfirmPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -464,10 +465,10 @@ function ResetPasswordContent() {
                   {loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>جاري تعيين كلمة المرور...</span>
+                      <span>{ui("جاري تعيين كلمة المرور...")}</span>
                     </>
                   ) : (
-                    <span>تأكيد وتعيين كلمة المرور</span>
+                    <span>{ui("تأكيد وتعيين كلمة المرور")}</span>
                   )}
                 </button>
               </form>
@@ -478,13 +479,15 @@ function ResetPasswordContent() {
 
       {/* Footer */}
       <footer className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-400 dark:text-slate-500 relative z-10">
-        <p>© {new Date().getFullYear()} شركة ميقات الخليج للنقل البري. جميع الحقوق محفوظة.</p>
+        <p>© {ui(new Date().getFullYear())} {ui("شركة ميقات الخليج للنقل البري. جميع الحقوق محفوظة.")}</p>
       </footer>
     </div>
   );
 }
 
 export default function ResetPasswordPage() {
+
+
   return (
     <Suspense
       fallback={

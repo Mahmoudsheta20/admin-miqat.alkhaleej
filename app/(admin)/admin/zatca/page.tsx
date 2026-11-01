@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,6 +16,8 @@ interface InvoiceList {
 }
 
 export default function ZatcaPage() {
+  const ui = useUiText();
+
   const { t, dir, isRTL } = useLanguage();
   const [data, setData] = useState<InvoiceList | null>(null);
   const [error, setError] = useState("");
@@ -117,12 +121,10 @@ export default function ZatcaPage() {
     <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Header with On-Demand Help Guide */}
       <PageHeader
-        title={isRTL ? "الفوترة الضريبية" : "ZATCA Tax Invoicing"}
-        subtitle={
-          isRTL
+        title={ui(isRTL ? "الفوترة الضريبية" : "ZATCA Tax Invoicing")}
+        subtitle={ui(isRTL
             ? "إدارة الفواتير الضريبية والمبسطة والإشعارات الدائنة والمدينة المتوافقة مع متطلبات الزكاة والضريبة."
-            : "Manage standard & simplified tax invoices, credit notes, and debit notes per ZATCA requirements."
-        }
+            : "Manage standard & simplified tax invoices, credit notes, and debit notes per ZATCA requirements.")}
         badge={t("section.financeReview")}
         icon={ShieldCheck}
         onRefresh={() => void load()}
@@ -144,7 +146,7 @@ export default function ZatcaPage() {
               className="theme-card inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-border hover:border-amber-500 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
               <Building2 className="w-4 h-4 text-amber-500" />
-              <span>{isRTL ? "بيانات الشركة" : "Company Profile"}</span>
+              <span>{ui(isRTL ? "بيانات الشركة" : "Company Profile")}</span>
             </Link>
 
             <Link
@@ -152,7 +154,7 @@ export default function ZatcaPage() {
               className="gold-gradient-btn inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black shadow-sm hover:shadow-md transition"
             >
               <Plus className="w-4 h-4" />
-              <span>{isRTL ? "إنشاء مستند ضريبي" : "New Tax Document"}</span>
+              <span>{ui(isRTL ? "إنشاء مستند ضريبي" : "New Tax Document")}</span>
             </Link>
           </>
         }
@@ -163,24 +165,23 @@ export default function ZatcaPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {seedMessage}
+          {ui(seedMessage)}
         </p>
       )}
       {error && (
         <p role="alert" className="text-rose-600 text-xs font-bold">
-          {error}
+          {ui(error)}
         </p>
       )}
 
       <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
-        <p>{data?.total || 0} فاتورة</p>
+        <p>{ui(data?.total || 0)} {ui("فاتورة")}</p>
         <button className="theme-card rounded-lg px-3 py-2 cursor-pointer" onClick={() => void load()}>
-          تحديث
-        </button>
+          {ui("تحديث")}</button>
       </div>
 
       <div className="theme-card rounded-2xl overflow-x-auto">
-        <table className="w-full text-sm text-right">
+        <table className="w-full text-sm text-start">
           <thead className="theme-card-subtle">
             <tr>
               {[
@@ -192,7 +193,7 @@ export default function ZatcaPage() {
                 "تاريخ الفاتورة",
               ].map((label) => (
                 <th key={label} className="p-4 whitespace-nowrap">
-                  {label}
+                  {ui(label)}
                 </th>
               ))}
             </tr>
@@ -205,25 +206,24 @@ export default function ZatcaPage() {
                     className="text-amber-700 dark:text-amber-400 font-bold font-mono"
                     href={`/admin/invoices/${row.id}`}
                   >
-                    {row.invoiceNumber}
+                    {ui(row.invoiceNumber)}
                   </Link>
                 </td>
-                <td className="p-4 whitespace-nowrap">{invoiceTitle(row)}</td>
+                <td className="p-4 whitespace-nowrap">{ui(invoiceTitle(row))}</td>
                 <td className="p-4">{row.customerName}</td>
-                <td className="p-4 font-mono">{row.totalAmount} ر.س</td>
-                <td className="p-4 font-mono text-slate-500">{row.vatAmount}</td>
-                <td className="p-4 whitespace-nowrap">{dateLabel(row.invoiceDate)}</td>
+                <td className="p-4 font-mono">{ui(row.totalAmount)} {ui("ر.س")}</td>
+                <td className="p-4 font-mono text-slate-500">{ui(row.vatAmount)}</td>
+                <td className="p-4 whitespace-nowrap">{ui(dateLabel(row.invoiceDate, ui.language))}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {!data && !error && (
           <p role="status" className="p-6 animate-pulse">
-            جارٍ تحميل الفواتير…
-          </p>
+            {ui("جارٍ تحميل الفواتير…")}</p>
         )}
         {data?.items.length === 0 && (
-          <p className="p-8 text-slate-500">لا توجد مستندات ضريبية محلية حتى الآن.</p>
+          <p className="p-8 text-slate-500">{ui("لا توجد مستندات ضريبية محلية حتى الآن.")}</p>
         )}
       </div>
 
@@ -233,16 +233,14 @@ export default function ZatcaPage() {
           className="theme-card px-4 py-2 rounded-lg disabled:opacity-40 cursor-pointer"
           onClick={() => setPage(page - 1)}
         >
-          السابق
-        </button>
-        <span>صفحة {page}</span>
+          {ui("السابق")}</button>
+        <span>{ui("صفحة")}{ui(page)}</span>
         <button
           disabled={!data || page * 30 >= data.total}
           className="theme-card px-4 py-2 rounded-lg disabled:opacity-40 cursor-pointer"
           onClick={() => setPage(page + 1)}
         >
-          التالي
-        </button>
+          {ui("التالي")}</button>
       </div>
     </div>
   );

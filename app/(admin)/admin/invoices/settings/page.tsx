@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -43,6 +45,8 @@ const EMPTY: CompanyForm = {
 };
 
 export default function InvoiceSettingsPage() {
+  const ui = useUiText();
+
   const [form, setForm] = useState(EMPTY);
   const [presentation, setPresentation] = useState(DEFAULT_PRESENTATION);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,14 +141,14 @@ export default function InvoiceSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-12" dir="rtl">
+    <div className="mx-auto max-w-3xl space-y-6 pb-12" dir={ui.dir}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/invoices"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 transition"
         >
           <ArrowRight className="w-4 h-4" />
-          <span>العودة للفواتير</span>
+          <span>{ui("العودة للفواتير")}</span>
         </Link>
 
         <Link
@@ -152,7 +156,7 @@ export default function InvoiceSettingsPage() {
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>إنشاء فاتورة</span>
+          <span>{ui("إنشاء فاتورة")}</span>
         </Link>
       </div>
 
@@ -162,11 +166,9 @@ export default function InvoiceSettingsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-            بيانات الشركة والحساب البنكي
-          </h1>
+            {ui("بيانات الشركة والحساب البنكي")}</h1>
           <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            تُدرج هذه البيانات تلقائياً في ترويسة الفواتير الرسمية والفواتير المبدئية الجديدة
-          </p>
+            {ui("تُدرج هذه البيانات تلقائياً في ترويسة الفواتير الرسمية والفواتير المبدئية الجديدة")}</p>
         </div>
       </header>
 
@@ -177,7 +179,7 @@ export default function InvoiceSettingsPage() {
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+            <span>{ui(error)}</span>
           </div>
           <button
             className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition cursor-pointer"
@@ -187,8 +189,7 @@ export default function InvoiceSettingsPage() {
               setReload((v) => v + 1);
             }}
           >
-            إعادة التحميل
-          </button>
+            {ui("إعادة التحميل")}</button>
         </div>
       )}
 
@@ -198,14 +199,14 @@ export default function InvoiceSettingsPage() {
           className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
         >
           <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>{message}</span>
+          <span>{ui(message)}</span>
         </div>
       )}
 
       {isLoading ? (
         <div role="status" className="theme-card rounded-2xl p-12 flex flex-col items-center justify-center gap-3">
           <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-500">جارٍ التحميل…</p>
+          <p className="text-xs font-bold text-slate-500">{ui("جارٍ التحميل…")}</p>
         </div>
       ) : (
         !hasLoadError && (
@@ -216,17 +217,16 @@ export default function InvoiceSettingsPage() {
                 <div className="flex items-center gap-2 border-b theme-border pb-3">
                   <Building2 className="w-4 h-4 text-amber-500" />
                   <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                    البيانات القانونية والضريبية للمنشأة
-                  </h2>
+                    {ui("البيانات القانونية والضريبية للمنشأة")}</h2>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-xs sm:text-sm font-bold sm:col-span-2">
-                    اسم الشركة القانوني <span className="text-rose-500">*</span>
+                    {ui("اسم الشركة القانوني")}<span className="text-rose-500">*</span>
                     <input
                       required
                       maxLength={200}
-                      placeholder="مثال: شركة ميقات الخليج للنقل البري"
+                      placeholder={ui("مثال: شركة ميقات الخليج للنقل البري")}
                       className={INPUT}
                       value={form.legalName}
                       onChange={(event) => {
@@ -237,11 +237,10 @@ export default function InvoiceSettingsPage() {
                   </label>
 
                   <label className="text-xs sm:text-sm font-bold">
-                    الرقم الضريبي (إن وجد)
-                    <input
+                    {ui("الرقم الضريبي (إن وجد)")}<input
                       maxLength={15}
                       pattern="3\d{13}3"
-                      placeholder="3xxxxxxxxxxxxx3 (15 رقماً)"
+                      placeholder={ui("3xxxxxxxxxxxxx3 (15 رقماً)")}
                       dir="ltr"
                       className={`${INPUT} font-mono`}
                       value={form.vatNumber}
@@ -253,11 +252,10 @@ export default function InvoiceSettingsPage() {
                   </label>
 
                   <label className="text-xs sm:text-sm font-bold">
-                    السجل التجاري (إن وجد)
-                    <input
+                    {ui("السجل التجاري (إن وجد)")}<input
                       maxLength={10}
                       pattern="\d{10}"
-                      placeholder="10 أرقام"
+                      placeholder={ui("10 أرقام")}
                       dir="ltr"
                       className={`${INPUT} font-mono`}
                       value={form.commercialRegistration}
@@ -279,12 +277,10 @@ export default function InvoiceSettingsPage() {
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-amber-500" />
                     <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                      العنوان الوطني للمنشأة (اختياري)
-                    </h2>
+                      {ui("العنوان الوطني للمنشأة (اختياري)")}</h2>
                   </div>
                   <span className="text-[11px] text-slate-400">
-                    أكمل جميع الحقول معاً أو اتركها فارغة
-                  </span>
+                    {ui("أكمل جميع الحقول معاً أو اتركها فارغة")}</span>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -298,11 +294,11 @@ export default function InvoiceSettingsPage() {
                     ] as const
                   ).map((field) => (
                     <label key={field.key} className="text-xs sm:text-sm font-bold">
-                      {field.label}
+                      {ui(field.label)}
                       <input
                         maxLength={200}
                         pattern={"pattern" in field ? field.pattern : undefined}
-                        placeholder={field.placeholder}
+                        placeholder={ui(field.placeholder)}
                         className={`${INPUT} ${"pattern" in field ? "font-mono" : ""}`}
                         value={form[field.key]}
                         onChange={(event) => {
@@ -315,7 +311,7 @@ export default function InvoiceSettingsPage() {
                 </div>
               </section>
 
-              <section className="theme-card grid gap-5 rounded-2xl border theme-border p-5 sm:grid-cols-2 sm:p-6"><label className="text-sm font-bold">اسم الشركة بالإنجليزية<input required maxLength={200} dir="ltr" className={INPUT} value={presentation.englishName} onChange={event => { setPresentation(current => ({ ...current, englishName: event.target.value })); setMessage(""); }} /></label><label className="text-sm font-bold">الموقع الإلكتروني<input required type="url" maxLength={200} dir="ltr" className={INPUT} value={presentation.website} onChange={event => { setPresentation(current => ({ ...current, website: event.target.value })); setMessage(""); }} /></label><label className="flex items-center gap-3 text-sm sm:col-span-2"><input type="checkbox" className="accent-amber-600" checked={presentation.showSeal} onChange={event => { setPresentation(current => ({ ...current, showSeal: event.target.checked })); setMessage(""); }} />إظهار ختم الشركة على المستندات الضريبية</label></section>
+              <section className="theme-card grid gap-5 rounded-2xl border theme-border p-5 sm:grid-cols-2 sm:p-6"><label className="text-sm font-bold">{ui("اسم الشركة بالإنجليزية")}<input required maxLength={200} dir="ltr" className={INPUT} value={presentation.englishName} onChange={event => { setPresentation(current => ({ ...current, englishName: event.target.value })); setMessage(""); }} /></label><label className="text-sm font-bold">{ui("الموقع الإلكتروني")}<input required type="url" maxLength={200} dir="ltr" className={INPUT} value={presentation.website} onChange={event => { setPresentation(current => ({ ...current, website: event.target.value })); setMessage(""); }} /></label><label className="flex items-center gap-3 text-sm sm:col-span-2"><input type="checkbox" className="accent-amber-600" checked={presentation.showSeal} onChange={event => { setPresentation(current => ({ ...current, showSeal: event.target.checked })); setMessage(""); }} />{ui("إظهار ختم الشركة على المستندات الضريبية")}</label></section>
 
               <InvoiceBankFields
                 isDefaultSettings
@@ -339,12 +335,12 @@ export default function InvoiceSettingsPage() {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>جارٍ الحفظ…</span>
+                    <span>{ui("جارٍ الحفظ…")}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>حفظ بيانات الشركة والحساب البنكي</span>
+                    <span>{ui("حفظ بيانات الشركة والحساب البنكي")}</span>
                   </>
                 )}
               </button>

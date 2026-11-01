@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import dynamic from "next/dynamic";
 import LoadError from "@/app/_components/LoadError";
 
@@ -48,6 +50,8 @@ import {
 import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminContractsPage() {
+  const ui = useUiText();
+
   const { t, isRTL } = useLanguage();
   const cachedContracts =
     getCachedData<Awaited<ReturnType<typeof getContracts>>>(
@@ -474,7 +478,7 @@ export default function AdminContractsPage() {
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>{syncStatus}</span>
+            <span>{ui(syncStatus)}</span>
           </div>
           <button
             onClick={() => setSyncStatus(null)}
@@ -487,8 +491,8 @@ export default function AdminContractsPage() {
 
       {/* Top Header Section with On-Demand Slide-Over Guide */}
       <PageHeader
-        title={t("contracts.title")}
-        subtitle={t("contracts.subtitle")}
+        title={ui(t("contracts.title"))}
+        subtitle={ui(t("contracts.subtitle"))}
         badge={isRTL ? "عقود النقل البري المعتمدة" : "Licensed Land Transport Contracts"}
         icon={FileText}
         onRefresh={() => void fetchContractsData(undefined, true)}
@@ -512,7 +516,7 @@ export default function AdminContractsPage() {
       {/* KPI Stats Ribbon */}
       <StatRow columns={4}>
         <StatCard
-          label={isRTL ? "إجمالي العقود" : "Total Contracts"}
+          label={ui(isRTL ? "إجمالي العقود" : "Total Contracts")}
           value={stats.total}
           unit={isRTL ? "عقد" : "contracts"}
           icon={FileText}
@@ -521,7 +525,7 @@ export default function AdminContractsPage() {
           isLoading={isLoading}
         />
         <StatCard
-          label={isRTL ? "فحص تشغيلي معتمد" : "Approved Inspections"}
+          label={ui(isRTL ? "فحص تشغيلي معتمد" : "Approved Inspections")}
           value={stats.inspected}
           unit={isRTL ? "مكتمل" : "passed"}
           icon={ClipboardCheck}
@@ -531,7 +535,7 @@ export default function AdminContractsPage() {
           isLoading={isLoading}
         />
         <StatCard
-          label={isRTL ? "بانتظار الفحص" : "Pending Inspection"}
+          label={ui(isRTL ? "بانتظار الفحص" : "Pending Inspection")}
           value={stats.pending}
           unit={isRTL ? "معلق" : "pending"}
           icon={AlertCircle}
@@ -541,7 +545,7 @@ export default function AdminContractsPage() {
           isLoading={isLoading}
         />
         <StatCard
-          label={isRTL ? "إجمالي الركاب والضيوف" : "Total Passengers"}
+          label={ui(isRTL ? "إجمالي الركاب والضيوف" : "Total Passengers")}
           value={stats.totalPassengers}
           unit={isRTL ? "راكب" : "guests"}
           icon={Users}
@@ -563,7 +567,7 @@ export default function AdminContractsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة..."
+              placeholder={ui("ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...")}
               className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-hidden"
             />
             {search && (
@@ -583,8 +587,7 @@ export default function AdminContractsPage() {
               type="submit"
               className="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition shrink-0"
             >
-              بحث
-            </button>
+              {ui("بحث")}</button>
           </form>
 
           {/* Captain Selector Filter */}
@@ -595,8 +598,7 @@ export default function AdminContractsPage() {
                 htmlFor="captainFilterSelect"
                 className="block text-[10px] text-slate-400 font-medium leading-none mb-1"
               >
-                تصفية حسب الكابتن:
-              </label>
+                {ui("تصفية حسب الكابتن:")}</label>
               {isLoadingCaptains ? (
                 <div className="h-5 w-32 bg-slate-200 dark:bg-slate-700/60 rounded-md animate-pulse my-0.5" />
               ) : (
@@ -607,8 +609,7 @@ export default function AdminContractsPage() {
                   className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
                 >
                   <option value="ALL" className="bg-white dark:bg-slate-900">
-                    جميع الكباتن (
-                    {Array.isArray(captains) ? captains.length : 0})
+                    {ui("جميع الكباتن (")}{ui(Array.isArray(captains) ? captains.length : 0)})
                   </option>
                   {(Array.isArray(captains) ? captains : []).map((cap) => (
                     <option
@@ -616,10 +617,10 @@ export default function AdminContractsPage() {
                       value={cap.id}
                       className="bg-white dark:bg-slate-900"
                     >
-                      {cap.name}{" "}
-                      {cap.assignedVehiclePlate
+                      {cap.name}{ui(" ")}
+                      {ui(cap.assignedVehiclePlate
                         ? `(${cap.assignedVehiclePlate})`
-                        : ""}
+                        : "")}
                     </option>
                   ))}
                 </select>
@@ -629,7 +630,7 @@ export default function AdminContractsPage() {
               <button
                 onClick={() => handleCaptainFilterSelect("ALL")}
                 className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                title="إلغاء تصفية الكابتن"
+                title={ui("إلغاء تصفية الكابتن")}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -644,8 +645,7 @@ export default function AdminContractsPage() {
                 htmlFor="inspectionFilterSelect"
                 className="block text-[10px] text-slate-400 font-medium leading-none mb-1"
               >
-                الفحص التشغيلي:
-              </label>
+                {ui("الفحص التشغيلي:")}</label>
               <select
                 id="inspectionFilterSelect"
                 value={inspectionFilter}
@@ -658,16 +658,15 @@ export default function AdminContractsPage() {
                 className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
               >
                 <option value="ALL" className="bg-white dark:bg-slate-900">
-                  كافة الحالات
-                </option>
+                  {ui("كافة الحالات")}</option>
                 <option
                   value="INSPECTED"
                   className="bg-white dark:bg-slate-900"
                 >
-                  مفحوص ومعتمد فقط ({stats.inspected})
+                  {ui("مفحوص ومعتمد فقط (")}{ui(stats.inspected)})
                 </option>
                 <option value="PENDING" className="bg-white dark:bg-slate-900">
-                  بانتظار الفحص فقط ({stats.pending})
+                  {ui("بانتظار الفحص فقط (")}{ui(stats.pending)})
                 </option>
               </select>
             </div>
@@ -678,7 +677,7 @@ export default function AdminContractsPage() {
                   setCurrentPage(1);
                 }}
                 className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                title="إلغاء التصفية"
+                title={ui("إلغاء التصفية")}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -705,7 +704,7 @@ export default function AdminContractsPage() {
                     : "theme-card text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-amber-500/50"
                 }`}
               >
-                {op.label}
+                {ui(op.label)}
               </button>
             ))}
           </div>
@@ -717,8 +716,7 @@ export default function AdminContractsPage() {
               className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 hover:underline font-bold self-start sm:self-auto shrink-0"
             >
               <X className="w-3.5 h-3.5" />
-              إعادة ضبط جميع عوامل التصفية
-            </button>
+              {ui("إعادة ضبط جميع عوامل التصفية")}</button>
           )}
         </div>
       </div>
@@ -730,30 +728,23 @@ export default function AdminContractsPage() {
           <>
             {/* Desktop Table Skeleton */}
             <div className="hidden lg:block overflow-x-auto relative">
-              <table className="w-full text-right text-xs border-separate border-spacing-0">
+              <table className="w-full text-start text-xs border-separate border-spacing-0">
                 <thead className="bg-slate-50/95 dark:bg-slate-900/90 border-b theme-border text-slate-500 dark:text-slate-400 font-bold backdrop-blur-xs">
                   <tr>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      رقم العقد والعملية
-                    </th>
+                      {ui("رقم العقد والعملية")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      العميل / الطرف الثاني
-                    </th>
+                      {ui("العميل / الطرف الثاني")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      الكابتن واللوحة
-                    </th>
+                      {ui("الكابتن واللوحة")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      مسار الرحلة والموعد
-                    </th>
+                      {ui("مسار الرحلة والموعد")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      الفحص التشغيلي
-                    </th>
+                      {ui("الفحص التشغيلي")}</th>
                     <th className="px-3 py-3.5 text-center whitespace-nowrap border-b theme-border">
-                      الركاب
-                    </th>
-                    <th className="sticky left-0 z-20 px-3.5 py-3.5 text-left whitespace-nowrap border-b theme-border bg-slate-50 dark:bg-slate-900 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-r border-slate-200/80 dark:border-slate-800">
-                      الإجراءات
-                    </th>
+                      {ui("الركاب")}</th>
+                    <th className="sticky left-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap border-b theme-border bg-slate-50 dark:bg-slate-900 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-r border-slate-200/80 dark:border-slate-800">
+                      {ui("الإجراءات")}</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-800 dark:text-slate-200">
@@ -799,7 +790,7 @@ export default function AdminContractsPage() {
                         <div className="inline-block h-6 w-10 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
                       </td>
                       {/* Actions (Sticky left) */}
-                      <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 px-3.5 py-3 align-middle text-left whitespace-nowrap border-b theme-border border-r border-slate-200/80 dark:border-slate-800 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)]">
+                      <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 px-3.5 py-3 align-middle text-end whitespace-nowrap border-b theme-border border-r border-slate-200/80 dark:border-slate-800 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)]">
                         <div className="inline-flex items-center gap-1.5">
                           <div className="w-7 h-7 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
                           <div className="w-7 h-7 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
@@ -875,57 +866,47 @@ export default function AdminContractsPage() {
               <FileText className="w-7 h-7" />
             </div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">
-              لا توجد عقود مسجلة
-            </h3>
+              {ui("لا توجد عقود مسجلة")}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              {hasActiveFilters
+              {ui(hasActiveFilters
                 ? "لا توجد نتائج تطابق معايير البحث والتصفية المحددة. جرب تغيير المدخلات أو إعادة ضبط التصفية."
-                : "لم يتم إنشاء أي عقود بعد. ابدأ بإنشاء عقد جديد وتوثيقه في النظام."}
+                : "لم يتم إنشاء أي عقود بعد. ابدأ بإنشاء عقد جديد وتوثيقه في النظام.")}
             </p>
             {hasActiveFilters ? (
               <button
                 onClick={handleResetFilters}
                 className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 transition"
               >
-                إلغاء عوامل التصفية
-              </button>
+                {ui("إلغاء عوامل التصفية")}</button>
             ) : (
               <Link
                 href="/admin/contracts/new"
                 className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs"
               >
-                <FileText className="w-4 h-4" />+ إنشاء أول عقد
-              </Link>
+                <FileText className="w-4 h-4" />{ui("+ إنشاء أول عقد")}</Link>
             )}
           </div>
         ) : (
           <>
             {/* Desktop Table View (lg and up) */}
             <div className="hidden lg:block overflow-x-auto relative">
-              <table className="w-full text-right text-xs border-separate border-spacing-0">
+              <table className="w-full text-start text-xs border-separate border-spacing-0">
                 <thead className="bg-slate-50/95 dark:bg-slate-900/90 border-b theme-border text-slate-500 dark:text-slate-400 font-bold backdrop-blur-xs">
                   <tr>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      رقم العقد والعملية
-                    </th>
+                      {ui("رقم العقد والعملية")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      العميل / الطرف الثاني
-                    </th>
+                      {ui("العميل / الطرف الثاني")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      الكابتن واللوحة
-                    </th>
+                      {ui("الكابتن واللوحة")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      مسار الرحلة والموعد
-                    </th>
+                      {ui("مسار الرحلة والموعد")}</th>
                     <th className="px-3.5 py-3.5 whitespace-nowrap border-b theme-border">
-                      الفحص التشغيلي
-                    </th>
+                      {ui("الفحص التشغيلي")}</th>
                     <th className="px-3 py-3.5 text-center whitespace-nowrap border-b theme-border">
-                      الركاب
-                    </th>
-                    <th className="sticky left-0 z-20 px-3.5 py-3.5 text-left whitespace-nowrap border-b theme-border bg-slate-50 dark:bg-slate-900 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-r border-slate-200/80 dark:border-slate-800">
-                      الإجراءات
-                    </th>
+                      {ui("الركاب")}</th>
+                    <th className="sticky left-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap border-b theme-border bg-slate-50 dark:bg-slate-900 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-r border-slate-200/80 dark:border-slate-800">
+                      {ui("الإجراءات")}</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-800 dark:text-slate-200">
@@ -949,7 +930,7 @@ export default function AdminContractsPage() {
                                 handleCopyRef(c.referenceNumber, e)
                               }
                               className="p-1 rounded-md text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition"
-                              title="نسخ رقم العقد"
+                              title={ui("نسخ رقم العقد")}
                             >
                               {copiedRef === c.referenceNumber ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -974,19 +955,19 @@ export default function AdminContractsPage() {
                                       : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                 }`}
                               >
-                                {c.status === "APPROVED"
+                                {ui(c.status === "APPROVED"
                                   ? "معتمد"
                                   : c.status === "REJECTED"
                                     ? "مرفوض"
-                                    : "قيد المراجعة"}
+                                    : "قيد المراجعة")}
                               </span>
                             )}
                             {c.flightNumber && (
                               <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono text-[10px] font-bold">
                                 <Plane className="w-2.5 h-2.5 text-blue-500" />
                                 <span>
-                                  {c.flightCarrier ? `${c.flightCarrier} ` : ""}
-                                  {c.flightNumber}
+                                  {ui(c.flightCarrier ? `${c.flightCarrier} ` : "")}
+                                  {ui(c.flightNumber)}
                                 </span>
                               </div>
                             )}
@@ -1004,7 +985,7 @@ export default function AdminContractsPage() {
                             <div className="min-w-0">
                               <div
                                 className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[130px]"
-                                title={c.customerName}
+                                title={ui(c.customerName)}
                               >
                                 {c.customerName}
                               </div>
@@ -1015,7 +996,7 @@ export default function AdminContractsPage() {
                                   dir="ltr"
                                 >
                                   <Phone className="w-2.5 h-2.5 opacity-60" />
-                                  <span>{c.customerPhone}</span>
+                                  <span>{ui(c.customerPhone)}</span>
                                 </a>
                               ) : (
                                 <span className="text-[10px] text-slate-400">
@@ -1032,9 +1013,9 @@ export default function AdminContractsPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                             <span
                               className="truncate max-w-[110px]"
-                              title={c.captain?.name || "الكابتن"}
+                              title={ui(c.captain?.name || "الكابتن")}
                             >
-                              {c.captain?.name || "الكابتن"}
+                              {ui(c.captain?.name || "الكابتن")}
                             </span>
                           </div>
                           <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/90 font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 border theme-border">
@@ -1050,29 +1031,29 @@ export default function AdminContractsPage() {
                               <MapPin className="w-3 h-3 text-emerald-500 shrink-0" />
                               <span
                                 className="truncate max-w-[90px]"
-                                title={c.origin}
+                                title={ui(c.origin)}
                               >
-                                {c.origin}
+                                {ui(c.origin)}
                               </span>
                               <span className="text-slate-400 text-[10px] mx-0.5">
                                 ←
                               </span>
                               <span
                                 className="truncate max-w-[90px]"
-                                title={c.destination}
+                                title={ui(c.destination)}
                               >
-                                {c.destination}
+                                {ui(c.destination)}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-2.5 h-2.5" />
-                                {c.tripDate}
+                                {ui(c.tripDate)}
                               </span>
                               <span>•</span>
                               <span className="flex items-center gap-1">
                                 <Clock className="w-2.5 h-2.5" />
-                                {c.tripTime}
+                                {ui(c.tripTime)}
                               </span>
                             </div>
                           </div>
@@ -1085,20 +1066,20 @@ export default function AdminContractsPage() {
                               type="button"
                               onClick={() => setSelectedContract(c)}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 text-[11px] font-bold hover:bg-emerald-500/20 transition cursor-pointer"
-                              title="فحص تشغيلي مكتمل - اضغط للتفاصيل"
+                              title={ui("فحص تشغيلي مكتمل - اضغط للتفاصيل")}
                             >
                               <ClipboardCheck className="w-3.5 h-3.5 text-emerald-500" />
-                              <span>مفحوص ومعتمد</span>
+                              <span>{ui("مفحوص ومعتمد")}</span>
                             </button>
                           ) : (
                             <button
                               type="button"
                               onClick={() => setSelectedContract(c)}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 text-[11px] font-bold hover:bg-amber-500/20 transition cursor-pointer"
-                              title="تنبيه: بانتظار الفحص التشغيلي قبل الرحلة"
+                              title={ui("تنبيه: بانتظار الفحص التشغيلي قبل الرحلة")}
                             >
                               <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                              <span>بانتظار الفحص</span>
+                              <span>{ui("بانتظار الفحص")}</span>
                             </button>
                           )}
                         </td>
@@ -1109,17 +1090,17 @@ export default function AdminContractsPage() {
                             type="button"
                             onClick={() => setSelectedContract(c)}
                             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-100 hover:bg-amber-500/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition border theme-border hover:border-amber-500/30"
-                            title="عرض كشف الركاب والمرافقين"
+                            title={ui("عرض كشف الركاب والمرافقين")}
                           >
                             <Users className="w-3.5 h-3.5 text-amber-500" />
                             <span className="font-mono">
-                              {c.passengers?.length || 0}
+                              {ui(c.passengers?.length || 0)}
                             </span>
                           </button>
                         </td>
 
                         {/* Action Buttons (STICKY LEFT-0) */}
-                        <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors px-3.5 py-3 align-middle text-left whitespace-nowrap shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-b theme-border border-r border-slate-200/80 dark:border-slate-800">
+                        <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors px-3.5 py-3 align-middle text-end whitespace-nowrap shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] border-b theme-border border-r border-slate-200/80 dark:border-slate-800">
                           <ContractActions
                             contractId={c.id}
                             onView={() => setSelectedContract(c)}
@@ -1153,8 +1134,8 @@ export default function AdminContractsPage() {
                         {c.flightNumber && (
                           <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                             <Plane className="w-3 h-3 text-blue-500" />
-                            {c.flightCarrier ? `${c.flightCarrier} • ` : ""}
-                            {c.flightNumber}
+                            {ui(c.flightCarrier ? `${c.flightCarrier} • ` : "")}
+                            {ui(c.flightNumber)}
                           </span>
                         )}
                       </div>
@@ -1168,13 +1149,11 @@ export default function AdminContractsPage() {
                         {isInspected ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 text-[10px] font-bold">
                             <ClipboardCheck className="w-3 h-3 text-emerald-500" />
-                            مفحوص
-                          </span>
+                            {ui("مفحوص")}</span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 text-[10px] font-bold">
                             <AlertCircle className="w-3 h-3 text-amber-500" />
-                            بانتظار الفحص
-                          </span>
+                            {ui("بانتظار الفحص")}</span>
                         )}
                       </div>
                     </div>
@@ -1183,7 +1162,7 @@ export default function AdminContractsPage() {
                     <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border space-y-2 text-xs">
                       {/* Customer */}
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400">الطرف الثاني:</span>
+                        <span className="text-slate-400">{ui("الطرف الثاني:")}</span>
                         <span className="font-bold text-slate-900 dark:text-white">
                           {c.customerName}
                         </span>
@@ -1192,10 +1171,9 @@ export default function AdminContractsPage() {
                       {/* Captain & Vehicle */}
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400">
-                          الكابتن والمركبة:
-                        </span>
+                          {ui("الكابتن والمركبة:")}</span>
                         <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-                          <span>{c.captain?.name || "الكابتن"}</span>
+                          <span>{ui(c.captain?.name || "الكابتن")}</span>
                           <span className="font-mono text-[11px] px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                             {c.vehiclePlate}
                           </span>
@@ -1206,20 +1184,20 @@ export default function AdminContractsPage() {
                       <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800/70 space-y-1">
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
                           <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <span className="truncate">{c.origin}</span>
+                          <span className="truncate">{ui(c.origin)}</span>
                           <span className="text-slate-400 text-xs">←</span>
-                          <span className="truncate">{c.destination}</span>
+                          <span className="truncate">{ui(c.destination)}</span>
                         </div>
 
                         {/* Date & Time */}
                         <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-1">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-400" />
-                            {c.tripDate}
+                            {ui(c.tripDate)}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-slate-400" />
-                            {c.tripTime}
+                            {ui(c.tripTime)}
                           </span>
                         </div>
                       </div>
@@ -1234,8 +1212,7 @@ export default function AdminContractsPage() {
                       >
                         <Users className="w-3.5 h-3.5 text-amber-500" />
                         <span className="font-mono">
-                          {c.passengers?.length || 0} ركاب
-                        </span>
+                          {ui(c.passengers?.length || 0)} {ui("ركاب")}</span>
                       </button>
 
                       {/* Action buttons */}
@@ -1257,23 +1234,22 @@ export default function AdminContractsPage() {
               {/* Items Counter Summary & Page Size */}
               <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 w-full sm:w-auto justify-between sm:justify-start">
                 <span>
-                  عرض{" "}
+                  {ui("عرض")}{ui(" ")}
                   <strong className="text-slate-900 dark:text-white font-mono">
-                    {startIndex + 1}
-                  </strong>{" "}
-                  -{" "}
+                    {ui(startIndex + 1)}
+                  </strong>{ui(" ")}
+                  -{ui(" ")}
                   <strong className="text-slate-900 dark:text-white font-mono">
-                    {endIndex}
-                  </strong>{" "}
-                  من إجمالي{" "}
+                    {ui(endIndex)}
+                  </strong>{ui(" ")}
+                  {ui("من إجمالي")}{ui(" ")}
                   <strong className="text-amber-600 dark:text-amber-400 font-mono">
-                    {filteredContracts.length}
-                  </strong>{" "}
-                  عقد
-                </span>
+                    {ui(filteredContracts.length)}
+                  </strong>{ui(" ")}
+                  {ui("عقد")}</span>
 
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-slate-400">العرض:</span>
+                  <span className="text-[11px] text-slate-400">{ui("العرض:")}</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -1282,9 +1258,9 @@ export default function AdminContractsPage() {
                     }}
                     className="bg-white dark:bg-slate-800 border theme-border rounded-lg px-2 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden"
                   >
-                    <option value={10}>10 / صفحة</option>
-                    <option value={25}>25 / صفحة</option>
-                    <option value={50}>50 / صفحة</option>
+                    <option value={10}>{ui("10 / صفحة")}</option>
+                    <option value={25}>{ui("25 / صفحة")}</option>
+                    <option value={50}>{ui("50 / صفحة")}</option>
                   </select>
                 </div>
               </div>
@@ -1298,7 +1274,7 @@ export default function AdminContractsPage() {
                   }
                   disabled={safeCurrentPage <= 1}
                   className="p-2 rounded-xl border theme-card text-slate-600 dark:text-slate-300 hover:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  title="الصفحة السابقة"
+                  title={ui("الصفحة السابقة")}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -1327,7 +1303,7 @@ export default function AdminContractsPage() {
                           : "theme-card border theme-border text-slate-700 dark:text-slate-300 hover:border-amber-500"
                       }`}
                     >
-                      {page}
+                      {ui(page)}
                     </button>
                   );
                 })}
@@ -1339,7 +1315,7 @@ export default function AdminContractsPage() {
                   }
                   disabled={safeCurrentPage >= totalPages}
                   className="p-2 rounded-xl border theme-card text-slate-600 dark:text-slate-300 hover:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  title="الصفحة التالية"
+                  title={ui("الصفحة التالية")}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -1361,18 +1337,18 @@ export default function AdminContractsPage() {
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                    تفاصيل العقد: {selectedContract.referenceNumber}
+                    {ui("تفاصيل العقد:")}{selectedContract.referenceNumber}
                   </h3>
                   <p className="text-[11px] sm:text-xs text-slate-400">
-                    العميل: {selectedContract.customerName} • تاريخ الإصدار:{" "}
+                    {ui("العميل:")}{selectedContract.customerName} {ui("• تاريخ الإصدار:")}{ui(" ")}
                     <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">
-                      {formatOfficialDate(
+                      {ui(formatOfficialDate(
                         selectedContract.issueDate ||
                           selectedContract.createdAt,
-                      )}
-                    </span>{" "}
-                    • الرحلة: {selectedContract.tripDate}{" "}
-                    {selectedContract.tripTime}
+                      ))}
+                    </span>{ui(" ")}
+                    {ui("• الرحلة:")}{ui(selectedContract.tripDate)}{ui(" ")}
+                    {ui(selectedContract.tripTime)}
                   </p>
                 </div>
               </div>
@@ -1390,34 +1366,30 @@ export default function AdminContractsPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border text-xs">
                 <div>
                   <span className="text-slate-400 text-[11px] block">
-                    الكابتن المعتمد
-                  </span>
+                    {ui("الكابتن المعتمد")}</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    {selectedContract.captain?.name || "كابتن ميقات"}
+                    {ui(selectedContract.captain?.name || "كابتن ميقات")}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[11px] block">
-                    رقم اللوحة
-                  </span>
+                    {ui("رقم اللوحة")}</span>
                   <span className="font-mono font-bold text-slate-900 dark:text-white">
                     {selectedContract.vehiclePlate}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[11px] block">
-                    محطة الانطلاق
-                  </span>
+                    {ui("محطة الانطلاق")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedContract.origin}
+                    {ui(selectedContract.origin)}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[11px] block">
-                    الوجهة المقصودة
-                  </span>
+                    {ui("الوجهة المقصودة")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedContract.destination}
+                    {ui(selectedContract.destination)}
                   </span>
                 </div>
               </div>
@@ -1427,19 +1399,16 @@ export default function AdminContractsPage() {
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     <ClipboardCheck className="w-4 h-4 text-emerald-500" />
-                    بيانات الفحص والإقرار التشغيلي
-                  </h4>
+                    {ui("بيانات الفحص والإقرار التشغيلي")}</h4>
                   {selectedContract.inspectionId ||
                   selectedContract.inspection ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold inline-flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                      معتمد ومكتمل
-                    </span>
+                      {ui("معتمد ومكتمل")}</span>
                   ) : (
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-bold inline-flex items-center gap-1">
                       <AlertCircle className="w-3 h-3 text-amber-500" />
-                      بانتظار الفحص
-                    </span>
+                      {ui("بانتظار الفحص")}</span>
                   )}
                 </div>
 
@@ -1448,35 +1417,31 @@ export default function AdminContractsPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
                       <div>
                         <span className="text-slate-400 text-[10px] block">
-                          تاريخ الفحص
-                        </span>
+                          {ui("تاريخ الفحص")}</span>
                         <span
                           className="font-mono font-bold text-slate-800 dark:text-slate-200"
                           dir="ltr"
                         >
-                          {selectedContract.inspection.inspectionDate
+                          {ui(selectedContract.inspection.inspectionDate
                             ? new Date(
                                 selectedContract.inspection.inspectionDate,
                               ).toLocaleDateString("en-GB")
-                            : "—"}
+                            : "—")}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 text-[10px] block">
-                          لوحة المركبة المفحوصة
-                        </span>
+                          {ui("لوحة المركبة المفحوصة")}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                           {selectedContract.inspection.vehiclePlate}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 text-[10px] block">
-                          إقرار الكابتن
-                        </span>
+                          {ui("إقرار الكابتن")}</span>
                         <span className="font-bold text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          تم الإقرار والتعهد
-                        </span>
+                          {ui("تم الإقرار والتعهد")}</span>
                       </div>
                     </div>
 
@@ -1485,55 +1450,51 @@ export default function AdminContractsPage() {
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${selectedContract.inspection.fireExtinguisher ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"}`}
                       >
-                        طفاية الحريق:{" "}
-                        {selectedContract.inspection.fireExtinguisher
+                        {ui("طفاية الحريق:")}{ui(" ")}
+                        {ui(selectedContract.inspection.fireExtinguisher
                           ? "جاهزة"
-                          : "غير متوفرة"}
+                          : "غير متوفرة")}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${selectedContract.inspection.firstAidKit ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"}`}
                       >
-                        حقيبة الإسعافات:{" "}
-                        {selectedContract.inspection.firstAidKit
+                        {ui("حقيبة الإسعافات:")}{ui(" ")}
+                        {ui(selectedContract.inspection.firstAidKit
                           ? "جاهزة"
-                          : "غير متوفرة"}
+                          : "غير متوفرة")}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${selectedContract.inspection.seatBelts ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"}`}
                       >
-                        أحزمة الأمان:{" "}
-                        {selectedContract.inspection.seatBelts
+                        {ui("أحزمة الأمان:")}{ui(" ")}
+                        {ui(selectedContract.inspection.seatBelts
                           ? "سليمة"
-                          : "فحص مطلوب"}
+                          : "فحص مطلوب")}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${selectedContract.inspection.tires ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"}`}
                       >
-                        سلامة الإطارات:{" "}
-                        {selectedContract.inspection.tires
+                        {ui("سلامة الإطارات:")}{ui(" ")}
+                        {ui(selectedContract.inspection.tires
                           ? "سليمة"
-                          : "فحص مطلوب"}
+                          : "فحص مطلوب")}
                       </span>
                     </div>
                   </div>
                 ) : selectedContract.inspectionId ? (
                   <p className="text-xs text-emerald-700 dark:text-emerald-300 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                    تم ربط فحص تشغيلي وإقرار معتمد لهذا العقد برقم معرّف:{" "}
+                    {ui("تم ربط فحص تشغيلي وإقرار معتمد لهذا العقد برقم معرّف:")}{ui(" ")}
                     <code className="font-mono font-bold">
-                      {selectedContract.inspectionId.slice(0, 12)}...
+                      {ui(selectedContract.inspectionId.slice(0, 12))}...
                     </code>
                   </p>
                 ) : (
                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-300 space-y-1">
                     <p className="font-bold flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4 text-amber-500" />
-                      تنبيه تشغيلي إلزامي:
-                    </p>
+                      {ui("تنبيه تشغيلي إلزامي:")}</p>
                     <p className="text-[11px] text-amber-700 dark:text-amber-400">
-                      لم يتم إرفاق الفحص اليومي والإقرار التشغيلي المسبق للمركبة
-                      قبل انطلاق هذه الرحلة. يُرجى توجيه الكابتن لإتمام الفحص
-                      التشغيلي اليومي عبر بوابته.
-                    </p>
+                      {ui("لم يتم إرفاق الفحص اليومي والإقرار التشغيلي المسبق للمركبة قبل انطلاق هذه الرحلة. يُرجى توجيه الكابتن لإتمام الفحص التشغيلي اليومي عبر بوابته.")}</p>
                   </div>
                 )}
               </div>
@@ -1543,42 +1504,37 @@ export default function AdminContractsPage() {
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     <Users className="w-4 h-4 text-amber-500" />
-                    كشف الركاب والمرافقين المعتمد (
-                    {selectedContract.passengers?.length || 0} راكباً)
-                  </h4>
+                    {ui("كشف الركاب والمرافقين المعتمد (")}{ui(selectedContract.passengers?.length || 0)} {ui("راكباً)")}</h4>
                   <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
-                    الصفحة 2 من وثيقة العقد
-                  </span>
+                    {ui("الصفحة 2 من وثيقة العقد")}</span>
                 </div>
 
                 {!selectedContract.passengers?.length ? (
                   <p className="text-xs text-slate-400 p-4 text-center rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
-                    لا يوجد ركاب مرافقين مضافين لهذا العقد (تم قيد الضيف الرئيسي
-                    فقط)
-                  </p>
+                    {ui("لا يوجد ركاب مرافقين مضافين لهذا العقد (تم قيد الضيف الرئيسي فقط)")}</p>
                 ) : (
                   <div className="rounded-xl border theme-border overflow-hidden">
                     <div className="hidden sm:block overflow-x-auto">
-                      <table className="w-full text-right text-xs">
+                      <table className="w-full text-start text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 font-bold">
                           <tr>
                             <th className="px-3 py-2 text-center w-10">#</th>
-                            <th className="px-3 py-2">اسم الضيف / الراكب</th>
-                            <th className="px-3 py-2">الجنسية</th>
-                            <th className="px-3 py-2">الهوية / الجواز</th>
+                            <th className="px-3 py-2">{ui("اسم الضيف / الراكب")}</th>
+                            <th className="px-3 py-2">{ui("الجنسية")}</th>
+                            <th className="px-3 py-2">{ui("الهوية / الجواز")}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y theme-border">
                           {selectedContract.passengers.map((p, idx) => (
                             <tr key={p.id || idx}>
                               <td className="px-3 py-2 text-center font-mono font-bold text-slate-400">
-                                {p.sequence || idx + 1}
+                                {ui(p.sequence || idx + 1)}
                               </td>
                               <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">
                                 {p.name}
                               </td>
                               <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                                {p.nationality}
+                                {ui(p.nationality)}
                               </td>
                               <td
                                 className="px-3 py-2 font-mono text-slate-700 dark:text-slate-300"
@@ -1602,19 +1558,19 @@ export default function AdminContractsPage() {
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                               <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-mono flex items-center justify-center text-slate-500 font-bold">
-                                {p.sequence || idx + 1}
+                                {ui(p.sequence || idx + 1)}
                               </span>
                               <span>{p.name}</span>
                             </span>
                             {p.nationality && (
                               <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                                {p.nationality}
+                                {ui(p.nationality)}
                               </span>
                             )}
                           </div>
                           {p.idNumber && (
                             <div
-                              className="text-[11px] text-slate-400 font-mono pr-6"
+                              className="text-[11px] text-slate-400 font-mono ps-6"
                               dir="ltr"
                             >
                               ID: {p.idNumber}
@@ -1631,8 +1587,7 @@ export default function AdminContractsPage() {
               {selectedContract.notes && (
                 <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs">
                   <span className="font-bold text-amber-700 dark:text-amber-400 block mb-1">
-                    ملاحظات الرحلة والتشغيل:
-                  </span>
+                    {ui("ملاحظات الرحلة والتشغيل:")}</span>
                   <p className="text-slate-600 dark:text-slate-300">
                     {selectedContract.notes}
                   </p>
@@ -1646,15 +1601,14 @@ export default function AdminContractsPage() {
                 onClick={() => setSelectedContract(null)}
                 className="w-full sm:w-auto px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
-                إغلاق
-              </button>
+                {ui("إغلاق")}</button>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Link
                   href={`/admin/contracts/${selectedContract.id}`}
                   className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl gold-gradient-btn text-white transition shadow-xs"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>صفحة المراجعة والاعتماد</span>
+                  <span>{ui("صفحة المراجعة والاعتماد")}</span>
                 </Link>
                 <button
                   type="button"
@@ -1664,10 +1618,10 @@ export default function AdminContractsPage() {
                     setReverseContract(c);
                   }}
                   className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-300 hover:border-blue-500 hover:bg-blue-500/10 transition"
-                  title="إنشاء رحلة عكسية من هذا العقد"
+                  title={ui("إنشاء رحلة عكسية من هذا العقد")}
                 >
                   <ArrowLeftRight className="w-3.5 h-3.5" />
-                  <span>رحلة عكسية</span>
+                  <span>{ui("رحلة عكسية")}</span>
                 </button>
                 <button
                   type="button"
@@ -1677,18 +1631,17 @@ export default function AdminContractsPage() {
                     setContractToDelete(c);
                   }}
                   className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-rose-500 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition"
-                  title="حذف العقد نهائياً"
+                  title={ui("حذف العقد نهائياً")}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>حذف العقد</span>
+                  <span>{ui("حذف العقد")}</span>
                 </button>
                 <button
                   onClick={() => openPdf(selectedContract)}
                   className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-sm"
                 >
                   <FileText className="w-4 h-4" />
-                  استعراض الـ PDF
-                </button>
+                  {ui("استعراض الـ PDF")}</button>
               </div>
             </div>
           </div>
@@ -1712,7 +1665,7 @@ export default function AdminContractsPage() {
       {/* Confirm Deletion Dialog */}
       <ConfirmDialog
         isOpen={!!contractToDelete}
-        title="تأكيد حذف العقد"
+        title={ui("تأكيد حذف العقد")}
         message={
           contractToDelete
             ? `هل أنت متأكد من رغبتك في حذف العقد رقم (${contractToDelete.referenceNumber}) نهائياً؟ سيتم حذف بيانات الركاب وملف الـ PDF المرتبط به ولا يمكن التراجع عن هذا الإجراء.`

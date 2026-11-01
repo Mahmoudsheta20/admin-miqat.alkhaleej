@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import dynamic from "next/dynamic";
 
 import React, { useEffect, useState, useTransition, useMemo } from "react";
@@ -27,6 +29,8 @@ import { fetchCached, getCachedData } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminDashboardPage() {
+  const ui = useUiText();
+
   const { t, isRTL } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(() =>
     getCachedData("dashboard_stats"),
@@ -159,8 +163,8 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Top Header Section with On-Demand Slide-Over Guide */}
       <PageHeader
-        title={t("dashboard.title")}
-        subtitle={t("dashboard.subtitle")}
+        title={ui(t("dashboard.title"))}
+        subtitle={ui(t("dashboard.subtitle"))}
         badge={isRTL ? "مركز العمليات والإشراف المالي" : "Operations & Financial Dashboard"}
         icon={ReceiptText}
         onRefresh={() => loadStats(true)}
@@ -196,12 +200,12 @@ export default function AdminDashboardPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {seedMessage}
+          {ui(seedMessage)}
         </p>
       )}
       {seedError && (
         <p role="alert" className="text-xs sm:text-sm font-bold text-rose-600">
-          {seedError}
+          {ui(seedError)}
         </p>
       )}
 
@@ -217,10 +221,10 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {t("contracts.newContract")}
+                {ui(t("contracts.newContract"))}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
-                {t("contracts.subtitle")}
+                {ui(t("contracts.subtitle"))}
               </p>
             </div>
           </div>
@@ -237,10 +241,10 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {t("invoice.newInvoice")}
+                {ui(t("invoice.newInvoice"))}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
-                {t("invoice.subtitle")}
+                {ui(t("invoice.subtitle"))}
               </p>
             </div>
           </div>
@@ -257,10 +261,10 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {t("nav.inspections")}
+                {ui(t("nav.inspections"))}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
-                {t("inspections.subtitle")}
+                {ui(t("inspections.subtitle"))}
               </p>
             </div>
           </div>
@@ -277,10 +281,10 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {t("nav.invoices")}
+                {ui(t("nav.invoices"))}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
-                {t("invoice.title")}
+                {ui(t("invoice.title"))}
               </p>
             </div>
           </div>
@@ -295,7 +299,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {t("captains.title")}
+                {ui(t("captains.title"))}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -303,20 +307,20 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : (stats?.totalCaptains ?? 0)}
+                {ui(isLoading ? "—" : (stats?.totalCaptains ?? 0))}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
-                {isRTL ? "كابتن" : "Captains"}
+              <span className="text-[11px] sm:text-xs text-slate-400 ms-1.5 font-bold">
+                {ui(isRTL ? "كابتن" : "Captains")}
               </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{t("captains.title")}</span>
+            <span>{ui(t("captains.title"))}</span>
             <Link
               href="/admin/captains"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              {t("common.view")}
+              {ui(t("common.view"))}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -327,7 +331,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {t("fleet.title")}
+                {ui(t("fleet.title"))}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Car className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -335,20 +339,20 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : (stats?.totalVehicles ?? 0)}
+                {ui(isLoading ? "—" : (stats?.totalVehicles ?? 0))}
               </span>
-              <span className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 mr-1.5 font-bold">
-                ({stats?.activeVehicles ?? 0} {isRTL ? "جاهزة" : "Ready"})
+              <span className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 ms-1.5 font-bold">
+                ({ui(stats?.activeVehicles ?? 0)} {ui(isRTL ? "جاهزة" : "Ready")})
               </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{t("fleet.title")}</span>
+            <span>{ui(t("fleet.title"))}</span>
             <Link
               href="/admin/fleet"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              {t("common.view")}
+              {ui(t("common.view"))}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -359,7 +363,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {t("contracts.title")}
+                {ui(t("contracts.title"))}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -367,20 +371,20 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : (stats?.totalContracts ?? 0)}
+                {ui(isLoading ? "—" : (stats?.totalContracts ?? 0))}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
-                {isRTL ? "عقد رسمي" : "Contracts"}
+              <span className="text-[11px] sm:text-xs text-slate-400 ms-1.5 font-bold">
+                {ui(isRTL ? "عقد رسمي" : "Contracts")}
               </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{t("contracts.title")}</span>
+            <span>{ui(t("contracts.title"))}</span>
             <Link
               href="/admin/contracts"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              {t("common.view")}
+              {ui(t("common.view"))}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -391,7 +395,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {t("inspections.title")}
+                {ui(t("inspections.title"))}
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -399,20 +403,20 @@ export default function AdminDashboardPage() {
             </div>
             <div className="mt-2.5 sm:mt-3">
               <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {isLoading ? "—" : (stats?.todayInspections ?? 0)}
+                {ui(isLoading ? "—" : (stats?.todayInspections ?? 0))}
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 mr-1.5 font-bold">
-                {isRTL ? "فحص مسجل" : "Inspections"}
+              <span className="text-[11px] sm:text-xs text-slate-400 ms-1.5 font-bold">
+                {ui(isRTL ? "فحص مسجل" : "Inspections")}
               </span>
             </div>
           </div>
           <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{t("inspections.title")}</span>
+            <span>{ui(t("inspections.title"))}</span>
             <Link
               href="/admin/inspections"
               className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
             >
-              {t("common.view")}
+              {ui(t("common.view"))}
               <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
@@ -424,17 +428,17 @@ export default function AdminDashboardPage() {
         <div className="p-4 sm:p-5 border-b theme-border flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-              {t("dashboard.recentContracts")}
+              {ui(t("dashboard.recentContracts"))}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {t("contracts.subtitle")}
+              {ui(t("contracts.subtitle"))}
             </p>
           </div>
           <Link
             href="/admin/contracts"
             className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
           >
-            {t("common.all")} ({stats?.totalContracts ?? 0})
+            {ui(t("common.all"))} ({ui(stats?.totalContracts ?? 0)})
             {isRTL ? (
               <ChevronLeft className="w-4 h-4" />
             ) : (
@@ -446,32 +450,32 @@ export default function AdminDashboardPage() {
         {isLoading ? (
           <div className="p-10 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-slate-400">{t("common.loading")}</p>
+            <p className="text-xs text-slate-400">{ui(t("common.loading"))}</p>
           </div>
         ) : !stats?.recentContracts?.length ? (
           <div className="p-10 text-center text-slate-400 text-sm">
-            {isRTL ? "لا توجد عقود مسجلة حتى الآن." : "No contracts found yet."}
+            {ui(isRTL ? "لا توجد عقود مسجلة حتى الآن." : "No contracts found yet.")}
           </div>
         ) : (
           <>
             {/* Desktop Table (Visible on md and larger) */}
             <div className="hidden md:block overflow-x-auto">
               <table
-                className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs`}
+                className={`w-full ${"text-start"} text-xs`}
               >
                 <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
                   <tr>
-                    <th className="px-5 py-3">{t("contracts.refNumber")}</th>
-                    <th className="px-5 py-3">{t("contracts.customer")}</th>
-                    <th className="px-5 py-3">{t("contracts.captain")}</th>
-                    <th className="px-5 py-3">{t("fleet.plateAr")}</th>
-                    <th className="px-5 py-3">{t("common.details")}</th>
-                    <th className="px-5 py-3">{t("common.date")}</th>
-                    <th className="px-5 py-3">{t("contracts.passengers")}</th>
+                    <th className="px-5 py-3">{ui(t("contracts.refNumber"))}</th>
+                    <th className="px-5 py-3">{ui(t("contracts.customer"))}</th>
+                    <th className="px-5 py-3">{ui(t("contracts.captain"))}</th>
+                    <th className="px-5 py-3">{ui(t("fleet.plateAr"))}</th>
+                    <th className="px-5 py-3">{ui(t("common.details"))}</th>
+                    <th className="px-5 py-3">{ui(t("common.date"))}</th>
+                    <th className="px-5 py-3">{ui(t("contracts.passengers"))}</th>
                     <th
-                      className={`px-5 py-3 ${isRTL ? "text-left" : "text-right"}`}
+                      className={`px-5 py-3 ${"text-end"}`}
                     >
-                      {t("common.actions")}
+                      {ui(t("common.actions"))}
                     </th>
                   </tr>
                 </thead>
@@ -488,7 +492,7 @@ export default function AdminDashboardPage() {
                         {c.customerName}
                       </td>
                       <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">
-                        {c.captainName}
+                        {ui(c.captainName)}
                       </td>
                       <td className="px-5 py-3.5 font-mono font-semibold">
                         {c.vehiclePlate}
@@ -501,15 +505,15 @@ export default function AdminDashboardPage() {
                         />
                       </td>
                       <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono">
-                        {c.tripDate} {c.tripTime}
+                        {ui(c.tripDate)} {ui(c.tripTime)}
                       </td>
                       <td className="px-5 py-3.5">
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                          {c.passengersCount} {isRTL ? "ركاب" : "pax"}
+                          {ui(c.passengersCount)} {ui(isRTL ? "ركاب" : "pax")}
                         </span>
                       </td>
                       <td
-                        className={`px-5 py-3.5 ${isRTL ? "text-left" : "text-right"} whitespace-nowrap`}
+                        className={`px-5 py-3.5 ${"text-end"} whitespace-nowrap`}
                       >
                         <div className="inline-flex items-center gap-1.5">
                           <Link
@@ -517,14 +521,14 @@ export default function AdminDashboardPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
                           >
                             <Eye className="w-3.5 h-3.5 text-amber-500" />
-                            <span>{t("common.details")}</span>
+                            <span>{ui(t("common.details"))}</span>
                           </Link>
                           <Link
                             href={`/admin/invoices/new?contractId=${encodeURIComponent(c.id)}`}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold transition text-xs"
                           >
                             <ReceiptText className="w-3.5 h-3.5" />
-                            <span>{t("invoice.title")}</span>
+                            <span>{ui(t("invoice.title"))}</span>
                           </Link>
                           <button
                             onClick={() =>
@@ -564,7 +568,7 @@ export default function AdminDashboardPage() {
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-400">
-                        {t("contracts.customer")}:
+                        {ui(t("contracts.customer"))}:
                       </span>
                       <span className="font-bold text-slate-900 dark:text-white">
                         {c.customerName}
@@ -572,15 +576,15 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-400">
-                        {t("contracts.captain")}:
+                        {ui(t("contracts.captain"))}:
                       </span>
                       <span className="text-slate-700 dark:text-slate-300 font-semibold">
-                        {c.captainName}
+                        {ui(c.captainName)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-400">
-                        {t("fleet.plateAr")}:
+                        {ui(t("fleet.plateAr"))}:
                       </span>
                       <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
                         {c.vehiclePlate}
@@ -588,24 +592,24 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-400">
-                        {t("common.date")}:
+                        {ui(t("common.date"))}:
                       </span>
                       <span className="font-mono text-slate-500 dark:text-slate-400">
-                        {c.tripDate} {c.tripTime}
+                        {ui(c.tripDate)} {ui(c.tripTime)}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2.5 border-t theme-border gap-2">
                     <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                      {c.passengersCount} {isRTL ? "ركاب" : "pax"}
+                      {ui(c.passengersCount)} {ui(isRTL ? "ركاب" : "pax")}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <Link
                         href={`/admin/contracts/${c.id}`}
                         className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs shadow-2xs"
                       >
-                        {t("common.details")}
+                        {ui(t("common.details"))}
                       </Link>
                       <button
                         onClick={() =>

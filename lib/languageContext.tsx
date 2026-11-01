@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useCallback } from "react";
 import { useStoredPreference, setStoredPreference } from "./useStoredPreference";
+import { useRouter } from "next/navigation";
+import { localizeText } from "./localization";
 import { TRANSLATIONS, type Language } from "./translations";
 
 export type Direction = "rtl" | "ltr";
@@ -17,8 +19,9 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const stored = useStoredPreference("miqat_language", "ar");
+export function LanguageProvider({ children, initialLanguage="ar" }: { children: React.ReactNode; initialLanguage?:Language }) {
+  const router = useRouter();
+  const stored = useStoredPreference("miqat_language", initialLanguage);
   const language: Language = stored === "en" ? "en" : "ar";
   const dir: Direction = language === "ar" ? "rtl" : "ltr";
   const isRTL = language === "ar";
@@ -30,7 +33,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLanguage = useCallback((newLang: Language) => {
     setStoredPreference("miqat_language", newLang);
-  }, []);
+    try { document.cookie = `miqat_language=${newLang}; path=/; max-age=31536000; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`; } catch { /* Keep the session preference when cookies are unavailable. */ }
+    router.refresh();
+  }, [router]);
 
   const toggleLanguage = useCallback(() => {
     const next: Language = language === "ar" ? "en" : "ar";
@@ -45,9 +50,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
       const arDict = TRANSLATIONS.ar;
       if (arDict && key in arDict) {
-        return arDict[key];
+        return localizeText(arDict[key],language);
       }
-      return fallback || key;
+      return localizeText(fallback || key,language);
     },
     [language]
   );

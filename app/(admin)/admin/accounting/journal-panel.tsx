@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useRef, useState, type FormEvent } from "react";
 import {
@@ -37,6 +39,8 @@ export default function JournalPanel({
   reload: number;
   onChanged: () => void;
 }) {
+  const ui = useUiText();
+
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState(currentSaudiPeriod().day);
@@ -151,10 +155,9 @@ export default function JournalPanel({
     <section className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold">دفتر اليومية</h2>
+          <h2 className="text-xl font-bold">{ui("دفتر اليومية")}</h2>
           <p className="mt-1 text-xs text-slate-500">
-            القيود المعتمدة محفوظة. التصحيح بقيد عكسي؛ وتصحيح المستند من شاشته الأصلية.
-          </p>
+            {ui("القيود المعتمدة محفوظة. التصحيح بقيد عكسي؛ وتصحيح المستند من شاشته الأصلية.")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -163,21 +166,19 @@ export default function JournalPanel({
             className="theme-card rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-4 py-3 text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300 disabled:opacity-50 cursor-pointer"
             onClick={() => void fillCapitalPreset()}
           >
-            تعبئة قيد رأس مال (300,000 ر.س)
-          </button>
+            {ui("تعبئة قيد رأس مال (300,000 ر.س)")}</button>
           <button
             type="button"
             className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold cursor-pointer"
             onClick={() => setShowForm((v) => !v)}
           >
-            قيد يدوي
-          </button>
+            {ui("قيد يدوي")}</button>
         </div>
       </div>
 
       {(error || journals.error || accounts.error) && (
         <p role="alert" className="text-sm text-rose-600">
-          {error || journals.error || accounts.error}
+          {ui(error || journals.error || accounts.error)}
         </p>
       )}
 
@@ -188,8 +189,7 @@ export default function JournalPanel({
         >
           <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
             <label className="text-xs font-bold">
-              تاريخ القيد
-              <input
+              {ui("تاريخ القيد")}<input
                 required
                 type="date"
                 className={`${INPUT} mt-2`}
@@ -201,8 +201,7 @@ export default function JournalPanel({
               />
             </label>
             <label className="text-xs font-bold">
-              البيان
-              <input
+              {ui("البيان")}<input
                 required
                 maxLength={300}
                 className={`${INPUT} mt-2`}
@@ -211,18 +210,18 @@ export default function JournalPanel({
                   setDescription(e.target.value);
                   key.current = "";
                 }}
-                placeholder="رصيد افتتاحي أو تسوية محاسبية"
+                placeholder={ui("رصيد افتتاحي أو تسوية محاسبية")}
               />
             </label>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[780px] text-right text-xs">
+            <table className="w-full min-w-[780px] text-start text-xs">
               <thead>
                 <tr>
                   {["الحساب", "مدين", "دائن", "البيان / لوحة المركبة", ""].map((v, i) => (
                     <th key={i} className="pb-3">
-                      {v}
+                      {ui(v)}
                     </th>
                   ))}
                 </tr>
@@ -237,12 +236,12 @@ export default function JournalPanel({
                         value={l.accountCode}
                         onChange={(e) => update(l.key, { accountCode: e.target.value })}
                       >
-                        <option value="">اختر الحساب</option>
+                        <option value="">{ui("اختر الحساب")}</option>
                         {accounts.data?.items
                           .filter((a) => a.isPosting && a.isActive)
                           .map((a) => (
                             <option key={a.code} value={a.code}>
-                              {a.code} · {a.nameAr}
+                              {ui(a.code)} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                             </option>
                           ))}
                       </select>
@@ -250,7 +249,7 @@ export default function JournalPanel({
                     {(["debit", "credit"] as const).map((side) => (
                       <td className="w-32 pe-2 pb-2" key={side}>
                         <input
-                          aria-label={side === "debit" ? "مدين" : "دائن"}
+                          aria-label={ui(side === "debit" ? "مدين" : "دائن")}
                           required
                           type="number"
                           min="0"
@@ -264,18 +263,18 @@ export default function JournalPanel({
                     ))}
                     <td className="pe-2 pb-2">
                       <input
-                        aria-label="بيان السطر"
+                        aria-label={ui("بيان السطر")}
                         maxLength={300}
                         className={INPUT}
-                        placeholder="بيان السطر"
+                        placeholder={ui("بيان السطر")}
                         value={l.description}
                         onChange={(e) => update(l.key, { description: e.target.value })}
                       />
                       <input
-                        aria-label="لوحة المركبة في القيد"
+                        aria-label={ui("لوحة المركبة في القيد")}
                         maxLength={50}
                         className={`${INPUT} mt-1`}
-                        placeholder="لوحة المركبة (اختياري)"
+                        placeholder={ui("لوحة المركبة (اختياري)")}
                         value={l.vehiclePlate}
                         onChange={(e) => update(l.key, { vehiclePlate: e.target.value })}
                       />
@@ -283,7 +282,7 @@ export default function JournalPanel({
                     <td>
                       <button
                         type="button"
-                        aria-label="حذف سطر"
+                        aria-label={ui("حذف سطر")}
                         disabled={lines.length <= 2}
                         className="px-2 text-rose-600 disabled:opacity-30 cursor-pointer"
                         onClick={() => {
@@ -291,8 +290,7 @@ export default function JournalPanel({
                           key.current = "";
                         }}
                       >
-                        حذف
-                      </button>
+                        {ui("حذف")}</button>
                     </td>
                   </tr>
                 ))}
@@ -306,8 +304,7 @@ export default function JournalPanel({
               className="theme-card rounded-lg border theme-border px-4 py-2 text-sm cursor-pointer"
               onClick={() => setLines((v) => [...v, empty(crypto.randomUUID())])}
             >
-              إضافة سطر
-            </button>
+              {ui("إضافة سطر")}</button>
             <p
               className={`text-sm ${
                 totals.debit === totals.credit && totals.debit > 0
@@ -315,20 +312,17 @@ export default function JournalPanel({
                   : "text-rose-600"
               }`}
             >
-              المدين {amountLabel(String(totals.debit / 100))} · الدائن{" "}
-              {amountLabel(String(totals.credit / 100))}
+              {ui("المدين")}{ui(amountLabel(String(totals.debit / 100)))} {ui("· الدائن")}{ui(" ")}
+              {ui(amountLabel(String(totals.credit / 100)))}
             </p>
             <button
               disabled={saving || totals.debit !== totals.credit || totals.debit === 0}
               className="gold-gradient-btn rounded-xl px-5 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
             >
-              اعتماد القيد المتوازن
-            </button>
+              {ui("اعتماد القيد المتوازن")}</button>
           </div>
           <p className="text-xs text-slate-500">
-            تسويات الحسابات الضريبية اليدوية تظهر في دفتر الأستاذ؛ تقرير VAT يُحسب من الفواتير
-            والمصروفات، لذلك يلزم مطابقة أي تسوية يدوية قبل الإقفال.
-          </p>
+            {ui("تسويات الحسابات الضريبية اليدوية تظهر في دفتر الأستاذ؛ تقرير VAT يُحسب من الفواتير والمصروفات، لذلك يلزم مطابقة أي تسوية يدوية قبل الإقفال.")}</p>
         </form>
       )}
 
@@ -338,8 +332,7 @@ export default function JournalPanel({
           className="theme-card flex flex-wrap items-end gap-3 rounded-xl border theme-border p-5"
         >
           <label className="text-xs font-bold">
-            تاريخ العكس
-            <input
+            {ui("تاريخ العكس")}<input
               type="date"
               required
               className={`${INPUT} mt-2`}
@@ -348,8 +341,7 @@ export default function JournalPanel({
             />
           </label>
           <label className="flex-1 text-xs font-bold">
-            سبب عكس القيد
-            <input
+            {ui("سبب عكس القيد")}<input
               required
               minLength={3}
               maxLength={300}
@@ -362,15 +354,13 @@ export default function JournalPanel({
             disabled={saving}
             className="gold-gradient-btn rounded-xl px-4 py-3 text-sm cursor-pointer"
           >
-            تأكيد العكس
-          </button>
+            {ui("تأكيد العكس")}</button>
           <button
             type="button"
             className="theme-card rounded-xl border theme-border px-4 py-3 text-sm cursor-pointer"
             onClick={() => setReverseId(null)}
           >
-            إلغاء
-          </button>
+            {ui("إلغاء")}</button>
         </form>
       )}
 
@@ -380,36 +370,36 @@ export default function JournalPanel({
             <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 text-sm">
               <div>
                 <bdi className="font-mono font-bold text-amber-700 dark:text-amber-400">
-                  JE-{String(j.number).padStart(6, "0")}
+                  JE-{ui(String(j.number).padStart(6, "0"))}
                 </bdi>
                 <span className="ms-3">{j.description}</span>
                 <span className="ms-3 text-xs text-slate-500">
-                  {j.entryDate.slice(0, 10)}
-                  {j.reversal ? " · تم عكسه" : ""}
-                  {j.reversesId ? " · قيد عكسي" : ""}
+                  {ui(j.entryDate.slice(0, 10))}
+                  {ui(j.reversal ? " · تم عكسه" : "")}
+                  {ui(j.reversesId ? " · قيد عكسي" : "")}
                 </span>
               </div>
               <bdi className="font-mono font-bold">
-                {amountLabel(String(j.lines.reduce((s, l) => s + Number(l.debit), 0)))} SAR
+                {ui(amountLabel(String(j.lines.reduce((s, l) => s + Number(l.debit), 0))))} SAR
               </bdi>
             </summary>
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[500px] text-right text-sm">
+              <table className="w-full min-w-[500px] text-start text-sm">
                 <thead className="text-xs text-slate-500">
                   <tr>
-                    <th className="py-2">الحساب</th>
-                    <th>مدين</th>
-                    <th>دائن</th>
+                    <th className="py-2">{ui("الحساب")}</th>
+                    <th>{ui("مدين")}</th>
+                    <th>{ui("دائن")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {j.lines.map((l) => (
                     <tr key={l.id} className="border-t theme-border">
                       <td className="py-3">
-                        <bdi className="font-mono">{l.accountCode}</bdi> · {l.account.nameAr}
+                        <bdi className="font-mono">{ui(l.accountCode)}</bdi> · {(ui.language === "en" && l.account.nameEn ? l.account.nameEn : ui(l.account.nameAr))}
                       </td>
-                      <td className="font-mono">{amountLabel(l.debit)}</td>
-                      <td className="font-mono">{amountLabel(l.credit)}</td>
+                      <td className="font-mono">{ui(amountLabel(l.debit))}</td>
+                      <td className="font-mono">{ui(amountLabel(l.credit))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -424,8 +414,7 @@ export default function JournalPanel({
                   setReverseReason("");
                 }}
               >
-                عكس القيد اليدوي
-              </button>
+                {ui("عكس القيد اليدوي")}</button>
             )}
           </details>
         ))}
@@ -433,8 +422,7 @@ export default function JournalPanel({
 
       {journals.isLoading && (
         <p role="status" className="py-8 text-sm text-slate-500">
-          جارٍ تحميل القيود…
-        </p>
+          {ui("جارٍ تحميل القيود…")}</p>
       )}
 
       <div className="flex justify-between text-sm">
@@ -444,10 +432,9 @@ export default function JournalPanel({
           disabled={page === 1}
           onClick={() => setPage((v) => v - 1)}
         >
-          السابق
-        </button>
+          {ui("السابق")}</button>
         <p>
-          {journals.data?.total || 0} قيد · صفحة {page}
+          {ui(journals.data?.total || 0)} {ui("قيد · صفحة")}{ui(page)}
         </p>
         <button
           type="button"
@@ -455,8 +442,7 @@ export default function JournalPanel({
           disabled={!journals.data || page * 30 >= journals.data.total}
           onClick={() => setPage((v) => v + 1)}
         >
-          التالي
-        </button>
+          {ui("التالي")}</button>
       </div>
     </section>
   );

@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
@@ -202,6 +204,8 @@ function SidebarHeader({
   homePath,
   onNavigate,
 }: SidebarHeaderProps) {
+  const ui = useUiText();
+
   return (
     <div
       className={`shrink-0 flex items-center justify-center py-4 px-14 lg:px-3 border-b border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
@@ -212,13 +216,13 @@ function SidebarHeader({
         href={homePath}
         onClick={onNavigate}
         className="group flex items-center justify-center transition-transform duration-200 active:scale-95"
-        title="الرئيسية"
+        title={ui("الرئيسية")}
       >
         {collapsed ? (
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center p-1.5 shadow-2xs group-hover:border-amber-500 transition">
             <Image
               src="/logo.svg"
-              alt="ميقات الخليج"
+              alt={ui("ميقات الخليج")}
               width={36}
               height={36}
               className="object-contain w-full h-full"
@@ -229,7 +233,7 @@ function SidebarHeader({
           <div className="w-full max-w-[175px] h-12 flex items-center justify-center px-2 py-1">
             <Image
               src="/logo.svg"
-              alt="ميقات الخليج"
+              alt={ui("ميقات الخليج")}
               width={160}
               height={50}
               className="object-contain w-auto h-full max-h-12 transition-transform duration-200 group-hover:scale-[1.03]"
@@ -289,6 +293,8 @@ function SidebarNavLinks({
   filteredItems,
   onMobileClose,
 }: SidebarNavLinksProps) {
+  const ui = useUiText();
+
   const { t, isRTL } = useLanguage();
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -303,7 +309,7 @@ function SidebarNavLinks({
 
   return (
     <nav
-      aria-label="القائمة الرئيسية"
+      aria-label={ui("القائمة الرئيسية")}
       className="min-h-0 flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overscroll-contain"
     >
       {filteredItems.map((item, index) => {
@@ -326,7 +332,7 @@ function SidebarNavLinks({
               >
                 {!collapsed && item.section && sectionTitle && (
                   <p className="px-3 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                    {sectionTitle}
+                    {ui(sectionTitle)}
                   </p>
                 )}
               </div>
@@ -340,13 +346,13 @@ function SidebarNavLinks({
                   ? "bg-amber-500/12 text-amber-700 dark:text-amber-400 font-black border border-amber-500/25 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-950 dark:hover:text-white border border-transparent"
               } ${collapsed ? "justify-center px-2 py-3" : ""}`}
-              title={collapsed ? itemLabel : undefined}
+              title={ui(collapsed ? itemLabel : undefined)}
             >
               {/* Active bar: right-0 in RTL, left-0 in LTR */}
               {active && (
                 <span
                   className={`absolute top-2 bottom-2 w-1 bg-amber-500 ${
-                    isRTL ? "right-0 rounded-l-full" : "left-0 rounded-r-full"
+                    isRTL ? "right-0 rounded-e-full" : "left-0 rounded-s-full"
                   }`}
                 />
               )}
@@ -357,18 +363,18 @@ function SidebarNavLinks({
                     : "text-slate-400 dark:text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200"
                 }`}
               >
-                {item.icon}
+                {ui(item.icon)}
               </span>
               {!collapsed && (
                 <>
                   <span className="truncate text-sm lg:text-xs font-bold tracking-normal">
-                    {itemLabel}
+                    {ui(itemLabel)}
                   </span>
                   {item.badge && (
                     <span
-                      className={`mr-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${item.badgeColor}`}
+                      className={`ms-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${item.badgeColor}`}
                     >
-                      {item.badge}
+                      {ui(item.badge)}
                     </span>
                   )}
                 </>
@@ -388,6 +394,8 @@ interface SidebarFooterProps {
 }
 
 function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
+  const ui = useUiText();
+
   const { t } = useLanguage();
   const isSuper = user?.role === "ADMIN" && isSuperAdmin(user?.email);
 
@@ -432,7 +440,7 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
                       : "text-amber-700 dark:text-amber-400 bg-amber-500/10"
                   }`}
                 >
-                  {roleTitle}
+                  {ui(roleTitle)}
                 </span>
               </div>
             </div>
@@ -469,15 +477,15 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
         className={`hidden lg:flex items-center justify-center py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-800 cursor-pointer ${
           collapsed ? "w-10 h-10 mx-auto" : "w-full px-3"
         }`}
-        title={collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة")}
-        aria-label={collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة")}
+        title={ui(collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة"))}
+        aria-label={ui(collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة"))}
       >
         {collapsed ? (
           <ChevronLeft className="w-4 h-4" />
         ) : (
           <>
-            <ChevronRight className="w-4 h-4 ml-1.5" />
-            <span className="text-xs">{t("sidebar.collapse", "طي القائمة الجانبية")}</span>
+            <ChevronRight className="w-4 h-4 me-1.5" />
+            <span className="text-xs">{ui(t("sidebar.collapse", "طي القائمة الجانبية"))}</span>
           </>
         )}
       </button>
@@ -498,6 +506,8 @@ export default function Sidebar({
   mobileOpen,
   onMobileClose,
 }: SidebarProps) {
+  const ui = useUiText();
+
   const pathname = usePathname();
   const { user } = useAuth();
   const { mode } = useWorkspaceMode();
@@ -572,7 +582,7 @@ export default function Sidebar({
       <dialog
         id="mobile-navigation"
         ref={drawerRef}
-        aria-label="القائمة الجانبية"
+        aria-label={ui("القائمة الجانبية")}
         onCancel={onMobileClose}
         onClose={onMobileClose}
         onClick={(event) => {
@@ -580,25 +590,25 @@ export default function Sidebar({
         }}
         className="mobile-drawer fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 lg:hidden"
       >
-        <aside className="absolute inset-y-0 right-0 w-[min(21rem,calc(100vw-3rem))] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] bg-white dark:bg-[#090e17] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
+        <aside className="absolute inset-y-0 start-0 w-[min(21rem,calc(100vw-3rem))] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] bg-white dark:bg-[#090e17] border-e border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
           <button
             onClick={onMobileClose}
-            className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] left-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
-            aria-label="إغلاق القائمة"
+            className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] end-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
+            aria-label={ui("إغلاق القائمة")}
           >
             <X className="w-4 h-4" />
           </button>
-          {sidebarContent(false)}
+          {ui(sidebarContent(false))}
         </aside>
       </dialog>
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 h-full sticky top-0 bg-white dark:bg-[#090e17] border-l border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
+        className={`hidden lg:flex flex-col shrink-0 h-full sticky top-0 bg-white dark:bg-[#090e17] border-e border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
           collapsed ? "w-[72px]" : "w-64"
         }`}
       >
-        {sidebarContent(collapsed)}
+        {ui(sidebarContent(collapsed))}
       </aside>
     </>
   );

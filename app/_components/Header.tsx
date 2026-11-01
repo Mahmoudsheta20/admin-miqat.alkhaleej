@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
@@ -41,6 +43,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
+  const ui = useUiText();
+
   const router = useRouter();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -61,7 +65,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
     const update = () => {
       const now = new Date();
       setTimeStr(
-        now.toLocaleTimeString("ar-SA", {
+        now.toLocaleTimeString(ui.locale, {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
@@ -73,7 +77,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [ui.locale]);
 
   // Close profile dropdown on click outside or Escape
   useEffect(() => {
@@ -147,7 +151,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
               className="lg:hidden min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
-              aria-label="القائمة الجانبية"
+              aria-label={ui("القائمة الجانبية")}
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -156,12 +160,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
             <Link
               href={homePath}
               className="flex items-center cursor-pointer min-w-0 py-1 transition-opacity hover:opacity-90"
-              title="ميقات الخليج - الصفحة الرئيسية"
+              title={ui("ميقات الخليج - الصفحة الرئيسية")}
             >
               <div className="h-8 sm:h-9 w-20 sm:w-auto sm:max-w-[150px] flex items-center">
                 <Image
                   src="/logo.svg"
-                  alt="ميقات الخليج"
+                  alt={ui("ميقات الخليج")}
                   width={140}
                   height={40}
                   className="object-contain max-w-full w-auto h-7 sm:h-8"
@@ -172,7 +176,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
 
             {/* Mode Switcher in Header for Admin */}
             {user.role === "ADMIN" && (
-              <div className="flex items-center mr-1 sm:mr-2">
+              <div className="flex shrink-0 items-center lg:hidden 2xl:flex">
                 <WorkspaceModeSwitcher variant="header" />
               </div>
             )}
@@ -184,10 +188,9 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
             <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs">
               <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span className="text-slate-500 dark:text-slate-400 text-[11px]">
-                مكة المكرمة:
-              </span>
+                {ui("مكة المكرمة:")}</span>
               <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-[12px]">
-                {timeStr || "—"}
+                {ui(timeStr || "—")}
               </span>
             </div>
 
@@ -196,10 +199,10 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               <button
                 onClick={() => router.push("/captain/contract")}
                 className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold"
-                title="إنشاء عقد رحلة جديد"
+                title={ui("إنشاء عقد رحلة جديد")}
               >
                 <FileCheck2 className="w-4 h-4" />
-                <span className="hidden sm:inline">إنشاء عقد رحلة</span>
+                <span className="hidden sm:inline">{ui("إنشاء عقد رحلة")}</span>
               </button>
             )}
 
@@ -211,18 +214,18 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     <button
                       onClick={() => router.push("/admin/purchases")}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs transition shadow-2xs font-bold cursor-pointer"
-                      title="تسجيل مصروف أو فاتورة مشتريات"
+                      title={ui("تسجيل مصروف أو فاتورة مشتريات")}
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>+ مصروف</span>
+                      <span>{ui("+ مصروف")}</span>
                     </button>
                     <button
                       onClick={() => router.push("/admin/invoices/new")}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold cursor-pointer"
-                      title="إنشاء فاتورة ضريبية جديدة"
+                      title={ui("إنشاء فاتورة ضريبية جديدة")}
                     >
                       <ReceiptText className="w-4 h-4" />
-                      <span>+ فاتورة</span>
+                      <span>{ui("+ فاتورة")}</span>
                     </button>
                   </>
                 ) : (
@@ -230,18 +233,18 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     <button
                       onClick={() => router.push("/admin/inspections")}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-800/80 hover:border-amber-500/40 text-slate-700 dark:text-slate-200 text-xs transition shadow-2xs font-bold cursor-pointer"
-                      title="سجل فحص المركبات اليومي"
+                      title={ui("سجل فحص المركبات اليومي")}
                     >
                       <ClipboardCheck className="w-3.5 h-3.5 text-amber-500" />
-                      <span>الفحوصات</span>
+                      <span>{ui("الفحوصات")}</span>
                     </button>
                     <button
                       onClick={() => router.push("/admin/contracts/new")}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs transition shadow-xs font-bold cursor-pointer"
-                      title="إنشاء عقد رسمي جديد"
+                      title={ui("إنشاء عقد رسمي جديد")}
                     >
                       <Plus className="w-4 h-4" />
-                      <span>عقد جديد</span>
+                      <span>{ui("عقد جديد")}</span>
                     </button>
                   </>
                 )}
@@ -255,12 +258,10 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
             <button
               onClick={toggleTheme}
               className="hidden sm:flex min-w-11 min-h-11 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-300 transition"
-              title={
-                theme === "dark"
+              title={ui(theme === "dark"
                   ? "التبديل إلى الوضع النهاري"
-                  : "التبديل إلى الوضع الليلي"
-              }
-              aria-label="تبديل المظهر"
+                  : "التبديل إلى الوضع الليلي")}
+              aria-label={ui("تبديل المظهر")}
             >
               {theme === "dark" ? (
                 <Sun className="w-4 h-4 text-amber-400" />
@@ -275,15 +276,15 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                 onClick={() => {
                   setIsProfileMenuOpen((prev) => !prev);
                 }}
-                className={`min-w-11 min-h-11 flex items-center justify-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1 rounded-xl border transition-all duration-200 text-right ${
+                className={`min-w-11 min-h-11 flex items-center justify-center gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1 rounded-xl border transition-all duration-200 text-start ${
                   isProfileMenuOpen
                     ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15 shadow-xs"
                     : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
                 }`}
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="header-account"
-                aria-label="قائمة الملف الشخصي"
-                title="قائمة الملف الشخصي"
+                aria-label={ui("قائمة الملف الشخصي")}
+                title={ui("قائمة الملف الشخصي")}
               >
                 <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs border border-amber-500/30">
                   {user.avatarUrl ? (
@@ -299,14 +300,14 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     <span>{user.name.slice(0, 1)}</span>
                   )}
                 </div>
-                <div className="hidden md:block min-w-0 pr-0.5 max-w-[110px]">
+                <div className="hidden md:block min-w-0 ps-0.5 max-w-[110px]">
                   <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                     {user.name}
                   </p>
                   <span
                     className={`inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold border ${roleInfo.color}`}
                   >
-                    {roleInfo.title}
+                    {ui(roleInfo.title)}
                   </span>
                 </div>
                 <ChevronDown
@@ -319,12 +320,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               {/* Profile Dropdown Menu Card */}
               {isProfileMenuOpen && (
                 <div
-                  className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-80 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
+                  className="header-popover fixed sm:absolute inset-x-3 sm:inset-x-auto sm:start-0 top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-full mt-1.5 sm:mt-2 sm:w-80 max-w-md rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150"
                   id="header-account"
-                  aria-label="الحساب والإعدادات"
+                  aria-label={ui("الحساب والإعدادات")}
                 >
                   <div className="flex items-center justify-between border-b theme-border px-4 py-2 lg:hidden">
-                    <p className="text-sm font-bold">الحساب والإعدادات</p>
+                    <p className="text-sm font-bold">{ui("الحساب والإعدادات")}</p>
                     <button
                       type="button"
                       onClick={() => {
@@ -332,7 +333,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         menuRef.current?.querySelector("button")?.focus();
                       }}
                       className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
-                      aria-label="إغلاق الحساب والإعدادات"
+                      aria-label={ui("إغلاق الحساب والإعدادات")}
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -361,20 +362,20 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                           </h3>
                           <span
                             className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 shrink-0"
-                            title="نشط الآن"
+                            title={ui("نشط الآن")}
                           />
                         </div>
                         <span
                           className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold border ${roleInfo.color}`}
                         >
-                          {roleInfo.title}
+                          {ui(roleInfo.title)}
                         </span>
                         {user.email && (
                           <p
                             className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate font-mono"
                             dir="ltr"
                           >
-                            {user.email}
+                            {ui(user.email)}
                           </p>
                         )}
                         {user.phone && (
@@ -382,7 +383,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                             className="text-[11px] text-slate-500 dark:text-slate-400 font-mono"
                             dir="ltr"
                           >
-                            {user.phone}
+                            {ui(user.phone)}
                           </p>
                         )}
                       </div>
@@ -398,17 +399,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         setProfileTab("profile");
                         setIsProfileOpen(true);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
                           <User className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold">الملف الشخصي</p>
+                          <p className="font-bold">{ui("الملف الشخصي")}</p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            تعديل بيانات الحساب والصورة
-                          </p>
+                            {ui("تعديل بيانات الحساب والصورة")}</p>
                         </div>
                       </div>
                     </button>
@@ -420,16 +420,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         setProfileTab("password");
                         setIsProfileOpen(true);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
                           <Lock className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold">{t("header.changePassword")}</p>
+                          <p className="font-bold">{ui(t("header.changePassword"))}</p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            {t("header.changePasswordSubtitle")}
+                            {ui(t("header.changePasswordSubtitle"))}
                           </p>
                         </div>
                       </div>
@@ -440,21 +440,21 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                       onClick={() => {
                         toggleLanguage();
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition">
                           <Globe className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold">{language === "ar" ? "اللغة (Language)" : "Language (اللغة)"}</p>
+                          <p className="font-bold">{ui(language === "ar" ? "اللغة (Language)" : "Language (اللغة)")}</p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            {language === "ar" ? "التبديل إلى English" : "Switch to Arabic (العربية)"}
+                            {ui(language === "ar" ? "التبديل إلى English" : "Switch to Arabic (العربية)")}
                           </p>
                         </div>
                       </div>
                       <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border theme-border font-mono text-[11px] font-bold text-amber-700 dark:text-amber-400">
-                        {language === "ar" ? "English" : "العربية"}
+                        {ui(language === "ar" ? "English" : "العربية")}
                       </span>
                     </button>
 
@@ -464,7 +464,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         setIsProfileMenuOpen(false);
                         router.push(homePath);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20 transition">
@@ -472,13 +472,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         </div>
                         <div>
                           <p className="font-bold">
-                            {user.role === "ADMIN"
+                            {ui(user.role === "ADMIN"
                               ? "لوحة الإدارة"
-                              : "لوحة الكابتن"}
+                              : "لوحة الكابتن")}
                           </p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            الانتقال للصفحة الرئيسية
-                          </p>
+                            {ui("الانتقال للصفحة الرئيسية")}</p>
                         </div>
                       </div>
                     </button>
@@ -491,17 +490,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                             setIsProfileMenuOpen(false);
                             router.push("/admin/contracts/new");
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
                               <FilePlus2 className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="font-bold">إنشاء عقد رسمي</p>
+                              <p className="font-bold">{ui("إنشاء عقد رسمي")}</p>
                               <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                إصدار عقد رحلة جديد
-                              </p>
+                                {ui("إصدار عقد رحلة جديد")}</p>
                             </div>
                           </div>
                         </button>
@@ -511,17 +509,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                             setIsProfileMenuOpen(false);
                             router.push("/admin/captains");
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition">
                               <UserCheck className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="font-bold">إدارة الكباتن</p>
+                              <p className="font-bold">{ui("إدارة الكباتن")}</p>
                               <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                متابعة السائقين والأسطول
-                              </p>
+                                {ui("متابعة السائقين والأسطول")}</p>
                             </div>
                           </div>
                         </button>
@@ -532,22 +529,20 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                               setIsProfileMenuOpen(false);
                               router.push("/admin/admins");
                             }}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20 transition">
                                 <ShieldCheck className="w-4 h-4" />
                               </div>
                               <div>
-                                <p className="font-bold">إدارة المسؤولين</p>
+                                <p className="font-bold">{ui("إدارة المسؤولين")}</p>
                                 <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                  إضافة وتعيين مسؤولي النظام
-                                </p>
+                                  {ui("إضافة وتعيين مسؤولي النظام")}</p>
                               </div>
                             </div>
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20">
-                              صلاحية حصرية
-                            </span>
+                              {ui("صلاحية حصرية")}</span>
                           </button>
                         )}
                       </>
@@ -558,17 +553,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                             setIsProfileMenuOpen(false);
                             router.push("/captain/contract");
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20 transition">
                               <FileCheck2 className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="font-bold">عقد الرحلة</p>
+                              <p className="font-bold">{ui("عقد الرحلة")}</p>
                               <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                إنشاء ومراجعة العقود
-                              </p>
+                                {ui("إنشاء ومراجعة العقود")}</p>
                             </div>
                           </div>
                         </button>
@@ -578,17 +572,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                             setIsProfileMenuOpen(false);
                             router.push("/captain/inspection");
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition">
                               <ClipboardCheck className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="font-bold">الفحص التشغيلي</p>
+                              <p className="font-bold">{ui("الفحص التشغيلي")}</p>
                               <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                                تسجيل الفحص اليومي للمركبة
-                              </p>
+                                {ui("تسجيل الفحص اليومي للمركبة")}</p>
                             </div>
                           </div>
                         </button>
@@ -598,7 +591,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     {/* Theme Toggle in Menu */}
                     <button
                       onClick={() => toggleTheme()}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-right"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 transition group text-start"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20 transition">
@@ -609,16 +602,16 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                           )}
                         </div>
                         <div>
-                          <p className="font-bold">المظهر</p>
+                          <p className="font-bold">{ui("المظهر")}</p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            {theme === "dark"
+                            {ui(theme === "dark"
                               ? "التحويل إلى الوضع النهاري"
-                              : "التحويل إلى الوضع الليلي"}
+                              : "التحويل إلى الوضع الليلي")}
                           </p>
                         </div>
                       </div>
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                        {theme === "dark" ? "داكن" : "فاتح"}
+                        {ui(theme === "dark" ? "داكن" : "فاتح")}
                       </span>
                     </button>
                   </div>
@@ -631,12 +624,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                         await logout();
                         router.push("/login");
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition font-bold text-xs text-right"
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition font-bold text-xs text-start"
                     >
                       <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
                         <LogOut className="w-4 h-4" />
                       </div>
-                      <span>تسجيل الخروج من النظام</span>
+                      <span>{ui("تسجيل الخروج من النظام")}</span>
                     </button>
                   </div>
                 </div>

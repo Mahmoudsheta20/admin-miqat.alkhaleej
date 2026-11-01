@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import dynamic from "next/dynamic";
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -27,6 +29,8 @@ import ProfileModal from "@/app/_components/ProfileModal";
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 
 export default function CaptainHomePage() {
+  const ui = useUiText();
+
   const { user } = useAuth();
   const [inspection, setInspection] = useState<VehicleInspection | null>(() => {
     return user ? getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection || null : null;
@@ -98,7 +102,7 @@ export default function CaptainHomePage() {
             <div
               onClick={() => setIsProfileOpen(true)}
               className="relative group cursor-pointer w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold text-lg sm:text-xl flex items-center justify-center border border-amber-500/30 shrink-0 shadow-xs"
-              title="تعديل الصورة والملف الشخصي"
+              title={ui("تعديل الصورة والملف الشخصي")}
             >
               {user.avatarUrl ? (
                 <Image
@@ -118,15 +122,13 @@ export default function CaptainHomePage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white truncate">
-                  مرحباً بك، كابتن {user.name}
+                  {ui("مرحباً بك، كابتن")}{user.name}
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] sm:text-xs font-bold border border-emerald-500/20 shrink-0">
-                  كابتن معتمد
-                </span>
+                  {ui("كابتن معتمد")}</span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 truncate">
-                بوابة الميدان • منظومة ميقات الخليج لإدارة الرحلات والعقود
-              </p>
+                {ui("بوابة الميدان • منظومة ميقات الخليج لإدارة الرحلات والعقود")}</p>
             </div>
           </div>
 
@@ -136,39 +138,37 @@ export default function CaptainHomePage() {
             className="self-start sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            تحديث
-          </button>
+            {ui("تحديث")}</button>
         </div>
 
         {/* Captain Meta Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-5 sm:mt-6 pt-4 sm:pt-5 border-t theme-border text-xs">
           <div>
-            <span className="text-slate-400 text-[11px] block">المركبة المسندة</span>
+            <span className="text-slate-400 text-[11px] block">{ui("المركبة المسندة")}</span>
             <span className="font-bold text-slate-900 dark:text-white font-mono flex items-center gap-1 mt-0.5">
               <Car className="w-3.5 h-3.5 text-amber-500" />
-              {user.assignedVehiclePlate || "لم تُسند مركبة"}
+              {ui(user.assignedVehiclePlate || "لم تُسند مركبة")}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 text-[11px] block">رقم الهوية</span>
+            <span className="text-slate-400 text-[11px] block">{ui("رقم الهوية")}</span>
             <span className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block" dir="ltr">
               {user.nationalId || "2553660073"}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 text-[11px] block">رقم الجوال</span>
+            <span className="text-slate-400 text-[11px] block">{ui("رقم الجوال")}</span>
             <span className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block" dir="ltr">
-              {user.phone || "0542273515"}
+              {ui(user.phone || "0542273515")}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 text-[11px] block">إجمالي العقود المنفذة</span>
+            <span className="text-slate-400 text-[11px] block">{ui("إجمالي العقود المنفذة")}</span>
             <span className="font-bold text-slate-900 dark:text-white font-mono text-sm mt-0.5 block">
-              {contracts.length} عقد
-            </span>
+              {ui(contracts.length)} {ui("عقد")}</span>
           </div>
         </div>
       </div>
@@ -198,9 +198,9 @@ export default function CaptainHomePage() {
             </div>
             <div>
               <h2 className="text-sm sm:text-lg font-black flex items-center gap-2">
-                {hasInspectionToday
+                {ui(hasInspectionToday
                   ? "تم اعتماد الفحص التشغيلي للمركبة بنجاح"
-                  : "فحص المركبة التشغيلي غير مسجل حتى الآن"}
+                  : "فحص المركبة التشغيلي غير مسجل حتى الآن")}
               </h2>
               <p className="text-xs sm:text-sm mt-1 opacity-80 leading-relaxed max-w-2xl">
                 {hasInspectionToday
@@ -218,16 +218,14 @@ export default function CaptainHomePage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl gold-gradient-btn text-xs font-bold transition shadow-md"
               >
                 <FilePlus2 className="w-4 h-4" />
-                إنشاء عقد رحلة جديد
-              </Link>
+                {ui("إنشاء عقد رحلة جديد")}</Link>
             ) : (
               <Link
                 href="/captain/inspection"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-md"
               >
                 <ClipboardCheck className="w-4 h-4" />
-                إجراء الفحص اليومي الآن
-              </Link>
+                {ui("إجراء الفحص اليومي الآن")}</Link>
             )}
           </div>
         </div>
@@ -245,11 +243,9 @@ export default function CaptainHomePage() {
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition">
-                فحص المركبة اليومي
-              </h3>
+                {ui("فحص المركبة اليومي")}</h3>
               <p className="text-xs text-slate-500">
-                16 بنداً: لوحة القيادة، الفحص الخارجي، وأدوات الأمان
-              </p>
+                {ui("16 بنداً: لوحة القيادة، الفحص الخارجي، وأدوات الأمان")}</p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition" />
@@ -265,11 +261,9 @@ export default function CaptainHomePage() {
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition">
-                إنشاء عقد رحلة جديد
-              </h3>
+                {ui("إنشاء عقد رحلة جديد")}</h3>
               <p className="text-xs text-slate-500">
-                كشف الركاب الديناميكي وتوليد الـ PDF الرسمي
-              </p>
+                {ui("كشف الركاب الديناميكي وتوليد الـ PDF الرسمي")}</p>
             </div>
           </div>
           <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition" />
@@ -281,29 +275,25 @@ export default function CaptainHomePage() {
         <div className="p-5 border-b theme-border flex items-center justify-between">
           <div>
             <h2 className="text-base font-black text-slate-900 dark:text-white">
-              عقودي الأخيرة
-            </h2>
+              {ui("عقودي الأخيرة")}</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              العقود الموثقة الصادرة بحسابك مع كشوف الركاب
-            </p>
+              {ui("العقود الموثقة الصادرة بحسابك مع كشوف الركاب")}</p>
           </div>
           <Link
             href="/captain/contract"
             className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
           >
-            + عقد جديد
-          </Link>
+            {ui("+ عقد جديد")}</Link>
         </div>
 
         {isLoading ? (
           <div className="p-10 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-slate-400">جاري تحميل البيانات...</p>
+            <p className="text-xs text-slate-400">{ui("جاري تحميل البيانات...")}</p>
           </div>
         ) : contracts.length === 0 ? (
           <div className="p-10 text-center text-slate-400 text-sm">
-            لم تقم بإنشاء أي عقود بعد.
-          </div>
+            {ui("لم تقم بإنشاء أي عقود بعد.")}</div>
         ) : (
           <div className="divide-y theme-border">
             {contracts.map((c) => (
@@ -319,28 +309,26 @@ export default function CaptainHomePage() {
                     <StatusBadge type="operation" status={c.operationType} size="sm" />
                   </div>
                   <div className="font-bold text-slate-900 dark:text-white text-sm">
-                    العميل: {c.customerName}
+                    {ui("العميل:")}{c.customerName}
                   </div>
                   <div className="text-xs text-slate-500 flex items-center gap-3">
-                    <span>من: {c.origin}</span>
+                    <span>{ui("من:")}{ui(c.origin)}</span>
                     <span>•</span>
-                    <span>إلى: {c.destination}</span>
+                    <span>{ui("إلى:")}{ui(c.destination)}</span>
                     <span>•</span>
-                    <span className="font-mono">{c.tripDate}</span>
+                    <span className="font-mono">{ui(c.tripDate)}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                   <span className="text-xs text-slate-400 font-mono">
-                    {c.passengers?.length || 0} ركاب
-                  </span>
+                    {ui(c.passengers?.length || 0)} {ui("ركاب")}</span>
                   <button
                     onClick={() => openPdf(c)}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    عرض PDF
-                  </button>
+                    {ui("عرض PDF")}</button>
                 </div>
               </div>
             ))}

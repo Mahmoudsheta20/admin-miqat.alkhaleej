@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useState } from "react";
 import {
@@ -39,13 +41,15 @@ export default function SectionGuide({
   tip,
   defaultOpen = false,
 }: SectionGuideProps) {
+  const ui = useUiText();
+
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { dir, language } = useLanguage();
   const isAr = language === "ar";
 
   return (
     <section
-      aria-label={title}
+      aria-label={ui(title)}
       className="theme-card rounded-2xl border border-amber-500/25 bg-amber-500/[0.03] dark:bg-amber-500/[0.04] overflow-hidden transition-all"
       dir={dir}
     >
@@ -57,14 +61,14 @@ export default function SectionGuide({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300 border border-amber-500/25">
-                {isAr ? "دليل المعرفة وشرح القسم" : "Section Guide & Knowledge"}
+                {ui(isAr ? "دليل المعرفة وشرح القسم" : "Section Guide & Knowledge")}
               </span>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {title}
+                {ui(title)}
               </h2>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
-              {summary}
+              {ui(summary)}
             </p>
           </div>
         </div>
@@ -76,13 +80,13 @@ export default function SectionGuide({
           className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-white/80 dark:bg-slate-900/70 hover:border-amber-500 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 transition shrink-0 cursor-pointer"
         >
           <span>
-            {isOpen
+            {ui(isOpen
               ? isAr
                 ? "إخفاء الشرح"
                 : "Hide Guide"
               : isAr
                 ? "عرض الشرح التفصيلي"
-                : "Show Detailed Guide"}
+                : "Show Detailed Guide")}
           </span>
           {isOpen ? (
             <ChevronUp className="w-3.5 h-3.5" />
@@ -103,11 +107,11 @@ export default function SectionGuide({
                 <div className="flex items-center justify-between gap-2 border-b theme-border pb-2">
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>{card.title}</span>
+                    <span>{ui(card.title)}</span>
                   </h3>
                   {card.badge && (
                     <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                      {card.badge}
+                      {ui(card.badge)}
                     </span>
                   )}
                 </div>
@@ -117,16 +121,16 @@ export default function SectionGuide({
                     <li key={item.label} className="leading-relaxed">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="font-bold text-slate-800 dark:text-slate-100">
-                          {item.label}:
+                          {ui(item.label)}:
                         </span>
                         {item.code && (
                           <code className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                            {item.code}
+                            {ui(item.code)}
                           </code>
                         )}
                       </div>
                       <p className="text-slate-500 dark:text-slate-400 mt-0.5">
-                        {item.description}
+                        {ui(item.description)}
                       </p>
                     </li>
                   ))}
@@ -140,7 +144,7 @@ export default function SectionGuide({
               {tip && (
                 <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                   <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>{tip}</span>
+                  <span>{ui(tip)}</span>
                 </div>
               )}
               {formula && (
@@ -148,7 +152,7 @@ export default function SectionGuide({
                   className="font-mono text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg shrink-0"
                   dir="ltr"
                 >
-                  {formula}
+                  {ui(formula)}
                 </div>
               )}
             </div>

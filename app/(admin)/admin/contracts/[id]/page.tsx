@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
@@ -29,6 +31,8 @@ interface ContractReviewPageProps {
 }
 
 export default function ContractReviewPage({ params }: ContractReviewPageProps) {
+  const ui = useUiText();
+
   const resolvedParams = use(params);
 
   const [contract, setContract] = useState<Contract | null>(
@@ -117,7 +121,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
     return (
       <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-500 dark:text-slate-400">
         <div className="w-10 h-10 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-        <p className="text-xs font-semibold">جاري تحميل وثيقة العقد للمراجعة...</p>
+        <p className="text-xs font-semibold">{ui("جاري تحميل وثيقة العقد للمراجعة...")}</p>
       </div>
     );
   }
@@ -129,17 +133,16 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           <AlertTriangle className="w-8 h-8" />
         </div>
         <h2 className="text-lg font-black text-slate-900 dark:text-white">
-          {error || "العقد غير متاح"}
+          {ui(error || "العقد غير متاح")}
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          قد يكون تم حذف العقد أو أن المعرف المطلوب غير صحيح.
-        </p>
+          {ui("قد يكون تم حذف العقد أو أن المعرف المطلوب غير صحيح.")}</p>
         <Link
           href="/admin/contracts"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold text-white shadow-xs"
         >
           <ArrowRight className="w-4 h-4" />
-          <span>الرجوع لسجل العقود</span>
+          <span>{ui("الرجوع لسجل العقود")}</span>
         </Link>
       </div>
     );
@@ -205,18 +208,16 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
   };
 
   return (
-    <div className="space-y-6 pb-16" dir="rtl">
+    <div className="space-y-6 pb-16" dir={ui.dir}>
       {/* Top Breadcrumbs & Nav */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
             <Link href="/admin" className="hover:text-amber-600 transition">
-              لوحة الإدارة
-            </Link>
+              {ui("لوحة الإدارة")}</Link>
             <span>/</span>
             <Link href="/admin/contracts" className="hover:text-amber-600 transition">
-              سجل العقود
-            </Link>
+              {ui("سجل العقود")}</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-bold font-mono">
               {contract.referenceNumber}
@@ -226,7 +227,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
-              <span>مراجعة وتدقيق العقد:</span>
+              <span>{ui("مراجعة وتدقيق العقد:")}</span>
               <span className="font-mono text-amber-600 dark:text-amber-400">
                 {contract.referenceNumber}
               </span>
@@ -236,7 +237,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
             >
               <StatusIcon className="w-3.5 h-3.5" />
-              <span>{statusInfo.label}</span>
+              <span>{ui(statusInfo.label)}</span>
             </div>
           </div>
         </div>
@@ -247,7 +248,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
           >
             <ReceiptText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>إنشاء فاتورة مرتبطة بالعقد</span>
+            <span>{ui("إنشاء فاتورة مرتبطة بالعقد")}</span>
           </Link>
 
           {contract.pdfPath && (
@@ -258,7 +259,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
               className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
             >
               <Printer className="w-4 h-4 text-slate-500" />
-              <span>طباعة / معاينة PDF</span>
+              <span>{ui("طباعة / معاينة PDF")}</span>
             </a>
           )}
 
@@ -267,7 +268,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight className="w-4 h-4" />
-            <span>العودة للسجل</span>
+            <span>{ui("العودة للسجل")}</span>
           </Link>
         </div>
       </div>
@@ -278,21 +279,21 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           <div className="space-y-1">
             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-amber-500" />
-              <span>إجراءات الاعتماد والمراجعة الإدارية</span>
+              <span>{ui("إجراءات الاعتماد والمراجعة الإدارية")}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {currentStatus === "PENDING_REVIEW"
+              {ui(currentStatus === "PENDING_REVIEW"
                 ? "العقد بانتظار قرار الإدارة. يمكنك اعتماده رسمياً ليصبح سارياً، أو رفضه مع تدوين أسباب الرفض."
                 : currentStatus === "APPROVED"
                 ? "تم اعتماد هذا العقد رسمياً وهو مؤهل للتشغيل."
                 : currentStatus === "REJECTED"
                 ? "تم رفض هذا العقد من قبل الإدارة. الملاحظات مسجلة أدناه."
-                : "العقد يخضع للشروط التشغيلية المقررة."}
+                : "العقد يخضع للشروط التشغيلية المقررة.")}
             </p>
             {contract.reviewNotes && (
               <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
-                <span className="font-bold text-rose-600 dark:text-rose-400">ملاحظات المراجعة: </span>
-                <span>{contract.reviewNotes}</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400">{ui("ملاحظات المراجعة:")}</span>
+                <span>{ui(contract.reviewNotes)}</span>
               </div>
             )}
           </div>
@@ -307,7 +308,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>اعتماد وتوثيق العقد</span>
+                <span>{ui("اعتماد وتوثيق العقد")}</span>
               </button>
             )}
 
@@ -319,7 +320,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 <XCircle className="w-4 h-4" />
-                <span>رفض العقد</span>
+                <span>{ui("رفض العقد")}</span>
               </button>
             )}
 
@@ -329,9 +330,9 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 disabled={actionLoading}
                 onClick={() => handleUpdateStatus("PENDING_REVIEW")}
                 className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition"
-                title="إعادة العقد لحالة قيد المراجعة"
+                title={ui("إعادة العقد لحالة قيد المراجعة")}
               >
-                <span>إعادة للمراجعة</span>
+                <span>{ui("إعادة للمراجعة")}</span>
               </button>
             )}
           </div>
@@ -350,7 +351,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             ) : (
               <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
             )}
-            <span>{notificationMsg.text}</span>
+            <span>{ui(notificationMsg.text)}</span>
           </div>
         )}
       </div>
@@ -361,44 +362,44 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
           <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <MapPin className="w-4 h-4 text-amber-500" />
-            <span>بيانات الرحلة والمسار</span>
+            <span>{ui("بيانات الرحلة والمسار")}</span>
           </h3>
 
           <div className="space-y-3 text-xs">
             <div>
-              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">نوع العملية:</span>
+              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("نوع العملية:")}</span>
               <span className="font-bold text-slate-900 dark:text-white">
-                {operationLabels[contract.operationType] || contract.operationType}
+                {ui(operationLabels[contract.operationType] || contract.operationType)}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-slate-800/60">
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">نقطة الانطلاق:</span>
-                <span className="font-bold text-slate-900 dark:text-white">{contract.origin}</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("نقطة الانطلاق:")}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{ui(contract.origin)}</span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">الوجهة:</span>
-                <span className="font-bold text-slate-900 dark:text-white">{contract.destination}</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("الوجهة:")}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{ui(contract.destination)}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-slate-800/60">
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">تاريخ الرحلة:</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">{contract.tripDate}</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("تاريخ الرحلة:")}</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{ui(contract.tripDate)}</span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">وقت الرحلة:</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">{contract.tripTime}</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("وقت الرحلة:")}</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{ui(contract.tripTime)}</span>
               </div>
             </div>
 
             {(contract.flightCarrier || contract.flightNumber) && (
               <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">بيانات الرحلة الجوية:</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("بيانات الرحلة الجوية:")}</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {contract.flightCarrier || ""} {contract.flightNumber ? `(${contract.flightNumber})` : ""}
+                  {ui(contract.flightCarrier || "")} {ui(contract.flightNumber ? `(${contract.flightNumber})` : "")}
                 </span>
               </div>
             )}
@@ -409,27 +410,27 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
           <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <User className="w-4 h-4 text-amber-500" />
-            <span>بيانات العميل والضيف الأساسي</span>
+            <span>{ui("بيانات العميل والضيف الأساسي")}</span>
           </h3>
 
           <div className="space-y-3 text-xs">
             <div>
-              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">اسم العميل:</span>
+              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("اسم العميل:")}</span>
               <span className="font-bold text-slate-900 dark:text-white text-sm">{contract.customerName}</span>
             </div>
 
             {contract.customerPhone && (
               <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">رقم الهاتف:</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("رقم الهاتف:")}</span>
                 <span className="font-mono font-bold text-amber-600 dark:text-amber-400" dir="ltr">
-                  {contract.customerPhone}
+                  {ui(contract.customerPhone)}
                 </span>
               </div>
             )}
 
             {contract.notes && (
               <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">ملاحظات العقد:</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("ملاحظات العقد:")}</span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                   {contract.notes}
                 </p>
@@ -442,7 +443,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
           <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <Car className="w-4 h-4 text-amber-500" />
-            <span>الكابتن والمركبة التشغيلية</span>
+            <span>{ui("الكابتن والمركبة التشغيلية")}</span>
           </h3>
 
           <div className="space-y-3 text-xs">
@@ -458,40 +459,39 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 />
               ) : (
                 <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-sm flex items-center justify-center border border-amber-500/20 shrink-0">
-                  {contract.captain?.name?.slice(0, 2) || "ك"}
+                  {ui(contract.captain?.name?.slice(0, 2) || "ك")}
                 </div>
               )}
               <div className="min-w-0">
-                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">اسم الكابتن المعتمد:</span>
+                <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("اسم الكابتن المعتمد:")}</span>
                 <span className="font-bold text-slate-900 dark:text-white truncate block">
-                  {contract.captain?.name || "كابتن رسمي"}
+                  {ui(contract.captain?.name || "كابتن رسمي")}
                 </span>
                 {contract.captain?.phone && (
                   <span className="text-[11px] font-mono text-slate-500 block mt-0.5" dir="ltr">
-                    {contract.captain.phone}
+                    {ui(contract.captain.phone)}
                   </span>
                 )}
               </div>
             </div>
 
             <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60">
-              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">رقم لوحة المركبة:</span>
+              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("رقم لوحة المركبة:")}</span>
               <span className="font-bold font-mono text-amber-600 dark:text-amber-400 text-sm">
                 {contract.vehiclePlate}
               </span>
             </div>
 
             <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60">
-              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">حالة الفحص التشغيلي:</span>
+              <span className="text-slate-500 dark:text-slate-400 block mb-0.5">{ui("حالة الفحص التشغيلي:")}</span>
               {contract.inspection ? (
                 <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>فحص تشغيلي مكتمل ومطابق</span>
+                  <span>{ui("فحص تشغيلي مكتمل ومطابق")}</span>
                 </span>
               ) : (
                 <span className="text-amber-600 dark:text-amber-400 font-bold">
-                  فحص تشغيلي معتمد آلياً
-                </span>
+                  {ui("فحص تشغيلي معتمد آلياً")}</span>
               )}
             </div>
           </div>
@@ -502,27 +502,27 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
       <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
         <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
           <Users className="w-4 h-4 text-amber-500" />
-          <span>قائمة الركاب المعتمدة ({contract.passengers?.length || 0})</span>
+          <span>{ui("قائمة الركاب المعتمدة (")}{ui(contract.passengers?.length || 0)})</span>
         </h3>
 
         {contract.passengers && contract.passengers.length > 0 ? (
           <>
             <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-right text-xs">
+              <table className="w-full text-start text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
                     <th className="py-2.5 px-3 font-bold">#</th>
-                    <th className="py-2.5 px-3 font-bold">اسم الراكب</th>
-                    <th className="py-2.5 px-3 font-bold">الجنسية</th>
-                    <th className="py-2.5 px-3 font-bold">رقم الهوية / الجواز</th>
+                    <th className="py-2.5 px-3 font-bold">{ui("اسم الراكب")}</th>
+                    <th className="py-2.5 px-3 font-bold">{ui("الجنسية")}</th>
+                    <th className="py-2.5 px-3 font-bold">{ui("رقم الهوية / الجواز")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {contract.passengers.map((p, idx) => (
                     <tr key={p.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
-                      <td className="py-2.5 px-3 font-mono font-bold text-slate-400">{p.sequence || idx + 1}</td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-slate-400">{ui(p.sequence || idx + 1)}</td>
                       <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{p.name}</td>
-                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">{p.nationality || "—"}</td>
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">{ui(p.nationality || "—")}</td>
                       <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300" dir="ltr">
                         {p.idNumber || "—"}
                       </td>
@@ -539,18 +539,18 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-mono flex items-center justify-center text-slate-500 font-bold">
-                        {p.sequence || idx + 1}
+                        {ui(p.sequence || idx + 1)}
                       </span>
                       <span>{p.name}</span>
                     </span>
                     {p.nationality && (
                       <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
-                        {p.nationality}
+                        {ui(p.nationality)}
                       </span>
                     )}
                   </div>
                   {p.idNumber && (
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono pr-6" dir="ltr">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono ps-6" dir="ltr">
                       <span>ID: {p.idNumber}</span>
                     </div>
                   )}
@@ -559,7 +559,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             </div>
           </>
         ) : (
-          <p className="text-xs text-slate-400 py-4 text-center">لا يوجد ركاب إضافيون مسجلون في هذا العقد.</p>
+          <p className="text-xs text-slate-400 py-4 text-center">{ui("لا يوجد ركاب إضافيون مسجلون في هذا العقد.")}</p>
         )}
       </div>
 
@@ -570,19 +570,17 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
               <XCircle className="w-6 h-6" />
               <h3 className="text-base font-black text-slate-900 dark:text-white">
-                تأكيد رفض العقد
-              </h3>
+                {ui("تأكيد رفض العقد")}</h3>
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              يرجى تدوين سبب عدم الاعتماد لمساعدة الكابتن وفريق العمليات في تصحيح بيانات الرحلة:
-            </p>
+              {ui("يرجى تدوين سبب عدم الاعتماد لمساعدة الكابتن وفريق العمليات في تصحيح بيانات الرحلة:")}</p>
 
             <textarea
               rows={3}
               value={rejectNotes}
               onChange={(e) => setRejectNotes(e.target.value)}
-              placeholder="مثال: نقص في بيانات الركاب، أو عدم توافق وقت الرحلة..."
+              placeholder={ui("مثال: نقص في بيانات الركاب، أو عدم توافق وقت الرحلة...")}
               className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden focus:border-rose-500"
             />
 
@@ -593,8 +591,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 onClick={() => setRejectModalOpen(false)}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
-                إلغاء
-              </button>
+                {ui("إلغاء")}</button>
 
               <button
                 type="button"
@@ -602,7 +599,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 onClick={() => handleUpdateStatus("REJECTED", rejectNotes)}
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
               >
-                {actionLoading ? "جاري الرفض..." : "تأكيد الرفض"}
+                {ui(actionLoading ? "جاري الرفض..." : "تأكيد الرفض")}
               </button>
             </div>
           </div>

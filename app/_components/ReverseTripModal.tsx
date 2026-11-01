@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -23,10 +25,14 @@ interface ReverseTripModalProps {
 const FIELD_CLASS = "theme-input w-full min-w-0 min-h-12 rounded-xl px-3 py-2 text-base";
 
 export default function ReverseTripModal(props: ReverseTripModalProps) {
+
+
   return props.isOpen ? <ReverseTripForm key={props.contract.id} {...props} /> : null;
 }
 
 function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps) {
+  const ui = useUiText();
+
   const router = useRouter();
   const { t, isRTL } = useLanguage();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -120,73 +126,73 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
       <div className="mobile-dialog-panel mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-2xl border theme-border theme-card shadow-2xl">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b theme-border p-4 sm:px-6">
           <div className="min-w-0">
-            <h2 id="return-trip-title" className="flex items-center gap-2 text-lg font-bold"><ArrowLeftRight className="h-5 w-5 text-amber-500" />{isRTL ? "رحلة عودة" : "Return Trip"}</h2>
-            <p className="mt-1 text-xs text-slate-500">{isRTL ? "من العقد " : "From Contract "}<span className="font-mono">{contract.referenceNumber}</span></p>
+            <h2 id="return-trip-title" className="flex items-center gap-2 text-lg font-bold"><ArrowLeftRight className="h-5 w-5 text-amber-500" />{ui(isRTL ? "رحلة عودة" : "Return Trip")}</h2>
+            <p className="mt-1 text-xs text-slate-500">{ui(isRTL ? "من العقد " : "From Contract ")}<span className="font-mono">{contract.referenceNumber}</span></p>
           </div>
-          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={t("common.close")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={ui(t("common.close"))} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-5 w-5" /></button>
         </header>
         {createdContract ? (
           <div className="space-y-4 p-6 text-center" role="status">
             <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
-            <h3 className="text-lg font-bold">{isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully"}</h3>
+            <h3 className="text-lg font-bold">{ui(isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully")}</h3>
             <p className="font-mono">{createdContract.referenceNumber}</p>
-            {!createdContract.pdfPath && <p className="text-sm text-amber-700 dark:text-amber-400">{isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview."}</p>}
-            <button type="button" onClick={() => { onClose(); router.push(`/admin/contracts/${createdContract.id}/edit`); }} className="min-h-12 w-full rounded-xl gold-gradient-btn px-4 font-bold">{isRTL ? "عرض وتعديل عقد العودة" : "View & Edit Return Contract"}</button>
+            {!createdContract.pdfPath && <p className="text-sm text-amber-700 dark:text-amber-400">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
+            <button type="button" onClick={() => { onClose(); router.push(`/admin/contracts/${createdContract.id}/edit`); }} className="min-h-12 w-full rounded-xl gold-gradient-btn px-4 font-bold">{ui(isRTL ? "عرض وتعديل عقد العودة" : "View & Edit Return Contract")}</button>
           </div>
         ) : (
           <>
             <form id="return-trip-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-6">
               <div className="rounded-xl border theme-border theme-card-subtle p-4">
                 <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="grid min-w-0 grid-cols-1 gap-3 disabled:opacity-60 sm:grid-cols-2">
-                  <label className="block min-w-0 space-y-2"><span className="text-sm font-bold">{isRTL ? "من — نقطة الانطلاق" : "From — Origin"}</span><input type="text" required maxLength={500} value={origin} onChange={event => setOrigin(event.target.value)} className={FIELD_CLASS} /></label>
-                  <label className="block min-w-0 space-y-2"><span className="text-sm font-bold">{isRTL ? "إلى — وجهة الوصول" : "To — Destination"}</span><input type="text" required maxLength={500} value={destination} onChange={event => setDestination(event.target.value)} className={FIELD_CLASS} /></label>
+                  <label className="block min-w-0 space-y-2"><span className="text-sm font-bold">{ui(isRTL ? "من — نقطة الانطلاق" : "From — Origin")}</span><input type="text" required maxLength={500} value={origin} onChange={event => setOrigin(event.target.value)} className={FIELD_CLASS} /></label>
+                  <label className="block min-w-0 space-y-2"><span className="text-sm font-bold">{ui(isRTL ? "إلى — وجهة الوصول" : "To — Destination")}</span><input type="text" required maxLength={500} value={destination} onChange={event => setDestination(event.target.value)} className={FIELD_CLASS} /></label>
                 </fieldset>
-                <p className="mt-2 text-xs text-slate-500">{isRTL ? "تم عكس المسار تلقائياً، ويمكنك تعديله." : "Route reversed automatically, you may adjust it."}</p>
-                <p className="mt-3 border-t theme-border pt-3 text-sm text-slate-500">{isRTL ? `نفس العميل و${contract.passengers?.length || 0} ركاب. سيُنشأ عقد جديد، وتبقى الرحلة الأصلية كما هي.` : `Same client and ${contract.passengers?.length || 0} passengers. A new contract will be created, leaving the original intact.`}</p>
+                <p className="mt-2 text-xs text-slate-500">{ui(isRTL ? "تم عكس المسار تلقائياً، ويمكنك تعديله." : "Route reversed automatically, you may adjust it.")}</p>
+                <p className="mt-3 border-t theme-border pt-3 text-sm text-slate-500">{ui(isRTL ? `نفس العميل و${contract.passengers?.length || 0} ركاب. سيُنشأ عقد جديد، وتبقى الرحلة الأصلية كما هي.` : `Same client and ${contract.passengers?.length || 0} passengers. A new contract will be created, leaving the original intact.`)}</p>
               </div>
               <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="min-w-0 space-y-4 disabled:opacity-60">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <CustomDatePicker
-                    label={isRTL ? "تاريخ العودة" : "Return Date"}
+                    label={ui(isRTL ? "تاريخ العودة" : "Return Date")}
                     required
                     minDate={originalDate}
                     value={tripDate}
                     onChange={value => setTripDate(value.replace(/\//g, "-"))}
                     className="min-w-0"
                   />
-                  <label className="block space-y-2"><span className="text-sm font-bold">{isRTL ? "وقت العودة" : "Return Time"}</span><input type="time" required value={tripTime} onChange={event => setTripTime(event.target.value)} dir="ltr" className={FIELD_CLASS} /></label>
+                  <label className="block space-y-2"><span className="text-sm font-bold">{ui(isRTL ? "وقت العودة" : "Return Time")}</span><input type="time" required value={tripTime} onChange={event => setTripTime(event.target.value)} dir="ltr" className={FIELD_CLASS} /></label>
                 </div>
-                <label className="block space-y-2"><span className="text-sm font-bold">{isRTL ? "الكابتن" : "Captain"}</span>
+                <label className="block space-y-2"><span className="text-sm font-bold">{ui(isRTL ? "الكابتن" : "Captain")}</span>
                   <select required value={captainId} onChange={event => {
                     const selected = captains.find(captain => captain.id === event.target.value);
                     setCaptainId(event.target.value);
                     setVehiclePlate(selected?.id === contract.captainId ? contract.vehiclePlate : selected?.assignedVehiclePlate || "");
                     setIsConfirmed(false);
                   }} className={FIELD_CLASS}>
-                    <option value="">{isRTL ? "اختر الكابتن" : "Select Captain"}</option>
-                    {captains.map(captain => <option key={captain.id} value={captain.id}>{captain.name}{captain.id === contract.captainId ? (isRTL ? " — الكابتن الأصلي" : " — Original Captain") : ""}</option>)}
+                    <option value="">{ui(isRTL ? "اختر الكابتن" : "Select Captain")}</option>
+                    {captains.map(captain => <option key={captain.id} value={captain.id}>{captain.name}{ui(captain.id === contract.captainId ? (isRTL ? " — الكابتن الأصلي" : " — Original Captain") : "")}</option>)}
                   </select>
-                  <span className="block text-xs text-slate-500">{isRTL ? "يمكنك اختيار كابتن بديل إذا كان الكابتن الأصلي غير متاح." : "You can choose a replacement captain if original captain is unavailable."}</span>
+                  <span className="block text-xs text-slate-500">{ui(isRTL ? "يمكنك اختيار كابتن بديل إذا كان الكابتن الأصلي غير متاح." : "You can choose a replacement captain if original captain is unavailable.")}</span>
                 </label>
-                {!isLoading && !isOriginalCaptainActive && <p className="text-sm text-amber-700 dark:text-amber-400">{isRTL ? "الكابتن الأصلي غير نشط. اختر كابتناً بديلاً." : "Original captain is inactive. Please choose a replacement captain."}</p>}
-                <label className="block space-y-2"><span className="text-sm font-bold">{isRTL ? "المركبة" : "Vehicle"}</span>
+                {!isLoading && !isOriginalCaptainActive && <p className="text-sm text-amber-700 dark:text-amber-400">{ui(isRTL ? "الكابتن الأصلي غير نشط. اختر كابتناً بديلاً." : "Original captain is inactive. Please choose a replacement captain.")}</p>}
+                <label className="block space-y-2"><span className="text-sm font-bold">{ui(isRTL ? "المركبة" : "Vehicle")}</span>
                   <select required value={vehiclePlate} onChange={event => { setVehiclePlate(event.target.value); setIsConfirmed(false); }} className={FIELD_CLASS}>
-                    <option value="">{isRTL ? "اختر المركبة" : "Select Vehicle"}</option>
+                    <option value="">{ui(isRTL ? "اختر المركبة" : "Select Vehicle")}</option>
                     {vehiclePlate && !vehicles.some(vehicle => vehicle.plateNumberAr === vehiclePlate) && <option value={vehiclePlate}>{vehiclePlate}</option>}
-                    {vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.plateNumberAr}>{vehicle.plateNumberAr} — {vehicle.make} {vehicle.model}</option>)}
+                    {vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.plateNumberAr}>{vehicle.plateNumberAr} — {ui(vehicle.make)} {ui(vehicle.model)}</option>)}
                   </select>
                 </label>
                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border theme-border p-4">
                   <input type="checkbox" required checked={isConfirmed} onChange={event => setIsConfirmed(event.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-amber-600" />
-                  <span className="text-sm leading-relaxed">{isRTL ? "أؤكد إجراء الفحص الفني فعلياً واجتياز جميع بنوده للمركبة والكابتن المختارين، وصحة بيانات رحلة العودة. سيكون تاريخ إصدار العقد وتاريخ الفحص مطابقين لتاريخ رحلة العودة المختار." : "I confirm that safety inspection passed all 15 points for the selected vehicle and captain, and return details are accurate. Issue and inspection dates will match the return date."}</span>
+                  <span className="text-sm leading-relaxed">{ui(isRTL ? "أؤكد إجراء الفحص الفني فعلياً واجتياز جميع بنوده للمركبة والكابتن المختارين، وصحة بيانات رحلة العودة. سيكون تاريخ إصدار العقد وتاريخ الفحص مطابقين لتاريخ رحلة العودة المختار." : "I confirm that safety inspection passed all 15 points for the selected vehicle and captain, and return details are accurate. Issue and inspection dates will match the return date.")}</span>
                 </label>
               </fieldset>
-              {isLoading && <p role="status" className="text-sm text-slate-500">{isRTL ? "جاري تحميل الكباتن والمركبات..." : "Loading captains and vehicles..."}</p>}
-              {(error || loadError) && <p role="alert" className="flex items-start gap-2 rounded-xl bg-rose-500/10 p-3 text-sm text-rose-700 dark:text-rose-300"><AlertCircle className="h-5 w-5 shrink-0" />{error || loadError}</p>}
+              {isLoading && <p role="status" className="text-sm text-slate-500">{ui(isRTL ? "جاري تحميل الكباتن والمركبات..." : "Loading captains and vehicles...")}</p>}
+              {(error || loadError) && <p role="alert" className="flex items-start gap-2 rounded-xl bg-rose-500/10 p-3 text-sm text-rose-700 dark:text-rose-300"><AlertCircle className="h-5 w-5 shrink-0" />{ui(error || loadError)}</p>}
             </form>
             <footer className="grid shrink-0 grid-cols-[auto_1fr] gap-3 border-t theme-border p-4 sm:px-6">
-              <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-12 rounded-xl border theme-border px-4 text-sm font-bold">{t("common.cancel")}</button>
-              <button type="submit" form="return-trip-form" disabled={isSubmitting || isLoading || Boolean(loadError) || !isConfirmed} className="min-h-12 rounded-xl gold-gradient-btn px-4 text-sm font-bold disabled:opacity-50">{isSubmitting ? (isRTL ? "جاري حفظ العقد وPDF..." : "Saving Contract & PDF...") : (isRTL ? "إنشاء عقد العودة" : "Create Return Contract")}</button>
+              <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-12 rounded-xl border theme-border px-4 text-sm font-bold">{ui(t("common.cancel"))}</button>
+              <button type="submit" form="return-trip-form" disabled={isSubmitting || isLoading || Boolean(loadError) || !isConfirmed} className="min-h-12 rounded-xl gold-gradient-btn px-4 text-sm font-bold disabled:opacity-50">{ui(isSubmitting ? (isRTL ? "جاري حفظ العقد وPDF..." : "Saving Contract & PDF...") : (isRTL ? "إنشاء عقد العودة" : "Create Return Contract"))}</button>
             </footer>
           </>
         )}

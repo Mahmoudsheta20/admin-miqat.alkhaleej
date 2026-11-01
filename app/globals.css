@@ -3,8 +3,8 @@
 
 @layer base {
   :root {
-    --font-arabic: var(--font-zain), var(--font-outfit), system-ui, sans-serif;
-    --font-latin: var(--font-outfit), system-ui, sans-serif;
+    --font-arabic: var(--font-inter), var(--font-zain), system-ui, sans-serif;
+    --font-latin: var(--font-inter), var(--font-zain), system-ui, sans-serif;
     
     /* Light Mode Variables (Default) */
     --bg-main: #f8fafc;
@@ -116,7 +116,7 @@ html.dark ::-webkit-scrollbar-thumb {
 
 /* Button Utilities */
 .gold-gradient-btn {
-  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
   color: #ffffff;
   font-weight: 700;
   transition: all 0.2s ease-in-out;
@@ -317,3 +317,24 @@ button:disabled { cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Logical layout and consistent typography in both interface languages. */
+@theme inline { --font-sans: var(--font-latin); }
+html[lang="en"] body { letter-spacing: normal; line-height: 1.55; }
+input, select, textarea, button { font-family: inherit; }
+input, select, textarea { max-width: 100%; }
+input[type="tel"], input[type="email"], [dir="ltr"] { unicode-bidi: isolate; }
+.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+button, a, input, select, textarea, summary { scroll-margin-block: 5rem; }
+:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 3px; }
+html[lang="en"] .font-black { font-weight: 750; }
+html[lang="en"] .font-extrabold { font-weight: 700; }
+@media (prefers-reduced-motion: reduce) {
+ *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+ .gold-gradient-btn:hover { transform: none; }
+}
+
+.app-modal > form { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+
+html[dir="ltr"] .app-shell { padding-inline-start: env(safe-area-inset-left,0px); padding-inline-end: env(safe-area-inset-right,0px); }
+html[dir="ltr"] .mobile-bottom-nav { padding-inline: max(.5rem,env(safe-area-inset-left,0px)) max(.5rem,env(safe-area-inset-right,0px)); }

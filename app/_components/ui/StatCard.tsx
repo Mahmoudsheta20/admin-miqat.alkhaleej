@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React from "react";
 import { LucideIcon } from "lucide-react";
@@ -59,6 +61,8 @@ export default function StatCard({
   onClick,
   isLoading = false,
 }: StatCardProps) {
+  const ui = useUiText();
+
   const styles = VARIANT_STYLES[variant];
   const Component = onClick ? "button" : "div";
 
@@ -76,7 +80,7 @@ export default function StatCard({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
-          {label}
+          {ui(label)}
         </span>
         {Icon && (
           <div
@@ -92,15 +96,15 @@ export default function StatCard({
           dir="ltr"
           className={`text-xl sm:text-2xl lg:text-3xl font-black font-mono tracking-tight ${styles.textVal}`}
         >
-          {isLoading ? "—" : value}
+          {ui(isLoading ? "—" : value)}
         </bdi>
         {unit && (
-          <span className="text-xs font-bold text-slate-400">{unit}</span>
+          <span className="text-xs font-bold text-slate-400">{ui(unit)}</span>
         )}
       </div>
 
       {subtext && (
-        <p className="text-[11px] text-slate-400 mt-1 truncate">{subtext}</p>
+        <p className="text-[11px] text-slate-400 mt-1 truncate">{ui(subtext)}</p>
       )}
     </Component>
   );
@@ -113,6 +117,8 @@ export interface StatRowProps {
 }
 
 export function StatRow({ children, columns = 4, className = "" }: StatRowProps) {
+  const ui = useUiText();
+
   const colClass =
     columns === 2
       ? "grid-cols-1 sm:grid-cols-2"
@@ -122,7 +128,7 @@ export function StatRow({ children, columns = 4, className = "" }: StatRowProps)
 
   return (
     <div className={`grid ${colClass} gap-3 sm:gap-4 ${className}`.trim()}>
-      {children}
+      {ui(children)}
     </div>
   );
 }

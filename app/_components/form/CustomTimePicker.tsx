@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, useRef, useId } from "react";
 import { Clock, AlertCircle, ChevronDown } from "lucide-react";
@@ -53,6 +55,8 @@ export function CustomTimePicker({
   hint,
   className = "",
 }: CustomTimePickerProps) {
+  const ui = useUiText();
+
   const controlId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -116,12 +120,12 @@ export function CustomTimePicker({
       {label && (
         <div className="flex items-center justify-between gap-1.5 min-w-0">
           <label htmlFor={controlId} className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
-            <span>{label}</span>
+            <span>{ui(label)}</span>
             {required && <span className="text-rose-500 font-black">*</span>}
           </label>
           {value && (
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium font-mono shrink-0">
-              ({formatTimeArabic12h(value)})
+              ({ui(formatTimeArabic12h(value))})
             </span>
           )}
         </div>
@@ -129,13 +133,13 @@ export function CustomTimePicker({
 
       {/* Trigger Button */}
       <button
-        aria-label={label || "حدد الوقت"}
+        aria-label={ui(label || "حدد الوقت")}
         aria-expanded={isOpen}
         id={controlId}
         aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-right cursor-pointer
+        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
           ${
             error
               ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
@@ -149,11 +153,11 @@ export function CustomTimePicker({
             <Clock className="w-3.5 h-3.5" />
           </div>
           <span className="text-xs font-bold font-mono tracking-wider truncate">
-            {value || "حدد الوقت"}
+            {ui(value || "حدد الوقت")}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 text-slate-400 mr-2">
+        <div className="flex items-center gap-1 shrink-0 text-slate-400 ms-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-amber-500" : ""
@@ -172,22 +176,19 @@ export function CustomTimePicker({
               onClick={setNow}
               className="flex-1 py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold transition text-center"
             >
-              الآن
-            </button>
+              {ui("الآن")}</button>
             <button
               type="button"
               onClick={() => addMinutes(30)}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
-              +30 د
-            </button>
+              {ui("+30 د")}</button>
             <button
               type="button"
               onClick={() => addMinutes(60)}
               className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
             >
-              +1 ساعة
-            </button>
+              {ui("+1 ساعة")}</button>
           </div>
 
           {/* Interactive Spinners / Direct pick */}
@@ -195,8 +196,7 @@ export function CustomTimePicker({
             {/* Hours Column */}
             <div>
               <label className="text-[11px] font-bold text-slate-400 block mb-1 text-center">
-                الساعة (24h)
-              </label>
+                {ui("الساعة (24h)")}</label>
               <div className="h-44 overflow-y-auto rounded-xl border theme-border p-1 space-y-1">
                 {Array.from({ length: 24 }).map((_, i) => {
                   const isSelected = hour === i;
@@ -212,9 +212,9 @@ export function CustomTimePicker({
                             : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                         }`}
                     >
-                      <span>{String(i).padStart(2, "0")}</span>
+                      <span>{ui(String(i).padStart(2, "0"))}</span>
                       <span className="text-[10px] opacity-70">
-                        {i >= 12 ? "م" : "ص"}
+                        {ui(i >= 12 ? "م" : "ص")}
                       </span>
                     </button>
                   );
@@ -225,8 +225,7 @@ export function CustomTimePicker({
             {/* Minutes Column */}
             <div>
               <label className="text-[11px] font-bold text-slate-400 block mb-1 text-center">
-                الدقائق
-              </label>
+                {ui("الدقائق")}</label>
               <div className="h-44 overflow-y-auto rounded-xl border theme-border p-1 space-y-1">
                 {minuteOptions.map((m) => {
                   const isSelected = minute === m;
@@ -242,7 +241,7 @@ export function CustomTimePicker({
                             : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                         }`}
                     >
-                      :{String(m).padStart(2, "0")}
+                      :{ui(String(m).padStart(2, "0"))}
                     </button>
                   );
                 })}
@@ -253,8 +252,7 @@ export function CustomTimePicker({
           {/* Popular quick slots */}
           <div className="pt-2 border-t theme-border">
             <span className="text-[10px] text-slate-400 block mb-1.5">
-              مواعيد شائعة:
-            </span>
+              {ui("مواعيد شائعة:")}</span>
             <div className="grid grid-cols-3 gap-1.5">
               {popularHours.map((slot) => (
                 <button
@@ -263,7 +261,7 @@ export function CustomTimePicker({
                   onClick={() => setSpecificTime(slot.h, slot.m)}
                   className="py-1 px-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500/15 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold transition text-center"
                 >
-                  {slot.label}
+                  {ui(slot.label)}
                 </button>
               ))}
             </div>
@@ -272,15 +270,14 @@ export function CustomTimePicker({
           {/* Footer time confirmation */}
           <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between">
             <span className="text-xs text-slate-400 font-mono">
-              {value} ({formatTimeArabic12h(value)})
+              {ui(value)} ({ui(formatTimeArabic12h(value))})
             </span>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               className="px-3 py-1 rounded-lg gold-gradient-btn text-xs font-bold"
             >
-              تأكيد
-            </button>
+              {ui("تأكيد")}</button>
           </div>
         </div>
       )}
@@ -288,12 +285,12 @@ export function CustomTimePicker({
       {error && (
         <p id={`${controlId}-description`} role="alert" className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <AlertCircle className="w-3 h-3 shrink-0" />
-          <span>{error}</span>
+          <span>{ui(error)}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>
+        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{ui(hint)}</p>
       )}
     </div>
   );

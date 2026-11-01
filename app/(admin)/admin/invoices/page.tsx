@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -29,6 +31,7 @@ import {
   invoiceRequest,
   type InvoiceRow,
 } from "@/lib/invoices";
+import InvoiceVisibilityAction from "./invoice-visibility-action";
 import RecordPaymentModal from "./record-payment-modal";
 import { useLanguage } from "@/lib/languageContext";
 import { PageHeader, StatCard, StatRow, FilterBar, Money } from "@/app/_components/ui";
@@ -49,12 +52,15 @@ function formatMoney(value: string): string {
 }
 
 export default function InvoicesPage() {
+  const ui = useUiText();
+
   const { t, dir, isRTL } = useLanguage();
   const [data, setData] = useState<InvoiceList | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+  const [isArchived,setIsArchived]=useState(false);
 
   // Client-side instant filters
   const [search, setSearch] = useState("");
@@ -74,7 +80,7 @@ export default function InvoicesPage() {
       if (showRefresh) setIsRefreshing(true);
       else setIsLoading(true);
       try {
-        const result = await invoiceRequest<InvoiceList>(`?page=${page}`);
+        const result = await invoiceRequest<InvoiceList>(`?page=${page}&archived=${isArchived}`);
         setError(result.error || "");
         if (result.data) setData(result.data);
       } finally {
@@ -82,12 +88,12 @@ export default function InvoicesPage() {
         setIsRefreshing(false);
       }
     },
-    [page],
+    [page, isArchived],
   );
 
   useEffect(() => {
     let active = true;
-    void invoiceRequest<InvoiceList>(`?page=${page}`).then((result) => {
+    void invoiceRequest<InvoiceList>(`?page=${page}&archived=${isArchived}`).then((result) => {
       if (!active) return;
       setError(result.error || "");
       if (result.data) setData(result.data);
@@ -96,7 +102,7 @@ export default function InvoicesPage() {
     return () => {
       active = false;
     };
-  }, [page]);
+  }, [page, isArchived]);
 
   const items = useMemo(() => data?.items ?? [], [data]);
 
@@ -107,7 +113,7 @@ export default function InvoicesPage() {
       const isNote =
         row.taxDocument?.kind === "CREDIT" || row.taxDocument?.kind === "DEBIT";
 
-      if (typeFilter === "BOOKING" && (docType !== "BOOKING" || isNote))
+      if (typeFilter === "BOOKING" && (!["BOOKING","TAX"].includes(docType) || isNote))
         return false;
       if (typeFilter === "PROFORMA" && docType !== "PROFORMA") return false;
       if (typeFilter === "TAX" && (docType !== "TAX" || isNote)) return false;
@@ -146,6 +152,7 @@ export default function InvoicesPage() {
         bookingCount++;
       }
 
+      if(docType === "PROFORMA") continue;
       const gross = Number(item.totalAmount);
       const vat = Number(item.vatAmount);
       if (Number.isFinite(gross)) {
@@ -277,8 +284,8 @@ export default function InvoicesPage() {
       <PageHeader
         icon={ReceiptText}
         badge={t("section.financeDaily")}
-        title={t("invoice.title")}
-        subtitle={t("invoice.subtitle")}
+        title={ui(t("invoice.title"))}
+        subtitle={ui(t("invoice.subtitle"))}
         primaryAction={{
           label: t("invoice.newInvoice"),
           href: "/admin/invoices/new",
@@ -317,7 +324,7 @@ export default function InvoicesPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {seedMessage}
+          {ui(seedMessage)}
         </p>
       )}
       {error && (
@@ -327,14 +334,14 @@ export default function InvoicesPage() {
         >
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span>{error}</span>
+            <span>{ui(error)}</span>
           </div>
           <button
             type="button"
             onClick={() => void load(true)}
             className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition shrink-0 cursor-pointer"
           >
-            {t("common.retry")}
+            {ui(t("common.retry"))}
           </button>
         </div>
       )}
@@ -342,7 +349,7 @@ export default function InvoicesPage() {
       {/* 3. Streamlined KPI Cards */}
       <StatRow>
         <StatCard
-          label={t("invoice.totalInvoices")}
+          label={ui(t("invoice.totalInvoices"))}
           value={stats.total}
           subtext={t("invoice.savedInSystem")}
           icon={ReceiptText}
@@ -351,8 +358,8 @@ export default function InvoicesPage() {
           isLoading={isLoading && !data}
         />
         <StatCard
-          label={t("invoice.customerInvoices")}
-          value={stats.bookingCount}
+          label={ui(t("invoice.customerInvoices"))}
+          value={stats.bookingCount+stats.taxCount}
           subtext={t("invoice.customerInvoices")}
           icon={Check}
           variant="emerald"
@@ -361,7 +368,7 @@ export default function InvoicesPage() {
           isLoading={isLoading && !data}
         />
         <StatCard
-          label={t("invoice.proformaInvoices")}
+          label={ui(t("invoice.proformaInvoices"))}
           value={stats.proformaCount}
           subtext={t("invoice.proforma")}
           icon={FileSpreadsheet}
@@ -371,7 +378,7 @@ export default function InvoicesPage() {
           isLoading={isLoading && !data}
         />
         <StatCard
-          label={t("invoice.netSales")}
+          label={ui(t("invoice.netSales"))}
           value={formatMoney(stats.pageGrossSum)}
           unit={t("common.sar")}
           subtext={`${t("invoice.salesTax")}: ${formatMoney(stats.pageVatSum)} ${t("common.sar")}`}
@@ -385,10 +392,10 @@ export default function InvoicesPage() {
       <FilterBar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder={t("invoice.searchPlaceholder")}
+        searchPlaceholder={ui(t("invoice.searchPlaceholder"))}
         tabs={[
           { id: "ALL", label: t("common.all"), count: items.length },
-          { id: "BOOKING", label: t("invoice.customerInvoices"), count: stats.bookingCount },
+          { id: "BOOKING", label: t("invoice.customerInvoices"), count: stats.bookingCount+stats.taxCount },
           { id: "PROFORMA", label: t("invoice.proformaInvoices"), count: stats.proformaCount },
           { id: "NOTES", label: t("invoice.notesCount"), count: stats.notesCount },
         ]}
@@ -396,15 +403,17 @@ export default function InvoicesPage() {
         onTabChange={(tabId) => setTypeFilter(tabId as typeof typeFilter)}
       />
 
+      <div className="flex flex-wrap items-center justify-between gap-3"><label className="inline-flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={isArchived} onChange={event=>{setIsArchived(event.target.checked);setPage(1);}}/>{ui(isRTL?"عرض الفواتير المحذوفة":"Show removed invoices")}</label><p className="text-xs text-[var(--text-muted)]">{ui(isRTL?"البحث والتصفية والإجماليات تخص الصفحة الحالية.":"Search, filters and sales totals apply to the current page.")}</p></div>
+      {isArchived&&<p className="rounded-xl border border-amber-300 bg-amber-500/5 p-4 text-sm">{ui(isRTL?"هذه الفواتير مخفية من القائمة فقط. مستنداتها ودفعاتها وحساب الضريبة محفوظة.":"These invoices are hidden from the list only. Their documents, payments and VAT records are retained.")}</p>}
       {/* Invoices List Container */}
       <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
         <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
           <span className="font-bold text-slate-700 dark:text-slate-300">
-            {t("invoice.title")} ({filteredItems.length} {t("common.of")}{" "}
-            {data?.total || 0})
+            {ui(t("invoice.title"))} ({ui(filteredItems.length)} {ui(t("common.of"))}{ui(" ")}
+            {ui(data?.total || 0)})
           </span>
           <span className="text-slate-400 font-mono">
-            {t("common.page")} {page} {t("common.of")} {totalPages}
+            {ui(t("common.page"))} {ui(page)} {ui(t("common.of"))} {ui(totalPages)}
           </span>
         </div>
 
@@ -415,7 +424,7 @@ export default function InvoicesPage() {
           >
             <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              {t("common.loading")}
+              {ui(t("common.loading"))}
             </p>
           </div>
         ) : filteredItems.length === 0 ? (
@@ -424,14 +433,14 @@ export default function InvoicesPage() {
               <ReceiptText className="w-6 h-6" />
             </div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white">
-              {items.length === 0
+              {ui(items.length === 0
                 ? "لا توجد فواتير حتى الآن."
-                : "لا توجد فواتير مطابقة للبحث"}
+                : "لا توجد فواتير مطابقة للبحث")}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              {items.length === 0
+              {ui(items.length === 0
                 ? "ابدأ بإنشاء فاتورة جديدة أو فاتورة مبدئية وسيتم حفظها مع رمز الفاتورة الضريبية ZATCA QR ونسخة PDF للعميل."
-                : "جرب تعديل كلمات البحث أو تغيير تصفية نوع الفاتورة."}
+                : "جرب تعديل كلمات البحث أو تغيير تصفية نوع الفاتورة.")}
             </p>
             {items.length === 0 ? (
               <Link
@@ -439,7 +448,7 @@ export default function InvoicesPage() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs"
               >
                 <Plus className="w-4 h-4" />
-                <span>{t("invoice.newInvoice")}</span>
+                <span>{ui(t("invoice.newInvoice"))}</span>
               </Link>
             ) : (
               <button
@@ -450,7 +459,7 @@ export default function InvoicesPage() {
                 }}
                 className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition"
               >
-                {t("common.cancel")}
+                {ui(t("common.cancel"))}
               </button>
             )}
           </div>
@@ -459,23 +468,23 @@ export default function InvoicesPage() {
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
               <table
-                className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs border-collapse`}
+                className={`w-full ${"text-start"} text-xs border-collapse`}
               >
                 <thead>
                   <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-                    <th className="py-3.5 px-4">{t("invoice.number")}</th>
+                    <th className="py-3.5 px-4">{ui(t("invoice.number"))}</th>
                     <th className="py-3.5 px-4">
-                      {t("invoice.typeAndStatus")}
+                      {ui(t("invoice.typeAndStatus"))}
                     </th>
-                    <th className="py-3.5 px-4">{t("invoice.customer")}</th>
-                    <th className="py-3.5 px-4">{t("invoice.subtotal")}</th>
-                    <th className="py-3.5 px-4">{t("invoice.vat")}</th>
-                    <th className="py-3.5 px-4">{t("invoice.total")}</th>
-                    <th className="py-3.5 px-4">{t("invoice.date")}</th>
+                    <th className="py-3.5 px-4">{ui(t("invoice.customer"))}</th>
+                    <th className="py-3.5 px-4">{ui(t("invoice.subtotal"))}</th>
+                    <th className="py-3.5 px-4">{ui(t("invoice.vat"))}</th>
+                    <th className="py-3.5 px-4">{ui(t("invoice.total"))}</th>
+                    <th className="py-3.5 px-4">{ui(t("invoice.date"))}</th>
                     <th
-                      className={`py-3.5 px-4 ${isRTL ? "text-left" : "text-right"}`}
+                      className={`py-3.5 px-4 ${"text-end"}`}
                     >
-                      {t("common.actions")}
+                      {ui(t("common.actions"))}
                     </th>
                   </tr>
                 </thead>
@@ -498,7 +507,7 @@ export default function InvoicesPage() {
                               href={`/admin/invoices/${row.id}`}
                               className="text-amber-700 dark:text-amber-400 font-black font-mono text-sm hover:underline"
                             >
-                              {row.invoiceNumber}
+                              {ui(row.invoiceNumber)}
                             </Link>
                             <button
                               type="button"
@@ -506,7 +515,7 @@ export default function InvoicesPage() {
                                 handleCopyNumber(row.invoiceNumber)
                               }
                               className="p-1 rounded-md text-slate-400 hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
-                              title="نسخ رقم الفاتورة"
+                              title={ui("نسخ رقم الفاتورة")}
                             >
                               {copiedNumber === row.invoiceNumber ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -524,7 +533,7 @@ export default function InvoicesPage() {
                                 isCredit
                                   ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
                                   : isDebit
-                                    ? "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20"
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
                                     : isProforma
                                       ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
                                       : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
@@ -533,20 +542,20 @@ export default function InvoicesPage() {
                               {isCredit ? (
                                 <>
                                   <FileMinus className="w-3 h-3" />
-                                  <span>إشعار دائن (خفض)</span>
+                                  <span>{ui("إشعار دائن (خفض)")}</span>
                                 </>
                               ) : isDebit ? (
                                 <>
                                   <FilePlus className="w-3 h-3" />
-                                  <span>إشعار مدين (إضافة)</span>
+                                  <span>{ui("إشعار مدين (إضافة)")}</span>
                                 </>
                               ) : (
-                                invoiceTitle(row)
+                                ui(invoiceTitle(row))
                               )}
                             </span>
                             <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
                               <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                              <span>محفوظة في النظام</span>
+                              <span>{ui("محفوظة في النظام")}</span>
                             </span>
                           </div>
                         </td>
@@ -581,20 +590,20 @@ export default function InvoicesPage() {
                         </td>
 
                         <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                          {dateLabel(row.invoiceDate)}
+                          {ui(dateLabel(row.invoiceDate, ui.language))}
                         </td>
 
                         <td
-                          className={`py-3.5 px-4 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}
+                          className={`py-3.5 px-4 whitespace-nowrap ${"text-end"}`}
                         >
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition"
-                              title={t("common.view")}
+                              title={ui(t("common.view"))}
                             >
                               <Eye className="w-3.5 h-3.5 text-amber-500" />
-                              <span>{t("common.view")}</span>
+                              <span>{ui(t("common.view"))}</span>
                             </Link>
 
                             <button
@@ -602,7 +611,7 @@ export default function InvoicesPage() {
                               disabled={isDownloadingThis}
                               onClick={() => void handleDownloadPdf(row)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition disabled:opacity-50 cursor-pointer"
-                              title={t("common.downloadPdf")}
+                              title={ui(t("common.downloadPdf"))}
                             >
                               {isDownloadingThis ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -612,17 +621,18 @@ export default function InvoicesPage() {
                               <span>PDF</span>
                             </button>
 
-                            {!isProforma && !isCredit && (
+                            {!isArchived && !isProforma && !isCredit && (
                               <button
                                 type="button"
                                 onClick={() => setPaymentModalInvoice(row)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 font-bold transition cursor-pointer"
-                                title={t("invoice.recordPayment")}
+                                title={ui(t("invoice.recordPayment"))}
                               >
                                 <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>{t("invoice.recordPayment")}</span>
+                                <span>{ui(t("invoice.recordPayment"))}</span>
                               </button>
                             )}
+                            <InvoiceVisibilityAction id={row.id} number={row.invoiceNumber} isArchived={isArchived} onChanged={()=>{if(filteredItems.length===1&&page>1)setPage(v=>v-1);else void load(true);}}/>
                           </div>
                         </td>
                       </tr>
@@ -649,13 +659,13 @@ export default function InvoicesPage() {
                           href={`/admin/invoices/${row.id}`}
                           className="font-mono font-black text-sm text-amber-700 dark:text-amber-400"
                         >
-                          {row.invoiceNumber}
+                          {ui(row.invoiceNumber)}
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleCopyNumber(row.invoiceNumber)}
                           className="p-1 rounded-md text-slate-400 hover:text-amber-600"
-                          aria-label="نسخ رقم الفاتورة"
+                          aria-label={ui("نسخ رقم الفاتورة")}
                         >
                           {copiedNumber === row.invoiceNumber ? (
                             <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -670,32 +680,32 @@ export default function InvoicesPage() {
                           isCredit
                             ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
                             : isDebit
-                              ? "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20"
+                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
                               : isProforma
                                 ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
                                 : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
                         }`}
                       >
-                        {isCredit
+                        {ui(isCredit
                           ? "إشعار دائن"
                           : isDebit
                             ? "إشعار مدين"
-                            : invoiceTitle(row)}
+                            : ui(invoiceTitle(row)))}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <span className="text-[11px] text-slate-400 block">
-                          {t("invoice.customer")}:
+                          {ui(t("invoice.customer"))}:
                         </span>
                         <strong className="text-xs font-bold text-slate-900 dark:text-white">
                           {row.customerName}
                         </strong>
                       </div>
-                      <div className="text-left">
+                      <div className="text-end">
                         <span className="text-[11px] text-slate-400 block">
-                          {t("invoice.total")}:
+                          {ui(t("invoice.total"))}:
                         </span>
                         <Money
                           amount={isCredit ? -Math.abs(Number(row.totalAmount)) : row.totalAmount}
@@ -708,10 +718,10 @@ export default function InvoicesPage() {
                     <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-[11px] text-slate-500 dark:text-slate-400">
                       <span className="flex items-center gap-1 font-mono">
                         <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                        {dateLabel(row.invoiceDate)}
+                        {ui(dateLabel(row.invoiceDate, ui.language))}
                       </span>
                       <span className="flex items-center gap-1">
-                        <span>{t("invoice.vat")}:</span>
+                        <span>{ui(t("invoice.vat"))}:</span>
                         <Money amount={row.vatAmount} size="xs" color="muted" />
                       </span>
                     </div>
@@ -722,7 +732,7 @@ export default function InvoicesPage() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-card text-xs font-bold text-slate-700 dark:text-slate-200"
                       >
                         <Eye className="w-4 h-4 text-amber-500" />
-                        <span>{t("common.view")}</span>
+                        <span>{ui(t("common.view"))}</span>
                       </Link>
 
                       <button
@@ -739,16 +749,17 @@ export default function InvoicesPage() {
                         <span>PDF</span>
                       </button>
 
-                      {!isProforma && !isCredit && (
+                      {!isArchived && !isProforma && !isCredit && (
                         <button
                           type="button"
                           onClick={() => setPaymentModalInvoice(row)}
                           className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 text-xs font-bold cursor-pointer"
                         >
                           <CreditCard className="w-4 h-4 text-emerald-500" />
-                          <span>{t("invoice.recordPayment")}</span>
+                          <span>{ui(t("invoice.recordPayment"))}</span>
                         </button>
                       )}
+                      <InvoiceVisibilityAction id={row.id} number={row.invoiceNumber} isArchived={isArchived} onChanged={()=>{if(filteredItems.length===1&&page>1)setPage(v=>v-1);else void load(true);}}/>
                     </div>
                   </div>
                 );
@@ -770,12 +781,12 @@ export default function InvoicesPage() {
             ) : (
               <ChevronLeft className="w-4 h-4" />
             )}
-            <span>{t("common.back")}</span>
+            <span>{ui(t("common.back"))}</span>
           </button>
 
           <span className="font-bold text-slate-600 dark:text-slate-300">
-            {t("common.page")} <span className="font-mono">{page}</span>{" "}
-            {t("common.of")} <span className="font-mono">{totalPages}</span>
+            {ui(t("common.page"))} <span className="font-mono">{ui(page)}</span>{ui(" ")}
+            {ui(t("common.of"))} <span className="font-mono">{ui(totalPages)}</span>
           </span>
 
           <button
@@ -784,7 +795,7 @@ export default function InvoicesPage() {
             onClick={() => setPage(page + 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            <span>{t("common.next")}</span>
+            <span>{ui(t("common.next"))}</span>
             {isRTL ? (
               <ChevronLeft className="w-4 h-4" />
             ) : (

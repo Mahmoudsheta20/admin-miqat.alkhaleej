@@ -1,4 +1,6 @@
 "use client";
+import { useUiText, LocalizedText } from "@/lib/ui-text";
+
 
 import React, { forwardRef, useId } from "react";
 import { X } from "lucide-react";
@@ -37,6 +39,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
     },
     ref
   ) => {
+    const ui=useUiText();
     const hasValue = value !== undefined && value !== null && String(value).length > 0;
 
     const generatedId = useId();
@@ -46,8 +49,8 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
       <FormField id={fieldId} label={label} error={error} hint={hint} required={required} badge={badge}>
         <div className="relative flex items-center">
           {icon && (
-            <div className="absolute right-3 text-slate-400 pointer-events-none flex items-center justify-center">
-              {icon}
+            <div className="absolute start-3 text-slate-400 pointer-events-none flex items-center justify-center">
+              <LocalizedText value={icon}/>
             </div>
           )}
 
@@ -61,8 +64,8 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             aria-invalid={error ? true : props["aria-invalid"]}
             aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
             className={`min-w-0 w-full h-11 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium
-              ${icon ? "pr-9" : "pr-3.5"}
-              ${clearable || trailingIcon ? "pl-9" : "pl-3.5"}
+              ${icon ? "pe-9" : "pe-3.5"}
+              ${clearable || trailingIcon ? "pe-9" : "pe-3.5"}
               ${
                 error
                   ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
@@ -76,16 +79,16 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             <button
               type="button"
               onClick={onClear}
-              className="absolute left-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-md"
-              aria-label={`مسح ${label || "الحقل"}`}
+              className="absolute end-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-md"
+              aria-label={ui(`مسح ${label || "الحقل"}`)}
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
 
           {trailingIcon && (!clearable || !hasValue) && (
-            <div className="absolute left-3 text-slate-400 pointer-events-none flex items-center justify-center">
-              {trailingIcon}
+            <div className="absolute end-3 text-slate-400 pointer-events-none flex items-center justify-center">
+              <LocalizedText value={trailingIcon}/>
             </div>
           )}
         </div>

@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -37,6 +39,8 @@ export default function PaymentPanel({
   reload: number;
   onChanged: () => void;
 }) {
+  const ui = useUiText();
+
   const [type, setType] = useState<"SALE" | "PURCHASE">("SALE");
   const [options, setOptions] = useState<Option[]>([]);
   const [page, setPage] = useState(1);
@@ -131,11 +135,9 @@ export default function PaymentPanel({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            القبض والدفع (سندات التحصيل والصرف)
-          </h2>
+            {ui("القبض والدفع (سندات التحصيل والصرف)")}</h2>
           <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            تسوية الذمم، تحصيل مستحقات العملاء، وسداد فواتير الموردين عبر البنك أو الصندوق.
-          </p>
+            {ui("تسوية الذمم، تحصيل مستحقات العملاء، وسداد فواتير الموردين عبر البنك أو الصندوق.")}</p>
         </div>
       </div>
 
@@ -145,7 +147,7 @@ export default function PaymentPanel({
           className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
         >
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span>{successMessage}</span>
+          <span>{ui(successMessage)}</span>
         </div>
       )}
 
@@ -160,8 +162,7 @@ export default function PaymentPanel({
         {/* Direction Switcher (Receipt vs Disbursement) */}
         <div>
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
-            نوع العملية *
-          </label>
+            {ui("نوع العملية *")}</label>
           <div className="grid grid-cols-2 gap-3 max-w-md">
             <button
               type="button"
@@ -171,7 +172,7 @@ export default function PaymentPanel({
                 setAmount("");
                 setPage(1);
               }}
-              className={`p-3 rounded-2xl border text-right transition cursor-pointer flex items-center gap-2.5 ${
+              className={`p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 type === "SALE"
                   ? "bg-emerald-500/10 border-emerald-500/50 ring-1 ring-emerald-500/30"
                   : "theme-card theme-border opacity-70 hover:opacity-100"
@@ -180,9 +181,8 @@ export default function PaymentPanel({
               <ArrowDownLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div>
                 <strong className="text-xs font-black block text-slate-900 dark:text-white">
-                  تحصيل من عميل (سند قبض)
-                </strong>
-                <span className="text-[10px] text-slate-400">إيداع بالبنك وتخفيض ذمة العميل</span>
+                  {ui("تحصيل من عميل (سند قبض)")}</strong>
+                <span className="text-[10px] text-slate-400">{ui("إيداع بالبنك وتخفيض ذمة العميل")}</span>
               </div>
             </button>
 
@@ -194,7 +194,7 @@ export default function PaymentPanel({
                 setAmount("");
                 setPage(1);
               }}
-              className={`p-3 rounded-2xl border text-right transition cursor-pointer flex items-center gap-2.5 ${
+              className={`p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 type === "PURCHASE"
                   ? "bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30"
                   : "theme-card theme-border opacity-70 hover:opacity-100"
@@ -203,9 +203,8 @@ export default function PaymentPanel({
               <ArrowUpRight className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <div>
                 <strong className="text-xs font-black block text-slate-900 dark:text-white">
-                  سداد لمورد (سند صرف)
-                </strong>
-                <span className="text-[10px] text-slate-400">صرف من البنك وسداد مستحقات</span>
+                  {ui("سداد لمورد (سند صرف)")}</strong>
+                <span className="text-[10px] text-slate-400">{ui("صرف من البنك وسداد مستحقات")}</span>
               </div>
             </button>
           </div>
@@ -214,8 +213,7 @@ export default function PaymentPanel({
         {/* Form Inputs Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 sm:col-span-2">
-            اختر المستند المطلوب تسويته *
-            <select
+            {ui("اختر المستند المطلوب تسويته *")}<select
               required
               className={INPUT}
               value={documentId}
@@ -225,11 +223,11 @@ export default function PaymentPanel({
               }}
             >
               <option value="">
-                {type === "SALE" ? "اختر فاتورة عميل مرحّلة..." : "اختر فاتورة مورد مرحّلة..."}
+                {ui(type === "SALE" ? "اختر فاتورة عميل مرحّلة..." : "اختر فاتورة مورد مرحّلة...")}
               </option>
               {options.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {ui(o.label)}
                 </option>
               ))}
             </select>
@@ -243,9 +241,8 @@ export default function PaymentPanel({
                 }}
                 className="hover:text-amber-600 disabled:opacity-30 cursor-pointer font-bold"
               >
-                السابق
-              </button>
-              <span>صفحة {page}</span>
+                {ui("السابق")}</button>
+              <span>{ui("صفحة")}{ui(page)}</span>
               <button
                 type="button"
                 disabled={!hasMore}
@@ -255,26 +252,23 @@ export default function PaymentPanel({
                 }}
                 className="hover:text-amber-600 disabled:opacity-30 cursor-pointer font-bold"
               >
-                التالي
-              </button>
+                {ui("التالي")}</button>
             </span>
           </label>
 
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            طريقة الدفع / الحساب المالي *
-            <select
+            {ui("طريقة الدفع / الحساب المالي *")}<select
               className={INPUT}
               value={cashAccount}
               onChange={(e) => setCashAccount(e.target.value)}
             >
-              <option value="1102">تحويل بنكي - البنك الأهلي SNB (1102)</option>
-              <option value="1101">نقداً من الصندوق الرئيسي (1101)</option>
+              <option value="1102">{ui("تحويل بنكي - البنك الأهلي SNB (1102)")}</option>
+              <option value="1101">{ui("نقداً من الصندوق الرئيسي (1101)")}</option>
             </select>
           </label>
 
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            المبلغ المسدد (ر.س) *
-            <div className="relative">
+            {ui("المبلغ المسدد (ر.س) *")}<div className="relative">
               <input
                 required
                 type="number"
@@ -283,13 +277,12 @@ export default function PaymentPanel({
                 max={balance.data ? Math.abs(Number(balance.data.balance)) : undefined}
                 dir="ltr"
                 placeholder="0.00"
-                className={`${INPUT} font-mono font-bold pr-3 pl-10`}
+                className={`${INPUT} font-mono font-bold ps-3 ps-10`}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                ر.س
-              </span>
+                {ui("ر.س")}</span>
             </div>
             {remainingBalanceNum > 0 && (
               <button
@@ -297,19 +290,17 @@ export default function PaymentPanel({
                 onClick={() => setAmount(String(remainingBalanceNum))}
                 className="mt-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline"
               >
-                نسخ كامل المتبقي ({amountLabel(String(remainingBalanceNum))} ر.س)
-              </button>
+                {ui("نسخ كامل المتبقي (")}{ui(amountLabel(String(remainingBalanceNum)))} {ui("ر.س)")}</button>
             )}
           </label>
 
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            تاريخ السند *
-            <div className="relative">
+            {ui("تاريخ السند *")}<div className="relative">
               <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 required
                 type="date"
-                className={`${INPUT} pr-10`}
+                className={`${INPUT} ps-10`}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
@@ -317,11 +308,10 @@ export default function PaymentPanel({
           </label>
 
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            رقم الحوالة أو المرجع *
-            <input
+            {ui("رقم الحوالة أو المرجع *")}<input
               required
               maxLength={300}
-              placeholder="مثال: حوالة بنكية رقم 9842"
+              placeholder={ui("مثال: حوالة بنكية رقم 9842")}
               className={INPUT}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
@@ -332,16 +322,14 @@ export default function PaymentPanel({
         {/* Balance Status Banner */}
         {documentId && (
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-center justify-between text-xs">
-            <span className="text-slate-500">حالة المستند المالي المحدد:</span>
+            <span className="text-slate-500">{ui("حالة المستند المالي المحدد:")}</span>
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">
-                الرصيد المتبقي:
-              </span>
+                {ui("الرصيد المتبقي:")}</span>
               <strong className="font-mono font-black text-amber-700 dark:text-amber-400 text-sm">
-                {amountLabel(String(remainingBalanceNum))} ر.س
-              </strong>
+                {ui(amountLabel(String(remainingBalanceNum)))} {ui("ر.س")}</strong>
               <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 font-bold text-[11px]">
-                {type === "SALE" ? "سند قبض" : "سند صرف"}
+                {ui(type === "SALE" ? "سند قبض" : "سند صرف")}
               </span>
             </div>
           </div>
@@ -357,12 +345,12 @@ export default function PaymentPanel({
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>جارٍ حفظ السند…</span>
+                <span>{ui("جارٍ حفظ السند…")}</span>
               </>
             ) : (
               <>
                 <CreditCard className="w-4 h-4" />
-                <span>اعتماد وحفظ السند</span>
+                <span>{ui("اعتماد وحفظ السند")}</span>
               </>
             )}
           </button>
@@ -374,7 +362,7 @@ export default function PaymentPanel({
             className="p-3.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2"
           >
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error || payments.error}</span>
+            <span>{ui(error || payments.error)}</span>
           </div>
         )}
       </form>
@@ -383,20 +371,20 @@ export default function PaymentPanel({
       <div className="theme-card overflow-hidden rounded-2xl sm:rounded-3xl border theme-border shadow-xs space-y-0">
         <div className="px-5 py-4 border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between text-xs">
           <h3 className="font-black text-slate-900 dark:text-white text-sm">
-            سجل سندات القبض والصرف الأخيرة ({payments.data?.items.length ?? 0})
+            {ui("سجل سندات القبض والصرف الأخيرة (")}{ui(payments.data?.items.length ?? 0)})
           </h3>
           <span className="text-slate-400 font-mono">JE Journals</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[650px] text-right text-xs sm:text-sm border-collapse">
+          <table className="w-full min-w-[650px] text-start text-xs sm:text-sm border-collapse">
             <thead>
               <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-                <th className="px-4 py-3.5">التاريخ</th>
-                <th className="px-4 py-3.5">النوع</th>
-                <th className="px-4 py-3.5">المرجع والبيان</th>
-                <th className="px-4 py-3.5">المبلغ</th>
-                <th className="px-4 py-3.5">رقم القيد المحاسبي</th>
+                <th className="px-4 py-3.5">{ui("التاريخ")}</th>
+                <th className="px-4 py-3.5">{ui("النوع")}</th>
+                <th className="px-4 py-3.5">{ui("المرجع والبيان")}</th>
+                <th className="px-4 py-3.5">{ui("المبلغ")}</th>
+                <th className="px-4 py-3.5">{ui("رقم القيد المحاسبي")}</th>
               </tr>
             </thead>
             <tbody className="divide-y theme-border">
@@ -405,7 +393,7 @@ export default function PaymentPanel({
                 return (
                   <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
                     <td className="px-4 py-3.5 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                      {p.paymentDate.slice(0, 10)}
+                      {ui(p.paymentDate.slice(0, 10))}
                     </td>
                     <td className="px-4 py-3.5 whitespace-nowrap">
                       <span
@@ -418,24 +406,24 @@ export default function PaymentPanel({
                         {isReceipt ? (
                           <>
                             <ArrowDownLeft className="w-3 h-3" />
-                            <span>سند قبض</span>
+                            <span>{ui("سند قبض")}</span>
                           </>
                         ) : (
                           <>
                             <ArrowUpRight className="w-3 h-3" />
-                            <span>سند صرف</span>
+                            <span>{ui("سند صرف")}</span>
                           </>
                         )}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 font-bold text-slate-800 dark:text-slate-200">
-                      {p.reference}
+                      {ui(p.reference)}
                     </td>
                     <td className="px-4 py-3.5 font-mono font-black text-slate-900 dark:text-white whitespace-nowrap" dir="ltr">
-                      {amountLabel(p.amount)} <span className="text-[10px] text-amber-600 font-bold">ر.س</span>
+                      {ui(amountLabel(p.amount))} <span className="text-[10px] text-amber-600 font-bold">{ui("ر.س")}</span>
                     </td>
                     <td className="px-4 py-3.5 font-mono font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap">
-                      JE-{String(p.journal.number).padStart(6, "0")}
+                      JE-{ui(String(p.journal.number).padStart(6, "0"))}
                     </td>
                   </tr>
                 );
@@ -444,8 +432,7 @@ export default function PaymentPanel({
               {payments.data?.items.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400 text-xs">
-                    لا توجد سندات قبض أو صرف مسجلة حتى الآن.
-                  </td>
+                    {ui("لا توجد سندات قبض أو صرف مسجلة حتى الآن.")}</td>
                 </tr>
               )}
             </tbody>

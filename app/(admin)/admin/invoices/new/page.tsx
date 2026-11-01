@@ -1,7 +1,8 @@
+import { localizedMetadataTitle } from "@/lib/metadata";
 import InvoiceForm from "./invoice-form";
 
 export async function generateMetadata() {
-  return { title: "إنشاء فاتورة | ميقات الخليج" };
+  return { title: await localizedMetadataTitle("إنشاء فاتورة | ميقات الخليج") };
 }
 
 interface NewInvoicePageProps {

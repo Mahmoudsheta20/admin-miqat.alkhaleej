@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { currentSaudiPeriod, type ReportPeriod } from "@/lib/accounting";
 
@@ -10,35 +12,35 @@ interface Props {
 const INPUT = "theme-input mt-1 h-11 rounded-xl px-3 text-sm w-full";
 
 export default function AccountingPeriodSelector({ value: v, onChange }: Props) {
+  const ui = useUiText();
+
   const update = (c: Partial<ReportPeriod>) => onChange({ ...v, ...c });
 
   return (
     <div className="flex flex-wrap items-end gap-3">
       <label className="text-xs font-bold">
-        نوع الفترة
-        <select
+        {ui("نوع الفترة")}<select
           className={INPUT}
           value={v.mode}
           onChange={(e) => update({ mode: e.target.value as ReportPeriod["mode"] })}
         >
-          <option value="QUARTER">ربع سنوي</option>
-          <option value="YEAR">سنة كاملة</option>
-          <option value="CUSTOM">فترة مخصصة</option>
+          <option value="QUARTER">{ui("ربع سنوي")}</option>
+          <option value="YEAR">{ui("سنة كاملة")}</option>
+          <option value="CUSTOM">{ui("فترة مخصصة")}</option>
         </select>
       </label>
 
       {v.mode !== "CUSTOM" ? (
         <>
           <label className="text-xs font-bold">
-            السنة
-            <select
+            {ui("السنة")}<select
               className={INPUT}
               value={v.year}
               onChange={(e) => update({ year: Number(e.target.value) })}
             >
               {Array.from({ length: currentSaudiPeriod().year - 2017 }, (_, i) => 2020 + i).map(
                 (y) => (
-                  <option key={y}>{y}</option>
+                  <option key={y}>{ui(y)}</option>
                 )
               )}
             </select>
@@ -46,15 +48,14 @@ export default function AccountingPeriodSelector({ value: v, onChange }: Props) 
 
           {v.mode === "QUARTER" && (
             <label className="text-xs font-bold">
-              الربع
-              <select
+              {ui("الربع")}<select
                 className={INPUT}
                 value={v.quarter}
                 onChange={(e) => update({ quarter: Number(e.target.value) })}
               >
                 {[1, 2, 3, 4].map((q) => (
                   <option key={q} value={q}>
-                    Q{q} · الربع {q}
+                    Q{ui(q)} {ui("· الربع")} {ui(q)}
                   </option>
                 ))}
               </select>
@@ -64,8 +65,7 @@ export default function AccountingPeriodSelector({ value: v, onChange }: Props) 
       ) : (
         <>
           <label className="text-xs font-bold">
-            من
-            <input
+            {ui("من")}<input
               type="date"
               required
               className={INPUT}
@@ -74,8 +74,7 @@ export default function AccountingPeriodSelector({ value: v, onChange }: Props) 
             />
           </label>
           <label className="text-xs font-bold">
-            إلى
-            <input
+            {ui("إلى")}<input
               type="date"
               required
               min={v.startDate}

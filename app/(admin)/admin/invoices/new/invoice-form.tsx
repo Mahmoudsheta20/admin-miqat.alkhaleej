@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -115,6 +117,8 @@ export default function InvoiceForm({
   originalInvoiceId,
   noteKind = "INVOICE",
 }: InvoiceFormProps) {
+  const ui = useUiText();
+
   const router = useRouter();
 
   // Active Stepper Stage
@@ -597,7 +601,7 @@ export default function InvoiceForm({
         : estimate.gross;
 
   return (
-    <div className="mx-auto max-w-[1380px] pb-12" dir="rtl">
+    <div className="mx-auto max-w-[1380px] pb-12" dir={ui.dir}>
       {/* Top Breadcrumb & Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link
@@ -605,14 +609,13 @@ export default function InvoiceForm({
           className="inline-flex items-center gap-1.5 rounded-xl border theme-border px-3.5 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-amber-500 transition"
         >
           <ArrowRight className="size-3.5" />
-          <span>العودة لسجل الفواتير</span>
+          <span>{ui("العودة لسجل الفواتير")}</span>
         </Link>
         <Link
           href="/admin/invoices"
           className="rounded-xl border theme-border px-3.5 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition"
         >
-          إلغاء الأمر
-        </Link>
+          {ui("إلغاء الأمر")}</Link>
       </div>
 
       <header className="mb-6">
@@ -622,17 +625,16 @@ export default function InvoiceForm({
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              إنشاء {documentType === "PROFORMA" ? "فاتورة مبدئية (عرض أسعار)" : INVOICE_TYPE_LABELS[documentType]}
+              {ui("إنشاء")} {ui(documentType === "PROFORMA" ? "فاتورة مبدئية (عرض أسعار)" : INVOICE_TYPE_LABELS[documentType])}
             </h1>
             <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              أدخل بيانات المستند في ٤ خطوات واضحة وميسرة دون تعقيد محاسبي
-            </p>
+              {ui("أدخل بيانات المستند في ٤ خطوات واضحة وميسرة دون تعقيد محاسبي")}</p>
           </div>
         </div>
       </header>
 
       {/* 4-Stage Interactive Stepper Header */}
-      <nav aria-label="مراحل إنشاء الفاتورة" className="mb-6 theme-card rounded-2xl border theme-border p-2 sm:p-3 shadow-xs">
+      <nav aria-label={ui("مراحل إنشاء الفاتورة")} className="mb-6 theme-card rounded-2xl border theme-border p-2 sm:p-3 shadow-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {STAGES.map((st, idx) => {
             const isCurrent = currentStage === st.id;
@@ -644,7 +646,7 @@ export default function InvoiceForm({
                 key={st.id}
                 type="button"
                 onClick={() => setCurrentStage(st.id)}
-                className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl text-right transition cursor-pointer select-none ${
+                className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl text-start transition cursor-pointer select-none ${
                   isCurrent
                     ? "bg-amber-500/15 border border-amber-500/40 ring-1 ring-amber-500/30 text-amber-900 dark:text-amber-200"
                     : isCompleted
@@ -664,11 +666,11 @@ export default function InvoiceForm({
                   {isCompleted ? <Check className="size-3.5" /> : st.number}
                 </div>
                 <div className="min-w-0">
-                  <p className={`text-xs font-black truncate ${isCurrent ? "text-amber-700 dark:text-amber-300" : ""}`}>
-                    {st.title}
+                  <p className={`text-xs font-black whitespace-normal leading-snug ${isCurrent ? "text-amber-700 dark:text-amber-300" : ""}`}>
+                    {ui(st.title)}
                   </p>
                   <p className="text-[10px] text-slate-400 truncate hidden sm:block">
-                    {st.subtitle}
+                    {ui(st.subtitle)}
                   </p>
                 </div>
               </button>
@@ -686,7 +688,7 @@ export default function InvoiceForm({
           className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm font-bold text-rose-800 dark:text-rose-300 shadow-xs"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0 text-rose-600" />
-          <span className="flex-1">{error}</span>
+          <span className="flex-1">{ui(error)}</span>
           {!settings && (
             <button
               type="button"
@@ -696,8 +698,7 @@ export default function InvoiceForm({
                 setReload((v) => v + 1);
               }}
             >
-              إعادة المحاولة
-            </button>
+              {ui("إعادة المحاولة")}</button>
           )}
         </div>
       )}
@@ -705,7 +706,7 @@ export default function InvoiceForm({
       {isLoading ? (
         <div role="status" className="theme-card animate-pulse rounded-2xl p-12 text-center text-slate-400 text-xs sm:text-sm">
           <Loader2 className="size-6 animate-spin mx-auto mb-2 text-amber-500" />
-          <span>جارٍ تجهيز شاشة الفاتورة…</span>
+          <span>{ui("جارٍ تجهيز شاشة الفاتورة…")}</span>
         </div>
       ) : (
         <form id="invoice-create-form" onSubmit={save} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -728,32 +729,26 @@ export default function InvoiceForm({
                   <section className="theme-card rounded-2xl p-5 sm:p-6 border border-amber-500/30 bg-amber-500/[0.03]">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="rounded-md bg-amber-500/15 text-amber-800 dark:text-amber-300 px-2 py-0.5 text-xs font-black">
-                        ربط الفاتورة الأصلية للإشعار
-                      </span>
+                        {ui("ربط الفاتورة الأصلية للإشعار")}</span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-                      يُشترط نظاماً ربط الإشعار برقم الفاتورة الصادرة سابقاً. سيتم نسخ بيانات العميل والمسار والضريبة تلقائياً.
-                    </p>
+                      {ui("يُشترط نظاماً ربط الإشعار برقم الفاتورة الصادرة سابقاً. سيتم نسخ بيانات العميل والمسار والضريبة تلقائياً.")}</p>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="text-xs font-bold sm:col-span-2">
-                        اختر الفاتورة الأصلية *
-                        <input
+                        {ui("اختر الفاتورة الأصلية *")}<input
                           className={INPUT}
-                          placeholder="ابحث برقم الفاتورة أو اسم العميل..."
+                          placeholder={ui("ابحث برقم الفاتورة أو اسم العميل...")}
                           onChange={(e) => void selectOriginal(e.target.value)}
                         />
                       </label>
                       <label className="text-xs font-bold sm:col-span-2">
-                        سبب إصدار هذا الإشعار بالعربية *
-                        <input
+                        {ui("سبب إصدار هذا الإشعار بالعربية *")}<input
                           required
                           maxLength={200}
                           className={INPUT}
-                          placeholder={
-                            taxDocument.kind === "CREDIT"
+                          placeholder={ui(taxDocument.kind === "CREDIT"
                               ? "مثال: خصم تجاري ممنوح أو إلغاء رحلة جزئياً"
-                              : "مثال: رسوم جولة إضافية وتمديد ساعات الخدمة"
-                          }
+                              : "مثال: رسوم جولة إضافية وتمديد ساعات الخدمة")}
                           value={taxDocument.adjustmentReason || ""}
                           onChange={(e) => setTaxDocument({ ...taxDocument, adjustmentReason: e.target.value })}
                         />
@@ -767,11 +762,9 @@ export default function InvoiceForm({
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-4 mb-4">
                     <div>
                       <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                        بيانات العميل والفاتورة
-                      </h2>
+                        {ui("بيانات العميل والفاتورة")}</h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        اختر العقد لاستيراد كافة بيانات الرحلة والعميل بضغطة زر، أو أدخلها يدوياً
-                      </p>
+                        {ui("اختر العقد لاستيراد كافة بيانات الرحلة والعميل بضغطة زر، أو أدخلها يدوياً")}</p>
                     </div>
                   </div>
 
@@ -785,7 +778,7 @@ export default function InvoiceForm({
                     />
                     {sourceError && (
                       <p role="alert" className="mt-2 text-xs font-bold text-rose-600">
-                        {sourceError}
+                        {ui(sourceError)}
                       </p>
                     )}
                   </div>
@@ -793,14 +786,13 @@ export default function InvoiceForm({
                   {/* Customer Information Grid */}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      الفاتورة باسم (العميل أو المنشأة) *
-                      <input
+                      {ui("الفاتورة باسم (العميل أو المنشأة) *")}<input
                         name="customerName"
                         readOnly={Boolean(original)}
                         required
                         maxLength={200}
                         autoComplete="name"
-                        placeholder="اسم الفرد، الفندق، أو الشركة"
+                        placeholder={ui("اسم الفرد، الفندق، أو الشركة")}
                         className={INPUT}
                         value={buyer.name}
                         onChange={(e) => updateBuyer({ name: e.target.value })}
@@ -808,14 +800,13 @@ export default function InvoiceForm({
                     </label>
 
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      الرقم الضريبي للمشتري (للمنشآت B2B)
-                      <input
+                      {ui("الرقم الضريبي للمشتري (للمنشآت B2B)")}<input
                         name="customerVat"
                         readOnly={Boolean(original)}
                         inputMode="numeric"
                         pattern="3\d{13}3"
                         maxLength={15}
-                        placeholder="3xxxxxxxxxxxxxx3 (15 رقماً)"
+                        placeholder={ui("3xxxxxxxxxxxxxx3 (15 رقماً)")}
                         className={`${INPUT} font-mono`}
                         value={buyer.vatNumber}
                         onChange={(e) => updateBuyer({ vatNumber: e.target.value })}
@@ -823,11 +814,10 @@ export default function InvoiceForm({
                     </label>
 
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      اسم الضيف أو مسؤول المجموعة (اختياري)
-                      <input
+                      {ui("اسم الضيف أو مسؤول المجموعة (اختياري)")}<input
                         maxLength={160}
                         autoComplete="name"
-                        placeholder="إذا كان مختلفاً عن صاحب الفاتورة"
+                        placeholder={ui("إذا كان مختلفاً عن صاحب الفاتورة")}
                         className={INPUT}
                         value={transport.contactName || ""}
                         onChange={(e) => updateTransport({ contactName: e.target.value })}
@@ -837,8 +827,7 @@ export default function InvoiceForm({
                     {/* Phone with Country Code */}
                     <div>
                       <span className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                        رقم الجوال للتواصل والفاتورة *
-                      </span>
+                        {ui("رقم الجوال للتواصل والفاتورة *")}</span>
                       <InvoicePhoneField
                         value={phone}
                         onChange={(v) => {
@@ -849,8 +838,7 @@ export default function InvoiceForm({
                     </div>
 
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      البريد الإلكتروني (اختياري)
-                      <input
+                      {ui("البريد الإلكتروني (اختياري)")}<input
                         type="email"
                         maxLength={160}
                         placeholder="customer@example.com"
@@ -861,14 +849,13 @@ export default function InvoiceForm({
                     </label>
 
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      عدد الركاب في الرحلة *
-                      <input
+                      {ui("عدد الركاب في الرحلة *")}<input
                         required
                         type="number"
                         min={1}
                         max={100}
                         step={1}
-                        placeholder="مثال: 4 ركاب"
+                        placeholder={ui("مثال: 4 ركاب")}
                         className={`${INPUT} font-mono`}
                         value={transport.passengerCount ?? ""}
                         onChange={(e) =>
@@ -883,13 +870,12 @@ export default function InvoiceForm({
                   {/* Commercial Registration if entered */}
                   {isTaxMode && (
                     <label className="mt-4 block text-xs font-bold text-slate-700 dark:text-slate-200">
-                      رقم السجل التجاري للعميل (اختياري)
-                      <input
+                      {ui("رقم السجل التجاري للعميل (اختياري)")}<input
                         readOnly={Boolean(original)}
                         inputMode="numeric"
                         pattern="[0-9]{10}"
                         maxLength={10}
-                        placeholder="10 أرقام"
+                        placeholder={ui("10 أرقام")}
                         className={`${INPUT} font-mono`}
                         value={
                           original
@@ -910,9 +896,9 @@ export default function InvoiceForm({
                       onClick={() => setShowBuyerDetails(!showBuyerDetails)}
                     >
                       <span>
-                        {buyer.vatNumber
+                        {ui(buyer.vatNumber
                           ? "العنوان الوطني للمشتري (مطلوب للفواتير الضريبية B2B)"
-                          : "عنوان العميل الوطني (اختياري)"}
+                          : "عنوان العميل الوطني (اختياري)")}
                       </span>
                       <ChevronDown className={`size-3.5 transition-transform ${showBuyerDetails ? "rotate-180" : ""}`} />
                     </button>
@@ -927,7 +913,7 @@ export default function InvoiceForm({
                           { key: "postalCode", label: "الرمز البريدي (٥ أرقام)", pattern: "\\d{5}" },
                         ] as const).map((field) => (
                           <label key={field.key} className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                            {field.label}
+                            {ui(field.label)}
                             <input
                               readOnly={Boolean(original)}
                               maxLength={200}
@@ -950,7 +936,7 @@ export default function InvoiceForm({
                     onClick={() => setCurrentStage("TRIP_AND_SERVICE")}
                     className="gold-gradient-btn inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs sm:text-sm font-black cursor-pointer shadow-sm hover:shadow-md transition"
                   >
-                    <span>المتابعة: مسار الرحلة والخدمة</span>
+                    <span>{ui("المتابعة: مسار الرحلة والخدمة")}</span>
                     <ArrowLeft className="size-4" />
                   </button>
                 </div>
@@ -965,11 +951,9 @@ export default function InvoiceForm({
                 <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
                   <div className="border-b theme-border pb-4 mb-5">
                     <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                      مسار الرحلة ومواعيدها
-                    </h2>
+                      {ui("مسار الرحلة ومواعيدها")}</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      حدد نوع الرحلة، محطة الانطلاق، وجهة الوصول، والتاريخ
-                    </p>
+                      {ui("حدد نوع الرحلة، محطة الانطلاق، وجهة الوصول، والتاريخ")}</p>
                   </div>
 
                   {/* Booking Fields Component (handles roundtrip, hourly, stops) */}
@@ -991,8 +975,7 @@ export default function InvoiceForm({
                   <div className="mt-5 rounded-xl border border-blue-500/25 bg-blue-500/[0.04] p-3 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2">
                     <HelpCircle className="size-4 text-blue-500 shrink-0" />
                     <span>
-                      ملاحظة: تظهر في نسخة العميل المطبوعة أعداد الركاب الإجمالية؛ تفاصيل الأسماء والهويات تُراجع من سجل العقد والرحلة.
-                    </span>
+                      {ui("ملاحظة: تظهر في نسخة العميل المطبوعة أعداد الركاب الإجمالية؛ تفاصيل الأسماء والهويات تُراجع من سجل العقد والرحلة.")}</span>
                   </div>
                 </section>
 
@@ -1001,17 +984,15 @@ export default function InvoiceForm({
                   <button
                     type="button"
                     onClick={() => setShowSupplementalTrip(!showSupplementalTrip)}
-                    className="flex w-full items-center justify-between text-right cursor-pointer"
+                    className="flex w-full items-center justify-between text-start cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
                       <Truck className="size-4 text-amber-500" />
                       <div>
                         <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                          تفاصيل الرحلة التشغيلية الإضافية (اختياري)
-                        </h3>
+                          {ui("تفاصيل الرحلة التشغيلية الإضافية (اختياري)")}</h3>
                         <p className="text-[11px] text-slate-400">
-                          بيانات السائق، قراءة العداد، المسافة المقطوعة، وملاحظات التشغيل
-                        </p>
+                          {ui("بيانات السائق، قراءة العداد، المسافة المقطوعة، وملاحظات التشغيل")}</p>
                       </div>
                     </div>
                     <ChevronDown className={`size-4 text-slate-400 transition-transform ${showSupplementalTrip ? "rotate-180" : ""}`} />
@@ -1040,14 +1021,14 @@ export default function InvoiceForm({
                     className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 transition cursor-pointer"
                   >
                     <ArrowRight className="size-4" />
-                    <span>السابق</span>
+                    <span>{ui("السابق")}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setCurrentStage("PRICE_AND_TAX")}
                     className="gold-gradient-btn inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs sm:text-sm font-black cursor-pointer shadow-sm hover:shadow-md transition"
                   >
-                    <span>المتابعة: السعر والضريبة</span>
+                    <span>{ui("المتابعة: السعر والضريبة")}</span>
                     <ArrowLeft className="size-4" />
                   </button>
                 </div>
@@ -1063,15 +1044,12 @@ export default function InvoiceForm({
                   <div className="border-b theme-border pb-4 mb-5 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                        الخدمات والأسعار والمعاملة الضريبية
-                      </h2>
+                        {ui("الخدمات والأسعار والمعاملة الضريبية")}</h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        أدخل تفاصيل الخدمات، ويمكنك كتابة السعر قبل الضريبة أو السعر الإجمالي شامل 15%
-                      </p>
+                        {ui("أدخل تفاصيل الخدمات، ويمكنك كتابة السعر قبل الضريبة أو السعر الإجمالي شامل 15%")}</p>
                     </div>
                     <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.05] px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
-                      مثال: خدمة ٣٠٠ ر.س + ضريبة ٤٥ ر.س = ٣٤٥ ر.س إجمالي
-                    </div>
+                      {ui("مثال: خدمة ٣٠٠ ر.س + ضريبة ٤٥ ر.س = ٣٤٥ ر.س إجمالي")}</div>
                   </div>
 
                   {/* Line Items Editor */}
@@ -1102,7 +1080,7 @@ export default function InvoiceForm({
                       className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 px-4 py-2 text-xs font-black text-amber-800 dark:text-amber-300 transition cursor-pointer"
                     >
                       <Plus className="size-4" />
-                      <span>إضافة خدمة جديدة</span>
+                      <span>{ui("إضافة خدمة جديدة")}</span>
                     </button>
                     {["رسوم نقل إضافية", "جولة سياحية وزيارات", "رسوم انتظار"].map((label) => (
                       <button
@@ -1113,7 +1091,7 @@ export default function InvoiceForm({
                         className="inline-flex items-center gap-1.5 rounded-lg border theme-border px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition"
                       >
                         <Plus className="size-3" />
-                        <span>{label}</span>
+                        <span>{ui(label)}</span>
                       </button>
                     ))}
                   </div>
@@ -1143,14 +1121,14 @@ export default function InvoiceForm({
                     className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 transition cursor-pointer"
                   >
                     <ArrowRight className="size-4" />
-                    <span>السابق</span>
+                    <span>{ui("السابق")}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setCurrentStage("PAYMENT_AND_REVIEW")}
                     className="gold-gradient-btn inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs sm:text-sm font-black cursor-pointer shadow-sm hover:shadow-md transition"
                   >
-                    <span>المتابعة: الدفع والمراجعة</span>
+                    <span>{ui("المتابعة: الدفع والمراجعة")}</span>
                     <ArrowLeft className="size-4" />
                   </button>
                 </div>
@@ -1168,17 +1146,16 @@ export default function InvoiceForm({
                     <div className="border-b theme-border pb-4 mb-5">
                       <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <Wallet className="size-5 text-amber-500" />
-                        <span>هل دفع العميل قيمة الفاتورة؟</span>
+                        <span>{ui("هل دفع العميل قيمة الفاتورة؟")}</span>
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة
-                      </p>
+                        {ui("حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة")}</p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
                       {/* NOT PAID (آجل) */}
                       <label
-                        className={`p-4 rounded-xl border cursor-pointer transition text-right ${
+                        className={`p-4 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "NOT_PAID"
                             ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30"
                             : "theme-card theme-border hover:border-slate-300"
@@ -1193,19 +1170,18 @@ export default function InvoiceForm({
                           className="sr-only"
                         />
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white">لم يدفع بعد (آجل)</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">{ui("لم يدفع بعد (آجل)")}</span>
                           <span className="size-4 rounded-full border border-amber-500 flex items-center justify-center">
                             {paymentStatusChoice === "NOT_PAID" && <span className="size-2 rounded-full bg-amber-500" />}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.
-                        </p>
+                          {ui("تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.")}</p>
                       </label>
 
                       {/* FULLY PAID */}
                       <label
-                        className={`p-4 rounded-xl border cursor-pointer transition text-right ${
+                        className={`p-4 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "FULLY_PAID"
                             ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
                             : "theme-card theme-border hover:border-slate-300"
@@ -1220,19 +1196,18 @@ export default function InvoiceForm({
                           className="sr-only"
                         />
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white">دفع المبلغ كاملاً</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">{ui("دفع المبلغ كاملاً")}</span>
                           <span className="size-4 rounded-full border border-emerald-500 flex items-center justify-center">
                             {paymentStatusChoice === "FULLY_PAID" && <span className="size-2 rounded-full bg-emerald-500" />}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.
-                        </p>
+                          {ui("تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.")}</p>
                       </label>
 
                       {/* PARTIALLY PAID */}
                       <label
-                        className={`p-4 rounded-xl border cursor-pointer transition text-right ${
+                        className={`p-4 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "PARTIALLY_PAID"
                             ? "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30"
                             : "theme-card theme-border hover:border-slate-300"
@@ -1247,14 +1222,13 @@ export default function InvoiceForm({
                           className="sr-only"
                         />
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white">دفع جزءاً من المبلغ</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">{ui("دفع جزءاً من المبلغ")}</span>
                           <span className="size-4 rounded-full border border-blue-500 flex items-center justify-center">
                             {paymentStatusChoice === "PARTIALLY_PAID" && <span className="size-2 rounded-full bg-blue-500" />}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          تسجيل دفعة مقدمة الآن مع بقاء الرصيد المتبقي للمتابعة.
-                        </p>
+                          {ui("تسجيل دفعة مقدمة الآن مع بقاء الرصيد المتبقي للمتابعة.")}</p>
                       </label>
                     </div>
 
@@ -1262,8 +1236,7 @@ export default function InvoiceForm({
                     {paymentStatusChoice === "FULLY_PAID" && (
                       <div className="mt-5 pt-4 border-t theme-border space-y-3">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                          كيف استلمت المبلغ من العميل؟
-                        </span>
+                          {ui("كيف استلمت المبلغ من العميل؟")}</span>
                         <div className="grid gap-3 sm:grid-cols-3">
                           <label className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "BANK_TRANSFER" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}>
                             <input
@@ -1274,7 +1247,7 @@ export default function InvoiceForm({
                               className="size-3.5 accent-amber-600"
                             />
                             <Landmark className="size-4" />
-                            <span>تحويل بنكي (البنك الأهلي SNB)</span>
+                            <span>{ui("تحويل بنكي (البنك الأهلي SNB)")}</span>
                           </label>
                           <label className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "CASH" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}>
                             <input
@@ -1285,7 +1258,7 @@ export default function InvoiceForm({
                               className="size-3.5 accent-amber-600"
                             />
                             <Wallet className="size-4" />
-                            <span>نقداً بالصندوق</span>
+                            <span>{ui("نقداً بالصندوق")}</span>
                           </label>
                           <label className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer ${fullPaymentMethod === "CARD" ? "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300" : "theme-border"}`}>
                             <input
@@ -1296,7 +1269,7 @@ export default function InvoiceForm({
                               className="size-3.5 accent-amber-600"
                             />
                             <CreditCard className="size-4" />
-                            <span>بطاقة مدى / دفع إلكتروني</span>
+                            <span>{ui("بطاقة مدى / دفع إلكتروني")}</span>
                           </label>
                         </div>
                       </div>
@@ -1306,8 +1279,7 @@ export default function InvoiceForm({
                     {paymentStatusChoice === "PARTIALLY_PAID" && (
                       <div className="mt-5 pt-4 border-t theme-border grid gap-4 sm:grid-cols-2">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                          المبلغ المدفوع مقدماً الآن (ر.س) *
-                          <input
+                          {ui("المبلغ المدفوع مقدماً الآن (ر.س) *")}<input
                             required
                             type="number"
                             min="0.01"
@@ -1320,14 +1292,13 @@ export default function InvoiceForm({
                           />
                         </label>
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                          طريقة استلام الدفعة الأولى
-                          <select
+                          {ui("طريقة استلام الدفعة الأولى")}<select
                             className={INPUT}
                             value={partialPaymentMethod}
                             onChange={(e) => setPartialPaymentMethod(e.target.value as "BANK_TRANSFER" | "CASH")}
                           >
-                            <option value="BANK_TRANSFER">تحويل بنكي / الحساب البنكي SNB</option>
-                            <option value="CASH">نقداً في الصندوق</option>
+                            <option value="BANK_TRANSFER">{ui("تحويل بنكي / الحساب البنكي SNB")}</option>
+                            <option value="CASH">{ui("نقداً في الصندوق")}</option>
                           </select>
                         </label>
                       </div>
@@ -1337,11 +1308,10 @@ export default function InvoiceForm({
                   <section className="theme-card rounded-2xl p-5 border border-blue-500/30 bg-blue-500/[0.03]">
                     <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-bold text-xs">
                       <FileSpreadsheet className="size-4" />
-                      <span>فاتورة مبدئية (عرض أسعار)</span>
+                      <span>{ui("فاتورة مبدئية (عرض أسعار)")}</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-                      الفاتورة المبدئية هي عرض سعر مبدئي لا يتطلب تسوية أو تحصيل في هذه المرحلة. يتم تأكيد الدفع عند إصدار الفاتورة الفعلية للعميل.
-                    </p>
+                      {ui("الفاتورة المبدئية هي عرض سعر مبدئي لا يتطلب تسوية أو تحصيل في هذه المرحلة. يتم تأكيد الدفع عند إصدار الفاتورة الفعلية للعميل.")}</p>
                   </section>
                 )}
 
@@ -1351,16 +1321,15 @@ export default function InvoiceForm({
                     <button
                       type="button"
                       onClick={() => setShowAccountantDetails(!showAccountantDetails)}
-                      className="flex w-full items-center justify-between text-right cursor-pointer"
+                      className="flex w-full items-center justify-between text-start cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
                         <Landmark className="size-4 text-slate-400" />
                         <div>
                           <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                            تفاصيل التوجيه المحاسبي (تلقائية ومخصصة للمحاسب)
-                          </span>
+                            {ui("تفاصيل التوجيه المحاسبي (تلقائية ومخصصة للمحاسب)")}</span>
                           <p className="text-[11px] text-slate-400">
-                            حساب الإيراد ({revenueAccountCode}) وحساب التسوية ({settlementAccountCode})
+                            {ui("حساب الإيراد (")}{ui(revenueAccountCode)}{ui(") وحساب التسوية (")}{ui(settlementAccountCode)})
                           </p>
                         </div>
                       </div>
@@ -1370,8 +1339,7 @@ export default function InvoiceForm({
                     {showAccountantDetails && (
                       <div className="mt-4 pt-4 border-t theme-border grid gap-4 sm:grid-cols-2">
                         <label className="block text-xs font-bold text-slate-500">
-                          حساب الإيراد
-                          <select
+                          {ui("حساب الإيراد")}<select
                             className={INPUT}
                             value={revenueAccountCode}
                             onChange={(e) => {
@@ -1379,14 +1347,13 @@ export default function InvoiceForm({
                               setIsReviewed(false);
                             }}
                           >
-                            <option value="4101">4101 · إيرادات خدمات النقل والمطارات</option>
-                            <option value="4102">4102 · إيرادات كبار الشخصيات والعمرة والزيارة</option>
-                            <option value="4103">4103 · إيرادات النقل الصفرية أو المعفاة</option>
+                            <option value="4101">{ui("4101 · إيرادات خدمات النقل والمطارات")}</option>
+                            <option value="4102">{ui("4102 · إيرادات كبار الشخصيات والعمرة والزيارة")}</option>
+                            <option value="4103">{ui("4103 · إيرادات النقل الصفرية أو المعفاة")}</option>
                           </select>
                         </label>
                         <label className="block text-xs font-bold text-slate-500">
-                          حساب التسوية المالية
-                          <select
+                          {ui("حساب التسوية المالية")}<select
                             className={INPUT}
                             value={settlementAccountCode}
                             onChange={(e) => {
@@ -1394,14 +1361,13 @@ export default function InvoiceForm({
                               setIsReviewed(false);
                             }}
                           >
-                            <option value="1103">1103 · ذمم العملاء (آجل)</option>
-                            <option value="1102">1102 · البنك الأهلي السعودي - SNB</option>
-                            <option value="1101">1101 · النقدية بالصندوق</option>
+                            <option value="1103">{ui("1103 · ذمم العملاء (آجل)")}</option>
+                            <option value="1102">{ui("1102 · البنك الأهلي السعودي - SNB")}</option>
+                            <option value="1101">{ui("1101 · النقدية بالصندوق")}</option>
                           </select>
                         </label>
                         <p className="sm:col-span-2 text-[11px] text-slate-400 leading-relaxed">
-                          يوجه النظام القيود تلقائياً بناءً على إجابتك في سؤال «هل دفع العميل؟». يمكنك تغيير الحساب هنا للمحاسبة المتقدمة فقط.
-                        </p>
+                          {ui("يوجه النظام القيود تلقائياً بناءً على إجابتك في سؤال «هل دفع العميل؟». يمكنك تغيير الحساب هنا للمحاسبة المتقدمة فقط.")}</p>
                       </div>
                     )}
                   </section>
@@ -1411,32 +1377,30 @@ export default function InvoiceForm({
                 <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
                   <div className="border-b theme-border pb-4 mb-4">
                     <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                      مراجعة بيانات المستند قبل الإصدار
-                    </h2>
+                      {ui("مراجعة بيانات المستند قبل الإصدار")}</h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      تأكد من صحة المبالغ والمسار قبل الضغط على زر الإصدار
-                    </p>
+                      {ui("تأكد من صحة المبالغ والمسار قبل الضغط على زر الإصدار")}</p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2 text-xs">
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">العميل والمستند:</span>
+                      <span className="text-slate-400 block mb-1">{ui("العميل والمستند:")}</span>
                       <p className="font-bold text-slate-800 dark:text-slate-100">{buyer.name || "—"}</p>
                       {phone.number && (
-                        <p className="text-slate-400 font-mono mt-0.5">{phone.number}</p>
+                        <p className="text-slate-400 font-mono mt-0.5">{ui(phone.number)}</p>
                       )}
                     </div>
 
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">مسار وموعد الرحلة:</span>
+                      <span className="text-slate-400 block mb-1">{ui("مسار وموعد الرحلة:")}</span>
                       <p className="font-bold text-slate-800 dark:text-slate-100">
-                        {transport.origin || "—"} ← {transport.destination || "—"}
+                        {ui(transport.origin || "—")} ← {ui(transport.destination || "—")}
                       </p>
-                      <p className="text-slate-400 font-mono mt-0.5">{transport.tripDate || "—"}</p>
+                      <p className="text-slate-400 font-mono mt-0.5">{ui(transport.tripDate || "—")}</p>
                     </div>
 
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">تاريخ ووقت الفاتورة:</span>
+                      <span className="text-slate-400 block mb-1">{ui("تاريخ ووقت الفاتورة:")}</span>
                       <input
                         required
                         type="datetime-local"
@@ -1450,16 +1414,15 @@ export default function InvoiceForm({
                     </div>
 
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border theme-border">
-                      <span className="text-slate-400 block mb-1">حالة السداد والمتبقي:</span>
+                      <span className="text-slate-400 block mb-1">{ui("حالة السداد والمتبقي:")}</span>
                       <p className="font-black font-mono text-sm">
                         {paymentStatusChoice === "FULLY_PAID" ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">مدفوع بالكامل (٠.٠٠ متبقي)</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">{ui("مدفوع بالكامل (٠.٠٠ متبقي)")}</span>
                         ) : paymentStatusChoice === "PARTIALLY_PAID" ? (
                           <span className="text-blue-600 dark:text-blue-400">
-                            مدفوع: {partialPaymentAmount || "0"} ر.س · متبقي: {remainingBalance} ر.س
-                          </span>
+                            {ui("مدفوع:")}{ui(partialPaymentAmount || "0")} {ui("ر.س · متبقي:")}{ui(remainingBalance)} {ui("ر.س")}</span>
                         ) : (
-                          <span className="text-amber-600 dark:text-amber-400">آجل بالكامل (المتبقي: {estimate.gross} ر.س)</span>
+                          <span className="text-amber-600 dark:text-amber-400">{ui("آجل بالكامل (المتبقي:")}{ui(estimate.gross)} {ui("ر.س)")}</span>
                         )}
                       </p>
                     </div>
@@ -1475,7 +1438,7 @@ export default function InvoiceForm({
                         onChange={(e) => setIsReviewed(e.target.checked)}
                         className="mt-0.5 size-4 shrink-0 accent-amber-600 cursor-pointer"
                       />
-                      <span>أقر بأنني راجعت بيانات العميل والرحلة والأسعار والضريبة وهي صحيحة ومعتمدة للإصدار.</span>
+                      <span>{ui("أقر بأنني راجعت بيانات العميل والرحلة والأسعار والضريبة وهي صحيحة ومعتمدة للإصدار.")}</span>
                     </label>
                   </div>
                 </section>
@@ -1488,7 +1451,7 @@ export default function InvoiceForm({
                     className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 transition cursor-pointer"
                   >
                     <ArrowRight className="size-4" />
-                    <span>السابق</span>
+                    <span>{ui("السابق")}</span>
                   </button>
 
                   <button
@@ -1502,11 +1465,11 @@ export default function InvoiceForm({
                       <Save className="size-4" />
                     )}
                     <span>
-                      {isSaving
+                      {ui(isSaving
                         ? "جارٍ الإصدار والحفظ…"
                         : documentType === "PROFORMA"
                           ? "حفظ الفاتورة المبدئية"
-                          : "إصدار الفاتورة وتوليد PDF"}
+                          : "إصدار الفاتورة وتوليد PDF")}
                     </span>
                   </button>
                 </div>
@@ -1520,17 +1483,17 @@ export default function InvoiceForm({
               <section className="overflow-hidden rounded-2xl border theme-border bg-white dark:bg-slate-900 shadow-xs">
                 <div className="border-b theme-border px-5 py-4 bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-amber-700 dark:text-amber-400">ملخص المستند</span>
+                    <span className="text-xs font-black text-amber-700 dark:text-amber-400">{ui("ملخص المستند")}</span>
                     <span className="text-[10px] font-bold text-slate-400 font-mono">
-                      {rows.length} {rows.length === 1 ? "خدمة" : "خدمات"}
+                      {ui(rows.length)} {ui(rows.length === 1 ? "خدمة" : "خدمات")}
                     </span>
                   </div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white mt-1">
-                    {documentType === "PROFORMA" ? "فاتورة مبدئية" : INVOICE_TYPE_LABELS[documentType]}
+                    {ui(documentType === "PROFORMA" ? "فاتورة مبدئية" : INVOICE_TYPE_LABELS[documentType])}
                   </h3>
                   {buyer.name && (
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                      العميل: {buyer.name}
+                      {ui("العميل:")}{buyer.name}
                     </p>
                   )}
                 </div>
@@ -1543,9 +1506,9 @@ export default function InvoiceForm({
                     ["ضريبة القيمة المضافة (15%)", estimate.vat],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between gap-3">
-                      <dt className="text-slate-500 dark:text-slate-400">{label}</dt>
+                      <dt className="text-slate-500 dark:text-slate-400">{ui(label)}</dt>
                       <dd className="font-mono font-bold text-slate-900 dark:text-slate-100" dir="ltr">
-                        {amount(val)}
+                        {ui(amount(val))}
                       </dd>
                     </div>
                   ))}
@@ -1553,12 +1516,12 @@ export default function InvoiceForm({
 
                 {/* Big Total Box */}
                 <div className="mx-4 mb-4 rounded-xl bg-slate-950 p-4 text-white dark:bg-slate-800/90 border border-slate-800">
-                  <p className="text-[11px] text-slate-400 font-bold">الإجمالي المطلوب شامل الضريبة</p>
+                  <p className="text-[11px] text-slate-400 font-bold">{ui("الإجمالي المطلوب شامل الضريبة")}</p>
                   <div className="mt-1 flex items-baseline gap-1.5">
                     <strong className="font-mono text-3xl font-black tracking-tight" dir="ltr" data-testid="invoice-total">
-                      {amount(estimate.gross)}
+                      {ui(amount(estimate.gross))}
                     </strong>
-                    <span className="text-xs font-bold text-amber-400">ر.س</span>
+                    <span className="text-xs font-bold text-amber-400">{ui("ر.س")}</span>
                   </div>
                 </div>
 
@@ -1566,17 +1529,16 @@ export default function InvoiceForm({
                 {paymentStatusChoice !== "FULLY_PAID" && (
                   <div className="mx-4 mb-4 rounded-xl bg-amber-500/10 p-3 text-xs border border-amber-500/20">
                     <div className="flex items-center justify-between text-amber-800 dark:text-amber-300 font-bold">
-                      <span>المبلغ المتبقي:</span>
+                      <span>{ui("المبلغ المتبقي:")}</span>
                       <span className="font-mono font-black" dir="ltr">
-                        {amount(remainingBalance)} ر.س
-                      </span>
+                        {ui(amount(remainingBalance))} {ui("ر.س")}</span>
                     </div>
                   </div>
                 )}
 
                 {!estimate.isValid && (
                   <p className="px-5 pb-4 text-xs leading-relaxed text-rose-600 dark:text-rose-400 font-bold">
-                    {estimate.error}
+                    {ui(estimate.error)}
                   </p>
                 )}
               </section>
@@ -1588,7 +1550,7 @@ export default function InvoiceForm({
                     <span>{settings.company.legalName}</span>
                   </p>
                   <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    الرقم الضريبي: {settings.company.vatNumber}
+                    {ui("الرقم الضريبي:")} {ui(settings.company.vatNumber)}
                   </p>
                 </div>
               )}
@@ -1597,29 +1559,28 @@ export default function InvoiceForm({
         </form>
       )}
 
-      {/* Mobile Sticky Financial Summary Bar (lg:hidden) */}
-      <div className="lg:hidden sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-20 mt-4">
+      {/* Mobile Financial Summary (normal flow keeps fields and navigation unobstructed) */}
+      <div className="lg:hidden mt-4">
         <div className="theme-card bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md rounded-2xl border theme-border shadow-xl p-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-slate-400 block">الإجمالي الشامل</span>
+            <span className="text-[10px] font-bold text-slate-400 block">{ui("الإجمالي الشامل")}</span>
             <div className="flex items-baseline gap-1">
               <strong className="font-mono text-lg font-black text-slate-900 dark:text-white" dir="ltr">
-                {amount(estimate.gross)}
+                {ui(amount(estimate.gross))}
               </strong>
-              <span className="text-[10px] font-bold text-amber-500">ر.س</span>
+              <span className="text-[10px] font-bold text-amber-500">{ui("ر.س")}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
-              المرحلة {STAGES.find((s) => s.id === currentStage)?.number} من ٤
-            </span>
+              {ui("المرحلة")} {ui(STAGES.find((s) => s.id === currentStage)?.number)} {ui("من ٤")}</span>
           </div>
         </div>
       </div>
 
       <p className="mt-6 flex items-center gap-2 text-xs text-slate-400">
         <Truck className="size-3.5" />
-        <span>تفاصيل الرحلة والمسار محفوظة مع الفاتورة · نسخة العميل المطبوعة تعرض أعداد الركاب فقط.</span>
+        <span>{ui("تفاصيل الرحلة والمسار محفوظة مع الفاتورة · نسخة العميل المطبوعة تعرض أعداد الركاب فقط.")}</span>
       </p>
     </div>
   );

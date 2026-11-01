@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import LoadError from "@/app/_components/LoadError";
 
 import Modal from "@/app/_components/Modal";
@@ -45,6 +47,8 @@ type CaptainItem = SystemUser & {
 };
 
 export default function CaptainsManagementPage() {
+  const ui = useUiText();
+
   const { t, isRTL } = useLanguage();
   const cachedCaptains =
     getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
@@ -359,8 +363,8 @@ export default function CaptainsManagementPage() {
 
       {/* Page Header with On-Demand Guide */}
       <PageHeader
-        title={t("captains.title")}
-        subtitle={t("captains.subtitle")}
+        title={ui(t("captains.title"))}
+        subtitle={ui(t("captains.subtitle"))}
         badge={isRTL ? "إدارة الكباتن والسائقين" : "Captains & Drivers"}
         icon={UserPlus}
         onRefresh={() => void loadCaptains(true)}
@@ -389,7 +393,7 @@ export default function CaptainsManagementPage() {
           role="status"
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
         >
-          {seedMessage}
+          {ui(seedMessage)}
         </p>
       )}
 
@@ -397,7 +401,7 @@ export default function CaptainsManagementPage() {
       <FilterBar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder={isRTL ? "البحث بالاسم، رقم الهوية، رقم الجوال، أو اللوحة..." : "Search by name, ID, phone, or plate..."}
+        searchPlaceholder={ui(isRTL ? "البحث بالاسم، رقم الهوية، رقم الجوال، أو اللوحة..." : "Search by name, ID, phone, or plate...")}
         tabs={[
           { id: "ALL", label: t("common.all"), count: safeCaptains.length },
           { id: "ACTIVE", label: isRTL ? "نشط" : "Active", count: activeCount },
@@ -414,27 +418,25 @@ export default function CaptainsManagementPage() {
           <div className="p-12 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
             <p className="text-xs text-slate-400">
-              جاري تحميل قائمة الكباتن...
-            </p>
+              {ui("جاري تحميل قائمة الكباتن...")}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-sm">
-            لا يوجد كباتن مسجلين يطابقون شروط البحث.
-          </div>
+            {ui("لا يوجد كباتن مسجلين يطابقون شروط البحث.")}</div>
         ) : (
           <>
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-right text-xs">
+              <table className="w-full text-start text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
                   <tr>
-                    <th className="px-5 py-3.5">الكابتن</th>
-                    <th className="px-5 py-3.5">رقم الهوية / الرخصة</th>
-                    <th className="px-5 py-3.5">المركبة المسندة</th>
-                    <th className="px-5 py-3.5">فحص اليوم</th>
-                    <th className="px-5 py-3.5">إجمالي العقود</th>
-                    <th className="px-5 py-3.5">الحالة</th>
-                    <th className="px-5 py-3.5 text-left">الإجراءات</th>
+                    <th className="px-5 py-3.5">{ui("الكابتن")}</th>
+                    <th className="px-5 py-3.5">{ui("رقم الهوية / الرخصة")}</th>
+                    <th className="px-5 py-3.5">{ui("المركبة المسندة")}</th>
+                    <th className="px-5 py-3.5">{ui("فحص اليوم")}</th>
+                    <th className="px-5 py-3.5">{ui("إجمالي العقود")}</th>
+                    <th className="px-5 py-3.5">{ui("الحالة")}</th>
+                    <th className="px-5 py-3.5 text-end">{ui("الإجراءات")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
@@ -464,13 +466,13 @@ export default function CaptainsManagementPage() {
                               {c.name}
                             </div>
                             <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                              <span>{c.email}</span>
+                              <span>{ui(c.email)}</span>
                               {c.phone && (
                                 <span
                                   className="font-mono text-slate-400"
                                   dir="ltr"
                                 >
-                                  {c.phone}
+                                  {ui(c.phone)}
                                 </span>
                               )}
                             </div>
@@ -484,12 +486,12 @@ export default function CaptainsManagementPage() {
                           </div>
                           {c.licenseNumber && (
                             <div className="text-[11px] text-slate-500 font-mono">
-                              رخصة: {c.licenseNumber}
+                              {ui("رخصة:")}{ui(c.licenseNumber)}
                             </div>
                           )}
                           {c.licenseExpiry && (
                             <div className="text-[10px] text-slate-400">
-                              انتهاء: {c.licenseExpiry}
+                              {ui("انتهاء:")}{ui(c.licenseExpiry)}
                             </div>
                           )}
                         </div>
@@ -498,34 +500,30 @@ export default function CaptainsManagementPage() {
                         {c.assignedVehiclePlate ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200">
                             <Car className="w-3.5 h-3.5 text-amber-500" />
-                            {c.assignedVehiclePlate}
+                            {ui(c.assignedVehiclePlate)}
                           </span>
                         ) : (
                           <span className="text-slate-400 text-xs">
-                            غير مسندة
-                          </span>
+                            {ui("غير مسندة")}</span>
                         )}
                       </td>
                       <td className="px-5 py-4">
                         {c.hasTodayInspection ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            تم الفحص
-                          </span>
+                            {ui("تم الفحص")}</span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
                             <XCircle className="w-3.5 h-3.5" />
-                            بانتظار الفحص
-                          </span>
+                            {ui("بانتظار الفحص")}</span>
                         )}
                       </td>
                       <td className="px-5 py-4">
                         <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
-                          {c.contractCount}
+                          {ui(c.contractCount)}
                         </span>
-                        <span className="text-[11px] text-slate-400 mr-1">
-                          عقد
-                        </span>
+                        <span className="text-[11px] text-slate-400 ms-1">
+                          {ui("عقد")}</span>
                       </td>
                       <td className="px-5 py-4">
                         <button
@@ -533,11 +531,9 @@ export default function CaptainsManagementPage() {
                           onClick={() => handleToggleStatus(c)}
                           disabled={isTogglingId === c.id}
                           className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                          title={
-                            c.active
+                          title={ui(c.active
                               ? "انقر لتعطيل الحساب"
-                              : "انقر لتفعيل وتنشيط الحساب"
-                          }
+                              : "انقر لتفعيل وتنشيط الحساب")}
                         >
                           <StatusBadge
                             type="captain"
@@ -556,7 +552,7 @@ export default function CaptainsManagementPage() {
                           </span>
                         </button>
                       </td>
-                      <td className="px-5 py-4 text-left">
+                      <td className="px-5 py-4 text-end">
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             onClick={() => handleToggleStatus(c)}
@@ -566,11 +562,9 @@ export default function CaptainsManagementPage() {
                                 ? "theme-card hover:border-rose-500 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                                 : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
                             }`}
-                            title={
-                              c.active
+                            title={ui(c.active
                                 ? "تعطيل حساب الكابتن مؤقتاً"
-                                : "تنشيط وتفعيل حساب الكابتن"
-                            }
+                                : "تنشيط وتفعيل حساب الكابتن")}
                           >
                             <Power
                               className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
@@ -580,7 +574,7 @@ export default function CaptainsManagementPage() {
                             onClick={() => handleResetPassword(c)}
                             disabled={isResettingId === c.id}
                             className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 transition"
-                            title="توليد كلمة مرور مؤقتة جديدة للكابتن"
+                            title={ui("توليد كلمة مرور مؤقتة جديدة للكابتن")}
                           >
                             <KeyRound
                               className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
@@ -589,14 +583,14 @@ export default function CaptainsManagementPage() {
                           <button
                             onClick={() => openEditModal(c)}
                             className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 transition"
-                            title="تعديل بيانات الكابتن وحالته"
+                            title={ui("تعديل بيانات الكابتن وحالته")}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setDeleteId(c.id)}
                             className="p-1.5 rounded-lg border theme-card hover:border-rose-500 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
-                            title="حذف / تعطيل الكابتن"
+                            title={ui("حذف / تعطيل الكابتن")}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -640,7 +634,7 @@ export default function CaptainsManagementPage() {
                           className="text-[11px] text-slate-500 font-mono truncate"
                           dir="ltr"
                         >
-                          {c.email}
+                          {ui(c.email)}
                         </div>
                       </div>
                     </div>
@@ -649,9 +643,7 @@ export default function CaptainsManagementPage() {
                       onClick={() => handleToggleStatus(c)}
                       disabled={isTogglingId === c.id}
                       className="group inline-flex items-center gap-1.5 p-1 rounded-xl transition hover:opacity-85"
-                      title={
-                        c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط"
-                      }
+                      title={ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}
                     >
                       <StatusBadge
                         type="captain"
@@ -667,8 +659,7 @@ export default function CaptainsManagementPage() {
                   <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border">
                     <div>
                       <span className="text-slate-400 text-[11px] block">
-                        الهوية الوطنية
-                      </span>
+                        {ui("الهوية الوطنية")}</span>
                       <span
                         className="font-mono font-bold text-slate-800 dark:text-slate-200"
                         dir="ltr"
@@ -679,37 +670,31 @@ export default function CaptainsManagementPage() {
 
                     <div>
                       <span className="text-slate-400 text-[11px] block">
-                        المركبة المسندة
-                      </span>
+                        {ui("المركبة المسندة")}</span>
                       <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {c.assignedVehiclePlate || "غير مسندة"}
+                        {ui(c.assignedVehiclePlate || "غير مسندة")}
                       </span>
                     </div>
 
                     <div>
                       <span className="text-slate-400 text-[11px] block">
-                        فحص اليوم
-                      </span>
+                        {ui("فحص اليوم")}</span>
                       <span className="mt-0.5 inline-block">
                         {c.hasTodayInspection ? (
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> تم الفحص
-                          </span>
+                            <CheckCircle2 className="w-3 h-3" /> {ui("تم الفحص")}</span>
                         ) : (
                           <span className="text-amber-600 dark:text-amber-400 font-bold text-[11px] flex items-center gap-1">
-                            <XCircle className="w-3 h-3" /> بانتظار الفحص
-                          </span>
+                            <XCircle className="w-3 h-3" /> {ui("بانتظار الفحص")}</span>
                         )}
                       </span>
                     </div>
 
                     <div>
                       <span className="text-slate-400 text-[11px] block">
-                        إجمالي العقود
-                      </span>
+                        {ui("إجمالي العقود")}</span>
                       <span className="font-mono font-bold text-slate-900 dark:text-white">
-                        {c.contractCount} عقد
-                      </span>
+                        {ui(c.contractCount)} {ui("عقد")}</span>
                     </div>
                   </div>
 
@@ -723,11 +708,9 @@ export default function CaptainsManagementPage() {
                           ? "theme-card text-slate-500 hover:text-rose-500 border-slate-200 dark:border-slate-800"
                           : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                       }`}
-                      title={
-                        c.active
+                      title={ui(c.active
                           ? "تعطيل حساب الكابتن"
-                          : "تنشيط وتفعيل حساب الكابتن"
-                      }
+                          : "تنشيط وتفعيل حساب الكابتن")}
                     >
                       <Power
                         className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
@@ -737,24 +720,23 @@ export default function CaptainsManagementPage() {
                       onClick={() => handleResetPassword(c)}
                       disabled={isResettingId === c.id}
                       className="px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold transition text-xs flex items-center gap-1.5"
-                      title="توليد كلمة مرور مؤقتة"
+                      title={ui("توليد كلمة مرور مؤقتة")}
                     >
                       <KeyRound
                         className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
                       />
-                      <span>كلمة مؤقتة</span>
+                      <span>{ui("كلمة مؤقتة")}</span>
                     </button>
                     <button
                       onClick={() => openEditModal(c)}
                       className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
                     >
                       <Edit2 className="w-3.5 h-3.5 text-amber-500" />
-                      تعديل البيانات
-                    </button>
+                      {ui("تعديل البيانات")}</button>
                     <button
                       onClick={() => setDeleteId(c.id)}
                       className="px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-xs"
-                      title="حذف / تعطيل الكابتن"
+                      title={ui("حذف / تعطيل الكابتن")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -769,7 +751,7 @@ export default function CaptainsManagementPage() {
       {/* Add / Edit Modal */}
       {(isAddModalOpen || editingCaptain) && (
         <Modal
-          label="بيانات الكابتن"
+          label={ui("بيانات الكابتن")}
           onClose={() => {
             setIsAddModalOpen(false);
             setEditingCaptain(null);
@@ -779,9 +761,9 @@ export default function CaptainsManagementPage() {
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {editingCaptain
+                {ui(editingCaptain
                   ? "تعديل بيانات الكابتن"
-                  : "إضافة كابتن جديد للنظام"}
+                  : "إضافة كابتن جديد للنظام")}
               </h3>
               <button
                 onClick={() => {
@@ -800,7 +782,7 @@ export default function CaptainsManagementPage() {
             >
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
-                  {formError}
+                  {ui(formError)}
                 </div>
               )}
 
@@ -812,7 +794,7 @@ export default function CaptainsManagementPage() {
                     setFormData({ ...formData, avatarUrl: url })
                   }
                   onRemove={() => setFormData({ ...formData, avatarUrl: "" })}
-                  label="صورة الكابتن الرسمية (تظهر في عقد النقل والبطاقة)"
+                  label={ui("صورة الكابتن الرسمية (تظهر في عقد النقل والبطاقة)")}
                   shape="rounded"
                   size="md"
                 />
@@ -821,8 +803,7 @@ export default function CaptainsManagementPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1 sm:col-span-2">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    اسم الكابتن بالكامل *
-                  </label>
+                    {ui("اسم الكابتن بالكامل *")}</label>
                   <input
                     type="text"
                     required
@@ -830,15 +811,14 @@ export default function CaptainsManagementPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="مثال: علي أحمد غلام أحمد"
+                    placeholder={ui("مثال: علي أحمد غلام أحمد")}
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    البريد الإلكتروني *
-                  </label>
+                    {ui("البريد الإلكتروني *")}</label>
                   <input
                     type="email"
                     required
@@ -853,8 +833,7 @@ export default function CaptainsManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    رقم الجوال
-                  </label>
+                    {ui("رقم الجوال")}</label>
                   <input
                     type="tel"
                     value={formData.phone || ""}
@@ -863,14 +842,13 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="0542273515"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
+                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    رقم الهوية الوطنية / الإقامة
-                  </label>
+                    {ui("رقم الهوية الوطنية / الإقامة")}</label>
                   <input
                     type="text"
                     value={formData.nationalId || ""}
@@ -879,14 +857,13 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2553660073"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
+                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    رقم رخصة القيادة
-                  </label>
+                    {ui("رقم رخصة القيادة")}</label>
                   <input
                     type="text"
                     value={formData.licenseNumber || ""}
@@ -898,14 +875,13 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="SA-39482910"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
+                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    تاريخ انتهاء الرخصة
-                  </label>
+                    {ui("تاريخ انتهاء الرخصة")}</label>
                   <input
                     type="text"
                     value={formData.licenseExpiry || ""}
@@ -917,14 +893,13 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2028/04/22"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-right"
+                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    لوحة المركبة المسندة
-                  </label>
+                    {ui("لوحة المركبة المسندة")}</label>
                   <input
                     type="text"
                     value={formData.assignedVehiclePlate || ""}
@@ -934,7 +909,7 @@ export default function CaptainsManagementPage() {
                         assignedVehiclePlate: e.target.value,
                       })
                     }
-                    placeholder="ا ص ل 7223"
+                    placeholder={ui("ا ص ل 7223")}
                     className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
@@ -942,8 +917,7 @@ export default function CaptainsManagementPage() {
                 {/* Account Status */}
                 <div className="space-y-1.5 col-span-full pt-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    حالة الحساب والتشغيل
-                  </label>
+                    {ui("حالة الحساب والتشغيل")}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -955,7 +929,7 @@ export default function CaptainsManagementPage() {
                       }`}
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span>حساب نشط (مفعل)</span>
+                      <span>{ui("حساب نشط (مفعل)")}</span>
                     </button>
                     <button
                       type="button"
@@ -969,7 +943,7 @@ export default function CaptainsManagementPage() {
                       }`}
                     >
                       <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
-                      <span>حساب معطل (موقوف)</span>
+                      <span>{ui("حساب معطل (موقوف)")}</span>
                     </button>
                   </div>
                 </div>
@@ -984,18 +958,17 @@ export default function CaptainsManagementPage() {
                   }}
                   className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
-                  إلغاء
-                </button>
+                  {ui("إلغاء")}</button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
                 >
-                  {isSubmitting
+                  {ui(isSubmitting
                     ? "جاري الحفظ..."
                     : editingCaptain
                       ? "حفظ التعديلات"
-                      : "إضافة الكابتن"}
+                      : "إضافة الكابتن")}
                 </button>
               </div>
             </form>
@@ -1006,10 +979,10 @@ export default function CaptainsManagementPage() {
       {/* Confirm Delete Dialog */}
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="تأكيد حذف / إلغاء تفعيل الكابتن"
+        title={ui("تأكيد حذف / إلغاء تفعيل الكابتن")}
         message="هل أنت متأكد من رغبتك في حذف هذا الكابتن؟ إذا كان مرتبطاً بعقود سابقة، سيتم تعطيل حسابه فقط حفاظاً على سجلات النظام."
         variant="danger"
-        confirmText="تأكيد الحذف"
+        confirmText={ui("تأكيد الحذف")}
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
       />
@@ -1017,7 +990,7 @@ export default function CaptainsManagementPage() {
       {/* Temporary Password Display Modal */}
       {tempPasswordModal && (
         <Modal
-          label="كلمة المرور المؤقتة"
+          label={ui("كلمة المرور المؤقتة")}
           onClose={() => setTempPasswordModal(null)}
           isBusy={false}
         >
@@ -1029,10 +1002,9 @@ export default function CaptainsManagementPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                    كلمة المرور المؤقتة للحساب
-                  </h3>
+                    {ui("كلمة المرور المؤقتة للحساب")}</h3>
                   <p className="text-[11px] text-slate-400">
-                    {tempPasswordModal.captainName}
+                    {ui(tempPasswordModal.captainName)}
                   </p>
                 </div>
               </div>
@@ -1049,37 +1021,32 @@ export default function CaptainsManagementPage() {
 
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
               <p className="font-bold">
-                يرجى تزويد الكابتن ببيانات الدخول التالية:
-              </p>
+                {ui("يرجى تزويد الكابتن ببيانات الدخول التالية:")}</p>
               <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
-                سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم
-                تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.
-              </p>
+                {ui("سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.")}</p>
             </div>
 
             <div className="space-y-2 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border theme-border flex items-center justify-between">
                 <span className="text-slate-500 text-[11px]">
-                  البريد الإلكتروني:
-                </span>
+                  {ui("البريد الإلكتروني:")}</span>
                 <span
                   className="font-mono font-bold text-slate-900 dark:text-white"
                   dir="ltr"
                 >
-                  {tempPasswordModal.email}
+                  {ui(tempPasswordModal.email)}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-amber-500/40 flex items-center justify-between">
                 <div>
                   <span className="text-slate-400 text-[10px] block font-bold">
-                    كلمة المرور المؤقتة:
-                  </span>
+                    {ui("كلمة المرور المؤقتة:")}</span>
                   <span
                     className="font-mono text-xl font-black text-amber-600 dark:text-amber-400 tracking-wider select-all"
                     dir="ltr"
                   >
-                    {tempPasswordModal.tempPassword}
+                    {ui(tempPasswordModal.tempPassword)}
                   </span>
                 </div>
                 <button
@@ -1100,13 +1067,11 @@ export default function CaptainsManagementPage() {
                   {copied ? (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      تم النسخ!
-                    </>
+                      {ui("تم النسخ!")}</>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5" />
-                      نسخ
-                    </>
+                      {ui("نسخ")}</>
                   )}
                 </button>
               </div>
@@ -1121,8 +1086,7 @@ export default function CaptainsManagementPage() {
                 }}
                 className="w-full py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
               >
-                تم، إغلاق النافذة
-              </button>
+                {ui("تم، إغلاق النافذة")}</button>
             </div>
           </div>
         </Modal>

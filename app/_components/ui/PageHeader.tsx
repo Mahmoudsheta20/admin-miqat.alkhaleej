@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -63,6 +65,8 @@ export default function PageHeader({
   onSeeded,
   onSeedError,
 }: PageHeaderProps) {
+  const ui = useUiText();
+
   const { t, isRTL, dir } = useLanguage();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -80,15 +84,15 @@ export default function PageHeader({
           <div className="min-w-0">
             {badge && (
               <span className="inline-block px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold mb-1">
-                {badge}
+                {ui(badge)}
               </span>
             )}
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight truncate">
-              {title}
+              {ui(title)}
             </h1>
             {subtitle && (
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                {subtitle}
+                {ui(subtitle)}
               </p>
             )}
           </div>
@@ -106,8 +110,8 @@ export default function PageHeader({
               onClick={onRefresh}
               disabled={isRefreshing}
               className="p-2.5 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
-              title={t("common.refresh")}
-              aria-label={t("common.refresh")}
+              title={ui(t("common.refresh"))}
+              aria-label={ui(t("common.refresh"))}
             >
               <RefreshCw
                 className={`w-4 h-4 ${isRefreshing ? "animate-spin text-amber-500" : ""}`}
@@ -121,10 +125,10 @@ export default function PageHeader({
               type="button"
               onClick={() => setIsHelpOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 text-xs font-bold transition shadow-2xs cursor-pointer"
-              title={t("common.help")}
+              title={ui(t("common.help"))}
             >
               <HelpCircle className="w-4 h-4 text-amber-500" />
-              <span className="hidden sm:inline">{t("common.help")}</span>
+              <span className="hidden sm:inline">{ui(t("common.help"))}</span>
             </button>
           )}
 
@@ -140,7 +144,7 @@ export default function PageHeader({
                 onClick={() => setIsMoreOpen((prev) => !prev)}
                 className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 text-xs font-bold transition shadow-2xs cursor-pointer"
               >
-                <span>{t("common.more")}</span>
+                <span>{ui(t("common.more"))}</span>
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
 
@@ -167,7 +171,7 @@ export default function PageHeader({
           )}
 
           {/* Custom Action Slot */}
-          {actions}
+          {ui(actions)}
 
           {/* Primary Action Button */}
           {primaryAction && <ActionButton action={primaryAction} isPrimary />}
@@ -186,7 +190,7 @@ export default function PageHeader({
           <div
             className={`fixed inset-y-0 ${
               isRTL ? "left-0" : "right-0"
-            } max-w-full flex pl-10`}
+            } max-w-full flex pe-10`}
             dir={dir}
           >
             <div className="w-screen max-w-md bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-s theme-border">
@@ -197,14 +201,14 @@ export default function PageHeader({
                     <HelpCircle className="w-4 h-4" />
                   </div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    {helpGuide.title}
+                    {ui(helpGuide.title)}
                   </h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsHelpOpen(false)}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
-                  aria-label={t("common.close")}
+                  aria-label={ui(t("common.close"))}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -213,7 +217,7 @@ export default function PageHeader({
               {/* Drawer Content */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4">
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-amber-500/5 border border-amber-500/15 p-3 rounded-xl">
-                  {helpGuide.summary}
+                  {ui(helpGuide.summary)}
                 </p>
 
                 {helpGuide.cards.map((card, idx) => (
@@ -223,11 +227,11 @@ export default function PageHeader({
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs font-black text-slate-900 dark:text-white">
-                        {card.title}
+                        {ui(card.title)}
                       </h3>
                       {card.badge && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                          {card.badge}
+                          {ui(card.badge)}
                         </span>
                       )}
                     </div>
@@ -235,15 +239,15 @@ export default function PageHeader({
                       {card.items.map((item, i) => (
                         <li key={i} className="text-xs leading-relaxed space-y-0.5">
                           <strong className="text-slate-800 dark:text-slate-200 block">
-                            {item.label}
+                            {ui(item.label)}
                             {item.code && (
                               <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400 ms-1.5 font-bold">
-                                [{item.code}]
+                                [{ui(item.code)}]
                               </span>
                             )}
                           </strong>
                           <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                            {item.description}
+                            {ui(item.description)}
                           </p>
                         </li>
                       ))}
@@ -254,19 +258,19 @@ export default function PageHeader({
                 {helpGuide.tip && (
                   <div className="p-3 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-800 dark:text-blue-300 text-xs">
                     <strong className="block font-bold mb-0.5">
-                      💡 {isRTL ? "ملاحظة هامة:" : "Key Tip:"}
+                      💡 {ui(isRTL ? "ملاحظة هامة:" : "Key Tip:")}
                     </strong>
-                    <span>{helpGuide.tip}</span>
+                    <span>{ui(helpGuide.tip)}</span>
                   </div>
                 )}
 
                 {helpGuide.formula && (
                   <div className="p-3 rounded-xl border theme-border bg-slate-100/50 dark:bg-slate-800/40 text-[11px] font-mono text-slate-700 dark:text-slate-300">
                     <span className="block text-[10px] text-slate-400 uppercase font-sans font-bold">
-                      {isRTL ? "معادلة الاحتساب:" : "Formula:"}
+                      {ui(isRTL ? "معادلة الاحتساب:" : "Formula:")}
                     </span>
                     <span dir="ltr" className="block mt-0.5">
-                      {helpGuide.formula}
+                      {ui(helpGuide.formula)}
                     </span>
                   </div>
                 )}
@@ -279,7 +283,7 @@ export default function PageHeader({
                   onClick={() => setIsHelpOpen(false)}
                   className="w-full py-2.5 rounded-xl border theme-border font-bold text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
-                  {t("common.close")}
+                  {ui(t("common.close"))}
                 </button>
               </div>
             </div>
@@ -299,17 +303,19 @@ function ActionButton({
   isPrimary?: boolean;
   dropdownItem?: boolean;
 }) {
+  const ui = useUiText();
+
   const Icon = action.icon;
 
   if (dropdownItem) {
     const content = (
       <span className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 transition rounded-lg mx-1">
         {Icon && <Icon className="w-3.5 h-3.5 text-amber-500" />}
-        <span>{action.label}</span>
+        <span>{ui(action.label)}</span>
       </span>
     );
     if (action.href) {
-      return <Link href={action.href} className="block">{content}</Link>;
+      return <Link href={action.href} className="block">{ui(content)}</Link>;
     }
     return (
       <button
@@ -318,7 +324,7 @@ function ActionButton({
         disabled={action.disabled}
         className="w-full text-start block cursor-pointer"
       >
-        {content}
+        {ui(content)}
       </button>
     );
   }
@@ -331,9 +337,9 @@ function ActionButton({
 
   if (action.href) {
     return (
-      <Link href={action.href} className={baseClasses} title={action.title}>
+      <Link href={action.href} className={baseClasses} title={ui(action.title)}>
         {Icon && <Icon className="w-4 h-4" />}
-        <span>{action.label}</span>
+        <span>{ui(action.label)}</span>
       </Link>
     );
   }
@@ -344,10 +350,10 @@ function ActionButton({
       onClick={action.onClick}
       disabled={action.disabled}
       className={`${baseClasses} disabled:opacity-50`}
-      title={action.title}
+      title={ui(action.title)}
     >
       {Icon && <Icon className="w-4 h-4" />}
-      <span>{action.label}</span>
+      <span>{ui(action.label)}</span>
     </button>
   );
 }

@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import Modal from "./Modal";
 
 import React, { useState } from "react";
@@ -28,6 +30,8 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal(props: ProfileModalProps) {
+
+
   const { user } = useAuth();
   if (!props.isOpen || !user) return null;
   return <ProfileModalContent key={`${user.id}:${props.initialTab}`} {...props} />;
@@ -38,6 +42,8 @@ function ProfileModalContent({
   onClose,
   initialTab = "profile",
 }: ProfileModalProps) {
+  const ui = useUiText();
+
   const { user, updateUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"profile" | "password">(initialTab);
@@ -152,7 +158,7 @@ function ProfileModalContent({
   };
 
   return (
-    <Modal label="الملف الشخصي" onClose={onClose} isBusy={isSubmitting || isChangingPass}>
+    <Modal label={ui("الملف الشخصي")} onClose={onClose} isBusy={isSubmitting || isChangingPass}>
       <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
@@ -166,19 +172,19 @@ function ProfileModalContent({
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {activeTab === "profile" ? "الملف الشخصي" : "تغيير كلمة المرور"}
+                {ui(activeTab === "profile" ? "الملف الشخصي" : "تغيير كلمة المرور")}
               </h3>
               <p className="text-[11px] sm:text-xs text-slate-400">
-                {activeTab === "profile"
+                {ui(activeTab === "profile"
                   ? "تحديث الصورة الشخصية والبيانات الأساسية"
-                  : "تعيين كلمة مرور جديدة وآمنة لحسابك"}
+                  : "تعيين كلمة مرور جديدة وآمنة لحسابك")}
               </p>
             </div>
           </div>
           <button
             disabled={isSubmitting || isChangingPass} onClick={onClose}
             className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-            aria-label="إغلاق"
+            aria-label={ui("إغلاق")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -200,7 +206,7 @@ function ProfileModalContent({
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>البيانات الشخصية</span>
+            <span>{ui("البيانات الشخصية")}</span>
           </button>
           <button
             type="button"
@@ -216,7 +222,7 @@ function ProfileModalContent({
             }`}
           >
             <Lock className="w-3.5 h-3.5" />
-            <span>تغيير كلمة المرور</span>
+            <span>{ui("تغيير كلمة المرور")}</span>
           </button>
         </div>
 
@@ -229,14 +235,14 @@ function ProfileModalContent({
             {error && (
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
+                <span>{ui(error)}</span>
               </div>
             )}
 
             {successMsg && (
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>{successMsg}</span>
+                <span>{ui(successMsg)}</span>
               </div>
             )}
 
@@ -246,7 +252,7 @@ function ProfileModalContent({
                 value={avatarUrl}
                 onChange={(url) => setAvatarUrl(url)}
                 onRemove={() => setAvatarUrl("")}
-                label="الصورة الشخصية"
+                label={ui("الصورة الشخصية")}
                 shape="circle"
                 size="md"
               />
@@ -256,14 +262,13 @@ function ProfileModalContent({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  الاسم الكامل *
-                </label>
+                  {ui("الاسم الكامل *")}</label>
                 <div className="relative">
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="اسم المستخدم"
+                    placeholder={ui("اسم المستخدم")}
                     required
                     className="w-full px-3.5 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
                   />
@@ -272,8 +277,7 @@ function ProfileModalContent({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  رقم الجوال
-                </label>
+                  {ui("رقم الجوال")}</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -281,7 +285,7 @@ function ProfileModalContent({
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="05xxxxxxxx"
                     dir="ltr"
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-right"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                   />
                 </div>
               </div>
@@ -292,20 +296,18 @@ function ProfileModalContent({
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-slate-400" />
-                  البريد الإلكتروني:
-                </span>
+                  {ui("البريد الإلكتروني:")}</span>
                 <span className="font-mono text-slate-700 dark:text-slate-300 font-bold" dir="ltr">
-                  {user.email}
+                  {ui(user.email)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-slate-400" />
-                  نوع الحساب:
-                </span>
+                  {ui("نوع الحساب:")}</span>
                 <span className="font-bold text-amber-600 dark:text-amber-400">
-                  {user.role === "ADMIN" ? "المدير العام (Admin)" : "كابتن ميداني (Captain)"}
+                  {ui(user.role === "ADMIN" ? "المدير العام (Admin)" : "كابتن ميداني (Captain)")}
                 </span>
               </div>
 
@@ -313,8 +315,7 @@ function ProfileModalContent({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <CreditCard className="w-3.5 h-3.5 text-slate-400" />
-                    رقم الهوية:
-                  </span>
+                    {ui("رقم الهوية:")}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
                     {user.nationalId}
                   </span>
@@ -325,10 +326,9 @@ function ProfileModalContent({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Car className="w-3.5 h-3.5 text-slate-400" />
-                    المركبة المسندة:
-                  </span>
+                    {ui("المركبة المسندة:")}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
-                    {user.assignedVehiclePlate}
+                    {ui(user.assignedVehiclePlate)}
                   </span>
                 </div>
               )}
@@ -341,14 +341,13 @@ function ProfileModalContent({
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
                 className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
-                إلغاء
-              </button>
+                {ui("إلغاء")}</button>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer"
               >
-                {isSubmitting ? "جاري الحفظ..." : "حفظ التغييرات"}
+                {ui(isSubmitting ? "جاري الحفظ..." : "حفظ التغييرات")}
               </button>
             </div>
           </form>
@@ -363,41 +362,39 @@ function ProfileModalContent({
             {passError && (
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{passError}</span>
+                <span>{ui(passError)}</span>
               </div>
             )}
 
             {passSuccess && (
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>{passSuccess}</span>
+                <span>{ui(passSuccess)}</span>
               </div>
             )}
 
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 space-y-1">
               <p className="font-bold flex items-center gap-1.5">
                 <Shield className="w-4 h-4" />
-                <span>أمان الحساب:</span>
+                <span>{ui("أمان الحساب:")}</span>
               </p>
               <p className="text-[11px] leading-relaxed">
-                يجب ألا تقل كلمة المرور الجديدة عن 8 خانات، وتختلف عن كلمة المرور الحالية.
-              </p>
+                {ui("يجب ألا تقل كلمة المرور الجديدة عن 8 خانات، وتختلف عن كلمة المرور الحالية.")}</p>
             </div>
 
             {/* Current Password */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                كلمة المرور الحالية *
-              </label>
+                {ui("كلمة المرور الحالية *")}</label>
               <div className="relative">
                 <input
                   type={showCurrentPass ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور الحالية"
+                  placeholder={ui("أدخل كلمة المرور الحالية")}
                   required
                   dir="ltr"
-                  className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-right"
+                  className="w-full px-3.5 py-2.5 ps-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                 />
                 <button
                   type="button"
@@ -412,17 +409,16 @@ function ProfileModalContent({
             {/* New Password */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                كلمة المرور الجديدة *
-              </label>
+                {ui("كلمة المرور الجديدة *")}</label>
               <div className="relative">
                 <input
                   type={showNewPass ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="كلمة مرور جديدة (8 خانات على الأقل)"
+                  placeholder={ui("كلمة مرور جديدة (8 خانات على الأقل)")}
                   required
                   dir="ltr"
-                  className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-right"
+                  className="w-full px-3.5 py-2.5 ps-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                 />
                 <button
                   type="button"
@@ -437,17 +433,16 @@ function ProfileModalContent({
             {/* Confirm New Password */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                تأكيد كلمة المرور الجديدة *
-              </label>
+                {ui("تأكيد كلمة المرور الجديدة *")}</label>
               <div className="relative">
                 <input
                   type={showConfirmPass ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="أعد إدخال كلمة المرور الجديدة للتأكيد"
+                  placeholder={ui("أعد إدخال كلمة المرور الجديدة للتأكيد")}
                   required
                   dir="ltr"
-                  className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-right"
+                  className="w-full px-3.5 py-2.5 ps-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                 />
                 <button
                   type="button"
@@ -466,8 +461,7 @@ function ProfileModalContent({
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
                 className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
-                إلغاء
-              </button>
+                {ui("إلغاء")}</button>
               <button
                 type="submit"
                 disabled={isChangingPass}
@@ -476,12 +470,12 @@ function ProfileModalContent({
                 {isChangingPass ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>جاري التحديث...</span>
+                    <span>{ui("جاري التحديث...")}</span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-3.5 h-3.5" />
-                    <span>تحديث كلمة المرور</span>
+                    <span>{ui("تحديث كلمة المرور")}</span>
                   </>
                 )}
               </button>

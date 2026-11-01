@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import { useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
@@ -14,6 +16,8 @@ export default function SeedTestDataButton({
   onSeeded,
   onError,
 }: SeedTestDataButtonProps) {
+  const ui = useUiText();
+
   const [isSeeding, setIsSeeding] = useState(false);
   const { isRTL } = useLanguage();
 
@@ -51,7 +55,7 @@ export default function SeedTestDataButton({
       disabled={isSeeding}
       onClick={() => void handleSeed()}
       className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3.5 py-2 text-xs font-bold text-amber-800 dark:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
-      title={isRTL ? "تعبئة بيانات تجريبية للتطوير" : "Seed test data for development"}
+      title={ui(isRTL ? "تعبئة بيانات تجريبية للتطوير" : "Seed test data for development")}
     >
       {isSeeding ? (
         <Loader2 className="size-3.5 animate-spin" />
@@ -59,13 +63,13 @@ export default function SeedTestDataButton({
         <Sparkles className="size-3.5 text-amber-500" />
       )}
       <span>
-        {isSeeding
+        {ui(isSeeding
           ? isRTL
             ? "جارٍ التعبئة…"
             : "Seeding…"
           : isRTL
             ? "بيانات تجريبية (تطوير)"
-            : "Demo Data (Dev)"}
+            : "Demo Data (Dev)")}
       </span>
     </button>
   );

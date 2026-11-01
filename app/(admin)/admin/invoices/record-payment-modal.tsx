@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useEffect, useState, useRef } from "react";
 import {
@@ -34,8 +36,10 @@ export default function RecordPaymentModal({
   onClose,
   onPaymentSuccess,
 }: RecordPaymentModalProps) {
+  const ui = useUiText();
+
   const { t, isRTL, dir } = useLanguage();
-  const [balance, setBalance] = useState<string | null>(totalAmount);
+  const [balance, setBalance] = useState<string | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [amount, setAmount] = useState(totalAmount);
   const [date, setDate] = useState(currentSaudiPeriod().day);
@@ -71,11 +75,13 @@ export default function RecordPaymentModal({
 
   if (!isOpen) return null;
 
-  const remainingNum = Number(balance ?? totalAmount);
-  const isFullyPaid = remainingNum <= 0.001;
+  const remainingNum = balance === null ? null : Number(balance);
+  const isRefundDue = remainingNum !== null && remainingNum < -0.001;
+  const isFullyPaid = remainingNum !== null && Math.abs(remainingNum) <= 0.001;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isLoadingBalance || balance === null || isRefundDue || isFullyPaid) return;
     const payNum = Number(amount);
     if (!payNum || payNum <= 0) {
       setError(isRTL ? "يرجى إدخال مبلغ صحيح أكبر من الصفر" : "Please enter a valid amount greater than zero");
@@ -138,10 +144,10 @@ export default function RecordPaymentModal({
                 id="payment-modal-title"
                 className="text-base sm:text-lg font-black text-slate-900 dark:text-white"
               >
-                {isRTL ? "تسجيل دفعة للعميل" : "Record Customer Payment"}
+                {ui(isRTL ? "تسجيل دفعة للعميل" : "Record Customer Payment")}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {isRTL ? "سند قبض محاسبي وتخفيض الرصيد المستحق" : "Receipt voucher and receivable balance reduction"}
+                {ui(isRTL ? "سند قبض محاسبي وتخفيض الرصيد المستحق" : "Receipt voucher and receivable balance reduction")}
               </p>
             </div>
           </div>
@@ -150,7 +156,7 @@ export default function RecordPaymentModal({
             type="button"
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-            aria-label={t("common.close")}
+            aria-label={ui(t("common.close"))}
           >
             <X className="w-5 h-5" />
           </button>
@@ -161,29 +167,29 @@ export default function RecordPaymentModal({
           {/* Invoice Summary Ribbon */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border theme-border space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500">{isRTL ? "رقم الفاتورة:" : "Invoice Number:"}</span>
+              <span className="text-slate-500">{ui(isRTL ? "رقم الفاتورة:" : "Invoice Number:")}</span>
               <span className="font-mono font-black text-amber-700 dark:text-amber-400">
-                {invoiceNumber}
+                {ui(invoiceNumber)}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500">{isRTL ? "اسم العميل:" : "Customer Name:"}</span>
+              <span className="text-slate-500">{ui(isRTL ? "اسم العميل:" : "Customer Name:")}</span>
               <span className="font-bold text-slate-900 dark:text-white truncate max-w-[240px]">
                 {customerName}
               </span>
             </div>
             <div className="pt-2 border-t theme-border flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-slate-400 block">{isRTL ? "الإجمالي الشامل:" : "Grand Total:"}</span>
+                <span className="text-[11px] text-slate-400 block">{ui(isRTL ? "الإجمالي الشامل:" : "Grand Total:")}</span>
                 <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
-                  <bdi dir="ltr">{totalAmount} {t("common.sar")}</bdi>
+                  <bdi dir="ltr">{ui(totalAmount)} {ui(t("common.sar"))}</bdi>
                 </span>
               </div>
-              <div className={isRTL ? "text-left" : "text-right"}>
-                <span className="text-[11px] text-slate-400 block">{isRTL ? "المتبقي حالياً:" : "Current Balance:"}</span>
+              <div className={"text-end"}>
+                <span className="text-[11px] text-slate-400 block">{ui(isRTL ? "المتبقي حالياً:" : "Current Balance:")}</span>
                 {isLoadingBalance ? (
                   <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-bold">
-                    <Loader2 className="w-3 h-3 animate-spin" /> {isRTL ? "جلب الرصيد…" : "Fetching balance…"}
+                    <Loader2 className="w-3 h-3 animate-spin" /> {ui(isRTL ? "جلب الرصيد…" : "Fetching balance…")}
                   </span>
                 ) : (
                   <span
@@ -193,7 +199,7 @@ export default function RecordPaymentModal({
                         : "text-amber-600 dark:text-amber-400"
                     }`}
                   >
-                    <bdi dir="ltr">{balance ?? totalAmount} {t("common.sar")}</bdi>
+                    <bdi dir="ltr">{ui(balance ?? "—")} {ui(t("common.sar"))}</bdi>
                   </span>
                 )}
               </div>
@@ -206,7 +212,7 @@ export default function RecordPaymentModal({
               className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
             >
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>{successMessage}</span>
+              <span>{ui(successMessage)}</span>
             </div>
           )}
 
@@ -216,18 +222,26 @@ export default function RecordPaymentModal({
               className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
             >
               <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-              <span>{error}</span>
+              <span>{ui(error)}</span>
             </div>
           )}
 
-          {isFullyPaid && !isLoadingBalance ? (
+          {isRefundDue ? (
+            <p role="status" className="rounded-2xl border border-amber-300 bg-amber-500/10 p-5 text-sm">
+              {isRTL ? "يوجد مبلغ مستحق للعميل. سجّل رد المبلغ من صفحة القيود والتقارير المالية." : "A refund is due to the customer. Record the refund from Accounting & Reports."}
+            </p>
+          ) : !isLoadingBalance && balance === null ? (
+            <p role="alert" className="rounded-2xl border border-rose-300 p-5 text-sm text-rose-600">
+              {isRTL ? "تعذر تحميل الرصيد. أغلق النافذة وأعد المحاولة قبل تسجيل دفعة." : "Unable to load the balance. Close this window and retry before recording a payment."}
+            </p>
+          ) : isFullyPaid && !isLoadingBalance ? (
             <div className="p-6 text-center space-y-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
               <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto" />
               <h3 className="text-sm font-black text-emerald-800 dark:text-emerald-300">
-                {isRTL ? "هذه الفاتورة مسددة بالكامل" : "This Invoice is Fully Paid"}
+                {ui(isRTL ? "هذه الفاتورة مسددة بالكامل" : "This Invoice is Fully Paid")}
               </h3>
               <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
-                {isRTL ? "تم تحصيل كامل القيمة المستحقة ولا يوجد رصيد متبقي على العميل." : "Full due amount collected with zero remaining balance."}
+                {ui(isRTL ? "تم تحصيل كامل القيمة المستحقة ولا يوجد رصيد متبقي على العميل." : "Full due amount collected with zero remaining balance.")}
               </p>
             </div>
           ) : (
@@ -236,7 +250,7 @@ export default function RecordPaymentModal({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="pay-amount" className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {isRTL ? "المبلغ المحصل الآن (ر.س) *" : "Amount Collected (SAR) *"}
+                    {ui(isRTL ? "المبلغ المحصل الآن (ر.س) *" : "Amount Collected (SAR) *")}
                   </label>
                   {balance && Number(balance) > 0 && (
                     <div className="flex items-center gap-1.5">
@@ -245,14 +259,14 @@ export default function RecordPaymentModal({
                         onClick={() => setAmount(balance)}
                         className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20"
                       >
-                        {isRTL ? `كامل المتبقي (${balance} ر.س)` : `Full Balance (${balance} SAR)`}
+                        {ui(isRTL ? `كامل المتبقي (${balance} ر.س)` : `Full Balance (${balance} SAR)`)}
                       </button>
                       <button
                         type="button"
                         onClick={() => setAmount((Number(balance) / 2).toFixed(2))}
                         className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border theme-border"
                       >
-                        {isRTL ? "النصف" : "Half"}
+                        {ui(isRTL ? "النصف" : "Half")}
                       </button>
                     </div>
                   )}
@@ -268,10 +282,10 @@ export default function RecordPaymentModal({
                     onChange={(e) => setAmount(e.target.value)}
                     required
                     placeholder="0.00"
-                    className="theme-input w-full pr-4 pl-12 py-2.5 rounded-xl text-sm font-mono font-bold"
+                    className="theme-input w-full ps-4 pe-12 py-2.5 rounded-xl text-sm font-mono font-bold"
                   />
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                    {t("common.sar")}
+                    {ui(t("common.sar"))}
                   </span>
                 </div>
               </div>
@@ -279,13 +293,13 @@ export default function RecordPaymentModal({
               {/* Payment Account */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                  {isRTL ? "طريقة استلام المبلغ (حساب الإيداع) *" : "Payment Method (Deposit Account) *"}
+                  {ui(isRTL ? "طريقة استلام المبلغ (حساب الإيداع) *" : "Payment Method (Deposit Account) *")}
                 </label>
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setCashAccount("1102")}
-                    className={`p-3 rounded-xl border ${isRTL ? "text-right" : "text-left"} transition flex items-center gap-2.5 cursor-pointer ${
+                    className={`p-3 rounded-xl border ${"text-start"} transition flex items-center gap-2.5 cursor-pointer ${
                       cashAccount === "1102"
                         ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30"
                         : "theme-card theme-border hover:border-amber-500/30"
@@ -294,16 +308,16 @@ export default function RecordPaymentModal({
                     <Building2 className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div>
                       <strong className="text-xs font-black block text-slate-900 dark:text-white">
-                        {isRTL ? "تحويل بنكي" : "Bank Transfer"}
+                        {ui(isRTL ? "تحويل بنكي" : "Bank Transfer")}
                       </strong>
-                      <span className="text-[10px] text-slate-400">{isRTL ? "البنك الأهلي (1102)" : "SNB Bank (1102)"}</span>
+                      <span className="text-[10px] text-slate-400">{ui(isRTL ? "البنك الأهلي (1102)" : "SNB Bank (1102)")}</span>
                     </div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setCashAccount("1101")}
-                    className={`p-3 rounded-xl border ${isRTL ? "text-right" : "text-left"} transition flex items-center gap-2.5 cursor-pointer ${
+                    className={`p-3 rounded-xl border ${"text-start"} transition flex items-center gap-2.5 cursor-pointer ${
                       cashAccount === "1101"
                         ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30"
                         : "theme-card theme-border hover:border-amber-500/30"
@@ -312,9 +326,9 @@ export default function RecordPaymentModal({
                     <Receipt className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div>
                       <strong className="text-xs font-black block text-slate-900 dark:text-white">
-                        {isRTL ? "نقداً في الصندوق" : "Cash in Drawer"}
+                        {ui(isRTL ? "نقداً في الصندوق" : "Cash in Drawer")}
                       </strong>
-                      <span className="text-[10px] text-slate-400">{isRTL ? "الصندوق الرئيسي (1101)" : "Main Petty Cash (1101)"}</span>
+                      <span className="text-[10px] text-slate-400">{ui(isRTL ? "الصندوق الرئيسي (1101)" : "Main Petty Cash (1101)")}</span>
                     </div>
                   </button>
                 </div>
@@ -323,7 +337,7 @@ export default function RecordPaymentModal({
               {/* Payment Date */}
               <div>
                 <label htmlFor="pay-date" className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                  {isRTL ? "تاريخ التحصيل *" : "Collection Date *"}
+                  {ui(isRTL ? "تاريخ التحصيل *" : "Collection Date *")}
                 </label>
                 <div className="relative">
                   <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -333,7 +347,7 @@ export default function RecordPaymentModal({
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
-                    className="theme-input w-full pr-10 pl-3 py-2.5 rounded-xl text-xs sm:text-sm font-mono"
+                    className="theme-input w-full ps-10 pe-3 py-2.5 rounded-xl text-xs sm:text-sm font-mono"
                   />
                 </div>
               </div>
@@ -341,14 +355,14 @@ export default function RecordPaymentModal({
               {/* Reference / Note */}
               <div>
                 <label htmlFor="pay-ref" className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                  {isRTL ? "رقم الحوالة أو المرجع " : "Reference / Transfer No. "}<span className="text-slate-400 font-normal">({t("common.optional")})</span>
+                  {ui(isRTL ? "رقم الحوالة أو المرجع " : "Reference / Transfer No. ")}<span className="text-slate-400 font-normal">({ui(t("common.optional"))})</span>
                 </label>
                 <input
                   id="pay-ref"
                   type="text"
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
-                  placeholder={isRTL ? "مثال: حوالة بنكية 8934 أو إيصال تسليم" : "e.g. Bank transfer 8934 or delivery receipt"}
+                  placeholder={ui(isRTL ? "مثال: حوالة بنكية 8934 أو إيصال تسليم" : "e.g. Bank transfer 8934 or delivery receipt")}
                   className="theme-input w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm"
                 />
               </div>
@@ -357,9 +371,9 @@ export default function RecordPaymentModal({
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-start gap-2 text-[11px] text-slate-500">
                 <ArrowDownLeft className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                 <p>
-                  {isRTL
+                  {ui(isRTL
                     ? "يتم قيد العملية تلقائياً: طرف مدين لحساب النقد/البنك، وطرف دائن لذمم العميل لتخفيض الرصيد المستحق فوراً."
-                    : "Automated entry: Debit Cash/Bank account, Credit Accounts Receivable to immediately reduce balance."}
+                    : "Automated entry: Debit Cash/Bank account, Credit Accounts Receivable to immediately reduce balance.")}
                 </p>
               </div>
 
@@ -371,22 +385,22 @@ export default function RecordPaymentModal({
                   disabled={isSubmitting}
                   className="px-4 py-2.5 rounded-xl border theme-border text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
-                  {t("common.cancel")}
+                  {ui(t("common.cancel"))}
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || isLoadingBalance || Boolean(successMessage)}
+                  disabled={isSubmitting || isLoadingBalance || balance === null || isRefundDue || Boolean(successMessage)}
                   className="px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{isRTL ? "جارٍ التسجيل…" : "Processing…"}</span>
+                      <span>{ui(isRTL ? "جارٍ التسجيل…" : "Processing…")}</span>
                     </>
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" />
-                      <span>{isRTL ? "تسجيل سند القبض" : "Record Receipt Voucher"}</span>
+                      <span>{ui(isRTL ? "تسجيل سند القبض" : "Record Receipt Voucher")}</span>
                     </>
                   )}
                 </button>

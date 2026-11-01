@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import Link from "next/link";
 import { Edit2, Eye, FileText, ArrowLeftRight, ReceiptText } from "lucide-react";
@@ -22,6 +24,8 @@ export default function ContractActions({
   onReverse,
   isFullWidth = false,
 }: ContractActionsProps) {
+  const ui = useUiText();
+
   return (
     <div
       className={
@@ -32,22 +36,22 @@ export default function ContractActions({
     >
       <button type="button" onClick={onView} className={SECONDARY_CLASS}>
         <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>التفاصيل</span>
+        <span>{ui("التفاصيل")}</span>
       </button>
       <Link
         href={`/admin/contracts/${encodeURIComponent(contractId)}/edit`}
         className={SECONDARY_CLASS}
       >
         <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>تعديل</span>
+        <span>{ui("تعديل")}</span>
       </Link>
       <Link
         href={`/admin/invoices/new?contractId=${encodeURIComponent(contractId)}`}
         className={`${ACTION_CLASS} border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 hover:border-amber-500 hover:bg-amber-500/20 hover:shadow-md`}
-        title="إنشاء فاتورة مرتبطة بهذا العقد"
+        title={ui("إنشاء فاتورة مرتبطة بهذا العقد")}
       >
         <ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>فاتورة</span>
+        <span>{ui("فاتورة")}</span>
       </Link>
       {onReverse && (
         <button
@@ -56,14 +60,14 @@ export default function ContractActions({
           className={`${ACTION_CLASS} border border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-300 hover:border-blue-500 hover:bg-blue-500/10 hover:shadow-md`}
         >
           <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>عكسية</span>
+          <span>{ui("عكسية")}</span>
         </button>
       )}
       <button
         type="button"
         onClick={onPreview}
         className={`${ACTION_CLASS} gold-gradient-btn hover:shadow-md`}
-        title="معاينة العقد وتحميله وطباعته"
+        title={ui("معاينة العقد وتحميله وطباعته")}
       >
         <FileText className="h-3.5 w-3.5" aria-hidden="true" />
         <span>PDF</span>

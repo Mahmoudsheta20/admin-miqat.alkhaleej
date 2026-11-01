@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
@@ -39,6 +41,8 @@ export function CaptainSelector({
   required = true,
   className = "",
 }: CaptainSelectorProps) {
+  const ui = useUiText();
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,18 +85,18 @@ export function CaptainSelector({
     <div ref={containerRef} className={`space-y-1.5 w-full relative ${className}`}>
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1">
-          <span>{label}</span>
+          <span>{ui(label)}</span>
           {required && <span className="text-rose-500 font-black">*</span>}
         </label>
         {selectedCaptain && (
           <span className="text-[10px] text-slate-400 font-mono">
-            المعرف: {selectedCaptain.id.slice(-6)}
+            {ui("المعرف:")}{ui(selectedCaptain.id.slice(-6))}
           </span>
         )}
       </div>
 
       <select
-        aria-label={label}
+        aria-label={ui(label)}
         aria-required={required}
         aria-invalid={Boolean(error)}
         value={selectedCaptainId}
@@ -102,14 +106,14 @@ export function CaptainSelector({
         }}
         className="theme-input sm:hidden min-h-12 w-full min-w-0 rounded-xl px-3 py-2 text-base"
       >
-        <option value="">اختر الكابتن</option>
+        <option value="">{ui("اختر الكابتن")}</option>
         {safeCaptains.map(captain => <option key={captain.id} value={captain.id}>{captain.name}</option>)}
       </select>
 
       {/* Selected Captain Card Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`hidden sm:flex w-full h-[72px] p-3 rounded-2xl cursor-pointer transition-all duration-200 border text-right items-center justify-between
+        className={`hidden sm:flex w-full h-[72px] p-3 rounded-2xl cursor-pointer transition-all duration-200 border text-start items-center justify-between
           ${
             error
               ? "bg-rose-500/5 border-rose-500/50"
@@ -139,12 +143,12 @@ export function CaptainSelector({
                 )}
                 {selectedCaptain.hasTodayInspection ? (
                   <span
-                    title="فحص اليوم مكتمل"
+                    title={ui("فحص اليوم مكتمل")}
                     className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 absolute -bottom-0.5 -right-0.5"
                   />
                 ) : (
                   <span
-                    title="بانتظار الفحص اليومي"
+                    title={ui("بانتظار الفحص اليومي")}
                     className="w-3 h-3 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-900 absolute -bottom-0.5 -right-0.5"
                   />
                 )}
@@ -158,7 +162,7 @@ export function CaptainSelector({
                   </h4>
                   {selectedCaptain.assignedVehiclePlate && (
                     <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
-                      {selectedCaptain.assignedVehiclePlate}
+                      {ui(selectedCaptain.assignedVehiclePlate)}
                     </span>
                   )}
                 </div>
@@ -167,19 +171,17 @@ export function CaptainSelector({
                   {selectedCaptain.phone && (
                     <span className="flex items-center gap-1 font-mono" dir="ltr">
                       <Phone className="w-3 h-3 text-slate-400" />
-                      {selectedCaptain.phone}
+                      {ui(selectedCaptain.phone)}
                     </span>
                   )}
                   {selectedCaptain.hasTodayInspection ? (
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 text-[10px]">
                       <ShieldCheck className="w-3 h-3" />
-                      الفحص مكتمل
-                    </span>
+                      {ui("الفحص مكتمل")}</span>
                   ) : (
                     <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1 text-[10px]">
                       <Clock className="w-3 h-3" />
-                      بانتظار الفحص
-                    </span>
+                      {ui("بانتظار الفحص")}</span>
                   )}
                 </div>
               </div>
@@ -187,7 +189,7 @@ export function CaptainSelector({
 
             {/* Change trigger action */}
             <div className="flex items-center gap-1.5 shrink-0 text-xs font-bold text-amber-600 dark:text-amber-400">
-              <span className="hidden sm:inline">تغيير الكابتن</span>
+              <span className="hidden sm:inline">{ui("تغيير الكابتن")}</span>
               <ChevronDown
                 className={`w-4 h-4 transition-transform duration-200 ${
                   isOpen ? "rotate-180" : ""
@@ -199,7 +201,7 @@ export function CaptainSelector({
           <div className="flex items-center justify-between py-1">
             <div className="flex items-center gap-2 text-slate-400">
               <User className="w-4 h-4" />
-              <span className="text-xs">اضغط لاختيار الكابتن المسؤول</span>
+              <span className="text-xs">{ui("اضغط لاختيار الكابتن المسؤول")}</span>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400" />
           </div>
@@ -216,8 +218,8 @@ export function CaptainSelector({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث بالاسم أو رقم الجوال أو رقم اللوحة..."
-              className="w-full pr-9 pl-8 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border theme-border focus:border-amber-500 focus:outline-hidden font-medium"
+              placeholder={ui("ابحث بالاسم أو رقم الجوال أو رقم اللوحة...")}
+              className="w-full ps-9 pe-8 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border theme-border focus:border-amber-500 focus:outline-hidden font-medium"
               autoFocus
             />
             {searchQuery && (
@@ -232,11 +234,10 @@ export function CaptainSelector({
           </div>
 
           {/* Captains List */}
-          <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+          <div className="max-h-64 overflow-y-auto space-y-1.5 ps-0.5">
             {filteredCaptains.length === 0 ? (
               <div className="text-center py-6 text-xs text-slate-400">
-                لم يتم العثور على أي كابتن مطابق للبحث
-              </div>
+                {ui("لم يتم العثور على أي كابتن مطابق للبحث")}</div>
             ) : (
               filteredCaptains.map((cap) => {
                 const isSelected = cap.id === selectedCaptainId;
@@ -247,7 +248,7 @@ export function CaptainSelector({
                       onSelectCaptain(cap);
                       setIsOpen(false);
                     }}
-                    className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 text-right
+                    className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 text-start
                       ${
                         isSelected
                           ? "bg-amber-500/15 border border-amber-500/30 text-amber-950 dark:text-amber-100"
@@ -278,15 +279,15 @@ export function CaptainSelector({
                           </span>
                           {cap.assignedVehiclePlate && (
                             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                              {cap.assignedVehiclePlate}
+                              {ui(cap.assignedVehiclePlate)}
                             </span>
                           )}
                         </div>
 
                         <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                          {cap.phone && <span dir="ltr">{cap.phone}</span>}
+                          {cap.phone && <span dir="ltr">{ui(cap.phone)}</span>}
                           {cap.contractCount !== undefined && (
-                            <span>• {cap.contractCount} عقد</span>
+                            <span>• {ui(cap.contractCount)} {ui("عقد")}</span>
                           )}
                         </div>
                       </div>
@@ -295,12 +296,10 @@ export function CaptainSelector({
                     <div className="flex items-center gap-2 shrink-0">
                       {cap.hasTodayInspection ? (
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                          فحص مكتمل
-                        </span>
+                          {ui("فحص مكتمل")}</span>
                       ) : (
                         <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                          بانتظار الفحص
-                        </span>
+                          {ui("بانتظار الفحص")}</span>
                       )}
 
                       {isSelected && (
@@ -318,7 +317,7 @@ export function CaptainSelector({
       {error && (
         <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <AlertCircle className="w-3 h-3 shrink-0" />
-          <span>{error}</span>
+          <span>{ui(error)}</span>
         </p>
       )}
     </div>

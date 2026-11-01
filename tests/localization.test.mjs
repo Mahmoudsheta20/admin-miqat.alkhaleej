@@ -1,70 +1,13 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import fs from "node:fs";
-import ts from "typescript";
-
-const source = fs.readFileSync(
-  new URL("../lib/translations.ts", import.meta.url),
-  "utf8",
-);
-const compiled = ts.transpileModule(source, {
-  compilerOptions: {
-    module: ts.ModuleKind.CommonJS,
-    target: ts.ScriptTarget.ES2022,
-  },
-}).outputText;
-
-const exports = {};
-new Function("exports", "require", compiled)(exports, () => ({}));
-
-test("translations dictionary contains all required keys for both ar and en", () => {
-  const { TRANSLATIONS } = exports;
-  assert.ok(TRANSLATIONS.ar);
-  assert.ok(TRANSLATIONS.en);
-
-  const keyChecklist = [
-    "common.appName",
-    "common.save",
-    "common.cancel",
-    "common.currency",
-    "mode.operations",
-    "mode.finance",
-    "nav.dashboard",
-    "nav.contracts",
-    "nav.invoices",
-    "nav.purchases",
-    "nav.accounting",
-    "nav.vatReturns",
-    "header.makkahClock",
-    "header.profile",
-    "header.langToggle",
-    "invoice.title",
-    "purchases.title",
-    "vat.title",
-    "fleet.title",
-    "captains.title",
-    "contracts.title",
-    "contracts.newContract",
-    "contracts.refNumber",
-    "inspections.title",
-    "admins.title",
-    "zatca.title",
-  ];
-
-  for (const key of keyChecklist) {
-    assert.ok(TRANSLATIONS.ar[key], `Arabic translation missing for ${key}`);
-    assert.ok(TRANSLATIONS.en[key], `English translation missing for ${key}`);
-  }
-});
-
-test("translations correctly distinguish currency and mode labels between ar and en", () => {
-  const { TRANSLATIONS } = exports;
-  assert.equal(TRANSLATIONS.ar["common.currency"], "ر.س");
-  assert.equal(TRANSLATIONS.en["common.currency"], "SAR");
-
-  assert.equal(TRANSLATIONS.ar["mode.operations"], "العمليات والأسطول");
-  assert.equal(TRANSLATIONS.en["mode.operations"], "Operations & Fleet");
-
-  assert.equal(TRANSLATIONS.ar["mode.finance"], "المالية والضريبة");
-  assert.equal(TRANSLATIONS.en["mode.finance"], "Finance & VAT");
-});
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import ts from 'typescript';
+const modules=new Map();
+function load(name){const file=path.resolve('lib',name+'.ts');if(modules.has(file))return modules.get(file);const exports={};modules.set(file,exports);const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('exports','require',source)(exports,id=>load(id.replace('./','')));return exports;}
+const {localizeText,localeFor}=load('localization'),{UI_PHRASES,UI_TEMPLATES}=load('ui-phrases'),{TRANSLATIONS}=load('translations');
+test('both interface languages have all navigation and action keys',()=>{for(const key of Object.keys(TRANSLATIONS.ar))assert.ok(TRANSLATIONS.en[key]||UI_PHRASES[TRANSLATIONS.ar[key]],key);assert.equal(localeFor('ar'),'ar-SA');assert.equal(localeFor('en'),'en-GB');});
+test('every static Arabic phrase passed to the UI translator has an English entry',()=>{const missing=new Set();function walk(dir){for(const name of fs.readdirSync(dir)){const file=path.join(dir,name);if(fs.statSync(file).isDirectory()){walk(file);continue;}if(!file.endsWith('.tsx'))continue;const sf=ts.createSourceFile(file,fs.readFileSync(file,'utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);function literals(node){if((ts.isStringLiteral(node)||ts.isNoSubstitutionTemplateLiteral(node))&&/[\u0600-\u06ff]/.test(node.text)){const key=node.text.trim().replace(/\s+/g,' ');if(!UI_PHRASES[key])missing.add(key);}ts.forEachChild(node,literals);}function visit(node){if(ts.isCallExpression(node)&&node.expression.getText(sf)==='ui')for(const argument of node.arguments)literals(argument);ts.forEachChild(node,visit);}visit(sf);}}walk('app');assert.deepEqual([...missing],[]);});
+test('translation preserves Arabic, numbers and user data, and decodes JSX entities safely',()=>{assert.equal(localizeText('المبلغ قبل الضريبة','ar'),'المبلغ قبل الضريبة');assert.equal(localizeText('المبلغ قبل الضريبة','en'),'Amount excluding VAT');assert.equal(localizeText('  حفظ  ','en'),'  Save  ');assert.equal(localizeText('شركة محمد وأبناؤه للنقل','en'),'شركة محمد وأبناؤه للنقل');assert.equal(localizeText('SAR 345.00','en'),'SAR 345.00');assert.equal(localizeText('&quot;اختبار&quot;','ar'),'"اختبار"');});
+test('dynamic labels and VAT warnings retain interpolated data in any order',()=>{assert.equal(localizeText('حذف الراكب 4','en'),'Remove passenger 4');assert.equal(localizeText('يشمل التقرير 6 فاتورة حجز سابقة باعتبارها مبيعات فعلية؛ الفواتير المبدئية مستبعدة.','en'),'Includes 6 historical booking invoices as actual sales; proformas are excluded.');assert.equal(localizeText('نسخ 12.50 للخانة 7','en'),'Copy 12.50 for box 7');assert.equal(localizeText('الفاتورة الضريبية الخاصة بعميل اسمه محمد','en'),'الفاتورة الضريبية الخاصة بعميل اسمه محمد');for(const [source,target]of Object.entries(UI_TEMPLATES)){assert.deepEqual((source.match(/\{\d+\}/g)||[]).sort(),(target.match(/\{\d+\}/g)||[]).sort(),source);}});
+test('English uses Inter and Arabic retains Zain fallback, with language validation before hydration',()=>{const layout=fs.readFileSync('app/layout.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');assert.match(layout,/Inter\(/);assert.match(layout,/initialLanguage/);assert.match(layout,/localStorage.getItem\('miqat_language'\)/);assert.match(css,/--font-inter/);assert.match(css,/--font-zain/);assert.match(css,/prefers-reduced-motion/);});

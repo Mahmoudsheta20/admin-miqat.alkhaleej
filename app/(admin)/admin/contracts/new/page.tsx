@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 import dynamic from "next/dynamic";
 
 import React, { useState, useEffect } from "react";
@@ -91,6 +93,8 @@ const INSPECTION_CATEGORIES = [
 ];
 
 export default function AdminContractBuilderPage() {
+  const ui = useUiText();
+
   const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
   const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
 
@@ -459,7 +463,7 @@ export default function AdminContractBuilderPage() {
       <div className="flex items-center justify-center p-20">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs text-slate-400">جاري تحميل بيانات الأسطول والكباتن...</p>
+          <p className="text-xs text-slate-400">{ui("جاري تحميل بيانات الأسطول والكباتن...")}</p>
         </div>
       </div>
     );
@@ -475,11 +479,9 @@ export default function AdminContractBuilderPage() {
 
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-            تم توثيق العقد بنجاح!
-          </h2>
+            {ui("تم توثيق العقد بنجاح!")}</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            تم تسجيل العقد وإسناده للكابتن وتوليد وثيقة الـ PDF المعتمدة
-          </p>
+            {ui("تم تسجيل العقد وإسناده للكابتن وتوليد وثيقة الـ PDF المعتمدة")}</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 inline-block font-mono font-black text-amber-600 dark:text-amber-400 text-xl tracking-wider">
@@ -493,8 +495,7 @@ export default function AdminContractBuilderPage() {
             className="w-full sm:w-auto px-6 py-3 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
           >
             <FileText className="w-4 h-4" />
-            معاينة وتحميل العقد (PDF)
-          </button>
+            {ui("معاينة وتحميل العقد (PDF)")}</button>
 
           <button
             type="button"
@@ -502,8 +503,7 @@ export default function AdminContractBuilderPage() {
             className="w-full sm:w-auto px-5 py-3 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-2"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            إنشاء عقد إضافي آخر
-          </button>
+            {ui("إنشاء عقد إضافي آخر")}</button>
         </div>
 
         {isPdfOpen && (
@@ -528,24 +528,21 @@ export default function AdminContractBuilderPage() {
             <Link
               href="/admin/contracts"
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              title="رجوع لقائمة العقود"
+              title={ui("رجوع لقائمة العقود")}
             >
               <ArrowRight className="w-5 h-5" />
             </Link>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              إنشاء وتوثيق عقد نقل رسمي
-            </h1>
+              {ui("إنشاء وتوثيق عقد نقل رسمي")}</h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 mr-9">
-            إصدار عقود الرحلات الفورية وإسنادها للكباتن بصلاحيات الإدارة المباشرة
-          </p>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 ms-9">
+            {ui("إصدار عقود الرحلات الفورية وإسنادها للكباتن بصلاحيات الإدارة المباشرة")}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 text-xs font-bold flex items-center gap-1.5">
             <ShieldAlert className="w-4 h-4" />
-            صلاحيات الإدارة (تخطي الفحص)
-          </span>
+            {ui("صلاحيات الإدارة (تخطي الفحص)")}</span>
         </div>
       </div>
 
@@ -553,7 +550,7 @@ export default function AdminContractBuilderPage() {
         {serverError && (
           <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2 animate-shake">
             <ShieldAlert className="w-4 h-4 shrink-0" />
-            <span>{serverError}</span>
+            <span>{ui(serverError)}</span>
           </div>
         )}
 
@@ -562,11 +559,9 @@ export default function AdminContractBuilderPage() {
           <div className="flex items-center justify-between border-b theme-border pb-3">
             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Car className="w-4 h-4 text-amber-500" />
-              إسناد الرحلة والمركبة
-            </h3>
+              {ui("إسناد الرحلة والمركبة")}</h3>
             <span className="text-[11px] text-slate-400">
-              اختر الكابتن المتاح للرحلة وسيتم ربط مركبته تلقائياً
-            </span>
+              {ui("اختر الكابتن المتاح للرحلة وسيتم ربط مركبته تلقائياً")}</span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -577,7 +572,7 @@ export default function AdminContractBuilderPage() {
                 name="captainId"
                 render={({ field, fieldState }) => (
                   <CaptainSelector
-                    label="الكابتن المسؤول عن التنفيذ"
+                    label={ui("الكابتن المسؤول عن التنفيذ")}
                     required
                     captains={safeCaptains}
                     selectedCaptainId={field.value}
@@ -606,7 +601,7 @@ export default function AdminContractBuilderPage() {
                 name="vehiclePlate"
                 render={({ field, fieldState }) => (
                   <VehicleSelector
-                    label="المركبة المسندة للرحلة"
+                    label={ui("المركبة المسندة للرحلة")}
                     required
                     vehicles={vehicles}
                     selectedPlate={field.value}
@@ -628,16 +623,14 @@ export default function AdminContractBuilderPage() {
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-amber-500" />
-                بيانات الرحلة والعميل الأساسي
-              </h3>
+                {ui("بيانات الرحلة والعميل الأساسي")}</h3>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                تحديد المسار والمواعيد وفق التذاكر أو الحجوزات
-              </p>
+                {ui("تحديد المسار والمواعيد وفق التذاكر أو الحجوزات")}</p>
             </div>
 
             {/* Quick Template Chips */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-slate-400 font-bold ml-1">قوالب العمليات:</span>
+              <span className="text-[11px] text-slate-400 font-bold me-1">{ui("قوالب العمليات:")}</span>
               {[
                 "توصيل واستقبال مطار",
                 "جولة سياحية",
@@ -652,7 +645,7 @@ export default function AdminContractBuilderPage() {
                   }
                   className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-500/15 dark:bg-slate-800 dark:hover:bg-amber-500/20 text-slate-600 dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
                 >
-                  + {tag}
+                  + {ui(tag)}
                 </button>
               ))}
             </div>
@@ -661,10 +654,10 @@ export default function AdminContractBuilderPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Operation Type - Clean and Simple Text Input */}
             <CustomInput
-              label="نوع العملية التشغيلية"
+              label={ui("نوع العملية التشغيلية")}
               required
               icon={<Briefcase className="w-3.5 h-3.5 text-amber-500" />}
-              placeholder="توصيل مطار، جولة سياحية، نقل بين المدن..."
+              placeholder={ui("توصيل مطار، جولة سياحية، نقل بين المدن...")}
               clearable
               onClear={() => setValue("operationType", "", { shouldValidate: true })}
               {...register("operationType")}
@@ -673,21 +666,21 @@ export default function AdminContractBuilderPage() {
 
             {/* Customer Name */}
             <CustomInput
-              label="اسم الضيف الأساسي (الطرف الثاني)"
+              label={ui("اسم الضيف الأساسي (الطرف الثاني)")}
               required
               icon={<User className="w-3.5 h-3.5" />}
-              placeholder="مثال: فهد بن عبد العزيز الحربي"
+              placeholder={ui("مثال: فهد بن عبد العزيز الحربي")}
               {...register("customerName")}
               error={errors.customerName?.message}
             />
 
             {/* Customer Phone */}
             <CustomInput
-              label="رقم جوال الضيف للتواصل"
+              label={ui("رقم جوال الضيف للتواصل")}
               icon={<Phone className="w-3.5 h-3.5" />}
               placeholder="0551234567"
               dir="ltr"
-              className="text-right font-mono"
+              className="text-start font-mono"
               clearable
               onClear={() => setValue("customerPhone", "")}
               {...register("customerPhone")}
@@ -696,20 +689,20 @@ export default function AdminContractBuilderPage() {
 
             {/* Origin */}
             <CustomInput
-              label="موقع الانطلاق (من)"
+              label={ui("موقع الانطلاق (من)")}
               required
               icon={<MapPin className="w-3.5 h-3.5 text-amber-500" />}
-              placeholder="مكة المكرمة (فندق العنوان جبل عمر)"
+              placeholder={ui("مكة المكرمة (فندق العنوان جبل عمر)")}
               {...register("origin")}
               error={errors.origin?.message}
             />
 
             {/* Destination */}
             <CustomInput
-              label="الجهة والوصول (إلى)"
+              label={ui("الجهة والوصول (إلى)")}
               required
               icon={<MapPin className="w-3.5 h-3.5 text-emerald-500" />}
-              placeholder="مطار الملك عبد العزيز بجدة (الصالة 1)"
+              placeholder={ui("مطار الملك عبد العزيز بجدة (الصالة 1)")}
               {...register("destination")}
               error={errors.destination?.message}
             />
@@ -720,7 +713,7 @@ export default function AdminContractBuilderPage() {
               name="tripDate"
               render={({ field, fieldState }) => (
                 <CustomDatePicker
-                  label="تاريخ الرحلة"
+                  label={ui("تاريخ الرحلة")}
                   required
                   value={field.value}
                   onChange={field.onChange}
@@ -735,7 +728,7 @@ export default function AdminContractBuilderPage() {
               name="tripTime"
               render={({ field, fieldState }) => (
                 <CustomTimePicker
-                  label="وقت الرحلة"
+                  label={ui("وقت الرحلة")}
                   required
                   value={field.value}
                   onChange={field.onChange}
@@ -746,20 +739,20 @@ export default function AdminContractBuilderPage() {
 
             {/* Flight Carrier */}
             <CustomInput
-              label="شركة الطيران (اختياري)"
+              label={ui("شركة الطيران (اختياري)")}
               icon={<Plane className="w-3.5 h-3.5 text-blue-500" />}
-              placeholder="الخطوط السعودية"
+              placeholder={ui("الخطوط السعودية")}
               {...register("flightCarrier")}
               error={errors.flightCarrier?.message}
             />
 
             {/* Flight Number */}
             <CustomInput
-              label="رقم الرحلة الجوية (اختياري)"
+              label={ui("رقم الرحلة الجوية (اختياري)")}
               icon={<Plane className="w-3.5 h-3.5 text-blue-500" />}
               placeholder="SV841"
               dir="ltr"
-              className="text-right font-mono"
+              className="text-start font-mono"
               {...register("flightNumber")}
               error={errors.flightNumber?.message}
             />
@@ -771,12 +764,10 @@ export default function AdminContractBuilderPage() {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-amber-500" />
                     <span className="text-xs font-black text-slate-900 dark:text-white">
-                      تاريخ إصدار العقد (Release Date في وثيقة PDF)
-                    </span>
+                      {ui("تاريخ إصدار العقد (Release Date في وثيقة PDF)")}</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    اختر توثيق الإصدار بتاريخ اليوم الفعلي تلقائياً أو حدد تاريخاً مخصصاً (ويسجل النظام تاريخ التسجيل الفعلي في السجلات بدقة)
-                  </p>
+                    {ui("اختر توثيق الإصدار بتاريخ اليوم الفعلي تلقائياً أو حدد تاريخاً مخصصاً (ويسجل النظام تاريخ التسجيل الفعلي في السجلات بدقة)")}</p>
                 </div>
 
                 {/* Mode Selector Toggle */}
@@ -791,7 +782,7 @@ export default function AdminContractBuilderPage() {
                     }`}
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>تلقائي (اليوم الفعلي)</span>
+                    <span>{ui("تلقائي (اليوم الفعلي)")}</span>
                   </button>
 
                   <button
@@ -804,7 +795,7 @@ export default function AdminContractBuilderPage() {
                     }`}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>يدوي (تاريخ مخصص)</span>
+                    <span>{ui("يدوي (تاريخ مخصص)")}</span>
                   </button>
                 </div>
               </div>
@@ -812,14 +803,12 @@ export default function AdminContractBuilderPage() {
               {/* Dynamic Content based on issueDateMode */}
               {issueDateMode === "AUTO" ? (
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">تاريخ الإصدار المعتمد في ترويسة العقد:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{ui("تاريخ الإصدار المعتمد في ترويسة العقد:")}</span>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    {formatOfficialDate(todayStr)} (تاريخ اليوم الفعلي)
-                  </span>
-                  <span className="text-[11px] text-slate-400 mr-auto">
-                    * يسجل النظام تاريخ ووقت الإنشاء الفعلي تلقائياً في السجلات
-                  </span>
+                    {ui(formatOfficialDate(todayStr))} {ui("(تاريخ اليوم الفعلي)")}</span>
+                  <span className="text-[11px] text-slate-400 ms-auto">
+                    {ui("* يسجل النظام تاريخ ووقت الإنشاء الفعلي تلقائياً في السجلات")}</span>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
@@ -829,7 +818,7 @@ export default function AdminContractBuilderPage() {
                       name="issueDate"
                       render={({ field, fieldState }) => (
                         <CustomDatePicker
-                          label="تاريخ الإصدار المعتمد في العقد"
+                          label={ui("تاريخ الإصدار المعتمد في العقد")}
                           required
                           value={field.value || todayStr}
                           onChange={field.onChange}
@@ -841,8 +830,7 @@ export default function AdminContractBuilderPage() {
                   <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                     <span>
-                      سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، بينما يحتفظ النظام بتاريخ ووقت التسجيل الفعلي في قاعدة البيانات.
-                    </span>
+                      {ui("سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، بينما يحتفظ النظام بتاريخ ووقت التسجيل الفعلي في قاعدة البيانات.")}</span>
                   </div>
                 </div>
               )}
@@ -851,8 +839,8 @@ export default function AdminContractBuilderPage() {
             {/* Contract Notes */}
             <div className="sm:col-span-2 lg:col-span-3">
               <CustomTextarea
-                label="ملاحظات وتوجيهات خاصة بالعقد"
-                placeholder="تعليمات الاستقبال VIP، نقطة التجمع، أو تفاصيل إضافية..."
+                label={ui("ملاحظات وتوجيهات خاصة بالعقد")}
+                placeholder={ui("تعليمات الاستقبال VIP، نقطة التجمع، أو تفاصيل إضافية...")}
                 rows={2}
                 maxLength={500}
                 showCount
@@ -894,11 +882,9 @@ export default function AdminContractBuilderPage() {
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                  الفحص والإقرار التشغيلي الإلزامي (التحقق قبل التوثيق)
-                </h4>
+                  {ui("الفحص والإقرار التشغيلي الإلزامي (التحقق قبل التوثيق)")}</h4>
                 <p className="text-[11px] text-slate-400">
-                  تأكيد رسمي بمطابقة الفحص الفني للمركبة وسلامة المسار والركاب
-                </p>
+                  {ui("تأكيد رسمي بمطابقة الفحص الفني للمركبة وسلامة المسار والركاب")}</p>
               </div>
             </div>
 
@@ -906,23 +892,19 @@ export default function AdminContractBuilderPage() {
               {isCheckingInspection ? (
                 <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold flex items-center gap-1.5">
                   <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                  جاري التحقق من الفحص...
-                </span>
+                  {ui("جاري التحقق من الفحص...")}</span>
               ) : effectiveCaptainInspection ? (
                 <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  تم الفحص مسبقاً من الكابتن
-                </span>
+                  {ui("تم الفحص مسبقاً من الكابتن")}</span>
               ) : adminInspectionId ? (
                 <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  تم الاعتماد والإرسال من الإدارة
-                </span>
+                  {ui("تم الاعتماد والإرسال من الإدارة")}</span>
               ) : (
                 <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  بانتظار الاعتماد التشغيلي
-                </span>
+                  {ui("بانتظار الاعتماد التشغيلي")}</span>
               )}
             </div>
           </div>
@@ -931,11 +913,9 @@ export default function AdminContractBuilderPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border theme-border">
             <div className="space-y-0.5">
               <span className="text-xs font-black text-slate-900 dark:text-white block">
-                طريقة اعتماد وتوثيق الفحص التشغيلي:
-              </span>
+                {ui("طريقة اعتماد وتوثيق الفحص التشغيلي:")}</span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                اختر الاعتماد الآلي (فحص الكابتن اليومي أو اللحظة الحالية) أو التخصيص اليدوي للوقت والتاريخ
-              </span>
+                {ui("اختر الاعتماد الآلي (فحص الكابتن اليومي أو اللحظة الحالية) أو التخصيص اليدوي للوقت والتاريخ")}</span>
             </div>
 
             <div className="inline-flex p-1 rounded-xl bg-white dark:bg-slate-800 border theme-border shrink-0 self-start sm:self-center shadow-2xs">
@@ -949,7 +929,7 @@ export default function AdminContractBuilderPage() {
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>تلقائي (فحص الكابتن / الآن)</span>
+                <span>{ui("تلقائي (فحص الكابتن / الآن)")}</span>
               </button>
 
               <button
@@ -962,7 +942,7 @@ export default function AdminContractBuilderPage() {
                 }`}
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>يدوي (تحديد موعد مخصص)</span>
+                <span>{ui("يدوي (تحديد موعد مخصص)")}</span>
               </button>
             </div>
           </div>
@@ -977,15 +957,15 @@ export default function AdminContractBuilderPage() {
                   </div>
                   <div>
                     <span className="text-xs font-black block">
-                      تم استلام واعتماد فحص المركبة اليومي تلقائياً من الكابتن ({currentCaptain?.name || "الكابتن"})
+                      {ui("تم استلام واعتماد فحص المركبة اليومي تلقائياً من الكابتن (")}{ui(currentCaptain?.name || "الكابتن")})
                     </span>
                     <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
-                      لوحة المركبة المفحوصة: <strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> • تاريخ الفحص: <strong className="font-mono" dir="ltr">{new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB")}</strong>
+                      {ui("لوحة المركبة المفحوصة:")}<strong className="font-mono">{effectiveCaptainInspection.vehiclePlate}</strong> {ui("• تاريخ الفحص:")}<strong className="font-mono" dir="ltr">{ui(new Date(effectiveCaptainInspection.inspectionDate).toLocaleDateString("en-GB"))}</strong>
                     </span>
                   </div>
                 </div>
                 <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
-                  كود الفحص #{effectiveCaptainInspection.id.slice(0, 8)}
+                  {ui("كود الفحص #")}{ui(effectiveCaptainInspection.id.slice(0, 8))}
                 </span>
               </div>
             ) : adminInspectionId ? (
@@ -996,15 +976,14 @@ export default function AdminContractBuilderPage() {
                   </div>
                   <div>
                     <span className="text-xs font-black block">
-                      تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات
-                    </span>
+                      {ui("تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات")}</span>
                     <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 block">
-                      تم اعتماد الفحص الفني لمركبة الكابتن {currentCaptain?.name} وربطه بالعقد رسمياً • تاريخ الفحص: <strong className="font-mono" dir="ltr">{new Date().toLocaleDateString("en-GB")}</strong>
+                      {ui("تم اعتماد الفحص الفني لمركبة الكابتن")}{ui(currentCaptain?.name)} {ui("وربطه بالعقد رسمياً • تاريخ الفحص:")}<strong className="font-mono" dir="ltr">{ui(new Date().toLocaleDateString("en-GB"))}</strong>
                     </span>
                   </div>
                 </div>
                 <span className="self-start sm:self-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold font-mono">
-                  كود الفحص #{adminInspectionId.slice(0, 8)}
+                  {ui("كود الفحص #")}{ui(adminInspectionId.slice(0, 8))}
                 </span>
               </div>
             ) : (
@@ -1015,24 +994,21 @@ export default function AdminContractBuilderPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className="text-xs font-black block">
-                      الكابتن ({currentCaptain?.name || "المحدد"}) لم يرسل الفحص اليومي للمركبة لهذا اليوم
-                    </span>
+                      {ui("الكابتن (")}{ui(currentCaptain?.name || "المحدد")}{ui(") لم يرسل الفحص اليومي للمركبة لهذا اليوم")}</span>
                     <span className="text-[11px] text-amber-800 dark:text-amber-300 block mt-0.5">
-                      في الوضع التلقائي، سيتم اعتماد وتوثيق الفحص التشغيلي باللحظة الحالية فوراً وربطه بالعقد، أو يمكنك توثيقه مسبقاً الآن:
-                    </span>
+                      {ui("في الوضع التلقائي، سيتم اعتماد وتوثيق الفحص التشغيلي باللحظة الحالية فوراً وربطه بالعقد، أو يمكنك توثيقه مسبقاً الآن:")}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-amber-500/20">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="text-amber-800 dark:text-amber-300 font-medium">موعد الفحص الآلي:</span>
+                    <span className="text-amber-800 dark:text-amber-300 font-medium">{ui("موعد الفحص الآلي:")}</span>
                     <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      الآن ({new Date().toLocaleDateString("en-GB")} • {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })})
+                      {ui("الآن (")}{ui(new Date().toLocaleDateString("en-GB"))} • {ui(new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }))})
                     </span>
                     <span className="text-[11px] text-amber-700/70 dark:text-amber-400/70">
-                      (تسجيل الفحص باللحظة الحالية فوراً)
-                    </span>
+                      {ui("(تسجيل الفحص باللحظة الحالية فوراً)")}</span>
                   </div>
 
                   <button
@@ -1040,17 +1016,17 @@ export default function AdminContractBuilderPage() {
                     onClick={handleSendAdminInspection}
                     disabled={isSubmittingAdminInspection || !selectedCaptainId}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 h-11 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer"
-                    title="إرسال وتوثيق الفحص التشغيلي من الإدارة الآن"
+                    title={ui("إرسال وتوثيق الفحص التشغيلي من الإدارة الآن")}
                   >
                     {isSubmittingAdminInspection ? (
                       <>
                         <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                        <span>جاري التوثيق...</span>
+                        <span>{ui("جاري التوثيق...")}</span>
                       </>
                     ) : (
                       <>
                         <ClipboardCheck className="w-4 h-4" />
-                        <span>توثيق الفحص الآن</span>
+                        <span>{ui("توثيق الفحص الآن")}</span>
                       </>
                     )}
                   </button>
@@ -1066,18 +1042,16 @@ export default function AdminContractBuilderPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="text-xs font-black text-slate-900 dark:text-white block">
-                    تخصيص تاريخ الفحص التشغيلي المعتمد (يدوي)
-                  </span>
+                    {ui("تخصيص تاريخ الفحص التشغيلي المعتمد (يدوي)")}</span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    حدد تاريخ الفحص التشغيلي الذي ترغب في اعتماده وربطه بمركبة الكابتن {currentCaptain?.name} في هذا العقد:
-                  </span>
+                    {ui("حدد تاريخ الفحص التشغيلي الذي ترغب في اعتماده وربطه بمركبة الكابتن")}{ui(currentCaptain?.name)} {ui("في هذا العقد:")}</span>
                 </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2 border-t theme-border">
                 <div className="flex-1 sm:max-w-xs">
                   <CustomDatePicker
-                    label="تاريخ الفحص"
+                    label={ui("تاريخ الفحص")}
                     value={adminInspectionDate}
                     onChange={setAdminInspectionDate}
                   />
@@ -1088,17 +1062,17 @@ export default function AdminContractBuilderPage() {
                   onClick={handleSendAdminInspection}
                   disabled={isSubmittingAdminInspection || !selectedCaptainId}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 h-11 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer sm:self-end"
-                  title="اعتماد وتوثيق الفحص التشغيلي بالتاريخ المحدد"
+                  title={ui("اعتماد وتوثيق الفحص التشغيلي بالتاريخ المحدد")}
                 >
                   {isSubmittingAdminInspection ? (
                     <>
                       <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      <span>جاري التوثيق...</span>
+                      <span>{ui("جاري التوثيق...")}</span>
                     </>
                   ) : (
                     <>
                       <ClipboardCheck className="w-4 h-4" />
-                      <span>توثيق الفحص المخصص</span>
+                      <span>{ui("توثيق الفحص المخصص")}</span>
                     </>
                   )}
                 </button>
@@ -1108,7 +1082,7 @@ export default function AdminContractBuilderPage() {
                 <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>
-                    تم توثيق الفحص التشغيلي برقم #{adminInspectionId.slice(0, 8)} بتاريخ: {adminInspectionDate}
+                    {ui("تم توثيق الفحص التشغيلي برقم #")}{ui(adminInspectionId.slice(0, 8))} {ui("بتاريخ:")}{ui(adminInspectionDate)}
                   </span>
                 </div>
               )}
@@ -1118,7 +1092,7 @@ export default function AdminContractBuilderPage() {
           {adminInspectionSuccessMsg && (
             <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>{adminInspectionSuccessMsg}</span>
+              <span>{ui(adminInspectionSuccessMsg)}</span>
             </div>
           )}
 
@@ -1126,19 +1100,19 @@ export default function AdminContractBuilderPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
               <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">سلامة الإطارات والفرامل</span>
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{ui("سلامة الإطارات والفرامل")}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
               <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">الأنوار وأجهزة الطوارئ</span>
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{ui("الأنوار وأجهزة الطوارئ")}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
               <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">مطابقة كشف الركاب</span>
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{ui("مطابقة كشف الركاب")}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
               <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-slate-400"}`} />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">جاهزية الكابتن المعتمد</span>
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{ui("جاهزية الكابتن المعتمد")}</span>
             </div>
           </div>
 
@@ -1152,12 +1126,12 @@ export default function AdminContractBuilderPage() {
               {showDetailedChecks ? (
                 <>
                   <ChevronUp className="w-3.5 h-3.5" />
-                  <span>إخفاء تفاصيل بنود الفحص الفني (16 بنداً)</span>
+                  <span>{ui("إخفاء تفاصيل بنود الفحص الفني (16 بنداً)")}</span>
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-3.5 h-3.5" />
-                  <span>عرض وتخصيص بنود الفحص الفني (16 بنداً)</span>
+                  <span>{ui("عرض وتخصيص بنود الفحص الفني (16 بنداً)")}</span>
                 </>
               )}
             </button>
@@ -1166,8 +1140,7 @@ export default function AdminContractBuilderPage() {
               <div className="mt-3 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-900/70 border theme-border space-y-3">
                 <div className="flex items-center justify-between border-b theme-border pb-2">
                   <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                    بنود الفحص الفني المعتمدة وفق اشتراطات هيئة النقل
-                  </span>
+                    {ui("بنود الفحص الفني المعتمدة وفق اشتراطات هيئة النقل")}</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -1176,15 +1149,14 @@ export default function AdminContractBuilderPage() {
                     }}
                     className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
                   >
-                    تحديد الكل سليم (100%)
-                  </button>
+                    {ui("تحديد الكل سليم (100%)")}</button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {INSPECTION_CATEGORIES.map((cat) => (
                     <div key={cat.title} className="space-y-1.5">
                       <span className="text-[11px] font-black text-slate-500 block mb-1">
-                        {cat.title}
+                        {ui(cat.title)}
                       </span>
                       <div className="space-y-1">
                         {cat.items.map((item) => (
@@ -1203,7 +1175,7 @@ export default function AdminContractBuilderPage() {
                               }
                               className="w-3.5 h-3.5 rounded text-amber-500 accent-amber-500"
                             />
-                            <span>{item.label}</span>
+                            <span>{ui(item.label)}</span>
                           </label>
                         ))}
                       </div>
@@ -1227,14 +1199,13 @@ export default function AdminContractBuilderPage() {
             />
             <div className="space-y-0.5">
               <span className="text-xs font-black text-slate-900 dark:text-white block leading-relaxed">
-                أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل، وكافة بيانات الرحلة والمسار والركاب مدخلة بدقة ومسؤولية تشغيلية كاملة.
-              </span>
+                {ui("أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل، وكافة بيانات الرحلة والمسار والركاب مدخلة بدقة ومسؤولية تشغيلية كاملة.")}</span>
               <span className="text-[11px] text-slate-400 block">
-                {effectiveCaptainInspection
+                {ui(effectiveCaptainInspection
                   ? `* تم ربط فحص الكابتن المعتمد اليوم (كود #${effectiveCaptainInspection.id.slice(0, 8)}) بالوثيقة الرسمية.`
                   : adminInspectionId
                   ? `* تم توثيق واعتماد الفحص الفني للمركبة من الإدارة (كود #${adminInspectionId.slice(0, 8)}) وربطه بالعقد.`
-                  : `* سيتم توثيق وتقديم فحص فعلي معتمد للمركبة مرتبط بالكابتن آلياً من النموذج وربطه بالعقد.`}
+                  : `* سيتم توثيق وتقديم فحص فعلي معتمد للمركبة مرتبط بالكابتن آلياً من النموذج وربطه بالعقد.`)}
               </span>
             </div>
           </label>
@@ -1242,7 +1213,7 @@ export default function AdminContractBuilderPage() {
           {confirmError && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 font-bold flex items-center gap-2 animate-shake">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{confirmError}</span>
+              <span>{ui(confirmError)}</span>
             </div>
           )}
         </div>
@@ -1253,8 +1224,7 @@ export default function AdminContractBuilderPage() {
             href="/admin/contracts"
             className="w-full sm:w-auto text-center px-6 py-3.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-2xs"
           >
-            إلغاء والعودة
-          </Link>
+            {ui("إلغاء والعودة")}</Link>
 
           <button
             type="submit"
@@ -1264,12 +1234,12 @@ export default function AdminContractBuilderPage() {
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>جاري معالجة وتوثيق العقد...</span>
+                <span>{ui("جاري معالجة وتوثيق العقد...")}</span>
               </>
             ) : (
               <>
                 <FilePlus2 className="w-4 h-4" />
-                <span>اعتماد وتوثيق العقد الرسمي (PDF)</span>
+                <span>{ui("اعتماد وتوثيق العقد الرسمي (PDF)")}</span>
               </>
             )}
           </button>

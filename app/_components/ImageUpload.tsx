@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React, { useRef, useState } from "react";
 import Image from "next/image";
@@ -24,6 +26,8 @@ export default function ImageUpload({
   size = "md",
   className = "",
 }: ImageUploadProps) {
+  const ui = useUiText();
+
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +97,7 @@ export default function ImageUpload({
     <div className={`space-y-2 ${className}`}>
       {label && (
         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {label}
+          {ui(label)}
         </label>
       )}
 
@@ -102,16 +106,16 @@ export default function ImageUpload({
         <button
           type="button"
           disabled={isUploading}
-          aria-label={`تغيير ${label}`}
+          aria-label={ui(`تغيير ${label}`)}
           onClick={() => !isUploading && fileInputRef.current?.click()}
           className={`relative group cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500/80 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center transition shadow-xs ${sizeClasses} ${shapeClasses}`}
-          title="اضغط لاختيار صورة جديدة"
+          title={ui("اضغط لاختيار صورة جديدة")}
         >
           {value ? (
             <>
               <Image
                 src={value}
-                alt="الصورة"
+                alt={ui("الصورة")}
                 fill
                 className={`object-cover ${shapeClasses}`}
                 unoptimized
@@ -130,7 +134,7 @@ export default function ImageUpload({
               ) : (
                 <>
                   <Camera className="w-6 h-6 mb-1" />
-                  <span className="text-[10px] font-bold">رفع صورة</span>
+                  <span className="text-[10px] font-bold">{ui("رفع صورة")}</span>
                 </>
               )}
             </div>
@@ -155,7 +159,7 @@ export default function ImageUpload({
               className="px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 disabled:opacity-50"
             >
               <Upload className="w-3.5 h-3.5 text-amber-500" />
-              {value ? "تغيير الصورة" : "اختيار صورة"}
+              {ui(value ? "تغيير الصورة" : "اختيار صورة")}
             </button>
 
             {value && (
@@ -164,15 +168,14 @@ export default function ImageUpload({
                 disabled={isUploading}
                 onClick={handleRemove}
                 className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
-                title="حذف الصورة"
+                title={ui("حذف الصورة")}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
           <p className="text-[11px] text-slate-400">
-            الصيغ المدعومة: JPG, PNG, WEBP (حتى 5 ميجابايت)
-          </p>
+            {ui("الصيغ المدعومة: JPG, PNG, WEBP (حتى 5 ميجابايت)")}</p>
         </div>
       </div>
 
@@ -188,7 +191,7 @@ export default function ImageUpload({
       {error && (
         <div className="text-xs text-rose-500 flex items-center gap-1.5 mt-1">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-          <span>{error}</span>
+          <span>{ui(error)}</span>
         </div>
       )}
     </div>

@@ -1,4 +1,6 @@
 "use client";
+import { useUiText } from "@/lib/ui-text";
+
 
 import React from "react";
 import { Search, X } from "lucide-react";
@@ -29,6 +31,8 @@ export default function FilterBar<T extends string = string>({
   onTabChange,
   children,
 }: FilterBarProps<T>) {
+  const ui = useUiText();
+
   const { t, isRTL } = useLanguage();
   const placeholder = searchPlaceholder || t("common.search");
 
@@ -45,9 +49,9 @@ export default function FilterBar<T extends string = string>({
           type="search"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={ui(placeholder)}
           className={`theme-input w-full ${
-            isRTL ? "pr-10 pl-8" : "pl-10 pr-8"
+            isRTL ? "pe-10 ps-8" : "pe-10 ps-8"
           } py-2 text-xs sm:text-sm rounded-xl`}
         />
         {search && (
@@ -57,7 +61,7 @@ export default function FilterBar<T extends string = string>({
             className={`absolute ${
               isRTL ? "left-2.5" : "right-2.5"
             } top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition`}
-            aria-label={t("common.delete")}
+            aria-label={ui(t("common.delete"))}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -80,7 +84,7 @@ export default function FilterBar<T extends string = string>({
                     : "border theme-border text-slate-600 dark:text-slate-400 hover:border-amber-500/40"
                 }`}
               >
-                <span>{tab.label}</span>
+                <span>{ui(tab.label)}</span>
                 {typeof tab.count === "number" && (
                   <span
                     className={`font-mono text-[10px] px-1.5 py-0.2 rounded-md ${
@@ -89,7 +93,7 @@ export default function FilterBar<T extends string = string>({
                         : "bg-slate-100 dark:bg-slate-800 text-slate-500"
                     }`}
                   >
-                    {tab.count}
+                    {ui(tab.count)}
                   </span>
                 )}
               </button>
@@ -99,7 +103,7 @@ export default function FilterBar<T extends string = string>({
       )}
 
       {/* Additional slot for custom filters / dropdowns */}
-      {children && <div className="flex items-center gap-2">{children}</div>}
+      {children && <div className="flex items-center gap-2">{ui(children)}</div>}
     </div>
   );
 }
