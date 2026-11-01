@@ -45,10 +45,10 @@ import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
 const InspectionPdfPreviewModal = dynamic(() => import("@/app/_components/InspectionPdfPreviewModal"), { ssr: false });
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader, StatCard, StatRow } from "@/app/_components/ui";
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import { useLanguage } from "@/lib/languageContext";
 
 // Checklist Definitions
 interface CheckItemConfig {
@@ -89,6 +89,7 @@ const SAFETY_ITEMS: CheckItemConfig[] = [
 const ALL_CHECK_ITEMS = [...DASHBOARD_ITEMS, ...EXTERNAL_ITEMS, ...SAFETY_ITEMS];
 
 export default function AdminInspectionsPage() {
+  const { t, isRTL } = useLanguage();
   const cachedOverview = getCachedData<Awaited<ReturnType<typeof getCaptainsInspectionOverview>>>("inspections_overview");
   const cachedHistory = getCachedData<Awaited<ReturnType<typeof getAllInspectionsList>>>("inspections_history");
   const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
@@ -425,6 +426,72 @@ export default function AdminInspectionsPage() {
     });
   }, [safeInspections, search, historyDateFilter, captainFilter]);
 
+  const inspectionsHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل الفحص اليومي للكباتن والمركبات (15 بند سلامة)" : "Daily Vehicle & Captain Safety Inspection Guide",
+    summary: isRTL
+      ? "يضمن هذا القسم عدم انطلاق أي مركبة في رحلة رسمية قبل التحقق من جاهزيتها الميكانيكية وتوفر أدوات السلامة والطوارئ على متنها وتوثيق إقرار السائق."
+      : "Ensures no vehicle departs on an official passenger trip without verified mechanical readiness, emergency equipment, and logged driver safety declaration.",
+    cards: [
+      {
+        title: isRTL ? "١. بنود لوحة القيادة والمحرك" : "1. Dashboard & Engine Vital Signs",
+        badge: isRTL ? "٦ بنود ميكانيكية" : "6 Mechanical Checks",
+        items: [
+          {
+            label: isRTL ? "المؤشرات الحيوية" : "Engine Vitals",
+            description: isRTL
+              ? "مؤشر الوقود، مؤشر حرارة المحرك، ضغط الزيت، ولمبة فحص المحرك (Check Engine)."
+              : "Fuel gauge, engine temperature, oil pressure, and check engine indicator.",
+          },
+          {
+            label: isRTL ? "أنظمة المكابح والتحذير" : "Braking & Warning Lights",
+            description: isRTL
+              ? "سلامة نظام الفرامل المانعة للانغلاق (ABS) وخلو الطبلون من أي إشارات تحذيرية حرجة."
+              : "ABS warning lamp status and absence of critical alert lights.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. الفحص الخارجي وأدوات السلامة" : "2. Exterior & Emergency Gear",
+        badge: isRTL ? "٩ بنود أمان" : "9 Safety Checks",
+        items: [
+          {
+            label: isRTL ? "الهيكل والإطارات والأنوار" : "Tyres, Body & Lights",
+            description: isRTL
+              ? "سلامة الإطارات، الأنوار الأمامية، الإشارات الجانبية، المرايا، وعدم وجود أي تسريبات أسفل المركبة."
+              : "Tyre pressure, head/tail lights, turn signals, mirrors, and inspection for fluid leaks.",
+          },
+          {
+            label: isRTL ? "تجهيزات الطوارئ الإلزامية" : "Mandatory Safety Equipment",
+            description: isRTL
+              ? "طفاية الحريق، مثلث التحذير العاكس، حقيبة الإسعافات الأولية، مطرقة كسر الزجاج، وأحزمة الأمان."
+              : "Valid fire extinguisher, reflective warning triangle, first aid kit, window hammer, and seat belts.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. طرق الاعتماد والتوثيق" : "3. Approval & Documentation",
+        badge: isRTL ? "التشغيل السريع" : "Dispatch Dispatch",
+        items: [
+          {
+            label: isRTL ? "الاعتماد الفوري المباشر" : "Instant Direct Pass",
+            description: isRTL
+              ? "يُتيح للمشرف اعتماد جاهزية الكابتن والمركبة بضغطة زر واحدة بعد المعاينة الميدانية."
+              : "Allows operations supervisor to pass an active captain and assigned vehicle with one click.",
+          },
+          {
+            label: isRTL ? "تقرير الفحص الرسمي PDF" : "Official Inspection PDF",
+            description: isRTL
+              ? "يُصدر النظام شهادة فحص يومية قابلة للطباعة وتُربط تلقائياً بعقود الرحلات الصادرة في نفس اليوم."
+              : "Generates an official printable PDF certificate automatically attached to daily contracts.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "انقر على «اجتياز فحص مباشر» أمام أي كابتن لاعتماد فحص اليوم فوراً، أو استخدم «فحص مخصص جديد» لتسجيل ملاحظات تفصيلية على بنود محددة."
+      : "Click 'Direct Pass' next to any captain to approve immediately, or use 'New Custom Inspection' to record detailed observations.",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6">
       {/* Toast Banner */}
@@ -453,219 +520,88 @@ export default function AdminInspectionsPage() {
         </div>
       )}
 
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
-              إدارة السلامة والجودة
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              الرقابة والتشغيل اليومي
-            </span>
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2.5">
-            <ClipboardCheck className="w-7 h-7 text-amber-500" />
-            فحص الكباتن والمركبات اليومي
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-            متابعة واعتماد الفحص التشغيلي اليومي للمركبات، وإتمام الفحص المباشر للكباتن فورياً
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              showBanner("success", msg);
-              invalidateClientCache("inspections_");
-              invalidateClientCache("dashboard_stats");
-              void loadData(true);
-            }}
-            onError={(err) => showBanner("error", err)}
-          />
+      {/* Page Header with On-Demand Guide */}
+      <PageHeader
+        title={t("inspections.title")}
+        subtitle={t("inspections.subtitle")}
+        badge={isRTL ? "إدارة السلامة والجودة" : "Safety & Fleet Compliance"}
+        icon={ClipboardCheck}
+        onRefresh={() => void loadData(true)}
+        isRefreshing={isRefreshing}
+        helpGuide={inspectionsHelpGuide}
+        onSeeded={(msg) => {
+          showBanner("success", msg);
+          invalidateClientCache("inspections_");
+          invalidateClientCache("dashboard_stats");
+          void loadData(true);
+        }}
+        onSeedError={(err) => showBanner("error", err)}
+        actions={
           <button
-            onClick={() => loadData(true)}
-            disabled={isRefreshing}
-            className="p-2.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition shadow-xs disabled:opacity-50"
-            title="تحديث البيانات"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-amber-500" : ""}`} />
-          </button>
-
-          <button
+            type="button"
             onClick={() => {
               resetCustomForm();
               setIsCustomModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4 text-amber-500" />
-            فحص مخصص جديد
+            <span>{t("inspections.customInspection")}</span>
           </button>
-        </div>
-      </div>
-
-      <SectionGuide
-        title="شرح نظام الفحص اليومي للكباتن والمركبات (15 بند سلامة)"
-        summary="يضمن هذا القسم عدم انطلاق أي مركبة في رحلة رسمية قبل التحقق من جاهزيتها الميكانيكية وتوفر أدوات السلامة والطوارئ على متنها وتوثيق إقرار السائق."
-        cards={[
-          {
-            title: "1. بنود لوحة القيادة والمحرك",
-            badge: "6 بنود ميكانيكية",
-            items: [
-              {
-                label: "المؤشرات الحيوية",
-                description: "مؤشر الوقود، مؤشر حرارة المحرك، ضغط الزيت، ولمبة فحص المحرك (Check Engine).",
-              },
-              {
-                label: "أنظمة المكابح والتحذير",
-                description: "سلامة نظام الفرامل المانعة للانغلاق (ABS) وخلو الطبلون من أي إشارات تحذيرية حرجة.",
-              },
-            ],
-          },
-          {
-            title: "2. الفحص الخارجي وأدوات السلامة",
-            badge: "9 بنود أمان",
-            items: [
-              {
-                label: "الهيكل والإطارات والأنوار",
-                description: "سلامة الإطارات، الأنوار الأمامية، الإشارات الجانبية، المرايا، وعدم وجود أي تسريبات أسفل المركبة.",
-              },
-              {
-                label: "تجهيزات الطوارئ الإلزامية",
-                description: "طفاية الحريق، مثلث التحذير العاكس، حقيبة الإسعافات الأولية، مطرقة كسر الزجاج، وأحزمة الأمان.",
-              },
-            ],
-          },
-          {
-            title: "3. طرق الاعتماد والتوثيق",
-            badge: "التشغيل السريع",
-            items: [
-              {
-                label: "الاعتماد الفوري المباشر",
-                description: "يُتيح للمشرف اعتماد جاهزية الكابتن والمركبة بضغطة زر واحدة بعد المعاينة الميدانية.",
-              },
-              {
-                label: "تقرير الفحص الرسمي PDF",
-                description: "يُصدر النظام شهادة فحص يومية قابلة للطباعة وتُربط تلقائياً بعقود الرحلات الصادرة في نفس اليوم.",
-              },
-            ],
-          },
-        ]}
-        tip="انقر على «اجتياز فحص مباشر» أمام أي كابتن لاعتماد فحص اليوم فوراً، أو استخدم «فحص مخصص جديد» لتسجيل ملاحظات تفصيلية على بنود محددة."
+        }
       />
 
-      {/* KPI Stats Cards (Interactive Filter Triggers) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Total Captains */}
-        <button
-          type="button"
+      {/* KPI Stats Cards */}
+      <StatRow columns={4}>
+        <StatCard
+          label={t("inspections.totalCaptains")}
+          value={stats.totalCaptains}
+          unit={isRTL ? "كابتن نشط" : "captains"}
+          subtext={isRTL ? "عرض جميع الكباتن" : "View all captains"}
+          icon={UserCheck}
+          variant="blue"
+          isActive={activeTab === "captains" && statusFilter === "ALL"}
           onClick={() => {
             setActiveTab("captains");
             setStatusFilter("ALL");
           }}
-          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
-            activeTab === "captains" && statusFilter === "ALL"
-              ? "border-blue-500/40 ring-1 ring-blue-500/30 bg-blue-500/[0.03]"
-              : "theme-border hover:border-blue-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              إجمالي الكباتن النشطين
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <UserCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
-            {stats.totalCaptains}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">اضغط لعرض جميع الكباتن</p>
-        </button>
-
-        {/* Inspected Today */}
-        <button
-          type="button"
+        />
+        <StatCard
+          label={t("inspections.inspectedToday")}
+          value={stats.inspectedToday}
+          unit={isRTL ? "مكتمل" : "passed"}
+          subtext={isRTL ? "جاهزون ومؤهلون لإنشاء الرحلات" : "Qualified for trips"}
+          icon={ShieldCheck}
+          variant="emerald"
+          isActive={activeTab === "captains" && statusFilter === "INSPECTED"}
           onClick={() => {
             setActiveTab("captains");
             setStatusFilter("INSPECTED");
           }}
-          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
-            activeTab === "captains" && statusFilter === "INSPECTED"
-              ? "border-emerald-500/60 ring-1 ring-emerald-500/40 bg-emerald-500/10"
-              : "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-              تم فحصهم اليوم
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
-            {stats.inspectedToday}
-          </div>
-          <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-1">
-            جاهزون ومؤهلون لإنشاء الرحلات
-          </p>
-        </button>
-
-        {/* Pending Today */}
-        <button
-          type="button"
+        />
+        <StatCard
+          label={t("inspections.pendingToday")}
+          value={stats.pendingToday}
+          unit={isRTL ? "معلق" : "pending"}
+          subtext={isRTL ? "يتطلب إتمام الفحص قبل الرحلة" : "Requires inspection"}
+          icon={AlertTriangle}
+          variant="amber"
+          isActive={activeTab === "captains" && statusFilter === "PENDING"}
           onClick={() => {
             setActiveTab("captains");
             setStatusFilter("PENDING");
           }}
-          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
-            activeTab === "captains" && statusFilter === "PENDING"
-              ? "border-amber-500/60 ring-1 ring-amber-500/40 bg-amber-500/10"
-              : "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
-              بانتظار الفحص اليوم
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 mt-2 font-mono">
-            {stats.pendingToday}
-          </div>
-          <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-1">
-            يتطلب إتمام الفحص قبل الرحلة
-          </p>
-        </button>
-
-        {/* Total Historical Inspections */}
-        <button
-          type="button"
+        />
+        <StatCard
+          label={t("inspections.totalInspections")}
+          value={stats.totalInspections}
+          unit={isRTL ? "فحص موثق" : "records"}
+          subtext={isRTL ? "عرض سجل الفحوصات" : "View archived logs"}
+          icon={ClipboardCheck}
+          isActive={activeTab === "history"}
           onClick={() => setActiveTab("history")}
-          className={`text-right theme-card p-4 sm:p-5 rounded-2xl border relative overflow-hidden group transition cursor-pointer ${
-            activeTab === "history"
-              ? "border-amber-500/50 ring-1 ring-amber-500/30 bg-amber-500/5"
-              : "theme-border hover:border-amber-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              إجمالي الفحوصات الموثقة
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <ClipboardCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
-            {stats.totalInspections}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">اضغط لعرض سجل الفحوصات</p>
-        </button>
-      </div>
+        />
+      </StatRow>
 
       {/* Daily Fleet Readiness Progress Bar */}
       {stats.totalCaptains > 0 && (

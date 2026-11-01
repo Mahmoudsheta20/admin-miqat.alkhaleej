@@ -8,7 +8,6 @@ import {
   FileText,
   Search,
   Users,
-  RefreshCw,
   X,
   Plane,
   MapPin,
@@ -39,8 +38,7 @@ const PdfPreviewModal = dynamic(
 );
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader, StatCard, StatRow } from "@/app/_components/ui";
 import { formatOfficialDate } from "@/lib/contractConstants";
 import {
   fetchCached,
@@ -50,7 +48,7 @@ import {
 import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminContractsPage() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const cachedContracts =
     getCachedData<Awaited<ReturnType<typeof getContracts>>>(
       "contracts_ALL_ALL_",
@@ -382,6 +380,86 @@ export default function AdminContractsPage() {
     captainFilter !== "ALL" ||
     inspectionFilter !== "ALL";
 
+  const contractsHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل العقود الرسمية وتوثيق الرحلات وكشوف الركاب" : "Official Contracts & Manifest Guide",
+    summary: isRTL
+      ? "يُستخدم هذا القسم لإصدار وتوثيق عقود النقل البري المعتمدة وفق اشتراطات الهيئة العامة للنقل (TGA)، مع ربط كل عقد بالكابتن والمركبة وفحص السلامة اليومي وكشف الركاب."
+      : "Issues and archives official passenger transport contracts per TGA regulations, linking each contract to captain, vehicle, safety inspection, and passenger manifest.",
+    cards: [
+      {
+        title: isRTL ? "١. أنواع عقود التشغيل" : "1. Operation Types",
+        badge: isRTL ? "أنماط النقل" : "Transport Modes",
+        items: [
+          {
+            label: isRTL ? "حج وعمرة (HAJJ_UMRAH)" : "Hajj & Umrah",
+            description: isRTL
+              ? "عقود نقل المعتمرين والحجاج والزوار بين المطارات والفنادق والحرمين الشريفين."
+              : "Pilgrim and visitor transport between airports, hotels, and the Holy Mosques.",
+          },
+          {
+            label: isRTL ? "توصيل مطارات وكبار شخصيات" : "Airport & VIP",
+            code: "AIRPORT / VIP",
+            description: isRTL
+              ? "رحلات الاستقبال والتوديع بالمطارات مع توثيق الناقل الجوي ورقم الرحلة ووقت الوصول."
+              : "Airport pick-up and drop-off with flight carrier, number, and arrival tracking.",
+          },
+          {
+            label: isRTL ? "نقل بين المدن وتعاقدات" : "Intercity & Charter",
+            code: "INTERCITY / CHARTER",
+            description: isRTL
+              ? "عقود تشغيل الحافلات والمركبات للوفود والشركات والرحلات السياحية."
+              : "Bus and fleet chartering for corporate delegations and tourist groups.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. المتطلبات النظامية للعقد" : "2. Regulatory Requirements",
+        badge: "TGA & QR",
+        items: [
+          {
+            label: isRTL ? "ربط الفحص اليومي" : "Daily Inspection Link",
+            description: isRTL
+              ? "يتحقق النظام من وجود فحص سلامة يومي معتمد للكابتن والمركبة قبل انطلاق الرحلة."
+              : "System verifies an approved daily pre-trip vehicle safety inspection before dispatch.",
+          },
+          {
+            label: isRTL ? "كشف الركاب (Passenger Manifest)" : "Passenger Manifest",
+            description: isRTL
+              ? "إدراج أسماء الركاب وجنسياتهم وأرقام الهوية/الجواز داخل وثيقة العقد الرسمية."
+              : "Embeds passenger names, nationalities, and ID/passport numbers in the contract.",
+          },
+          {
+            label: isRTL ? "رمز التحقق الإلكتروني QR" : "Electronic QR Code",
+            description: isRTL
+              ? "يحتوي كل عقد PDF على رمز QR رسمي للتحقق الفوري من صحة العقد وسريانه ميدانياً."
+              : "Every contract PDF includes an official QR code for instant field validation.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. الإجراءات السريعة" : "3. Quick Actions",
+        badge: isRTL ? "أدوات المشرف" : "Supervisor Tools",
+        items: [
+          {
+            label: isRTL ? "إنشاء رحلة عودة (Reverse Trip)" : "Reverse Trip Generation",
+            description: isRTL
+              ? "توليد عقد رحلة عودة بضغطة واحدة بنفس كشف الركاب والكابتن مع عكس نقطة الانطلاق والوجهة."
+              : "One-click return contract generation with reversed route and mirrored manifest.",
+          },
+          {
+            label: isRTL ? "معاينة وتنزيل PDF" : "PDF Preview & Download",
+            description: isRTL
+              ? "استعراض وثيقة العقد الرسمي وطباعتها أو إرسالها للكابتن والعميل مباشرة."
+              : "Preview and download the official contract document for printing or instant sharing.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "يمكنك فلترة العقود حسب حالة الفحص (مفحوص / بدون فحص) أو نوع العملية أو اسم الكابتن من البطاقات التفاعلية أدناه."
+      : "Filter contracts by inspection status (inspected / pending), operation type, or captain using the interactive cards below.",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6 pb-12">
       <LoadError
@@ -407,239 +485,70 @@ export default function AdminContractsPage() {
         </div>
       )}
 
-      {/* Top Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {t("contracts.title")}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                {t("contracts.subtitle")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              invalidateClientCache("contracts_");
-              invalidateClientCache("captains_list");
-              setSyncStatus(msg);
-              void fetchContractsData(undefined, true);
-            }}
-            onError={(err) => setSyncStatus(err)}
-          />
-          <Link
-            href="/admin/contracts/new"
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs hover:shadow-md cursor-pointer"
-          >
-            <FileText className="w-4 h-4" />
-            <span>+ {t("contracts.newContract")}</span>
-          </Link>
-          <button
-            onClick={() => fetchContractsData(undefined, true)}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 cursor-pointer"
-            title={t("common.refresh")}
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-amber-500" : ""}`}
-            />
-            <span className="hidden sm:inline">{t("common.refresh")}</span>
-          </button>
-        </div>
-      </div>
-
-      <SectionGuide
-        title="شرح سجل العقود الرسمية وتوثيق الرحلات وكشوف الركاب"
-        summary="يُستخدم هذا القسم لإصدار وتوثيق عقود النقل البري المعتمدة وفق اشتراطات الهيئة العامة للنقل (TGA)، مع ربط كل عقد بالكابتن والمركبة وفحص السلامة اليومي وكشف الركاب."
-        cards={[
-          {
-            title: "1. أنواع عقود التشغيل",
-            badge: "أنماط النقل",
-            items: [
-              {
-                label: "حج وعمرة (HAJJ_UMRAH)",
-                description:
-                  "عقود نقل المعتمرين والحجاج والزوار بين المطارات والفنادق والحرمين الشريفين.",
-              },
-              {
-                label: "توصيل مطارات وكبار شخصيات",
-                code: "AIRPORT / VIP",
-                description:
-                  "رحلات الاستقبال والتوديع بالمطارات مع توثيق الناقل الجوي ورقم الرحلة ووقت الوصول.",
-              },
-              {
-                label: "نقل بين المدن وتعاقدات",
-                code: "INTERCITY / CHARTER",
-                description:
-                  "عقود تشغيل الحافلات والمركبات للوفود والشركات والرحلات السياحية.",
-              },
-            ],
-          },
-          {
-            title: "2. المتطلبات النظامية للعقد",
-            badge: "TGA & QR",
-            items: [
-              {
-                label: "ربط الفحص اليومي",
-                description:
-                  "يتحقق النظام من وجود فحص سلامة يومي معتمد للكابتن والمركبة قبل انطلاق الرحلة.",
-              },
-              {
-                label: "كشف الركاب (Passenger Manifest)",
-                description:
-                  "إدراج أسماء الركاب وجنسياتهم وأرقام الهوية/الجواز داخل وثيقة العقد الرسمية.",
-              },
-              {
-                label: "رمز التحقق الإلكتروني QR",
-                description:
-                  "يحتوي كل عقد PDF على رمز QR رسمي للتحقق الفوري من صحة العقد وسريانه ميدانياً.",
-              },
-            ],
-          },
-          {
-            title: "3. الإجراءات السريعة",
-            badge: "أدوات المشرف",
-            items: [
-              {
-                label: "إنشاء رحلة عودة (Reverse Trip)",
-                description:
-                  "توليد عقد رحلة عودة بضغطة واحدة بنفس كشف الركاب والكابتن مع عكس نقطة الانطلاق والوجهة.",
-              },
-              {
-                label: "معاينة وتنزيل PDF",
-                description:
-                  "استعراض وثيقة العقد الرسمي وطباعتها أو إرسالها للكابتن والعميل مباشرة.",
-              },
-            ],
-          },
-        ]}
-        tip="يمكنك فلترة العقود حسب حالة الفحص (مفحوص / بدون فحص) أو نوع العملية أو اسم الكابتن من البطاقات التفاعلية أدناه."
+      {/* Top Header Section with On-Demand Slide-Over Guide */}
+      <PageHeader
+        title={t("contracts.title")}
+        subtitle={t("contracts.subtitle")}
+        badge={isRTL ? "عقود النقل البري المعتمدة" : "Licensed Land Transport Contracts"}
+        icon={FileText}
+        onRefresh={() => void fetchContractsData(undefined, true)}
+        isRefreshing={isLoading}
+        helpGuide={contractsHelpGuide}
+        onSeeded={(msg) => {
+          invalidateClientCache("contracts_");
+          invalidateClientCache("captains_list");
+          setSyncStatus(msg);
+          void fetchContractsData(undefined, true);
+        }}
+        onSeedError={(err) => setSyncStatus(err)}
+        primaryAction={{
+          label: `+ ${t("contracts.newContract")}`,
+          href: "/admin/contracts/new",
+          icon: FileText,
+          variant: "primary",
+        }}
       />
 
       {/* KPI Stats Ribbon */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Total Contracts */}
-        <div
+      <StatRow columns={4}>
+        <StatCard
+          label={isRTL ? "إجمالي العقود" : "Total Contracts"}
+          value={stats.total}
+          unit={isRTL ? "عقد" : "contracts"}
+          icon={FileText}
+          isActive={inspectionFilter === "ALL"}
           onClick={() => setInspectionFilter("ALL")}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
-            inspectionFilter === "ALL"
-              ? "bg-amber-500/5 border-amber-500/40 ring-1 ring-amber-500/30"
-              : "theme-card theme-border hover:border-amber-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              إجمالي العقود
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
-              <FileText className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            {isLoading ? (
-              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700/60 rounded-lg animate-pulse" />
-            ) : (
-              <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {stats.total}
-              </span>
-            )}
-            <span className="text-[11px] text-slate-400">عقد موثق</span>
-          </div>
-        </div>
-
-        {/* Inspected Contracts */}
-        <div
+          isLoading={isLoading}
+        />
+        <StatCard
+          label={isRTL ? "فحص تشغيلي معتمد" : "Approved Inspections"}
+          value={stats.inspected}
+          unit={isRTL ? "مكتمل" : "passed"}
+          icon={ClipboardCheck}
+          variant="emerald"
+          isActive={inspectionFilter === "INSPECTED"}
           onClick={() => setInspectionFilter("INSPECTED")}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
-            inspectionFilter === "INSPECTED"
-              ? "bg-emerald-500/10 border-emerald-500/50 ring-1 ring-emerald-500/30"
-              : "theme-card theme-border hover:border-emerald-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-              فحص تشغيلي معتمد
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <ClipboardCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            {isLoading ? (
-              <div className="h-8 w-16 bg-emerald-500/20 dark:bg-emerald-500/10 rounded-lg animate-pulse" />
-            ) : (
-              <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-                {stats.inspected}
-              </span>
-            )}
-            <span className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70">
-              مكتمل
-            </span>
-          </div>
-        </div>
-
-        {/* Pending Inspection */}
-        <div
+          isLoading={isLoading}
+        />
+        <StatCard
+          label={isRTL ? "بانتظار الفحص" : "Pending Inspection"}
+          value={stats.pending}
+          unit={isRTL ? "معلق" : "pending"}
+          icon={AlertCircle}
+          variant="amber"
+          isActive={inspectionFilter === "PENDING"}
           onClick={() => setInspectionFilter("PENDING")}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
-            inspectionFilter === "PENDING"
-              ? "bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30"
-              : "theme-card theme-border hover:border-amber-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
-              بانتظار الفحص
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <AlertCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            {isLoading ? (
-              <div className="h-8 w-16 bg-amber-500/20 dark:bg-amber-500/10 rounded-lg animate-pulse" />
-            ) : (
-              <span className="text-2xl sm:text-3xl font-black font-mono text-amber-600 dark:text-amber-400">
-                {stats.pending}
-              </span>
-            )}
-            <span className="text-[11px] text-amber-600/70 dark:text-amber-400/70">
-              غير مفحوص
-            </span>
-          </div>
-        </div>
-
-        {/* Total Passengers */}
-        <div className="p-4 rounded-2xl border theme-card theme-border">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              إجمالي الضيوف والركاب
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            {isLoading ? (
-              <div className="h-8 w-16 bg-blue-500/20 dark:bg-blue-500/10 rounded-lg animate-pulse" />
-            ) : (
-              <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {stats.totalPassengers}
-              </span>
-            )}
-            <span className="text-[11px] text-slate-400">راكب مسجل</span>
-          </div>
-        </div>
-      </div>
+          isLoading={isLoading}
+        />
+        <StatCard
+          label={isRTL ? "إجمالي الركاب والضيوف" : "Total Passengers"}
+          value={stats.totalPassengers}
+          unit={isRTL ? "راكب" : "guests"}
+          icon={Users}
+          variant="blue"
+          isLoading={isLoading}
+        />
+      </StatRow>
 
       {/* Search & Filter Toolbar */}
       <div className="space-y-3">

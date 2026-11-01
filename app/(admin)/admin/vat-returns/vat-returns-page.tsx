@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Calculator,
   Download,
@@ -25,20 +25,86 @@ import {
 } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import AccountingPeriodSelector from "@/app/_components/AccountingPeriodSelector";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader } from "@/app/_components/ui";
 import VatReturnTable from "./vat-return-table";
 import ReturnSettings from "./return-settings";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function VatReturnsPage() {
-  const { t, dir } = useLanguage();
+  const { t, dir, isRTL } = useLanguage();
   const [period, setPeriod] = useState(defaultReportPeriod);
   const [failure, setFailure] = useState("");
   const [seedMessage, setSeedMessage] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [reload, setReload] = useState(0);
   const { year, quarter } = period;
+
+  const vatHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل إعداد ومطابقة الإقرار الضريبي (الخانات 1–16)" : "VAT Return Preparation Guide (Boxes 1–16)",
+    summary: isRTL
+      ? "يحتسب هذا القسم نموذج الإقرار الضريبي الرسمي بدقة هللة واحدة بناءً على تاريخ الإصدار والاحتساب الفعلي للفواتير المسجلة، مع استبعاد المسودات والفواتير المبدئية."
+      : "Computes official ZATCA VAT return boxes to the exact halala based on actual invoice issue dates, excluding drafts and proforma quotes.",
+    cards: [
+      {
+        title: isRTL ? "١. ضريبة المبيعات والمخرجات (1–6)" : "1. Output Sales VAT (Boxes 1–6)",
+        badge: "Output VAT",
+        items: [
+          {
+            label: isRTL ? "الخانة 1 (المبيعات الخاضعة 15%)" : "Box 1 (Standard 15% Sales)",
+            description: isRTL
+              ? "تُعرض المبالغ الصافية قبل الضريبة، وأي تخفيضات أو إلغاءات تظهر في عمود التعديل كإشعارات دائنة."
+              : "Net sales before tax; cancellations and reductions appear as credit note adjustments.",
+          },
+          {
+            label: isRTL ? "الخانة 6 (إجمالي ضريبة المبيعات)" : "Box 6 (Total Output VAT)",
+            description: isRTL
+              ? "مجموع ضريبة القيمة المضافة المحصلة عن كافة الرحلات والتوريدات الخاضعة خلال الفترة."
+              : "Total VAT collected across all taxable trips and services during the period.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. ضريبة المشتريات والمدخلات (7–12)" : "2. Input Purchases VAT (Boxes 7–12)",
+        badge: "Input VAT",
+        items: [
+          {
+            label: isRTL ? "الخانة 7 (المشتريات الخاضعة 15%)" : "Box 7 (Standard 15% Purchases)",
+            description: isRTL
+              ? "صافي مشتريات الوقود والصيانة والتكاليف المؤيدة بفواتير ضريبية صحيحة للموردين."
+              : "Net fuel, maintenance, and operating purchases supported by valid supplier tax invoices.",
+          },
+          {
+            label: isRTL ? "الخانة 12 (إجمالي الضريبة القابلة للاسترداد)" : "Box 12 (Total Recoverable Input VAT)",
+            description: isRTL
+              ? "مجموع الضريبة المؤهلة للخصم بعد استبعاد المصروفات غير الخاضعة كرواتب السائقين والرسوم الحكومية."
+              : "Total deductible VAT excluding non-taxable costs like driver salaries and licensing fees.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. التسوية وصافي الضريبة (13–16)" : "3. Settlement & Net VAT (Boxes 13–16)",
+        badge: isRTL ? "الرصيد النهائي" : "Net Balance",
+        items: [
+          {
+            label: isRTL ? "الخانة 13 (ضريبة الفترة)" : "Box 13 (Total VAT Due for Period)",
+            description: isRTL
+              ? "الفارق بين ضريبة المبيعات وضريبة المشتريات (الخانة 6 − الخانة 12)."
+              : "Net output tax minus recoverable input tax (Box 6 − Box 12).",
+          },
+          {
+            label: isRTL ? "الخانة 16 (صافي الضريبة المستحقة أو المستردة)" : "Box 16 (Net VAT Due or Refundable)",
+            description: isRTL
+              ? "الرقم النهائي الواجب سداده للهيئة أو رصيد دائن مستحق للمنشأة بعد خصم الرصيد المرحل والتصحيحات."
+              : "Final amount payable to ZATCA or refundable credit after carried forward balance and corrections.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "اضغط على زر النسخ بجانب أي رقم لنسخ الرقم العشري النظيف بدون فواصل أو رموز للصقه مباشرة في خانة بوابة الزكاة."
+      : "Click the copy button beside any figure to copy a clean number for direct pasting into the ZATCA portal.",
+    formula: "Box 16 = Box 6 (Output VAT) − Box 12 (Recoverable Input VAT) + Box 14 (Corrections) − Box 15 (Carried Credit)",
+  }), [isRTL]);
 
   async function download(format: "pdf" | "csv") {
     setFailure("");
@@ -67,82 +133,82 @@ export default function VatReturnsPage() {
 
   return (
     <div className="space-y-6 pb-12" dir={dir}>
-      {/* 1. Header & Actions (§14) */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-            <Calculator className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold">
-                {t("section.financeReview")}
-              </span>
-              <span className="text-xs text-slate-400 font-medium">
-                {t("vat.subtitle")}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-              {t("vat.title")}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {t("vat.subtitle")}
-            </p>
-          </div>
-        </div>
+      {/* 1. Header & Actions with On-Demand Guide */}
+      <PageHeader
+        title={t("vat.title")}
+        subtitle={t("vat.subtitle")}
+        badge={t("section.financeReview")}
+        icon={Calculator}
+        onRefresh={() => setReload((v) => v + 1)}
+        isRefreshing={isLoading}
+        helpGuide={vatHelpGuide}
+        onSeeded={(msg) => {
+          setFailure("");
+          setSeedMessage(msg);
+          setReload((v) => v + 1);
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setFailure(err);
+        }}
+        actions={
+          <>
+            <Link
+              href="/admin/purchases"
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
+            >
+              <ShoppingBag className="size-4 text-amber-500" />
+              <span>{t("purchases.title")}</span>
+            </Link>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setFailure("");
-              setSeedMessage(msg);
-              setReload((v) => v + 1);
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setFailure(err);
-            }}
-          />
-
-          <Link
-            href="/admin/purchases"
-            className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
-          >
-            <ShoppingBag className="size-4 text-amber-500" />
-            <span>{t("purchases.title")}</span>
-          </Link>
-
-          <Link
-            href="/admin/invoices"
-            className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
-          >
-            <ReceiptText className="size-4 text-amber-500" />
-            <span>{t("invoice.title")}</span>
-          </Link>
-        </div>
-      </header>
+            <Link
+              href="/admin/invoices"
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
+            >
+              <ReceiptText className="size-4 text-amber-500" />
+              <span>{t("invoice.title")}</span>
+            </Link>
+          </>
+        }
+      />
 
       {/* Official ZATCA Submission Notice Banner (§14.1) */}
       <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/5 text-amber-900 dark:text-amber-200 text-xs sm:text-sm leading-relaxed flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <strong className="font-black text-slate-900 dark:text-white block">
-            طريقة تقديم الإقرار الضريبي الرسمي:
+            {isRTL ? "طريقة تقديم الإقرار الضريبي الرسمي:" : "Official ZATCA Tax Return Filing:"}
           </strong>
           <p>
-            يتم تقديم الإقرار الضريبي رسمياً عبر بوابة هيئة الزكاة والضريبة
-            والجمارك (
-            <a
-              href="https://zatca.gov.sa"
-              target="_blank"
-              rel="noreferrer"
-              className="underline font-bold text-amber-700 dark:text-amber-400 inline-flex items-center gap-0.5"
-            >
-              zatca.gov.sa
-              <ExternalLink className="size-3" />
-            </a>
-            ). صُممت هذه الصفحة لمراجعة وتدقيق مبالغ المبيعات والمشتريات بدقة،
-            وتتيح لك نسخ الأرقام بنقرة واحدة ولصقها في الخانة المقابلة بالبوابة.
+            {isRTL ? (
+              <>
+                يتم تقديم الإقرار الضريبي رسمياً عبر بوابة هيئة الزكاة والضريبة والجمارك (
+                <a
+                  href="https://zatca.gov.sa"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline font-bold text-amber-700 dark:text-amber-400 inline-flex items-center gap-0.5"
+                >
+                  zatca.gov.sa
+                  <ExternalLink className="size-3" />
+                </a>
+                ). صُممت هذه الصفحة لمراجعة وتدقيق مبالغ المبيعات والمشتريات بدقة، وتتيح لك نسخ الأرقام بنقرة واحدة ولصقها في الخانة المقابلة بالبوابة.
+              </>
+            ) : (
+              <>
+                File your official tax return via the ZATCA portal (
+                <a
+                  href="https://zatca.gov.sa"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline font-bold text-amber-700 dark:text-amber-400 inline-flex items-center gap-0.5"
+                >
+                  zatca.gov.sa
+                  <ExternalLink className="size-3" />
+                </a>
+                ). This page audits sales and purchases, enabling single-click copy for portal entry.
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -178,68 +244,10 @@ export default function VatReturnsPage() {
             href="/admin/invoices/settings"
             className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition shrink-0"
           >
-            تعديل بيانات الشركة
+            {isRTL ? "تعديل بيانات الشركة" : "Edit Company Profile"}
           </Link>
         </div>
       )}
-
-      {/* Guide Card (§2, §14) */}
-      <SectionGuide
-        title="دليل إعداد ومطابقة الإقرار الضريبي (الخانات 1–16)"
-        summary="يحتسب هذا القسم نموذج الإقرار الضريبي الرسمي بدقة هللة واحدة بناءً على تاريخ الإصدار والاحتساب الفعلي للفواتير المسجلة، مع استبعاد المسودات والفواتير المبدئية."
-        cards={[
-          {
-            title: "1. ضريبة المبيعات والمخرجات (1–6)",
-            badge: "Output VAT",
-            items: [
-              {
-                label: "الخانة 1 (المبيعات الخاضعة 15%)",
-                description:
-                  "تُعرض المبالغ الصافية قبل الضريبة، وأي تخفيضات أو إلغاءات تظهر في عمود التعديل كإشعارات دائنة.",
-              },
-              {
-                label: "الخانة 6 (إجمالي ضريبة المبيعات)",
-                description:
-                  "مجموع ضريبة القيمة المضافة المحصلة عن كافة الرحلات والتوريدات الخاضعة خلال الفترة.",
-              },
-            ],
-          },
-          {
-            title: "2. ضريبة المشتريات والمدخلات (7–12)",
-            badge: "Input VAT",
-            items: [
-              {
-                label: "الخانة 7 (المشتريات الخاضعة 15%)",
-                description:
-                  "صافي مشتريات الوقود والصيانة والتكاليف المؤيدة بفواتير ضريبية صحيحة للموردين.",
-              },
-              {
-                label: "الخانة 12 (إجمالي الضريبة القابلة للاسترداد)",
-                description:
-                  "مجموع الضريبة المؤهلة للخصم بعد استبعاد المصروفات غير الخاضعة كرواتب السائقين والرسوم الحكومية.",
-              },
-            ],
-          },
-          {
-            title: "3. التسوية وصافي الضريبة (13–16)",
-            badge: "الرصيد النهائي",
-            items: [
-              {
-                label: "الخانة 13 (ضريبة الفترة)",
-                description:
-                  "الفارق بين ضريبة المبيعات وضريبة المشتريات (الخانة 6 − الخانة 12).",
-              },
-              {
-                label: "الخانة 16 (صافي الضريبة المستحقة أو المستردة)",
-                description:
-                  "الرقم النهائي الواجب سداده للهيئة أو رصيد دائن مستحق للمنشأة بعد خصم الرصيد المرحل والتصحيحات.",
-              },
-            ],
-          },
-        ]}
-        tip="اضغط على زر النسخ بجانب أي رقم لنسخ الرقم العشري النظيف بدون فواصل أو رموز للصقه مباشرة في خانة بوابة الزكاة."
-        formula="Box 16 = Box 6 (Output VAT) − Box 12 (Recoverable Input VAT) + Box 14 (Corrections) − Box 15 (Carried Credit)"
-      />
 
       {/* 2. Period Selector & Refresh / Export Bar (§14.2) */}
       <section className="theme-card flex flex-wrap items-center justify-between gap-4 rounded-2xl border theme-border p-4 sm:p-5">

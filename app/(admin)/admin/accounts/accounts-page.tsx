@@ -21,8 +21,7 @@ import {
   RefreshCw,
   HelpCircle,
 } from "lucide-react";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader } from "@/app/_components/ui";
 import { accountingRequest, type Account } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import { useLanguage } from "@/lib/languageContext";
@@ -479,7 +478,7 @@ function Editor({
 }
 
 export default function AccountsPage() {
-  const { t, dir } = useLanguage();
+  const { t, dir, isRTL } = useLanguage();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [postingFilter, setPostingFilter] = useState<
@@ -589,73 +588,127 @@ export default function AccountsPage() {
     return groups;
   }, [filteredAccounts]);
 
+  const accountsHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل شجرة الحسابات المحاسبية والتوجيه المالي" : "Chart of Accounts & Posting Guide",
+    summary: isRTL
+      ? "شجرة الحسابات هي العمود الفقري لكافة الحركات المالية لنظام ميقات الخليج. توضح القواعد التالية كيف تُرحل الفواتير والمشتريات وتفادي اختيار الحسابات التجميعية غير القابلة للقيد."
+      : "The Chart of Accounts is the general ledger backbone for Miqat Al-Khaleej. Use posting sub-accounts for invoices and journals, avoiding parent group accounts.",
+    cards: [
+      {
+        title: isRTL ? "١. الفرق الحاسم: تجميعي vs فرعي" : "1. Group vs. Posting Sub-Account",
+        badge: isRTL ? "قاعدة القيد المزدوج" : "Posting Rules",
+        items: [
+          {
+            label: isRTL ? "❌ الحساب التجميعي (Group)" : "❌ Group Accounts (isPosting = false)",
+            description: isRTL
+              ? "عناوين رئيسية كبرى مثل (1000 الأصول، 2000 الالتزامات، 4000 الإيرادات، 5000 المصروفات). دورها فقط تجميع الأرصدة في الميزانية وقائمة الدخل، ولا يقبل النظام أي قيد أو فاتورة عليها نهائياً."
+              : "Major category roll-up headers (e.g. 1000 Assets, 4000 Revenue). Never allowed in transaction journals or invoice posting.",
+          },
+          {
+            label: isRTL ? "✅ الحساب الفرعي (Posting)" : "✅ Posting Accounts (isPosting = true)",
+            description: isRTL
+              ? "الحسابات الميدانية التفصيلية مثل (1102 البنك، 4101 إيرادات النقل، 5101 الوقود). هذه فقط هي الحسابات الصالحة للاختيار في القيود والفواتير وسندات الصرف."
+              : "Operational leaf accounts (e.g. 1102 SNB Bank, 4101 Transport Revenue, 5101 Fuel). Exclusively permitted for journal entry lines.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. جدول التوجيه السريع للعمليات" : "2. Account Mapping Cheat Sheet",
+        badge: "Cheat Sheet",
+        items: [
+          {
+            label: isRTL ? "فواتير المبيعات والعمرة" : "Sales & Trip Invoices",
+            code: "4101 / 4102 + 210201",
+            description: isRTL
+              ? "الطرف الدائن: إيراد النقل (4101) أو VIP (4102) + ضريبة المخرجات (210201). الطرف المدين: البنك (1102) أو الصندوق (1101) أو ذمم العملاء (1103)."
+              : "Credit: Revenue (4101) + Output VAT (210201). Debit: Bank (1102), Cash (1101), or Accounts Receivable (1103).",
+          },
+          {
+            label: isRTL ? "مشتريات ومصروفات الأسطول" : "Fleet Expenses & Purchases",
+            code: "5101–5104 + 210202",
+            description: isRTL
+              ? "الوقود (5101)، الصيانة (5102)، النقل بالباطن (5103)، التأمين (5104) + ضريبة المدخلات (210202) مقابل البنك (1102) أو الموردين (2101)."
+              : "Debit: Operating expenses + Input VAT (210202). Credit: Bank (1102) or Accounts Payable (2101).",
+          },
+          {
+            label: isRTL ? "الرواتب والرسوم الحكومية TGA" : "Salaries & Government Fees",
+            code: "5105 / 5106 (0% VAT)",
+            description: isRTL
+              ? "رواتب السائقين (5105) ورسوم هيئة النقل (5106) تُسجل كمعاملة خارج نطاق الضريبة (0.00 ضريبة) لحماية ضريبة المدخلات."
+              : "Driver salaries (5105) and TGA license fees (5106) are logged at 0% VAT outside the scope of value-added tax.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. دلالات أرقام الحسابات (Coding)" : "3. Account Numbering Convention",
+        badge: "1000–5203",
+        items: [
+          {
+            label: isRTL ? "1xxx الأصول و 2xxx الالتزامات" : "1xxx Assets & 2xxx Liabilities",
+            description: isRTL
+              ? "1101 صندوق، 1102 بنك SNB، 1103 عملاء، 1201 أسطول الحافلات | 2101 موردين، 210201 ضريبة مخرجات، 210202 ضريبة مدخلات."
+              : "1101 Cash, 1102 Bank, 1103 AR, 1201 Vehicles | 2101 AP, 210201 Output VAT, 210202 Input VAT.",
+          },
+          {
+            label: isRTL ? "3xxx الملكية، 4xxx الإيراد، 5xxx المصروف" : "3xxx Equity, 4xxx Revenue, 5xxx Expenses",
+            description: isRTL
+              ? "3101 رأس المال (300,000 ر.س) | 4101 إيراد نقل 15%، 4103 صفري | 5101 وقود، 5102 صيانة، 5201 إيجار ومرافق."
+              : "3101 Paid-in Capital | 4101 Transport 15% Revenue | 5101 Fuel, 5102 Repairs, 5201 Facility rent.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "إذا واجهت رسالة «اختر حسابات فرعية نشطة قابلة للترحيل»، استخدم زر الفلترة السريع أدناه «فرعي (يقبل القيود)» لتصفية الحسابات الصالحة للاستخدام المباشر."
+      : "If prompted with 'Select active posting sub-accounts', filter by 'Posting' to see eligible accounts.",
+    formula: "Journal Rule: Line Account must satisfy (isPosting === true && isActive === true)",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6 pb-12" dir={dir}>
-      {/* Top Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
-                {t("section.financeReview")}
-              </span>
-              <span className="text-xs text-slate-500">
-                {t("nav.accounts")}
-              </span>
-            </div>
-            <h1 className="mt-1 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {t("nav.accounts")} (Chart of Accounts)
-            </h1>
-            <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق
-              الملكية، الإيرادات، والمصروفات
-            </p>
-          </div>
-        </div>
+      {/* Top Header with On-Demand Help Guide */}
+      <PageHeader
+        title={`${t("nav.accounts")} (Chart of Accounts)`}
+        subtitle={
+          isRTL
+            ? "الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق الملكية، الإيرادات، والمصروفات"
+            : "Unified Chart of Accounts: Assets, Liabilities, Equity, Revenues, and Expenses"
+        }
+        badge={t("section.financeReview")}
+        icon={BookOpen}
+        onRefresh={() => setReload((v) => v + 1)}
+        isRefreshing={isLoading}
+        helpGuide={accountsHelpGuide}
+        onSeeded={(msg) => {
+          setSeedError("");
+          setSeedMessage(msg);
+          setReload((v) => v + 1);
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setSeedError(err);
+        }}
+        actions={
+          <>
+            <Link
+              href="/admin/accounting"
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+            >
+              <Landmark className="size-4 text-amber-500" />
+              <span>{t("accounting.title")}</span>
+            </Link>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setReload((v) => v + 1)}
-            disabled={isLoading}
-            className="p-2.5 rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 cursor-pointer shadow-2xs"
-            title={t("common.refresh")}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin text-amber-500" : ""}`}
-            />
-          </button>
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setSeedError("");
-              setSeedMessage(msg);
-              setReload((v) => v + 1);
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setSeedError(err);
-            }}
-          />
-          <Link
-            href="/admin/accounting"
-            className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs sm:text-sm font-bold transition shadow-2xs"
-          >
-            <Landmark className="size-4 text-amber-500" />
-            <span>{t("accounting.title")}</span>
-          </Link>
-          <button
-            type="button"
-            className="gold-gradient-btn inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-black cursor-pointer shadow-sm hover:shadow-md transition"
-            onClick={() => setEditor({ account: "NEW" })}
-          >
-            <Plus className="size-4" />
-            <span>+ {t("common.create")}</span>
-          </button>
-        </div>
-      </header>
+            <button
+              type="button"
+              className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black cursor-pointer shadow-sm hover:shadow-md transition"
+              onClick={() => setEditor({ account: "NEW" })}
+            >
+              <Plus className="size-4" />
+              <span>+ {t("common.create")}</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Seed Alerts */}
       {seedMessage && (
@@ -694,72 +747,6 @@ export default function AccountsPage() {
           </button>
         </div>
       )}
-
-      {/* High-Impact Educational Guide with Solution for "اختر حسابات فرعية نشطة قابلة للترحيل" */}
-      <SectionGuide
-        title="دليل الخريطة المحاسبية وحل مشكلة: «اختر حسابات فرعية نشطة قابلة للترحيل»"
-        summary="شجرة الحسابات هي العمود الفقري لكافة الحركات المالية لنظام ميقات الخليج. توضح القواعد التالية كيف تُرحل الفواتير والمشتريات وتفادي اختيار الحسابات التجميعية غير القابلة للقيد."
-        cards={[
-          {
-            title: "1. الفرق الحاسم: تجميعي vs فرعي",
-            badge: "قاعدة القيد المزدوج",
-            items: [
-              {
-                label: "❌ الحساب التجميعي (Group - isPosting = false)",
-                description:
-                  "عناوين رئيسية كبرى مثل (1000 الأصول، 2000 الالتزامات، 4000 الإيرادات، 5000 المصروفات). دورها فقط تجميع الأرصدة في الميزانية وقائمة الدخل، ولا يقبل النظام أي قيد أو فاتورة عليها نهائياً.",
-              },
-              {
-                label: "✅ الحساب الفرعي (Posting - isPosting = true)",
-                description:
-                  "الحسابات الميدانية التفصيلية مثل (1102 البنك، 4101 إيرادات النقل، 5101 الوقود). هذه فقط هي الحسابات الصالحة للاختيار في القيود والفواتير وسندات الصرف.",
-              },
-            ],
-          },
-          {
-            title: "2. جدول التوجيه السريع للعمليات",
-            badge: "Cheat Sheet",
-            items: [
-              {
-                label: "فواتير المبيعات والعمرة",
-                code: "4101 / 4102 + 210201",
-                description:
-                  "الطرف الدائن: إيراد النقل (4101) أو VIP (4102) + ضريبة المخرجات (210201). الطرف المدين: البنك (1102) أو الصندوق (1101) أو ذمم العملاء (1103).",
-              },
-              {
-                label: "مشتريات ومصروفات الأسطول",
-                code: "5101–5104 + 210202",
-                description:
-                  "الوقود (5101)، الصيانة (5102)، النقل بالباطن (5103)، التأمين (5104) + ضريبة المدخلات (210202) مقابل البنك (1102) أو الموردين (2101).",
-              },
-              {
-                label: "الرواتب والرسوم الحكومية TGA",
-                code: "5105 / 5106 (0% VAT)",
-                description:
-                  "رواتب السائقين (5105) ورسوم هيئة النقل (5106) تُسجل كمعاملة خارج نطاق الضريبة (0.00 ضريبة) لحماية ضريبة المدخلات.",
-              },
-            ],
-          },
-          {
-            title: "3. دلالات أرقام الحسابات (Coding)",
-            badge: "1000–5203",
-            items: [
-              {
-                label: "1xxx الأصول و 2xxx الالتزامات",
-                description:
-                  "1101 صندوق، 1102 بنك SNB، 1103 عملاء، 1201 أسطول الحافلات | 2101 موردين، 210201 ضريبة مخرجات، 210202 ضريبة مدخلات.",
-              },
-              {
-                label: "3xxx الملكية، 4xxx الإيراد، 5xxx المصروف",
-                description:
-                  "3101 رأس المال (300,000 ر.س) | 4101 إيراد نقل 15%، 4103 صفري | 5101 وقود، 5102 صيانة، 5201 إيجار ومرافق.",
-              },
-            ],
-          },
-        ]}
-        tip="إذا واجهت رسالة «اختر حسابات فرعية نشطة قابلة للترحيل»، استخدم زر الفلترة السريع أدناه «فرعي (يقبل القيود)» لتصفية الحسابات الصالحة للاستخدام المباشر."
-        formula="Journal Rule: Line Account must satisfy (isPosting === true && isActive === true)"
-      />
 
       {/* Prominent Quick-Fix Callout Banner */}
       {showFaqGuide && (

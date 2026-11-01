@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, useMemo, type FormEvent } from "react";
 import { BookOpen, Calculator, Landmark } from "lucide-react";
 import AccountingPeriodSelector from "@/app/_components/AccountingPeriodSelector";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader } from "@/app/_components/ui";
 import {
   accountingRequest,
   amountLabel,
@@ -266,7 +265,7 @@ function PeriodArchive({
 }
 
 export default function AccountingPage() {
-  const { t, dir } = useLanguage();
+  const { t, dir, isRTL } = useLanguage();
   const [period, setPeriod] = useState(defaultReportPeriod);
   const [tab, setTab] = useState("REPORTS");
   const [reload, setReload] = useState(0);
@@ -299,53 +298,115 @@ export default function AccountingPage() {
     }
   }
 
+  const accountingHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل القيود المحاسبية والتقارير المالية وسندات القبض والسداد" : "Accounting, Financial Reports & Vouchers Guide",
+    summary: isRTL
+      ? "المحرك المالي الموحد للشركة: يعرض قائمة الدخل وميزان المراجعة ودفتر الأستاذ العام، مع إدارة قيود اليومية اليدوية والآلية وسندات قبض العملاء وسداد الموردين وإقفال الفترات."
+      : "Unified general ledger engine: provides Income Statement, Trial Balance, general ledger books, manual/automated journal entries, customer receipts, supplier payments, and period closing.",
+    cards: [
+      {
+        title: isRTL ? "١. التقارير المالية وميزان المراجعة" : "1. Financial Reports & Trial Balance",
+        badge: "REPORTS",
+        items: [
+          {
+            label: isRTL ? "قائمة الدخل وصافي الربح" : "Income Statement & Net Profit",
+            description: isRTL
+              ? "مقارنة إجمالي إيرادات النقل والعمرة (4000) مقابل التكاليف التشغيلية والإدارية (5000) لاستخراج صافي ربح الفترة."
+              : "Compares transport revenues (4000) against operating and administrative expenses (5000) to derive net profit.",
+          },
+          {
+            label: isRTL ? "السيولة والذمم وحسابات الضريبة" : "Cash, AR/AP & VAT Accounts",
+            code: "1101–1103 / 2101–2102",
+            description: isRTL
+              ? "متابعة أرصدة الصندوق والبنك الأهلي SNB، ذمم العملاء غير المحصلة، ذمم الموردين، وأرصدة ضريبة المخرجات والمدخلات."
+              : "Tracks cash/bank balances, accounts receivable, accounts payable, and input/output VAT balances.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. دفتر اليومية وسندات القبض والسداد" : "2. Journals & Receipt/Payment Vouchers",
+        badge: "JOURNALS & PAYMENTS",
+        items: [
+          {
+            label: isRTL ? "قيود اليومية المتوازنة" : "Balanced Double-Entry Journals",
+            description: isRTL
+              ? "كل قيد يتطلب تساوي إجمالي المدين مع إجمالي الدائن، ويتضمن زر «+ إثبات رأس المال (300,000 ر.س)» الجاهز."
+              : "Enforces debits equal credits equation, including one-click paid-in capital booking (300,000 SAR).",
+          },
+          {
+            label: isRTL ? "سندات القبض والسداد" : "Payment & Receipt Vouchers",
+            code: "SALE / PURCHASE",
+            description: isRTL
+              ? "تسجيل تحصيل دفعات الفواتير الآجلة من العملاء (يُخفض 1103 ويزيد 1102/1101) أو سداد فواتير الموردين الآجلة (يُخفض 2101)."
+              : "Records customer collections (credits 1103, debits bank/cash) and supplier payments (debits 2101).",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. إقفال الفترات والتصدير" : "3. Period Closing & Audited Export",
+        badge: "PERIODS & EXPORT",
+        items: [
+          {
+            label: isRTL ? "إقفال الفترات المحاسبية" : "Accounting Period Lock",
+            description: isRTL
+              ? "منع تسجيل أو تعديل أي قيود أو فواتير بتاريخ يقع داخل فترة محاسبية تم إقفالها واعتماد إقرارها الضريبي."
+              : "Locks historical periods against modifications once tax returns and audits are finalized.",
+          },
+          {
+            label: isRTL ? "تصدير التقارير PDF و CSV" : "PDF & CSV Export",
+            description: isRTL
+              ? "تنزيل نسخة رسمية من التقرير المالي أو كشف تفصيلي بصيغة CSV/Excel للمحاسب القانوني والمراجع الخارجي."
+              : "Generates official executive PDF reports or raw CSV/Excel dumps for external audit.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "انتقل بين التبويبات الأربع أدناه («التقارير المالية»، «دفتر اليومية»، «القبض والسداد»، «إقفال الفترات») لإدارة كامل الدورة المحاسبية."
+      : "Navigate across the 4 tabs below (Reports, Journals, Payments, Period Lock) to manage the entire financial accounting lifecycle.",
+    formula: "Total Debits = Total Credits | Assets = Liabilities + Equity + (Revenues − Expenses)",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6 pb-12" dir={dir}>
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-            <Landmark className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-amber-700 dark:text-amber-400">
-              {t("mode.finance")}
-            </p>
-            <h1 className="mt-1 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {t("accounting.title")}
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-500">
-              {t("accounting.subtitle")}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setError("");
-              setSeedMessage(msg);
-              changed();
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setError(err);
-            }}
-          />
-          <Link
-            href="/admin/accounts"
-            className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold transition"
-          >
-            <BookOpen className="size-4 text-amber-500" />
-            <span>{t("nav.accounts")}</span>
-          </Link>
-          <Link
-            href="/admin/vat-returns"
-            className="theme-card inline-flex items-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold transition"
-          >
-            <Calculator className="size-4 text-amber-500" />
-            <span>{t("nav.vatReturns")}</span>
-          </Link>
-        </div>
-      </header>
+      {/* Page Header with On-Demand Guide */}
+      <PageHeader
+        title={t("accounting.title")}
+        subtitle={t("accounting.subtitle")}
+        badge={t("mode.finance")}
+        icon={Landmark}
+        onRefresh={changed}
+        isRefreshing={isLoading}
+        helpGuide={accountingHelpGuide}
+        onSeeded={(msg) => {
+          setError("");
+          setSeedMessage(msg);
+          changed();
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setError(err);
+        }}
+        actions={
+          <>
+            <Link
+              href="/admin/accounts"
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+            >
+              <BookOpen className="size-4 text-amber-500" />
+              <span>{t("nav.accounts")}</span>
+            </Link>
+
+            <Link
+              href="/admin/vat-returns"
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+            >
+              <Calculator className="size-4 text-amber-500" />
+              <span>{t("nav.vatReturns")}</span>
+            </Link>
+          </>
+        }
+      />
 
       {seedMessage && (
         <p
@@ -355,65 +416,6 @@ export default function AccountingPage() {
           {seedMessage}
         </p>
       )}
-
-      <SectionGuide
-        title="شرح القيود المحاسبية والتقارير المالية وسندات القبض والسداد"
-        summary="المحرك المالي الموحد للشركة: يعرض قائمة الدخل وميزان المراجعة ودفتر الأستاذ العام، مع إدارة قيود اليومية اليدوية والآلية وسندات قبض العملاء وسداد الموردين وإقفال الفترات."
-        cards={[
-          {
-            title: "1. التقارير المالية وميزان المراجعة",
-            badge: "REPORTS",
-            items: [
-              {
-                label: "قائمة الدخل وصافي الربح",
-                description:
-                  "مقارنة إجمالي إيرادات النقل والعمرة (4000) مقابل التكاليف التشغيلية والإدارية (5000) لاستخراج صافي ربح الفترة.",
-              },
-              {
-                label: "السيولة والذمم وحسابات الضريبة",
-                code: "1101–1103 / 2101–2102",
-                description:
-                  "متابعة أرصدة الصندوق والبنك الأهلي SNB، ذمم العملاء غير المحصلة، ذمم الموردين، وأرصدة ضريبة المخرجات والمدخلات.",
-              },
-            ],
-          },
-          {
-            title: "2. دفتر اليومية وسندات القبض والسداد",
-            badge: "JOURNALS & PAYMENTS",
-            items: [
-              {
-                label: "قيود اليومية المتوازنة",
-                description:
-                  "كل قيد يتطلب تساوي إجمالي المدين مع إجمالي الدائن، ويتضمن زر «+ إثبات رأس المال (300,000 ر.س)» الجاهز.",
-              },
-              {
-                label: "سندات القبض والسداد",
-                code: "SALE / PURCHASE",
-                description:
-                  "تسجيل تحصيل دفعات الفواتير الآجلة من العملاء (يُخفض 1103 ويزيد 1102/1101) أو سداد فواتير الموردين الآجلة (يُخفض 2101).",
-              },
-            ],
-          },
-          {
-            title: "3. إقفال الفترات والتصدير",
-            badge: "PERIODS & EXPORT",
-            items: [
-              {
-                label: "إقفال الفترات المحاسبية",
-                description:
-                  "منع تسجيل أو تعديل أي قيود أو فواتير بتاريخ يقع داخل فترة محاسبية تم إقفالها واعتماد إقرارها الضريبي.",
-              },
-              {
-                label: "تصدير التقارير PDF و CSV",
-                description:
-                  "تنزيل نسخة رسمية من التقرير المالي أو كشف تفصيلي بصيغة CSV/Excel للمحاسب القانوني والمراجع الخارجي.",
-              },
-            ],
-          },
-        ]}
-        tip="انتقل بين التبويبات الأربع أدناه («التقارير المالية»، «دفتر اليومية»، «القبض والسداد»، «إقفال الفترات») لإدارة كامل الدورة المحاسبية."
-        formula="Total Debits (المدين) = Total Credits (الدائن) | Assets = Liabilities + Equity + (Revenues − Expenses)"
-      />
 
       <nav
         aria-label="صفحات المحاسبة"

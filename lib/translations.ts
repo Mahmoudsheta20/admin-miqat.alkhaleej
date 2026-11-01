@@ -47,6 +47,14 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "common.copy": "نسخ",
     "common.copied": "تم النسخ!",
     "common.sar": "ر.س",
+    "common.more": "المزيد",
+    "common.help": "دليل القسم",
+    "common.openGuide": "شرح القسم",
+    "common.filter": "تصفية",
+    "common.clearFilters": "مسح عوامل التصفية",
+    "common.noResults": "لا توجد نتائج مطابقة للبحث",
+    "common.noData": "لا توجد بيانات مسجلة حتى الآن",
+    "common.export": "تصدير",
 
     // Workspace Modes
     "mode.operations": "العمليات والأسطول",
@@ -232,6 +240,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "inspections.fail": "يوجد ملاحظات",
     "inspections.fuelLevel": "مستوى الوقود",
     "inspections.odometer": "قراءة العداد",
+    "inspections.directPass": "اجتياز فحص مباشر",
+    "inspections.customInspection": "فحص مخصص جديد",
+    "inspections.totalCaptains": "إجمالي الكباتن النشطين",
+    "inspections.inspectedToday": "تم فحصهم اليوم",
+    "inspections.pendingToday": "بانتظار الفحص اليوم",
+    "inspections.totalInspections": "إجمالي الفحوصات الموثقة",
+    "inspections.readiness": "مؤشر جاهزية الكباتن للفحص اليومي",
 
     // Admins & Roles
     "admins.title": "المشرفين والصلاحيات",
@@ -303,6 +318,14 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "common.copy": "Copy",
     "common.copied": "Copied!",
     "common.sar": "SAR",
+    "common.more": "More",
+    "common.help": "Section Guide",
+    "common.openGuide": "Guide",
+    "common.filter": "Filter",
+    "common.clearFilters": "Clear Filters",
+    "common.noResults": "No matching results found",
+    "common.noData": "No data recorded yet",
+    "common.export": "Export",
 
     // Workspace Modes
     "mode.operations": "Operations & Fleet",
@@ -490,6 +513,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "inspections.fail": "Issues Reported",
     "inspections.fuelLevel": "Fuel Level",
     "inspections.odometer": "Odometer Reading",
+    "inspections.directPass": "Direct Pass",
+    "inspections.customInspection": "New Custom Inspection",
+    "inspections.totalCaptains": "Total Active Captains",
+    "inspections.inspectedToday": "Inspected Today",
+    "inspections.pendingToday": "Inspection Pending",
+    "inspections.totalInspections": "Total Archived Inspections",
+    "inspections.readiness": "Daily Captain Fleet Readiness",
 
     // Admins & Roles
     "admins.title": "Admins & Permissions",

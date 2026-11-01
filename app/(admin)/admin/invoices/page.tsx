@@ -5,15 +5,12 @@ import Link from "next/link";
 import {
   ReceiptText,
   Plus,
-  Search,
-  RefreshCw,
   Building2,
   FileSpreadsheet,
   Download,
   Eye,
   Copy,
   Check,
-  X,
   ChevronRight,
   ChevronLeft,
   AlertCircle,
@@ -32,10 +29,9 @@ import {
   invoiceRequest,
   type InvoiceRow,
 } from "@/lib/invoices";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
 import RecordPaymentModal from "./record-payment-modal";
 import { useLanguage } from "@/lib/languageContext";
+import { PageHeader, StatCard, StatRow, FilterBar, Money } from "@/app/_components/ui";
 
 interface InvoiceList {
   items: InvoiceRow[];
@@ -203,83 +199,119 @@ export default function InvoicesPage() {
 
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / 30));
 
+  const invoiceHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل الفواتير والمستندات المالية" : "Invoicing & Financial Documents Guide",
+    summary: isRTL
+      ? "يجمع هذا القسم كافة فواتير المبيعات الصادرة عن شركة ميقات الخليج للنقل البري، مع تنظيم متابعة المبالغ المحصلة والمتبقية وإشعارات التعديل."
+      : "Consolidates all sales invoices issued by Miqat Al-Khaleej, organizing payment tracking, remaining balances, and credit/debit adjustment notes.",
+    cards: [
+      {
+        title: isRTL ? "١. أنواع المستندات" : "1. Document Types",
+        badge: isRTL ? "المبيعات" : "Sales",
+        items: [
+          {
+            label: isRTL ? "فاتورة للعميل" : "Customer Tax Invoice",
+            description: isRTL
+              ? "فاتورة نهائية معتمدة للرحلات وعقود النقل، تُثبت الإيراد والضريبة وتحتوي على رمز الفاتورة الضريبية ZATCA QR."
+              : "Final approved invoice establishing revenue and VAT, containing official ZATCA QR code.",
+          },
+          {
+            label: isRTL ? "فاتورة مبدئية (عرض سعر)" : "Proforma Invoice",
+            description: isRTL
+              ? "مستند أولي للعميل يتضمن تفاصيل الخدمة والآيبان البنكي (SNB) ولا يؤثر على القيود المحاسبية إلا بعد اعتماده."
+              : "Initial quotation with service details and SNB IBAN; does not post to ledger until approved.",
+          },
+          {
+            label: isRTL ? "إشعار دائن / مدين" : "Credit / Debit Note",
+            description: isRTL
+              ? "إشعار دائن لخفض القيمة أو إلغاء رحلة، وإشعار مدين لإضافة مبالغ لاحقة، مع ارتباط كامل برقم الفاتورة الأصلية."
+              : "Credit note to reduce value or cancel, and debit note to add amounts, linked to original invoice ref.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. متابعة السداد والتحصيل" : "2. Payment Tracking",
+        badge: isRTL ? "سندات القبض" : "Receipt Vouchers",
+        items: [
+          {
+            label: isRTL ? "المتبقي على العميل" : "Remaining Balance",
+            description: isRTL
+              ? "يُحمل المبلغ غير المسدد على ذمم العملاء (1103)، وعند استلام دفعة يُسجل سند قبض فوري يخفض الرصيد."
+              : "Unpaid amounts sit on Accounts Receivable (1103); recording a payment issues a voucher reducing AR.",
+          },
+          {
+            label: isRTL ? "زر «تسجيل دفعة»" : "Record Payment Action",
+            description: isRTL
+              ? "يمكن تسجيل دفعة نقدية بالصندوق (1101) أو تحويل بنكي (1102) مباشرة من جدول الفواتير أو صفحة التفاصيل."
+              : "Directly record cash (1101) or bank transfer (1102) from invoice table or details page.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. الحماية ومشاركة الفاتورة" : "3. Protection & Sharing",
+        badge: isRTL ? "محفوظة في النظام" : "System Protected",
+        items: [
+          {
+            label: isRTL ? "عدم القابلية للتعديل المباشر" : "Immutable Document",
+            description: isRTL
+              ? "الفاتورة المصدرة مستند مالي ثابت؛ أي تعديل يتم بمسار نظامي عبر إصدار إشعار دائن أو مدين."
+              : "Issued invoice is fixed; adjustments must follow official paths via credit or debit notes.",
+          },
+          {
+            label: isRTL ? "نسخة العميل ورابط التحقق" : "Customer Copy & Verification",
+            description: isRTL
+              ? "تنزيل PDF رسمي مجهز للطباعة أو نسخ رابط التحقق المباشر لمشاركته مع العميل عبر الواتساب أو الإيميل."
+              : "Download print-ready official PDF or copy direct verification link to share via WhatsApp or Email.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "لتعديل فاتورة تم إصدارها سابقاً، اضغط على «عرض» ثم اختر «خفض قيمة الفاتورة (إشعار دائن)» أو «إضافة مبلغ (إشعار مدين)»."
+      : "To adjust an issued invoice, click 'View' and choose 'Credit Note' or 'Debit Note'.",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6 pb-12" dir={dir}>
-      {/* Top Page Header (§4) */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-            <ReceiptText className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold">
-                {t("section.financeDaily")}
-              </span>
-              <span className="text-xs text-slate-400 font-medium">
-                {t("invoice.subtitle")}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-              {t("invoice.title")}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {t("invoice.subtitle")}
-            </p>
-          </div>
-        </div>
+      {/* 1. Unified Page Header */}
+      <PageHeader
+        icon={ReceiptText}
+        badge={t("section.financeDaily")}
+        title={t("invoice.title")}
+        subtitle={t("invoice.subtitle")}
+        primaryAction={{
+          label: t("invoice.newInvoice"),
+          href: "/admin/invoices/new",
+          icon: Plus,
+        }}
+        secondaryActions={[
+          {
+            label: `+ ${t("invoice.proforma")}`,
+            href: "/admin/invoices/new?type=PROFORMA",
+            icon: FileSpreadsheet,
+            variant: "subtle",
+          },
+          {
+            label: t("nav.zatca"),
+            href: "/admin/invoices/settings",
+            icon: Building2,
+          },
+        ]}
+        helpGuide={invoiceHelpGuide}
+        onRefresh={() => void load(true)}
+        isRefreshing={isLoading || isRefreshing}
+        onSeeded={(msg) => {
+          setError("");
+          setSeedMessage(msg);
+          void load(true);
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setError(err);
+        }}
+      />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setError("");
-              setSeedMessage(msg);
-              void load(true);
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setError(err);
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => void load(true)}
-            disabled={isLoading || isRefreshing}
-            className="p-2.5 rounded-xl border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-300 transition disabled:opacity-50 cursor-pointer"
-            title={t("common.refresh")}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isRefreshing || isLoading ? "animate-spin text-amber-500" : ""}`}
-            />
-          </button>
-
-          <Link
-            href="/admin/invoices/settings"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
-          >
-            <Building2 className="w-4 h-4 text-amber-500" />
-            <span>{t("nav.zatca")}</span>
-          </Link>
-
-          <Link
-            href="/admin/invoices/new?type=PROFORMA"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold text-amber-800 dark:text-amber-300 transition shadow-2xs"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>+ {t("invoice.proforma")}</span>
-          </Link>
-
-          <Link
-            href="/admin/invoices/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm hover:shadow-md transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t("invoice.newInvoice")}</span>
-          </Link>
-        </div>
-      </header>
-
-      {/* Alerts */}
+      {/* 2. Alerts (only shown when active) */}
       {seedMessage && (
         <p
           role="status"
@@ -307,234 +339,62 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {/* Guide Card (§2, §4) */}
-      <SectionGuide
-        title="دليل الفواتير والمستندات المالية"
-        summary="يجمع هذا القسم كافة فواتير المبيعات الصادرة عن شركة ميقات الخليج للنقل البري، مع تنظيم متابعة المبالغ المحصلة والمتبقية وإشعارات التعديل."
-        cards={[
-          {
-            title: "1. أنواع المستندات",
-            badge: "المبيعات",
-            items: [
-              {
-                label: "فاتورة للعميل",
-                description:
-                  "فاتورة نهائية معتمدة للرحلات وعقود النقل، تُثبت الإيراد والضريبة وتحتوي على رمز الفاتورة الضريبية ZATCA QR.",
-              },
-              {
-                label: "فاتورة مبدئية (عرض سعر)",
-                description:
-                  "مستند أولي للعميل يتضمن تفاصيل الخدمة والآيبان البنكي (SNB) ولا يؤثر على القيود المحاسبية إلا بعد اعتماده.",
-              },
-              {
-                label: "إشعار دائن / مدين",
-                description:
-                  "إشعار دائن لخفض القيمة أو إلغاء رحلة، وإشعار مدين لإضافة مبالغ لاحقة، مع ارتباط كامل برقم الفاتورة الأصلية.",
-              },
-            ],
-          },
-          {
-            title: "2. متابعة السداد والتحصيل",
-            badge: "سندات القبض",
-            items: [
-              {
-                label: "المتبقي على العميل",
-                description:
-                  "يُحمل المبلغ غير المسدد على ذمم العملاء (1103)، وعند استلام دفعة يُسجل سند قبض فوري يخفض الرصيد.",
-              },
-              {
-                label: "زر «تسجيل دفعة»",
-                description:
-                  "يمكن تسجيل دفعة نقدية بالصندوق (1101) أو تحويل بنكي (1102) مباشرة من جدول الفواتير أو صفحة التفاصيل.",
-              },
-            ],
-          },
-          {
-            title: "3. الحماية ومشاركة الفاتورة",
-            badge: "محفوظة في النظام",
-            items: [
-              {
-                label: "عدم القابلية للتعديل المباشر",
-                description:
-                  "الفاتورة المصدرة مستند مالي ثابت؛ أي تعديل يتم بمسار نظامي عبر إصدار إشعار دائن أو مدين.",
-              },
-              {
-                label: "نسخة العميل ورابط التحقق",
-                description:
-                  "تنزيل PDF رسمي مجهز للطباعة أو نسخ رابط التحقق المباشر لمشاركته مع العميل عبر الواتساب أو الإيميل.",
-              },
-            ],
-          },
-        ]}
-        tip="لتعديل فاتورة تم إصدارها سابقاً، اضغط على «عرض» ثم اختر «خفض قيمة الفاتورة (إشعار دائن)» أو «إضافة مبلغ (إشعار مدين)»."
-      />
-
-      {/* Interactive KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <button
-          type="button"
+      {/* 3. Streamlined KPI Cards */}
+      <StatRow>
+        <StatCard
+          label={t("invoice.totalInvoices")}
+          value={stats.total}
+          subtext={t("invoice.savedInSystem")}
+          icon={ReceiptText}
+          isActive={typeFilter === "ALL"}
           onClick={() => setTypeFilter("ALL")}
-          className={`p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
-            isRTL ? "text-right" : "text-left"
-          } ${
-            typeFilter === "ALL"
-              ? "bg-amber-500/5 border-amber-500/40 ring-1 ring-amber-500/30"
-              : "theme-card theme-border hover:border-amber-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              {t("invoice.totalInvoices")}
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <ReceiptText className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white mt-2">
-            {isLoading && !data ? "—" : stats.total}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {t("invoice.savedInSystem")}
-          </p>
-        </button>
-
-        <button
-          type="button"
+          isLoading={isLoading && !data}
+        />
+        <StatCard
+          label={t("invoice.customerInvoices")}
+          value={stats.bookingCount}
+          subtext={t("invoice.customerInvoices")}
+          icon={Check}
+          variant="emerald"
+          isActive={typeFilter === "BOOKING"}
           onClick={() => setTypeFilter("BOOKING")}
-          className={`p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
-            isRTL ? "text-right" : "text-left"
-          } ${
-            typeFilter === "BOOKING"
-              ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
-              : "theme-card theme-border hover:border-emerald-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-              {t("invoice.customerInvoices")}
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Check className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-2">
-            {isLoading && !data ? "—" : stats.bookingCount}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {t("invoice.customerInvoices")}
-          </p>
-        </button>
-
-        <button
-          type="button"
+          isLoading={isLoading && !data}
+        />
+        <StatCard
+          label={t("invoice.proformaInvoices")}
+          value={stats.proformaCount}
+          subtext={t("invoice.proforma")}
+          icon={FileSpreadsheet}
+          variant="blue"
+          isActive={typeFilter === "PROFORMA"}
           onClick={() => setTypeFilter("PROFORMA")}
-          className={`p-4 sm:p-5 rounded-2xl border transition cursor-pointer ${
-            isRTL ? "text-right" : "text-left"
-          } ${
-            typeFilter === "PROFORMA"
-              ? "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30"
-              : "theme-card theme-border hover:border-blue-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
-              {t("invoice.proformaInvoices")}
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <FileSpreadsheet className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-blue-600 dark:text-blue-400 mt-2">
-            {isLoading && !data ? "—" : stats.proformaCount}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {t("invoice.proforma")}
-          </p>
-        </button>
+          isLoading={isLoading && !data}
+        />
+        <StatCard
+          label={t("invoice.netSales")}
+          value={formatMoney(stats.pageGrossSum)}
+          unit={t("common.sar")}
+          subtext={`${t("invoice.salesTax")}: ${formatMoney(stats.pageVatSum)} ${t("common.sar")}`}
+          icon={TrendingUp}
+          variant="amber"
+          isLoading={isLoading && !data}
+        />
+      </StatRow>
 
-        <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              {t("invoice.netSales")}
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-2 flex items-baseline gap-1">
-            <span dir="ltr">
-              {isLoading && !data ? "—" : formatMoney(stats.pageGrossSum)}
-            </span>
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-              {t("common.sar")}
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1 font-mono">
-            {t("invoice.salesTax")}:{" "}
-            <span dir="ltr">{formatMoney(stats.pageVatSum)}</span>{" "}
-            {t("common.sar")}
-          </p>
-        </div>
-      </div>
-
-      {/* Search & Filter Toolbar */}
-      <div className="theme-card p-3 sm:p-4 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative flex-1">
-          <Search
-            className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2 pointer-events-none`}
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("invoice.searchPlaceholder")}
-            className={`theme-input w-full ${isRTL ? "pr-10 pl-8" : "pl-10 pr-8"} py-2 text-xs sm:text-sm rounded-xl`}
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className={`absolute ${isRTL ? "left-2.5" : "right-2.5"} top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600`}
-              aria-label={t("common.delete")}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          {(
-            [
-              { id: "ALL", label: `${t("common.all")} (${items.length})` },
-              {
-                id: "BOOKING",
-                label: `${t("invoice.customerInvoices")} (${stats.bookingCount})`,
-              },
-              {
-                id: "PROFORMA",
-                label: `${t("invoice.proformaInvoices")} (${stats.proformaCount})`,
-              },
-              {
-                id: "NOTES",
-                label: `${t("invoice.notesCount")} (${stats.notesCount})`,
-              },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setTypeFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                typeFilter === tab.id
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs"
-                  : "border theme-border text-slate-600 dark:text-slate-400 hover:border-amber-500/40"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* 4. Unified Filter Bar */}
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("invoice.searchPlaceholder")}
+        tabs={[
+          { id: "ALL", label: t("common.all"), count: items.length },
+          { id: "BOOKING", label: t("invoice.customerInvoices"), count: stats.bookingCount },
+          { id: "PROFORMA", label: t("invoice.proformaInvoices"), count: stats.proformaCount },
+          { id: "NOTES", label: t("invoice.notesCount"), count: stats.notesCount },
+        ]}
+        activeTab={typeFilter}
+        onTabChange={(tabId) => setTypeFilter(tabId as typeof typeFilter)}
+      />
 
       {/* Invoices List Container */}
       <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
@@ -704,36 +564,20 @@ export default function InvoicesPage() {
                           </div>
                         </td>
 
-                        <td
-                          className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap"
-                          dir="ltr"
-                        >
-                          {formatMoney(row.netAmount)}
-                        </td>
-
-                        <td
-                          className="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap"
-                          dir="ltr"
-                        >
-                          {formatMoney(row.vatAmount)}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <Money amount={row.netAmount} color="muted" size="xs" />
                         </td>
 
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span
-                            className={`font-mono font-black text-sm ${
-                              isCredit
-                                ? "text-rose-600 dark:text-rose-400"
-                                : "text-slate-900 dark:text-white"
-                            }`}
-                            dir="ltr"
-                          >
-                            {isCredit
-                              ? `-${formatMoney(row.totalAmount)}`
-                              : formatMoney(row.totalAmount)}
-                          </span>{" "}
-                          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
-                            {t("common.sar")}
-                          </span>
+                          <Money amount={row.vatAmount} color="muted" size="xs" />
+                        </td>
+
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <Money
+                            amount={isCredit ? -Math.abs(Number(row.totalAmount)) : row.totalAmount}
+                            color={isCredit ? "rose" : "default"}
+                            size="sm"
+                          />
                         </td>
 
                         <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
@@ -843,7 +687,7 @@ export default function InvoicesPage() {
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <span className="text-[11px] text-slate-400 block">
-                          العميل:
+                          {t("invoice.customer")}:
                         </span>
                         <strong className="text-xs font-bold text-slate-900 dark:text-white">
                           {row.customerName}
@@ -851,21 +695,13 @@ export default function InvoicesPage() {
                       </div>
                       <div className="text-left">
                         <span className="text-[11px] text-slate-400 block">
-                          الإجمالي الشامل:
+                          {t("invoice.total")}:
                         </span>
-                        <strong
-                          className={`font-mono text-sm font-black ${
-                            isCredit
-                              ? "text-rose-600 dark:text-rose-400"
-                              : "text-slate-900 dark:text-white"
-                          }`}
-                          dir="ltr"
-                        >
-                          {isCredit
-                            ? `-${formatMoney(row.totalAmount)}`
-                            : formatMoney(row.totalAmount)}{" "}
-                          ر.س
-                        </strong>
+                        <Money
+                          amount={isCredit ? -Math.abs(Number(row.totalAmount)) : row.totalAmount}
+                          color={isCredit ? "rose" : "default"}
+                          size="sm"
+                        />
                       </div>
                     </div>
 
@@ -874,8 +710,9 @@ export default function InvoicesPage() {
                         <Calendar className="w-3.5 h-3.5 text-amber-500" />
                         {dateLabel(row.invoiceDate)}
                       </span>
-                      <span className="font-mono">
-                        الضريبة: {formatMoney(row.vatAmount)} ر.س
+                      <span className="flex items-center gap-1">
+                        <span>{t("invoice.vat")}:</span>
+                        <Money amount={row.vatAmount} size="xs" color="muted" />
                       </span>
                     </div>
 

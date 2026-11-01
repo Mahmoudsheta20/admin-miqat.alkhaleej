@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Calculator,
   History,
@@ -22,8 +22,7 @@ import {
   type PurchaseRow,
 } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader, StatCard, StatRow, Money } from "@/app/_components/ui";
 import PurchaseForm from "./purchase-form";
 import PurchaseHistory from "./purchase-history";
 import { useLanguage } from "@/lib/languageContext";
@@ -63,134 +62,127 @@ export default function PurchasesPage() {
 
   function saved() {
     setEditor(null);
-    setMessage("تم حفظ فاتورة المورد وتحديث السجل المالي والضريبي.");
+    setMessage(isRTL ? "تم حفظ فاتورة المورد وتحديث السجل المالي والضريبي." : "Supplier invoice saved and ledger updated.");
     setReload((value) => value + 1);
   }
 
+  const purchasesHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل المصروفات والمشتريات ومعالجة ضريبة المدخلات" : "Purchases & Input VAT Guide",
+    summary: isRTL
+      ? "يُسجل في هذا القسم كافة فواتير الموردين ومصاريف تشغيل الأسطول من وقود وصيانة وتأمين، مع احتساب ضريبة المشتريات القابلة للخصم في الإقرار."
+      : "Records all supplier invoices and fleet operating expenses (fuel, maintenance, insurance), tracking deductible input VAT for the tax return.",
+    cards: [
+      {
+        title: isRTL ? "١. فئات مصروفات الأسطول" : "1. Fleet Expense Categories",
+        badge: isRTL ? "التكاليف التشغيلية" : "Operating Costs",
+        items: [
+          {
+            label: isRTL ? "مصروفات المركبات والتشغيل" : "Vehicle & Operations",
+            description: isRTL
+              ? "الوقود (5101)، الصيانة والإطارات (5102)، النقل من الباطن (5103)، وتأمين المركبات (5104)."
+              : "Fuel (5101), Maintenance & Tyres (5102), Subcontracted Transport (5103), Vehicle Insurance (5104).",
+          },
+          {
+            label: isRTL ? "الرواتب والرسوم الحكومية" : "Salaries & Government Fees",
+            description: isRTL
+              ? "رواتب وعمولات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة."
+              : "Driver salaries & commissions (5105), licensing & government fees (5106); VAT locked at 0.00 SAR.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. ضريبة مشتريات يمكن خصمها" : "2. Deductible Input VAT",
+        badge: "ZATCA 15%",
+        items: [
+          {
+            label: isRTL ? "شروط استحقاق الخصم" : "Deduction Eligibility",
+            description: isRTL
+              ? "توفر فاتورة ضريبية رسمية باسم الشركة، ورقم ضريبي للمورد، ورقم مرجعي للمستند."
+              : "Official company tax invoice, supplier tax number, and reference voucher number.",
+          },
+          {
+            label: isRTL ? "حساب الضريبة من الإجمالي" : "VAT Extracted from Gross",
+            description: isRTL
+              ? "يدعم النظام إدخال الصافي قبل الضريبة أو استخراج الضريبة عكسياً من الإجمالي شامل 15% بدقة هللة واحدة."
+              : "Supports net entry or reverse extraction from 15% gross with halala precision.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. طريقة الدفع والأرشفة" : "3. Payment & Archiving",
+        badge: isRTL ? "المرفقات والقيود" : "Ledger & Attachments",
+        items: [
+          {
+            label: isRTL ? "طرق السداد المعتمدة" : "Payment Methods",
+            description: isRTL
+              ? "آجل على حساب المورد (2101) أو تحويل بنكي (1102) أو نقداً من الصندوق (1101)."
+              : "Payable to supplier (2101), bank transfer (1102), or petty cash (1101).",
+          },
+          {
+            label: isRTL ? "رفع صورة الفاتورة أو PDF" : "Receipt / PDF Upload",
+            description: isRTL
+              ? "يمكن إرفاق نسخة الفاتورة أو الإيصال مباشرة لحفظ المستند المؤيد للخصم الضريبي."
+              : "Upload invoice photos or PDF receipts to archive supporting documentation.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "عند تسجيل مصروفات غير خاضعة للضريبة مثل الرسوم الحكومية أو الرواتب، يُغلق حقل الضريبة تلقائياً لمنع أي أخطاء في إقرار هيئة الزكاة."
+      : "Non-taxable expenses like government fees or salaries automatically lock VAT to 0.00 to prevent return errors.",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6 pb-12" dir={dir}>
-      {/* Top Page Header (§9, §16) */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-            <ShoppingBag className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-bold">
-                {t("section.financeDaily")}
-              </span>
-              <span className="text-xs text-slate-400 font-medium">
-                {t("purchases.subtitle")}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-              {t("purchases.title")}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {t("purchases.subtitle")}
-            </p>
-          </div>
-        </div>
+      {/* Top Page Header with Slide-Over Help */}
+      <PageHeader
+        title={t("purchases.title")}
+        subtitle={t("purchases.subtitle")}
+        badge={t("section.financeDaily")}
+        icon={ShoppingBag}
+        onRefresh={() => setReload((value) => value + 1)}
+        isRefreshing={isLoading}
+        helpGuide={purchasesHelpGuide}
+        onSeeded={(msg) => {
+          setMessage(msg);
+          setReload((value) => value + 1);
+        }}
+        onSeedError={(err) => setMessage(err)}
+        actions={
+          <>
+            <Link
+              href="/admin/vat-returns"
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+            >
+              <Calculator className="size-4 text-amber-500" />
+              <span>{t("nav.vatReturnsShort")}</span>
+            </Link>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setMessage(msg);
-              setReload((value) => value + 1);
-            }}
-            onError={(err) => setMessage(err)}
-          />
+            <button
+              type="button"
+              onClick={() => {
+                setMessage("");
+                setEditor("NEW_RETURN");
+              }}
+              className="theme-card inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
+            >
+              <RotateCcw className="size-4" />
+              <span>+ {t("purchases.newReturn")}</span>
+            </button>
 
-          <Link
-            href="/admin/vat-returns"
-            className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
-          >
-            <Calculator className="size-4 text-amber-500" />
-            <span>{t("nav.vatReturnsShort")}</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMessage("");
-              setEditor("NEW_RETURN");
-            }}
-            className="theme-card inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3.5 py-2.5 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
-          >
-            <RotateCcw className="size-4" />
-            <span>+ {t("purchases.newReturn")}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMessage("");
-              setEditor("NEW");
-            }}
-            className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black shadow-sm hover:shadow-md transition cursor-pointer"
-          >
-            <Plus className="size-4" />
-            <span>{t("purchases.newPurchase")}</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Guide Card (§2, §9) */}
-      <SectionGuide
-        title="دليل المصروفات والمشتريات ومعالجة ضريبة المدخلات"
-        summary="يُسجل في هذا القسم كافة فواتير الموردين ومصاريف تشغيل الأسطول من وقود وصيانة وتأمين، مع احتساب ضريبة المشتريات القابلة للخصم في الإقرار."
-        cards={[
-          {
-            title: "1. فئات مصروفات الأسطول",
-            badge: "التكاليف التشغيلية",
-            items: [
-              {
-                label: "مصروفات المركبات والتشغيل",
-                description:
-                  "الوقود (5101)، الصيانة والإطارات (5102)، النقل من الباطن (5103)، وتأمين المركبات (5104).",
-              },
-              {
-                label: "الرواتب والرسوم الحكومية",
-                description:
-                  "رواتب وعمولات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة.",
-              },
-            ],
-          },
-          {
-            title: "2. ضريبة مشتريات يمكن خصمها",
-            badge: "ZATCA 15%",
-            items: [
-              {
-                label: "شروط استحقاق الخصم",
-                description:
-                  "توفر فاتورة ضريبية رسمية باسم الشركة، ورقم ضريبي للمورد، ورقم مرجعي للمستند.",
-              },
-              {
-                label: "حساب الضريبة من الإجمالي",
-                description:
-                  "يدعم النظام إدخال الصافي قبل الضريبة أو استخراج الضريبة عكسياً من الإجمالي شامل 15% بدقة هللة واحدة.",
-              },
-            ],
-          },
-          {
-            title: "3. طريقة الدفع والأرشفة",
-            badge: "المرفقات والقيود",
-            items: [
-              {
-                label: "طرق السداد المعتمدة",
-                description:
-                  "آجل على حساب المورد (2101) أو تحويل بنكي (1102) أو نقداً من الصندوق (1101).",
-              },
-              {
-                label: "رفع صورة الفاتورة أو PDF",
-                description:
-                  "يمكن إرفاق نسخة الفاتورة أو الإيصال مباشرة لحفظ المستند المؤيد للخصم الضريبي.",
-              },
-            ],
-          },
-        ]}
-        tip="عند تسجيل مصروفات غير خاضعة للضريبة مثل الرسوم الحكومية أو الرواتب، يُغلق حقل الضريبة تلقائياً لمنع أي أخطاء في إقرار هيئة الزكاة."
+            <button
+              type="button"
+              onClick={() => {
+                setMessage("");
+                setEditor("NEW");
+              }}
+              className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black shadow-sm hover:shadow-md transition cursor-pointer"
+            >
+              <Plus className="size-4" />
+              <span>{t("purchases.newPurchase")}</span>
+            </button>
+          </>
+        }
       />
 
       {/* Filters Toolbar */}
@@ -332,48 +324,39 @@ export default function PurchasesPage() {
       )}
 
       {/* KPI Cards Ribbon */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {[
-          {
-            label: t("purchases.subtotal"),
-            value: data?.totals.netAmount,
-            color: "text-slate-900 dark:text-white",
-          },
-          {
-            label: t("purchases.totalVat"),
-            value: data?.totals.vatAmount,
-            color: "text-amber-600 dark:text-amber-400",
-          },
-          {
-            label: t("purchases.recoverableVat"),
-            value: data?.totals.recoverableVat,
-            color: "text-emerald-600 dark:text-emerald-400",
-          },
-          {
-            label: t("purchases.total"),
-            value: data?.totals.totalAmount,
-            color: "text-slate-900 dark:text-white",
-          },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="theme-card rounded-2xl border theme-border p-4 sm:p-5"
-          >
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              {card.label}
-            </p>
-            <p
-              className={`mt-2 font-mono text-xl sm:text-2xl font-black ${card.color}`}
-              dir="ltr"
-            >
-              {card.value ? amountLabel(card.value) : "—"}
-              <span className="ms-1.5 text-xs font-bold text-slate-400">
-                {t("common.sar")}
-              </span>
-            </p>
-          </div>
-        ))}
-      </div>
+      <StatRow columns={4}>
+        <StatCard
+          label={t("purchases.subtotal")}
+          value={data?.totals.netAmount ? amountLabel(data.totals.netAmount) : "0.00"}
+          unit={t("common.sar")}
+          icon={ShoppingBag}
+          isLoading={isLoading && !data}
+        />
+        <StatCard
+          label={t("purchases.totalVat")}
+          value={data?.totals.vatAmount ? amountLabel(data.totals.vatAmount) : "0.00"}
+          unit={t("common.sar")}
+          icon={Calculator}
+          variant="amber"
+          isLoading={isLoading && !data}
+        />
+        <StatCard
+          label={t("purchases.recoverableVat")}
+          value={data?.totals.recoverableVat ? amountLabel(data.totals.recoverableVat) : "0.00"}
+          unit={t("common.sar")}
+          icon={RotateCcw}
+          variant="emerald"
+          isLoading={isLoading && !data}
+        />
+        <StatCard
+          label={t("purchases.total")}
+          value={data?.totals.totalAmount ? amountLabel(data.totals.totalAmount) : "0.00"}
+          unit={t("common.sar")}
+          icon={ShoppingBag}
+          variant="blue"
+          isLoading={isLoading && !data}
+        />
+      </StatRow>
 
       {/* Purchases Table Container */}
       <div className="theme-card overflow-hidden rounded-2xl sm:rounded-3xl border theme-border shadow-xs">
@@ -471,57 +454,36 @@ export default function PurchasesPage() {
                       </span>
                     </td>
 
-                    <td
-                      className="px-4 py-3.5 font-mono text-xs whitespace-nowrap"
-                      dir="ltr"
-                    >
-                      {amountLabel(
-                        isReturn
-                          ? String(-Number(row.netAmount))
-                          : row.netAmount,
-                      )}
-                    </td>
-
-                    <td
-                      className="px-4 py-3.5 font-mono text-xs whitespace-nowrap"
-                      dir="ltr"
-                    >
-                      {amountLabel(
-                        isReturn
-                          ? String(-Number(row.vatAmount))
-                          : row.vatAmount,
-                      )}
-                    </td>
-
-                    <td
-                      className="px-4 py-3.5 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap"
-                      dir="ltr"
-                    >
-                      {amountLabel(
-                        isReturn
-                          ? String(-Number(row.recoverableVat))
-                          : row.recoverableVat,
-                      )}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Money
+                        amount={isReturn ? -Number(row.netAmount) : row.netAmount}
+                        color="muted"
+                        size="xs"
+                      />
                     </td>
 
                     <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span
-                        className={`font-mono font-black text-sm ${
-                          isReturn
-                            ? "text-rose-600 dark:text-rose-400"
-                            : "text-slate-900 dark:text-white"
-                        }`}
-                        dir="ltr"
-                      >
-                        {amountLabel(
-                          isReturn
-                            ? String(-Number(row.totalAmount))
-                            : row.totalAmount,
-                        )}
-                      </span>{" "}
-                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                        ر.س
-                      </span>
+                      <Money
+                        amount={isReturn ? -Number(row.vatAmount) : row.vatAmount}
+                        color="muted"
+                        size="xs"
+                      />
+                    </td>
+
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Money
+                        amount={isReturn ? -Number(row.recoverableVat) : row.recoverableVat}
+                        color="emerald"
+                        size="xs"
+                      />
+                    </td>
+
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Money
+                        amount={isReturn ? -Number(row.totalAmount) : row.totalAmount}
+                        color={isReturn ? "rose" : "default"}
+                        size="sm"
+                      />
                     </td>
 
                     <td className={`px-4 py-3.5 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}>
@@ -599,7 +561,7 @@ export default function PurchasesPage() {
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <div className="space-y-0.5">
                     <span className="text-[11px] text-slate-400 block">
-                      التاريخ:
+                      {t("purchases.date")}:
                     </span>
                     <span className="font-mono text-slate-700 dark:text-slate-300">
                       {row.issueDate}
@@ -607,40 +569,32 @@ export default function PurchasesPage() {
                   </div>
                   <div className="text-left space-y-0.5">
                     <span className="text-[11px] text-slate-400 block">
-                      الإجمالي الشامل:
+                      {t("purchases.total")}:
                     </span>
-                    <span
-                      className={`font-mono text-sm font-black ${
-                        isReturn
-                          ? "text-rose-600 dark:text-rose-400"
-                          : "text-slate-900 dark:text-white"
-                      }`}
-                      dir="ltr"
-                    >
-                      {amountLabel(
-                        isReturn
-                          ? String(-Number(row.totalAmount))
-                          : row.totalAmount,
-                      )}{" "}
-                      ر.س
-                    </span>
+                    <Money
+                      amount={isReturn ? -Number(row.totalAmount) : row.totalAmount}
+                      color={isReturn ? "rose" : "default"}
+                      size="sm"
+                    />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-[11px] text-slate-600 dark:text-slate-300 font-mono">
-                  <span>
-                    قبل الضريبة:{" "}
-                    {amountLabel(
-                      isReturn ? String(-Number(row.netAmount)) : row.netAmount,
-                    )}
+                  <span className="flex items-center gap-1">
+                    <span>{t("purchases.subtotal")}:</span>
+                    <Money
+                      amount={isReturn ? -Number(row.netAmount) : row.netAmount}
+                      size="xs"
+                      color="muted"
+                    />
                   </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                    مسترد:{" "}
-                    {amountLabel(
-                      isReturn
-                        ? String(-Number(row.recoverableVat))
-                        : row.recoverableVat,
-                    )}
+                  <span className="flex items-center gap-1">
+                    <span>{t("purchases.recoverableVat")}:</span>
+                    <Money
+                      amount={isReturn ? -Number(row.recoverableVat) : row.recoverableVat}
+                      size="xs"
+                      color="emerald"
+                    />
                   </span>
                 </div>
 

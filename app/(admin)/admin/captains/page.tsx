@@ -3,18 +3,16 @@ import LoadError from "@/app/_components/LoadError";
 
 import Modal from "@/app/_components/Modal";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import ImageUpload from "@/app/_components/ImageUpload";
 import {
   UserPlus,
-  Search,
   Car,
   CheckCircle2,
   XCircle,
   Edit2,
   Trash2,
-  RefreshCw,
   X,
   KeyRound,
   Copy,
@@ -33,8 +31,7 @@ import {
 import { SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader, FilterBar } from "@/app/_components/ui";
 import {
   fetchCached,
   getCachedData,
@@ -48,7 +45,7 @@ type CaptainItem = SystemUser & {
 };
 
 export default function CaptainsManagementPage() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const cachedCaptains =
     getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
   const [captains, setCaptains] = useState<CaptainItem[]>(() => {
@@ -66,6 +63,7 @@ export default function CaptainsManagementPage() {
   const [loadError, setLoadError] = useState("");
   const [seedMessage, setSeedMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
     null,
@@ -262,7 +260,15 @@ export default function CaptainsManagementPage() {
   };
 
   const safeCaptains = Array.isArray(captains) ? captains : [];
+  const activeCount = safeCaptains.filter((c) => c.active).length;
+  const inactiveCount = safeCaptains.filter((c) => !c.active).length;
+  const inspectedCount = safeCaptains.filter((c) => c.hasTodayInspection).length;
+
   const filtered = safeCaptains.filter((c) => {
+    if (statusFilter === "ACTIVE" && !c.active) return false;
+    if (statusFilter === "INACTIVE" && c.active) return false;
+    if (statusFilter === "INSPECTED" && !c.hasTodayInspection) return false;
+
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -274,6 +280,73 @@ export default function CaptainsManagementPage() {
     );
   });
 
+  const captainsHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل إدارة الكباتن ورخص القيادة وإسناد المركبات" : "Captains & Drivers Management Guide",
+    summary: isRTL
+      ? "يُدار في هذا القسم سجل كباتن شركة ميقات الخليج للنقل البري، بيانات الهوية الوطنية/الإقامة، رخص القيادة وتواريخ انتهائها، المركبة المسندة لكل كابتن، وحالة الفحص اليومي."
+      : "Manages Miqat Al-Khaleej captains registry, national/residence IDs, driving licenses and expiry dates, assigned vehicle plates, and daily safety inspection records.",
+    cards: [
+      {
+        title: isRTL ? "١. بيانات الكابتن والاعتماد" : "1. Captain Credentials & Licensing",
+        badge: isRTL ? "السجل الرسمي" : "Official Registry",
+        items: [
+          {
+            label: isRTL ? "الهوية ورخصة القيادة" : "National ID & Driving License",
+            description: isRTL
+              ? "توثيق رقم الهوية/الإقامة ورقم رخصة القيادة العمومي وتاريخ انتهائها لضمان الامتثال النظامي."
+              : "Verifies national/iqama ID and commercial driver license expiry dates for regulatory compliance.",
+          },
+          {
+            label: isRTL ? "إسناد المركبة (Vehicle Plate)" : "Assigned Vehicle Plate",
+            description: isRTL
+              ? "ربط الكابتن بلوحة المركبة المخصصة له لتعبئتها تلقائياً في شاشة الفحص اليومي وعقود النقل."
+              : "Links captain to their assigned vehicle plate to auto-populate daily inspection and transport contracts.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. بوابة الكابتن وكلمات المرور" : "2. Driver Portal & Security",
+        badge: isRTL ? "الأمان والدخول" : "Portal Security",
+        items: [
+          {
+            label: isRTL ? "إنشاء كلمة مرور مؤقتة" : "Temporary Passwords",
+            description: isRTL
+              ? "عند إضافة كابتن جديد أو الضغط على أيقونة المفتاح، يُصدر النظام كلمة مرور مؤقتة لدخول بوابة الكابتن."
+              : "Issues temporary access credentials upon captain creation or password reset for the mobile inspection portal.",
+          },
+          {
+            label: isRTL ? "التنشيط والإيقاف الفوري" : "Instant Activation / Deactivation",
+            description: isRTL
+              ? "يمكن تفعيل أو إيقاف حساب الكابتن بضغطة واحدة دون فقدان سجل عقوده وفحوصاته السابقة."
+              : "Instantly toggle account active state while safely preserving all historical trips and inspections.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. الربط التشغيلي والمحاسبي" : "3. Operations & Payroll Link",
+        badge: isRTL ? "التكامل" : "Integration",
+        items: [
+          {
+            label: isRTL ? "حالة فحص اليوم" : "Today's Inspection Status",
+            description: isRTL
+              ? "يظهر أمام كل كابتن شارة فورية توضح ما إذا أتم فحص السلامة اليومي للمركبة أم بانتظار الفحص."
+              : "Live indicator showing whether the captain has completed today's vehicle safety inspection.",
+          },
+          {
+            label: isRTL ? "مسير الرواتب والعهد" : "Salaries & Custody",
+            code: "5105 / 1104",
+            description: isRTL
+              ? "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%)."
+              : "Driver salaries and commissions link to account 5105 as non-taxable transactions (0% VAT).",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "استخدم زر المفتاح (إعادة تعيين كلمة المرور) لإصدار بيانات دخول جديدة للكابتن ونسخها بضغطة واحدة."
+      : "Use the key icon to generate new temporary login credentials and copy them with one click.",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6">
       <LoadError
@@ -283,48 +356,33 @@ export default function CaptainsManagementPage() {
         }}
         isLoading={isLoading}
       />
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {t("captains.title")}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {t("captains.subtitle")}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setLoadError("");
-              setSeedMessage(msg);
-              invalidateClientCache("captains_list");
-              void loadCaptains(true);
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setLoadError(err);
-            }}
-          />
-          <button
-            onClick={() => loadCaptains(true)}
-            disabled={isLoading}
-            className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50 cursor-pointer"
-            title={t("common.refresh")}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-          </button>
-          <button
-            onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl gold-gradient-btn transition shadow-sm cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" />
-            {t("captains.add")}
-          </button>
-        </div>
-      </div>
+
+      {/* Page Header with On-Demand Guide */}
+      <PageHeader
+        title={t("captains.title")}
+        subtitle={t("captains.subtitle")}
+        badge={isRTL ? "إدارة الكباتن والسائقين" : "Captains & Drivers"}
+        icon={UserPlus}
+        onRefresh={() => void loadCaptains(true)}
+        isRefreshing={isLoading}
+        helpGuide={captainsHelpGuide}
+        onSeeded={(msg) => {
+          setLoadError("");
+          setSeedMessage(msg);
+          invalidateClientCache("captains_list");
+          void loadCaptains(true);
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setLoadError(err);
+        }}
+        primaryAction={{
+          label: t("captains.add"),
+          onClick: openAddModal,
+          icon: UserPlus,
+          variant: "primary",
+        }}
+      />
 
       {seedMessage && (
         <p
@@ -335,82 +393,20 @@ export default function CaptainsManagementPage() {
         </p>
       )}
 
-      <SectionGuide
-        title="شرح إدارة الكباتن ورخص القيادة وإسناد المركبات"
-        summary="يُدار في هذا القسم سجل كباتن شركة ميقات الخليج للنقل البري، بيانات الهوية الوطنية/الإقامة، رخص القيادة وتواريخ انتهائها، المركبة المسندة لكل كابتن، وحالة الفحص اليومي."
-        cards={[
-          {
-            title: "1. بيانات الكابتن والاعتماد",
-            badge: "السجل الرسمي",
-            items: [
-              {
-                label: "الهوية ورخصة القيادة",
-                description:
-                  "توثيق رقم الهوية/الإقامة ورقم رخصة القيادة العمومي وتاريخ انتهائها لضمان الامتثال النظامي.",
-              },
-              {
-                label: "إسناد المركبة (Vehicle Plate)",
-                description:
-                  "ربط الكابتن بلوحة المركبة المخصصة له لتعبئتها تلقائياً في شاشة الفحص اليومي وعقود النقل.",
-              },
-            ],
-          },
-          {
-            title: "2. بوابة الكابتن وكلمات المرور",
-            badge: "الأمان والدخول",
-            items: [
-              {
-                label: "إنشاء كلمة مرور مؤقتة",
-                description:
-                  "عند إضافة كابتن جديد أو الضغط على أيقونة المفتاح، يُصدر النظام كلمة مرور مؤقتة لدخول بوابة الكابتن.",
-              },
-              {
-                label: "التنشيط والإيقاف الفوري",
-                description:
-                  "يمكن تفعيل أو إيقاف حساب الكابتن بضغطة واحدة دون فقدان سجل عقوده وفحوصاته السابقة.",
-              },
-            ],
-          },
-          {
-            title: "3. الربط التشغيلي والمحاسبي",
-            badge: "التكامل",
-            items: [
-              {
-                label: "حالة فحص اليوم",
-                description:
-                  "يظهر أمام كل كابتن شارة فورية توضح ما إذا أتم فحص السلامة اليومي للمركبة أم بانتظار الفحص.",
-              },
-              {
-                label: "مسير الرواتب والعهد",
-                code: "5105 / 1104",
-                description:
-                  "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%).",
-              },
-            ],
-          },
+      {/* Unified Filter and Search Bar */}
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={isRTL ? "البحث بالاسم، رقم الهوية، رقم الجوال، أو اللوحة..." : "Search by name, ID, phone, or plate..."}
+        tabs={[
+          { id: "ALL", label: t("common.all"), count: safeCaptains.length },
+          { id: "ACTIVE", label: isRTL ? "نشط" : "Active", count: activeCount },
+          { id: "INSPECTED", label: isRTL ? "مفحوص اليوم" : "Inspected Today", count: inspectedCount },
+          { id: "INACTIVE", label: isRTL ? "موقف" : "Inactive", count: inactiveCount },
         ]}
-        tip="استخدم زر المفتاح (إعادة تعيين كلمة المرور) لإصدار بيانات دخول جديدة للكابتن ونسخها بضغطة واحدة."
+        activeTab={statusFilter}
+        onTabChange={setStatusFilter}
       />
-
-      {/* Search Filter */}
-      <div className="theme-card p-4 rounded-2xl border theme-border flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-400 shrink-0" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="البحث بالاسم، رقم الهوية، رقم الجوال، أو اللوحة..."
-          className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-hidden"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch("")}
-            className="text-slate-400 hover:text-slate-600 text-xs font-bold"
-          >
-            إلغاء
-          </button>
-        )}
-      </div>
 
       {/* Table */}
       <div className="theme-card rounded-2xl overflow-hidden border theme-border">

@@ -1,7 +1,7 @@
-j"use client";
+"use client";
 import dynamic from "next/dynamic";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition, useMemo } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -9,7 +9,6 @@ import {
   FileCheck2,
   ClipboardCheck,
   ArrowUpRight,
-  RefreshCw,
   FileText,
   ChevronLeft,
   ChevronRight,
@@ -19,8 +18,7 @@ import {
 } from "lucide-react";
 import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
 import StatusBadge from "@/app/_components/StatusBadge";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader } from "@/app/_components/ui";
 const PdfPreviewModal = dynamic(
   () => import("@/app/_components/PdfPreviewModal"),
   { ssr: false },
@@ -75,56 +73,123 @@ export default function AdminDashboardPage() {
     setIsPdfOpen(true);
   };
 
+  const dashboardHelpGuide = useMemo(
+    () => ({
+      title: isRTL
+        ? "كيف تعمل لوحة الإشراف العام ومنظومة التشغيل والمالية؟"
+        : "How the Operations & Financial Dashboard Works",
+      summary: isRTL
+        ? "مركز القيادة الموحد لشركة ميقات الخليج للنقل البري: يربط دورة التشغيل الميداني (المركبات ← الكباتن ← الفحص اليومي ← العقود الرسمية) بالدورة المحاسبية والضريبية (الفواتير ← المشتريات ← القيود ← الإقرار الضريبي)."
+        : "Unified command center for Miqat Al-Khaleej: connects field operations (fleet → captains → pre-trip inspection → contracts) with accounting and tax cycles (invoices → purchases → journal entries → VAT return).",
+      cards: [
+        {
+          title: isRTL ? "١. دورة التشغيل الميداني" : "1. Field Operations Cycle",
+          badge: isRTL ? "العمليات" : "Operations",
+          items: [
+            {
+              label: isRTL ? "أسطول المركبات والكباتن" : "Fleet & Captains",
+              description: isRTL
+                ? "تسجيل الحافلات وسيارات VIP وتعيين مركبة مخصصة لكل كابتن مع متابعة صلاحية الاستمارة والتأمين."
+                : "Register buses and VIP vehicles, assign dedicated vehicles to captains, and track registration & insurance.",
+            },
+            {
+              label: isRTL ? "الفحص اليومي الإلزامي" : "Mandatory Pre-Trip Inspection",
+              description: isRTL
+                ? "يُشترط اجتياز فحص السلامة اليومي (15 بنداً ميكانيكياً وأمنياً) قبل إصدار عقود التشغيل اليومية."
+                : "Pass the daily 15-point safety inspection before issuing daily operation contracts.",
+            },
+            {
+              label: isRTL ? "العقود وكشوف الركاب" : "Contracts & Passenger Manifests",
+              description: isRTL
+                ? "إصدار عقود النقل الرسمية متضمنة بيانات الرحلة، الناقل الجوي، وكشف أسماء وجنسيات وهويات الركاب."
+                : "Issue official passenger contracts with trip details, airline info, and manifest details.",
+            },
+          ],
+        },
+        {
+          title: isRTL ? "٢. الدورة المالية والفوترة ZATCA" : "2. Financial & ZATCA Invoicing",
+          badge: isRTL ? "المبيعات والضريبة" : "Sales & Tax",
+          items: [
+            {
+              label: isRTL ? "فواتير الحجوزات والضريبة" : "Trip Invoices & VAT",
+              code: "15% / 0% / معفى",
+              description: isRTL
+                ? "إصدار فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة متوافقة مع المرحلة الأولى لهيئة الزكاة والضريبة والجمارك (TLV Base64 QR)."
+                : "Issue tax/simplified invoices and debit/credit notes compliant with ZATCA Phase 1 QR codes.",
+            },
+            {
+              label: isRTL ? "الترحيل المحاسبي التلقائي" : "Automated Journal Entries",
+              code: "1102 / 1103 / 4101 / 210201",
+              description: isRTL
+                ? "كل فاتورة معتمدة تُنشئ قيد يومية متوازناً يربط حساب الإيراد وحساب ضريبة المخرجات بحساب البنك أو ذمم العملاء."
+                : "Every confirmed invoice posts a balanced journal entry linking revenues, output VAT, and cash/receivables.",
+            },
+          ],
+        },
+        {
+          title: isRTL ? "٣. المصروفات والإقرار الضريبي" : "3. Expenses & VAT Return",
+          badge: "ZATCA VAT",
+          items: [
+            {
+              label: isRTL ? "مشتريات ومصروفات الأسطول" : "Fleet Purchases & Expenses",
+              code: "5101–5203",
+              description: isRTL
+                ? "تسجيل فواتير الوقود والصيانة والإيجارات مع احتساب ضريبة المدخلات القابلة للاسترداد (210202) وعزل الرسوم الحكومية والرواتب."
+                : "Log fuel, maintenance, and fleet expenses with recoverable input VAT separated from fees.",
+            },
+            {
+              label: isRTL ? "الإقرار الضريبي الربع سنوي" : "Quarterly VAT Return",
+              code: "خانات 1–16",
+              description: isRTL
+                ? "تجميع آلي لصافي الضريبة المستحقة (ضريبة المخرجات ناقص ضريبة المدخلات) مع نسخ فوري للأرقام لبوابة هيئة الزكاة."
+                : "Automated net tax calculation (output VAT minus input VAT) with one-click copy for the ZATCA portal.",
+            },
+          ],
+        },
+      ],
+      tip: isRTL
+        ? "اضغط على زر «بيانات تجريبية شاملة» في الأعلى لتعبئة جميع الأقسام تلقائياً وتجربة دورة العمل المتكاملة."
+        : "Click 'Seed Full Test Data' in the header to populate all sections and experience the integrated workflow.",
+      formula: "Net VAT = Output VAT (Sales 15% ± Notes) − Input VAT (Purchases 15% − Returns)",
+    }),
+    [isRTL]
+  );
+
   return (
     <div className="space-y-6">
-      {/* Top Header & Refresh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {t("dashboard.title")}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {t("dashboard.subtitle")}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setSeedError("");
-              setSeedMessage(msg);
-              loadStats(true);
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setSeedError(err);
-            }}
-          />
-          <button
-            onClick={() => loadStats(true)}
-            disabled={isLoading}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 min-h-[42px] shadow-2xs cursor-pointer"
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
-            />
-            {t("common.refresh")}
-          </button>
-          <Link
-            href="/admin/invoices/new"
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 transition min-h-[42px]"
-          >
-            <ReceiptText className="w-4 h-4" />
-            <span>+ {t("nav.invoices")}</span>
-          </Link>
-          <Link
-            href="/admin/contracts/new"
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-sm min-h-[42px]"
-          >
-            <FilePlus2 className="w-4 h-4" />
-            <span>+ {t("contracts.newContract")}</span>
-          </Link>
-        </div>
-      </div>
+      {/* Top Header Section with On-Demand Slide-Over Guide */}
+      <PageHeader
+        title={t("dashboard.title")}
+        subtitle={t("dashboard.subtitle")}
+        badge={isRTL ? "مركز العمليات والإشراف المالي" : "Operations & Financial Dashboard"}
+        icon={ReceiptText}
+        onRefresh={() => loadStats(true)}
+        isRefreshing={isLoading}
+        helpGuide={dashboardHelpGuide}
+        onSeeded={(msg) => {
+          setSeedError("");
+          setSeedMessage(msg);
+          loadStats(true);
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setSeedError(err);
+        }}
+        primaryAction={{
+          label: `+ ${t("contracts.newContract")}`,
+          href: "/admin/contracts/new",
+          icon: FilePlus2,
+          variant: "primary",
+        }}
+        secondaryActions={[
+          {
+            label: `+ ${t("nav.invoices")}`,
+            href: "/admin/invoices/new",
+            icon: ReceiptText,
+            variant: "subtle",
+          },
+        ]}
+      />
 
       {seedMessage && (
         <p
@@ -139,72 +204,6 @@ export default function AdminDashboardPage() {
           {seedError}
         </p>
       )}
-
-      <SectionGuide
-        title="كيف تعمل لوحة الإشراف العام ومنظومة التشغيل والمالية؟"
-        summary="مركز القيادة الموحد لشركة ميقات الخليج للنقل البري: يربط دورة التشغيل الميداني (المركبات ← الكباتن ← الفحص اليومي ← العقود الرسمية) بالدورة المحاسبية والضريبية (الفواتير ← المشتريات ← القيود ← الإقرار الضريبي)."
-        cards={[
-          {
-            title: "1. دورة التشغيل الميداني",
-            badge: "العمليات",
-            items: [
-              {
-                label: "أسطول المركبات والكباتن",
-                description:
-                  "تسجيل الحافلات وسيارات VIP وتعيين مركبة مخصصة لكل كابتن مع متابعة صلاحية الاستمارة والتأمين.",
-              },
-              {
-                label: "الفحص اليومي الإلزامي",
-                description:
-                  "يُشترط اجتياز فحص السلامة اليومي (15 بنداً ميكانيكياً وأمنياً) قبل إصدار عقود التشغيل اليومية.",
-              },
-              {
-                label: "العقود وكشوف الركاب",
-                description:
-                  "إصدار عقود النقل الرسمية متضمنة بيانات الرحلة، الناقل الجوي، وكشف أسماء وجنسيات وهويات الركاب.",
-              },
-            ],
-          },
-          {
-            title: "2. الدورة المالية والفوترة ZATCA",
-            badge: "المبيعات والضريبة",
-            items: [
-              {
-                label: "فواتير الحجوزات والضريبة",
-                code: "15% / 0% / معفى",
-                description:
-                  "إصدار فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة متوافقة مع المرحلة الأولى لهيئة الزكاة والضريبة والجمارك (TLV Base64 QR).",
-              },
-              {
-                label: "الترحيل المحاسبي التلقائي",
-                code: "1102 / 1103 / 4101 / 210201",
-                description:
-                  "كل فاتورة معتمدة تُنشئ قيد يومية متوازناً يربط حساب الإيراد وحساب ضريبة المخرجات بحساب البنك أو ذمم العملاء.",
-              },
-            ],
-          },
-          {
-            title: "3. المصروفات والإقرار الضريبي",
-            badge: "ZATCA VAT",
-            items: [
-              {
-                label: "مشتريات ومصروفات الأسطول",
-                code: "5101–5203",
-                description:
-                  "تسجيل فواتير الوقود والصيانة والإيجارات مع احتساب ضريبة المدخلات القابلة للاسترداد (210202) وعزل الرسوم الحكومية والرواتب.",
-              },
-              {
-                label: "الإقرار الضريبي الربع سنوي",
-                code: "خانات 1–16",
-                description:
-                  "تجميع آلي لصافي الضريبة المستحقة (ضريبة المخرجات ناقص ضريبة المدخلات) مع نسخ فوري للأرقام لبوابة هيئة الزكاة.",
-              },
-            ],
-          },
-        ]}
-        tip="اضغط على زر «بيانات تجريبية شاملة (رأس مال 300,000 ر.س)» في الأعلى لتعبئة جميع الأقسام الـ 11 تلقائياً وتجربة الدورة الكاملة."
-        formula="Net VAT = Output VAT (Sales 15% ± Notes) − Input VAT (Purchases 15% − Returns)"
-      />
 
       {/* Quick Daily Operations Shortcuts */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

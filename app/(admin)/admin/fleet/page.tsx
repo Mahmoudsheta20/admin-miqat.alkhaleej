@@ -3,16 +3,15 @@ import LoadError from "@/app/_components/LoadError";
 
 import Modal from "@/app/_components/Modal";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Plus,
-  Search,
   Edit2,
   Trash2,
-  RefreshCw,
   X,
   Gauge,
   Calendar,
+  Car,
 } from "lucide-react";
 import {
   getVehicles,
@@ -24,8 +23,7 @@ import {
 import { Vehicle, VehicleStatus } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
-import SeedTestDataButton from "@/app/_components/SeedTestDataButton";
-import SectionGuide from "@/app/_components/SectionGuide";
+import { PageHeader, FilterBar } from "@/app/_components/ui";
 import {
   fetchCached,
   getCachedData,
@@ -34,7 +32,7 @@ import {
 import { useLanguage } from "@/lib/languageContext";
 
 export default function FleetManagementPage() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const cachedFleet =
     getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
@@ -197,6 +195,80 @@ export default function FleetManagementPage() {
     );
   });
 
+  const availableCount = safeVehicles.filter((v) => v.status === "AVAILABLE").length;
+  const onTripCount = safeVehicles.filter((v) => v.status === "ON_TRIP").length;
+  const maintenanceCount = safeVehicles.filter((v) => v.status === "MAINTENANCE").length;
+
+  const fleetHelpGuide = useMemo(() => ({
+    title: isRTL ? "دليل أسطول المركبات ومتابعة الجاهزية والتراخيص" : "Fleet Management & Readiness Guide",
+    summary: isRTL
+      ? "يُدار في هذا القسم أسطول حافلات وسيارات شركة ميقات الخليج للنقل البري، مع توثيق اللوحات بالعربية والإنجليزية، السعة الركابية، عداد المسافات، وتواريخ انتهاء الاستمارة والتأمين."
+      : "Manages Miqat Al-Khaleej fleet vehicles and buses, tracking Arabic/English plates, passenger capacity, odometer readings, and registration/insurance expiry.",
+    cards: [
+      {
+        title: isRTL ? "١. فئات الأسطول وحالات الجاهزية" : "1. Fleet Categories & Status",
+        badge: isRTL ? "إدارة الأسطول" : "Fleet Operations",
+        items: [
+          {
+            label: isRTL ? "تصنيف المركبات" : "Vehicle Classification",
+            code: "BUS / COASTER / SUV_VIP",
+            description: isRTL
+              ? "تحديد فئة المركبة (حافلة، كوستر، جمس VIP، فان، سيدان) وسعة المقاعد لاختيار المركبة المناسبة لحجم الوفد."
+              : "Defines vehicle class (Bus, Coaster, VIP SUV, Van, Sedan) and seating capacity for party size matching.",
+          },
+          {
+            label: isRTL ? "حالات التشغيل" : "Operational Statuses",
+            code: "AVAILABLE / ON_TRIP / MAINTENANCE",
+            description: isRTL
+              ? "تتبع ما إذا كانت المركبة جاهزة للتشغيل، أو في رحلة حالية، أو داخل الصيانة الدورية."
+              : "Tracks whether a vehicle is available for dispatch, currently on a trip, or undergoing scheduled maintenance.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٢. التراخيص والتأمين والعداد" : "2. Compliance & Mileage",
+        badge: isRTL ? "الامتثال النظامي" : "Regulatory Compliance",
+        items: [
+          {
+            label: isRTL ? "صلاحية الاستمارة والتأمين" : "Registration & Insurance Expiry",
+            description: isRTL
+              ? "مراقبة تواريخ انتهاء رخصة السير (الاستمارة) ووثيقة التأمين لتفادي إيقاف الخدمات أو المخالفات."
+              : "Monitors vehicle registration and insurance expiry dates to avoid fines and operational disruption.",
+          },
+          {
+            label: isRTL ? "قراءة عداد المسافات (Odometer)" : "Odometer Tracking",
+            description: isRTL
+              ? "تحديث المسافة المقطوعة بالكيلومتر لمتابعة مواعيد تغيير الزيوت والإطارات والصيانة الوقائية."
+              : "Records kilometers driven to schedule timely oil changes, tyre replacements, and preventative maintenance.",
+          },
+        ],
+      },
+      {
+        title: isRTL ? "٣. الربط المحاسبي بالمركبة" : "3. Cost Center Accounting",
+        badge: isRTL ? "مراكز التكلفة" : "Cost Centers",
+        items: [
+          {
+            label: isRTL ? "الأصول الثابتة للأسطول" : "Fixed Assets",
+            code: "1201",
+            description: isRTL
+              ? "تندرج قيمة أسطول السيارات والحافلات ضمن حساب (1201 - أسطول السيارات والمركبات والحافلات)."
+              : "Fleet assets post to account 1201 (Vehicles and Bus Fleet) in the chart of accounts.",
+          },
+          {
+            label: isRTL ? "ربط المصروفات باللوحة" : "Plate Expense Tracking",
+            code: "5101 / 5102 / 5104",
+            description: isRTL
+              ? "عند تسجيل فاتورة وقود أو صيانة أو تأمين في قسم المشتريات، يمكن ربطها برقم لوحة المركبة لتتبع تكلفة كل مركبة."
+              : "Supplier fuel, maintenance, and insurance bills link directly to vehicle plates for per-vehicle cost analysis.",
+          },
+        ],
+      },
+    ],
+    tip: isRTL
+      ? "ربط رقم لوحة المركبة بفواتير الوقود والصيانة والعقود يساعدك على معرفة ربحية وتكلفة تشغيل كل مركبة بدقة."
+      : "Linking vehicle plates to fuel, repair, and trip contracts provides accurate per-vehicle profitability and operating cost tracking.",
+  }), [isRTL]);
+
   return (
     <div className="space-y-6">
       <LoadError
@@ -206,48 +278,33 @@ export default function FleetManagementPage() {
         }}
         isLoading={isLoading}
       />
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {t("fleet.title")}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {t("fleet.subtitle")}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <SeedTestDataButton
-            onSeeded={(msg) => {
-              setLoadError("");
-              setSeedMessage(msg);
-              invalidateClientCache("fleet_vehicles");
-              void loadVehicles(true);
-            }}
-            onError={(err) => {
-              setSeedMessage("");
-              setLoadError(err);
-            }}
-          />
-          <button
-            onClick={() => loadVehicles(true)}
-            disabled={isLoading}
-            className="p-2 rounded-xl border theme-card hover:border-amber-500 transition text-slate-600 dark:text-slate-400 disabled:opacity-50 cursor-pointer"
-            title={t("common.refresh")}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-          </button>
-          <button
-            onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl gold-gradient-btn transition shadow-sm cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            {t("fleet.add")}
-          </button>
-        </div>
-      </div>
+
+      {/* Page Header with On-Demand Guide */}
+      <PageHeader
+        title={t("fleet.title")}
+        subtitle={t("fleet.subtitle")}
+        badge={isRTL ? "إدارة أسطول النقل" : "Fleet Management"}
+        icon={Car}
+        onRefresh={() => void loadVehicles(true)}
+        isRefreshing={isLoading}
+        helpGuide={fleetHelpGuide}
+        onSeeded={(msg) => {
+          setLoadError("");
+          setSeedMessage(msg);
+          invalidateClientCache("fleet_vehicles");
+          void loadVehicles(true);
+        }}
+        onSeedError={(err) => {
+          setSeedMessage("");
+          setLoadError(err);
+        }}
+        primaryAction={{
+          label: t("fleet.add"),
+          onClick: openAddModal,
+          icon: Plus,
+          variant: "primary",
+        }}
+      />
 
       {seedMessage && (
         <p
@@ -258,98 +315,20 @@ export default function FleetManagementPage() {
         </p>
       )}
 
-      <SectionGuide
-        title="شرح أسطول المركبات ومتابعة الجاهزية والتراخيص ومراكز التكلفة"
-        summary="يُدار في هذا القسم أسطول حافلات وسيارات شركة ميقات الخليج للنقل البري، مع توثيق اللوحات بالعربية والإنجليزية، السعة الركابية، عداد المسافات، وتواريخ انتهاء الاستمارة والتأمين."
-        cards={[
-          {
-            title: "1. فئات الأسطول وحالات الجاهزية",
-            badge: "إدارة الأسطول",
-            items: [
-              {
-                label: "تصنيف المركبات",
-                code: "BUS / COASTER / SUV_VIP",
-                description:
-                  "تحديد فئة المركبة (حافلة، كوستر، جمس VIP، فان، سيدان) وسعة المقاعد لاختيار المركبة المناسبة لحجم الوفد.",
-              },
-              {
-                label: "حالات التشغيل",
-                code: "AVAILABLE / ON_TRIP / MAINTENANCE",
-                description:
-                  "تتبع ما إذا كانت المركبة جاهزة للتشغيل، أو في رحلة حالية، أو داخل الصيانة الدورية.",
-              },
-            ],
-          },
-          {
-            title: "2. التراخيص والتأمين والعداد",
-            badge: "الامتثال النظامي",
-            items: [
-              {
-                label: "صلاحية الاستمارة والتأمين",
-                description:
-                  "مراقبة تواريخ انتهاء رخصة السير (الاستمارة) ووثيقة التأمين لتفادي إيقاف الخدمات أو المخالفات.",
-              },
-              {
-                label: "قراءة عداد المسافات (Odometer)",
-                description:
-                  "تحديث المسافة المقطوعة بالكيلومتر لمتابعة مواعيد تغيير الزيوت والإطارات والصيانة الوقائية.",
-              },
-            ],
-          },
-          {
-            title: "3. الربط المحاسبي بالمركبة",
-            badge: "مراكز التكلفة",
-            items: [
-              {
-                label: "الأصول الثابتة للأسطول",
-                code: "1201",
-                description:
-                  "تندرج قيمة أسطول السيارات والحافلات ضمن حساب (1201 - أسطول السيارات والمركبات والحافلات).",
-              },
-              {
-                label: "ربط المصروفات بلوحة المركبة",
-                code: "5101 / 5102 / 5104",
-                description:
-                  "عند تسجيل فاتورة وقود أو صيانة أو تأمين في قسم المشتريات، يمكن ربطها برقم لوحة المركبة لتتبع تكلفة كل مركبة.",
-              },
-            ],
-          },
+      {/* Unified Filter and Search Bar */}
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={isRTL ? "البحث باللوحة، الشركة المصنعة، أو الطراز..." : "Search by plate, make, or model..."}
+        tabs={[
+          { id: "ALL", label: t("common.all"), count: safeVehicles.length },
+          { id: "AVAILABLE", label: isRTL ? "جاهزة" : "Available", count: availableCount },
+          { id: "ON_TRIP", label: isRTL ? "في رحلة" : "On Trip", count: onTripCount },
+          { id: "MAINTENANCE", label: isRTL ? "صيانة" : "Maintenance", count: maintenanceCount },
         ]}
-        tip="ربط رقم لوحة المركبة بفواتير الوقود والصيانة والعقود يساعدك على معرفة ربحية وتكلفة تشغيل كل مركبة بدقة."
+        activeTab={statusFilter}
+        onTabChange={setStatusFilter}
       />
-
-      {/* Filter and Search */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="flex-1 w-full theme-card p-3 rounded-2xl border theme-border flex items-center gap-3">
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="البحث باللوحة، الشركة المصنعة، أو الطراز..."
-            className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-hidden"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          {["ALL", "AVAILABLE", "ON_TRIP", "MAINTENANCE"].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition shrink-0 ${
-                statusFilter === st
-                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
-                  : "theme-card text-slate-600 dark:text-slate-400 hover:border-amber-500"
-              }`}
-            >
-              {st === "ALL" && "الكل"}
-              {st === "AVAILABLE" && "جاهزة"}
-              {st === "ON_TRIP" && "في رحلة"}
-              {st === "MAINTENANCE" && "صيانة"}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Vehicles Grid */}
       {isLoading ? (

@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import Modal from "./Modal";
 import { AlertTriangle, X } from "lucide-react";
+import { useLanguage } from "@/lib/languageContext";
 
 interface ConfirmDialogProps {
   open?: boolean;
@@ -24,21 +25,22 @@ export default function ConfirmDialog({
   title,
   message,
   confirmLabel,
-  confirmText = "تأكيد",
+  confirmText,
   cancelLabel,
-  cancelText = "إلغاء",
+  cancelText,
   variant = "danger",
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t, isRTL } = useLanguage();
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState("");
   const pending = useRef(false);
   const isVisible = isOpen !== undefined ? isOpen : !!open;
   if (!isVisible) return null;
 
-  const confirmBtnLabel = confirmLabel || confirmText;
-  const cancelBtnLabel = cancelLabel || cancelText;
+  const confirmBtnLabel = confirmLabel || confirmText || t("common.confirm");
+  const cancelBtnLabel = cancelLabel || cancelText || t("common.cancel");
 
   const variantStyles = {
     danger: {
@@ -64,7 +66,7 @@ export default function ConfirmDialog({
         {/* Close */}
         <button
           type="button" disabled={isBusy} onClick={onCancel}
-          aria-label="إغلاق"
+          aria-label={t("common.close")}
           className="absolute top-2 left-2 min-w-11 min-h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
         >
           <X className="w-4 h-4" />
@@ -97,12 +99,12 @@ export default function ConfirmDialog({
               setIsBusy(true);
               setError("");
               try { await onConfirm(); }
-              catch { setError("تعذر تنفيذ العملية، يرجى إعادة المحاولة."); }
+              catch { setError(isRTL ? "تعذر تنفيذ العملية، يرجى إعادة المحاولة." : "Operation failed, please try again."); }
               finally { pending.current = false; setIsBusy(false); }
             }}
             className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${styles.btn}`}
           >
-            {isBusy ? "جاري التنفيذ..." : confirmBtnLabel}
+            {isBusy ? (isRTL ? "جاري التنفيذ..." : "Processing...") : confirmBtnLabel}
           </button>
         </div>
       </div>
