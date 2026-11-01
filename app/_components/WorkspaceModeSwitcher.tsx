@@ -99,9 +99,7 @@ export default function WorkspaceModeSwitcher({
         >
           <Car className="w-3.5 h-3.5 shrink-0" />
           <span className="hidden md:inline">{t("mode.operations")}</span>
-          <span className="hidden min-[380px]:inline md:hidden">
-            {t("mode.operationsShort")}
-          </span>
+          <span className="hidden min-[380px]:inline md:hidden">{t("mode.operationsShort")}</span>
         </button>
 
         <button
@@ -117,9 +115,7 @@ export default function WorkspaceModeSwitcher({
         >
           <ReceiptText className="w-3.5 h-3.5 shrink-0" />
           <span className="hidden md:inline">{t("mode.finance")}</span>
-          <span className="hidden min-[380px]:inline md:hidden">
-            {t("mode.financeShort")}
-          </span>
+          <span className="hidden min-[380px]:inline md:hidden">{t("mode.financeShort")}</span>
         </button>
       </div>
     </div>

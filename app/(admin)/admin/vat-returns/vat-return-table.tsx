@@ -105,28 +105,14 @@ export default function VatReturnTable({ rows }: VatReturnTableProps) {
 
       {/* Table Content (Desktop md and up) */}
       <div className="hidden md:block overflow-x-auto">
-        <table
-          className={`w-full min-w-[850px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}
-        >
+        <table className={`w-full min-w-[850px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}>
           <thead>
             <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
               <th className="w-16 px-4 py-3.5">{t("vat.box")}</th>
               <th className="px-4 py-3.5">{t("vat.desc")}</th>
-              <th
-                className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
-              >
-                {t("vat.net")} ({t("common.sar")})
-              </th>
-              <th
-                className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
-              >
-                {t("vat.adj")} ({t("common.sar")})
-              </th>
-              <th
-                className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
-              >
-                {t("vat.due")} ({t("common.sar")})
-              </th>
+              <th className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}>{t("vat.net")} ({t("common.sar")})</th>
+              <th className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}>{t("vat.adj")} ({t("common.sar")})</th>
+              <th className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}>{t("vat.due")} ({t("common.sar")})</th>
             </tr>
           </thead>
           <tbody className="divide-y theme-border">

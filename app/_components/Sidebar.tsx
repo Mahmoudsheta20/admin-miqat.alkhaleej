@@ -313,15 +313,9 @@ function SidebarNavLinks({
         const sectionChanged = Boolean(
           item.section && item.section !== prevSection,
         );
-        const itemLabel = t(
-          NAV_ITEM_TRANSLATION_KEYS[item.href] || "",
-          item.label,
-        );
+        const itemLabel = t(NAV_ITEM_TRANSLATION_KEYS[item.href] || "", item.label);
         const sectionTitle = item.section
-          ? t(
-              SECTION_TITLE_KEYS[item.section] || "",
-              SECTION_TITLES[item.section],
-            )
+          ? t(SECTION_TITLE_KEYS[item.section] || "", SECTION_TITLES[item.section])
           : "";
 
         return (
@@ -475,25 +469,15 @@ function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
         className={`hidden lg:flex items-center justify-center py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-800 cursor-pointer ${
           collapsed ? "w-10 h-10 mx-auto" : "w-full px-3"
         }`}
-        title={
-          collapsed
-            ? t("sidebar.expand", "توسيع القائمة")
-            : t("sidebar.collapse", "طي القائمة")
-        }
-        aria-label={
-          collapsed
-            ? t("sidebar.expand", "توسيع القائمة")
-            : t("sidebar.collapse", "طي القائمة")
-        }
+        title={collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة")}
+        aria-label={collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة")}
       >
         {collapsed ? (
           <ChevronLeft className="w-4 h-4" />
         ) : (
           <>
             <ChevronRight className="w-4 h-4 ml-1.5" />
-            <span className="text-xs">
-              {t("sidebar.collapse", "طي القائمة الجانبية")}
-            </span>
+            <span className="text-xs">{t("sidebar.collapse", "طي القائمة الجانبية")}</span>
           </>
         )}
       </button>

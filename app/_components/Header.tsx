@@ -427,9 +427,7 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                           <Lock className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold">
-                            {t("header.changePassword")}
-                          </p>
+                          <p className="font-bold">{t("header.changePassword")}</p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
                             {t("header.changePasswordSubtitle")}
                           </p>
@@ -449,15 +447,9 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                           <Globe className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold">
-                            {language === "ar"
-                              ? "اللغة (Language)"
-                              : "Language (اللغة)"}
-                          </p>
+                          <p className="font-bold">{language === "ar" ? "اللغة (Language)" : "Language (اللغة)"}</p>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                            {language === "ar"
-                              ? "التبديل إلى English"
-                              : "Switch to Arabic (العربية)"}
+                            {language === "ar" ? "التبديل إلى English" : "Switch to Arabic (العربية)"}
                           </p>
                         </div>
                       </div>

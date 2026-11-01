@@ -388,9 +388,7 @@ export default function PurchasesPage() {
 
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
-          <table
-            className={`w-full min-w-[900px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}
-          >
+          <table className={`w-full min-w-[900px] ${isRTL ? "text-right" : "text-left"} text-xs sm:text-sm border-collapse`}>
             <thead>
               <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
                 <th className="px-4 py-3.5">{t("purchases.supplier")}</th>
@@ -400,11 +398,7 @@ export default function PurchasesPage() {
                 <th className="px-4 py-3.5">{t("invoice.vat")}</th>
                 <th className="px-4 py-3.5">{t("purchases.recoverableVat")}</th>
                 <th className="px-4 py-3.5">{t("purchases.total")}</th>
-                <th
-                  className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}
-                >
-                  {t("common.actions")}
-                </th>
+                <th className={`px-4 py-3.5 ${isRTL ? "text-left" : "text-right"}`}>{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y theme-border">
@@ -530,9 +524,7 @@ export default function PurchasesPage() {
                       </span>
                     </td>
 
-                    <td
-                      className={`px-4 py-3.5 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}
-                    >
+                    <td className={`px-4 py-3.5 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}>
                       <div className="inline-flex items-center gap-1.5">
                         {!row.voidedAt && (
                           <button
