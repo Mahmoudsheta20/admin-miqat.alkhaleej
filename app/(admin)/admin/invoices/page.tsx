@@ -62,13 +62,16 @@ export default function InvoicesPage() {
 
   // Client-side instant filters
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "BOOKING" | "PROFORMA" | "TAX" | "NOTES">("ALL");
+  const [typeFilter, setTypeFilter] = useState<
+    "ALL" | "BOOKING" | "PROFORMA" | "TAX" | "NOTES"
+  >("ALL");
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [seedMessage, setSeedMessage] = useState("");
 
   // Payment Modal State
-  const [paymentModalInvoice, setPaymentModalInvoice] = useState<InvoiceRow | null>(null);
+  const [paymentModalInvoice, setPaymentModalInvoice] =
+    useState<InvoiceRow | null>(null);
 
   const load = useCallback(
     async (showRefresh = false) => {
@@ -83,7 +86,7 @@ export default function InvoicesPage() {
         setIsRefreshing(false);
       }
     },
-    [page]
+    [page],
   );
 
   useEffect(() => {
@@ -105,9 +108,11 @@ export default function InvoicesPage() {
     const q = search.trim().toLowerCase();
     return items.filter((row) => {
       const docType = row.documentType || "BOOKING";
-      const isNote = row.taxDocument?.kind === "CREDIT" || row.taxDocument?.kind === "DEBIT";
+      const isNote =
+        row.taxDocument?.kind === "CREDIT" || row.taxDocument?.kind === "DEBIT";
 
-      if (typeFilter === "BOOKING" && (docType !== "BOOKING" || isNote)) return false;
+      if (typeFilter === "BOOKING" && (docType !== "BOOKING" || isNote))
+        return false;
       if (typeFilter === "PROFORMA" && docType !== "PROFORMA") return false;
       if (typeFilter === "TAX" && (docType !== "TAX" || isNote)) return false;
       if (typeFilter === "NOTES" && !isNote) return false;
@@ -131,7 +136,9 @@ export default function InvoicesPage() {
 
     for (const item of items) {
       const docType = item.documentType || "BOOKING";
-      const isNote = item.taxDocument?.kind === "CREDIT" || item.taxDocument?.kind === "DEBIT";
+      const isNote =
+        item.taxDocument?.kind === "CREDIT" ||
+        item.taxDocument?.kind === "DEBIT";
 
       if (isNote) {
         notesCount++;
@@ -186,7 +193,9 @@ export default function InvoicesPage() {
     try {
       await downloadInvoice(row.id);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "تعذر تنزيل الفاتورة؛ حاول مرة أخرى");
+      setError(
+        e instanceof Error ? e.message : "تعذر تنزيل الفاتورة؛ حاول مرة أخرى",
+      );
     } finally {
       setDownloadingId(null);
     }
@@ -309,15 +318,18 @@ export default function InvoicesPage() {
             items: [
               {
                 label: "فاتورة للعميل",
-                description: "فاتورة نهائية معتمدة للرحلات وعقود النقل، تُثبت الإيراد والضريبة وتحتوي على رمز الفاتورة الضريبية ZATCA QR.",
+                description:
+                  "فاتورة نهائية معتمدة للرحلات وعقود النقل، تُثبت الإيراد والضريبة وتحتوي على رمز الفاتورة الضريبية ZATCA QR.",
               },
               {
                 label: "فاتورة مبدئية (عرض سعر)",
-                description: "مستند أولي للعميل يتضمن تفاصيل الخدمة والآيبان البنكي (SNB) ولا يؤثر على القيود المحاسبية إلا بعد اعتماده.",
+                description:
+                  "مستند أولي للعميل يتضمن تفاصيل الخدمة والآيبان البنكي (SNB) ولا يؤثر على القيود المحاسبية إلا بعد اعتماده.",
               },
               {
                 label: "إشعار دائن / مدين",
-                description: "إشعار دائن لخفض القيمة أو إلغاء رحلة، وإشعار مدين لإضافة مبالغ لاحقة، مع ارتباط كامل برقم الفاتورة الأصلية.",
+                description:
+                  "إشعار دائن لخفض القيمة أو إلغاء رحلة، وإشعار مدين لإضافة مبالغ لاحقة، مع ارتباط كامل برقم الفاتورة الأصلية.",
               },
             ],
           },
@@ -327,11 +339,13 @@ export default function InvoicesPage() {
             items: [
               {
                 label: "المتبقي على العميل",
-                description: "يُحمل المبلغ غير المسدد على ذمم العملاء (1103)، وعند استلام دفعة يُسجل سند قبض فوري يخفض الرصيد.",
+                description:
+                  "يُحمل المبلغ غير المسدد على ذمم العملاء (1103)، وعند استلام دفعة يُسجل سند قبض فوري يخفض الرصيد.",
               },
               {
                 label: "زر «تسجيل دفعة»",
-                description: "يمكن تسجيل دفعة نقدية بالصندوق (1101) أو تحويل بنكي (1102) مباشرة من جدول الفواتير أو صفحة التفاصيل.",
+                description:
+                  "يمكن تسجيل دفعة نقدية بالصندوق (1101) أو تحويل بنكي (1102) مباشرة من جدول الفواتير أو صفحة التفاصيل.",
               },
             ],
           },
@@ -341,11 +355,13 @@ export default function InvoicesPage() {
             items: [
               {
                 label: "عدم القابلية للتعديل المباشر",
-                description: "الفاتورة المصدرة مستند مالي ثابت؛ أي تعديل يتم بمسار نظامي عبر إصدار إشعار دائن أو مدين.",
+                description:
+                  "الفاتورة المصدرة مستند مالي ثابت؛ أي تعديل يتم بمسار نظامي عبر إصدار إشعار دائن أو مدين.",
               },
               {
                 label: "نسخة العميل ورابط التحقق",
-                description: "تنزيل PDF رسمي مجهز للطباعة أو نسخ رابط التحقق المباشر لمشاركته مع العميل عبر الواتساب أو الإيميل.",
+                description:
+                  "تنزيل PDF رسمي مجهز للطباعة أو نسخ رابط التحقق المباشر لمشاركته مع العميل عبر الواتساب أو الإيميل.",
               },
             ],
           },
@@ -377,7 +393,9 @@ export default function InvoicesPage() {
           <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white mt-2">
             {isLoading && !data ? "—" : stats.total}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">{t("invoice.savedInSystem")}</p>
+          <p className="text-[11px] text-slate-400 mt-1">
+            {t("invoice.savedInSystem")}
+          </p>
         </button>
 
         <button
@@ -402,7 +420,9 @@ export default function InvoicesPage() {
           <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-2">
             {isLoading && !data ? "—" : stats.bookingCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">{t("invoice.customerInvoices")}</p>
+          <p className="text-[11px] text-slate-400 mt-1">
+            {t("invoice.customerInvoices")}
+          </p>
         </button>
 
         <button
@@ -427,7 +447,9 @@ export default function InvoicesPage() {
           <div className="text-2xl sm:text-3xl font-black font-mono text-blue-600 dark:text-blue-400 mt-2">
             {isLoading && !data ? "—" : stats.proformaCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">{t("invoice.proforma")}</p>
+          <p className="text-[11px] text-slate-400 mt-1">
+            {t("invoice.proforma")}
+          </p>
         </button>
 
         <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border">
@@ -440,11 +462,17 @@ export default function InvoicesPage() {
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-2 flex items-baseline gap-1">
-            <span dir="ltr">{isLoading && !data ? "—" : formatMoney(stats.pageGrossSum)}</span>
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{t("common.sar")}</span>
+            <span dir="ltr">
+              {isLoading && !data ? "—" : formatMoney(stats.pageGrossSum)}
+            </span>
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+              {t("common.sar")}
+            </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1 font-mono">
-            {t("invoice.salesTax")}: <span dir="ltr">{formatMoney(stats.pageVatSum)}</span> {t("common.sar")}
+            {t("invoice.salesTax")}:{" "}
+            <span dir="ltr">{formatMoney(stats.pageVatSum)}</span>{" "}
+            {t("common.sar")}
           </p>
         </div>
       </div>
@@ -452,7 +480,9 @@ export default function InvoicesPage() {
       {/* Search & Filter Toolbar */}
       <div className="theme-card p-3 sm:p-4 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2 pointer-events-none`} />
+          <Search
+            className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2 pointer-events-none`}
+          />
           <input
             type="search"
             value={search}
@@ -476,9 +506,18 @@ export default function InvoicesPage() {
           {(
             [
               { id: "ALL", label: `${t("common.all")} (${items.length})` },
-              { id: "BOOKING", label: `${t("invoice.customerInvoices")} (${stats.bookingCount})` },
-              { id: "PROFORMA", label: `${t("invoice.proformaInvoices")} (${stats.proformaCount})` },
-              { id: "NOTES", label: `${t("invoice.notesCount")} (${stats.notesCount})` },
+              {
+                id: "BOOKING",
+                label: `${t("invoice.customerInvoices")} (${stats.bookingCount})`,
+              },
+              {
+                id: "PROFORMA",
+                label: `${t("invoice.proformaInvoices")} (${stats.proformaCount})`,
+              },
+              {
+                id: "NOTES",
+                label: `${t("invoice.notesCount")} (${stats.notesCount})`,
+              },
             ] as const
           ).map((tab) => (
             <button
@@ -501,7 +540,8 @@ export default function InvoicesPage() {
       <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
         <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
           <span className="font-bold text-slate-700 dark:text-slate-300">
-            {t("invoice.title")} ({filteredItems.length} {t("common.of")} {data?.total || 0})
+            {t("invoice.title")} ({filteredItems.length} {t("common.of")}{" "}
+            {data?.total || 0})
           </span>
           <span className="text-slate-400 font-mono">
             {t("common.page")} {page} {t("common.of")} {totalPages}
@@ -509,7 +549,10 @@ export default function InvoicesPage() {
         </div>
 
         {!data && !error ? (
-          <div role="status" className="p-12 flex flex-col items-center justify-center gap-3">
+          <div
+            role="status"
+            className="p-12 flex flex-col items-center justify-center gap-3"
+          >
             <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
               {t("common.loading")}
@@ -521,7 +564,9 @@ export default function InvoicesPage() {
               <ReceiptText className="w-6 h-6" />
             </div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white">
-              {items.length === 0 ? "لا توجد فواتير حتى الآن." : "لا توجد فواتير مطابقة للبحث"}
+              {items.length === 0
+                ? "لا توجد فواتير حتى الآن."
+                : "لا توجد فواتير مطابقة للبحث"}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               {items.length === 0
@@ -553,17 +598,25 @@ export default function InvoicesPage() {
           <>
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
-              <table className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs border-collapse`}>
+              <table
+                className={`w-full ${isRTL ? "text-right" : "text-left"} text-xs border-collapse`}
+              >
                 <thead>
                   <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
                     <th className="py-3.5 px-4">{t("invoice.number")}</th>
-                    <th className="py-3.5 px-4">{t("invoice.typeAndStatus")}</th>
+                    <th className="py-3.5 px-4">
+                      {t("invoice.typeAndStatus")}
+                    </th>
                     <th className="py-3.5 px-4">{t("invoice.customer")}</th>
                     <th className="py-3.5 px-4">{t("invoice.subtotal")}</th>
                     <th className="py-3.5 px-4">{t("invoice.vat")}</th>
                     <th className="py-3.5 px-4">{t("invoice.total")}</th>
                     <th className="py-3.5 px-4">{t("invoice.date")}</th>
-                    <th className={`py-3.5 px-4 ${isRTL ? "text-left" : "text-right"}`}>{t("common.actions")}</th>
+                    <th
+                      className={`py-3.5 px-4 ${isRTL ? "text-left" : "text-right"}`}
+                    >
+                      {t("common.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y theme-border">
@@ -589,7 +642,9 @@ export default function InvoicesPage() {
                             </Link>
                             <button
                               type="button"
-                              onClick={() => handleCopyNumber(row.invoiceNumber)}
+                              onClick={() =>
+                                handleCopyNumber(row.invoiceNumber)
+                              }
                               className="p-1 rounded-md text-slate-400 hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
                               title="نسخ رقم الفاتورة"
                             >
@@ -639,7 +694,9 @@ export default function InvoicesPage() {
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 border theme-border text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">
-                              {row.customerName ? row.customerName.trim().charAt(0) : "ع"}
+                              {row.customerName
+                                ? row.customerName.trim().charAt(0)
+                                : "ع"}
                             </div>
                             <span className="font-bold text-slate-900 dark:text-white truncate max-w-[200px]">
                               {row.customerName}
@@ -647,11 +704,17 @@ export default function InvoicesPage() {
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap" dir="ltr">
+                        <td
+                          className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap"
+                          dir="ltr"
+                        >
                           {formatMoney(row.netAmount)}
                         </td>
 
-                        <td className="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap" dir="ltr">
+                        <td
+                          className="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap"
+                          dir="ltr"
+                        >
                           {formatMoney(row.vatAmount)}
                         </td>
 
@@ -664,7 +727,9 @@ export default function InvoicesPage() {
                             }`}
                             dir="ltr"
                           >
-                            {isCredit ? `-${formatMoney(row.totalAmount)}` : formatMoney(row.totalAmount)}
+                            {isCredit
+                              ? `-${formatMoney(row.totalAmount)}`
+                              : formatMoney(row.totalAmount)}
                           </span>{" "}
                           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
                             {t("common.sar")}
@@ -675,7 +740,9 @@ export default function InvoicesPage() {
                           {dateLabel(row.invoiceDate)}
                         </td>
 
-                        <td className={`py-3.5 px-4 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}>
+                        <td
+                          className={`py-3.5 px-4 whitespace-nowrap ${isRTL ? "text-left" : "text-right"}`}
+                        >
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
@@ -765,26 +832,39 @@ export default function InvoicesPage() {
                                 : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
                         }`}
                       >
-                        {isCredit ? "إشعار دائن" : isDebit ? "إشعار مدين" : invoiceTitle(row)}
+                        {isCredit
+                          ? "إشعار دائن"
+                          : isDebit
+                            ? "إشعار مدين"
+                            : invoiceTitle(row)}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[11px] text-slate-400 block">العميل:</span>
+                        <span className="text-[11px] text-slate-400 block">
+                          العميل:
+                        </span>
                         <strong className="text-xs font-bold text-slate-900 dark:text-white">
                           {row.customerName}
                         </strong>
                       </div>
                       <div className="text-left">
-                        <span className="text-[11px] text-slate-400 block">الإجمالي الشامل:</span>
+                        <span className="text-[11px] text-slate-400 block">
+                          الإجمالي الشامل:
+                        </span>
                         <strong
                           className={`font-mono text-sm font-black ${
-                            isCredit ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"
+                            isCredit
+                              ? "text-rose-600 dark:text-rose-400"
+                              : "text-slate-900 dark:text-white"
                           }`}
                           dir="ltr"
                         >
-                          {isCredit ? `-${formatMoney(row.totalAmount)}` : formatMoney(row.totalAmount)} ر.س
+                          {isCredit
+                            ? `-${formatMoney(row.totalAmount)}`
+                            : formatMoney(row.totalAmount)}{" "}
+                          ر.س
                         </strong>
                       </div>
                     </div>
@@ -794,7 +874,9 @@ export default function InvoicesPage() {
                         <Calendar className="w-3.5 h-3.5 text-amber-500" />
                         {dateLabel(row.invoiceDate)}
                       </span>
-                      <span className="font-mono">الضريبة: {formatMoney(row.vatAmount)} ر.س</span>
+                      <span className="font-mono">
+                        الضريبة: {formatMoney(row.vatAmount)} ر.س
+                      </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -846,13 +928,17 @@ export default function InvoicesPage() {
             onClick={() => setPage(page - 1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {isRTL ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
             <span>{t("common.back")}</span>
           </button>
 
           <span className="font-bold text-slate-600 dark:text-slate-300">
-            {t("common.page")} <span className="font-mono">{page}</span> {t("common.of")}{" "}
-            <span className="font-mono">{totalPages}</span>
+            {t("common.page")} <span className="font-mono">{page}</span>{" "}
+            {t("common.of")} <span className="font-mono">{totalPages}</span>
           </span>
 
           <button
@@ -862,7 +948,11 @@ export default function InvoicesPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
             <span>{t("common.next")}</span>
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {isRTL ? (
+              <ChevronLeft className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
