@@ -102,7 +102,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Dashboard Overview
     "dashboard.title": "لوحة الإشراف العام",
-    "dashboard.subtitle": "متابعة شاملة لأسطول ميقات الخليج، الكباتن، وحركة العقود الرسمية",
+    "dashboard.subtitle":
+      "متابعة شاملة لأسطول ميقات الخليج، الكباتن، وحركة العقود الرسمية",
     "dashboard.totalFleet": "إجمالي الأسطول",
     "dashboard.activeCaptains": "الكباتن النشطون",
     "dashboard.dailyInspections": "الفحص اليومي",
@@ -120,7 +121,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "invoice.notesCount": "الإشعارات",
     "invoice.netSales": "صافي المبيعات (شامل الضريبة)",
     "invoice.salesTax": "ضريبة المبيعات",
-    "invoice.searchPlaceholder": "بحث سريع برقم الفاتورة، اسم العميل، أو القيمة...",
+    "invoice.searchPlaceholder":
+      "بحث سريع برقم الفاتورة، اسم العميل، أو القيمة...",
     "invoice.number": "رقم الفاتورة",
     "invoice.typeAndStatus": "النوع والحالة",
     "invoice.customer": "العميل",
@@ -142,7 +144,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Purchases & Expenses Page
     "purchases.title": "المصروفات والمشتريات",
-    "purchases.subtitle": "سجّل فواتير الموردين، تابع مصروفات الأسطول، واخصم الضريبة المستحقة.",
+    "purchases.subtitle":
+      "سجّل فواتير الموردين، تابع مصروفات الأسطول، واخصم الضريبة المستحقة.",
     "purchases.newPurchase": "تسجيل فاتورة مورد",
     "purchases.newReturn": "تسجيل مرتجع مشتريات",
     "purchases.supplier": "المورد والفاتورة",
@@ -158,7 +161,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Accounting & Reports Page
     "accounting.title": "القيود والتقارير المالية",
-    "accounting.subtitle": "الإيرادات والتكاليف والذمم من القيود المعتمدة للشركة.",
+    "accounting.subtitle":
+      "الإيرادات والتكاليف والذمم من القيود المعتمدة للشركة.",
     "accounting.trialBalance": "ميزان المراجعة",
     "accounting.incomeStatement": "قائمة الدخل",
     "accounting.vehicleProfit": "تكلفة وربحية المركبات",
@@ -168,7 +172,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // VAT Return Page
     "vat.title": "الإقرار الضريبي (VAT Return)",
-    "vat.subtitle": "مراجعة وتدقيق خانات نموذج هيئة الزكاة (1–16) ونسخ المبالغ للبوابة الرسمية.",
+    "vat.subtitle":
+      "مراجعة وتدقيق خانات نموذج هيئة الزكاة (1–16) ونسخ المبالغ للبوابة الرسمية.",
     "vat.salesSection": "١. ضريبة المبيعات والتوريدات (المخرجات)",
     "vat.purchasesSection": "٢. ضريبة المشتريات والمصروفات (المدخلات)",
     "vat.netSection": "٣. تسوية وصافي الضريبة للفترة",
@@ -177,11 +182,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "vat.net": "المبلغ الصافي",
     "vat.adj": "التعديل",
     "vat.due": "مبلغ الضريبة",
-    "vat.copyNotice": "اضغط على زر النسخ بجوار أي رقم للصقه مباشرة في بوابة الهيئة",
+    "vat.copyNotice":
+      "اضغط على زر النسخ بجوار أي رقم للصقه مباشرة في بوابة الهيئة",
 
     // Fleet & Captains
     "fleet.title": "أسطول المركبات",
-    "fleet.subtitle": "إدارة حافلات ومركبات الأسطول ومتابعة الفحص والاستمارة والتأمين",
+    "fleet.subtitle":
+      "إدارة حافلات ومركبات الأسطول ومتابعة الفحص والاستمارة والتأمين",
     "fleet.add": "إضافة مركبة جديدة",
     "fleet.plateAr": "اللوحة بالعربية",
     "fleet.plateEn": "اللوحة بالإنجليزية",
@@ -202,7 +209,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Contracts
     "contracts.title": "العقود الرسمية",
-    "contracts.subtitle": "إصدار وتوثيق عقود نقل المعتمرين والرحلات السياحية وكشوف الركاب",
+    "contracts.subtitle":
+      "إصدار وتوثيق عقود نقل المعتمرين والرحلات السياحية وكشوف الركاب",
     "contracts.newContract": "عقد جديد",
     "contracts.refNumber": "رقم العقد",
     "contracts.customer": "العميل والجهة",
@@ -218,7 +226,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Inspections
     "inspections.title": "الفحص اليومي للمركبات",
-    "inspections.subtitle": "سجل الفحص الأمني والميكانيكي اليومي لكافة مركبات الأسطول",
+    "inspections.subtitle":
+      "سجل الفحص الأمني والميكانيكي اليومي لكافة مركبات الأسطول",
     "inspections.pass": "سليم / مجتاز",
     "inspections.fail": "يوجد ملاحظات",
     "inspections.fuelLevel": "مستوى الوقود",
@@ -226,7 +235,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Admins & Roles
     "admins.title": "المشرفين والصلاحيات",
-    "admins.subtitle": "إدارة حسابات مستخدمي النظام وتحديد مستويات الوصول والأدوار",
+    "admins.subtitle":
+      "إدارة حسابات مستخدمي النظام وتحديد مستويات الوصول والأدوار",
     "admins.roleAdmin": "مدير عام",
     "admins.roleOperations": "مشرف عمليات",
     "admins.roleDispatcher": "مرحل رحلات",
@@ -234,7 +244,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // ZATCA & Settings
     "zatca.title": "بيانات المنشأة والربط الضريبي",
-    "zatca.subtitle": "إعدادات الفاتورة الضريبية، العنوان الوطني، والحسابات البنكية",
+    "zatca.subtitle":
+      "إعدادات الفاتورة الضريبية، العنوان الوطني، والحسابات البنكية",
     "zatca.companyName": "اسم المنشأة الرسمي",
     "zatca.vatNumber": "الرقم الضريبي",
     "zatca.crNumber": "السجل التجاري",
@@ -347,7 +358,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Dashboard Overview
     "dashboard.title": "Operations Dashboard",
-    "dashboard.subtitle": "Comprehensive fleet tracking, captains oversight, and official trip contracts",
+    "dashboard.subtitle":
+      "Comprehensive fleet tracking, captains oversight, and official trip contracts",
     "dashboard.totalFleet": "Total Fleet",
     "dashboard.activeCaptains": "Active Captains",
     "dashboard.dailyInspections": "Daily Inspections",
@@ -357,7 +369,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Invoices Page
     "invoice.title": "Invoices",
-    "invoice.subtitle": "Create invoices, track client payments, and download copies.",
+    "invoice.subtitle":
+      "Create invoices, track client payments, and download copies.",
     "invoice.newInvoice": "Create New Invoice",
     "invoice.totalInvoices": "Total Documents",
     "invoice.customerInvoices": "Customer Invoices",
@@ -365,7 +378,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "invoice.notesCount": "Adjustments & Notes",
     "invoice.netSales": "Net Sales (Incl. VAT)",
     "invoice.salesTax": "Sales VAT",
-    "invoice.searchPlaceholder": "Quick search by invoice number, customer name, or amount...",
+    "invoice.searchPlaceholder":
+      "Quick search by invoice number, customer name, or amount...",
     "invoice.number": "Invoice Number",
     "invoice.typeAndStatus": "Type & Status",
     "invoice.customer": "Customer",
@@ -387,7 +401,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Purchases & Expenses Page
     "purchases.title": "Purchases & Expenses",
-    "purchases.subtitle": "Record vendor bills, track fleet costs, and deduct input VAT.",
+    "purchases.subtitle":
+      "Record vendor bills, track fleet costs, and deduct input VAT.",
     "purchases.newPurchase": "Record Vendor Bill",
     "purchases.newReturn": "Record Purchase Return",
     "purchases.supplier": "Supplier & Invoice",
@@ -403,7 +418,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Accounting & Reports Page
     "accounting.title": "Accounting & Financial Reports",
-    "accounting.subtitle": "Approved revenues, operational costs, receivables and ledger.",
+    "accounting.subtitle":
+      "Approved revenues, operational costs, receivables and ledger.",
     "accounting.trialBalance": "Trial Balance",
     "accounting.incomeStatement": "Income Statement",
     "accounting.vehicleProfit": "Vehicle Cost & Profitability",
@@ -413,7 +429,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // VAT Return Page
     "vat.title": "ZATCA VAT Return",
-    "vat.subtitle": "Audit and verify official ZATCA boxes (1–16) and copy figures to the official portal.",
+    "vat.subtitle":
+      "Audit and verify official ZATCA boxes (1–16) and copy figures to the official portal.",
     "vat.salesSection": "1. Sales & Standard-Rated Supplies (Output VAT)",
     "vat.purchasesSection": "2. Purchases & Fleet Expenses (Input VAT)",
     "vat.netSection": "3. Net VAT Due / Refundable",
@@ -422,11 +439,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "vat.net": "Net Amount",
     "vat.adj": "Adjustment",
     "vat.due": "VAT Due",
-    "vat.copyNotice": "Click the copy button beside any number to paste directly into the ZATCA portal",
+    "vat.copyNotice":
+      "Click the copy button beside any number to paste directly into the ZATCA portal",
 
     // Fleet & Captains
     "fleet.title": "Fleet Vehicles",
-    "fleet.subtitle": "Manage buses and vehicles, safety inspections, registration, and insurance",
+    "fleet.subtitle":
+      "Manage buses and vehicles, safety inspections, registration, and insurance",
     "fleet.add": "Add New Vehicle",
     "fleet.plateAr": "Plate (Arabic)",
     "fleet.plateEn": "Plate (English)",
@@ -436,7 +455,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "fleet.vehicleType": "Vehicle Type",
     "fleet.capacity": "Capacity",
     "captains.title": "Captains & Drivers",
-    "captains.subtitle": "Manage captain records, credentials, and vehicle assignments",
+    "captains.subtitle":
+      "Manage captain records, credentials, and vehicle assignments",
     "captains.add": "Add New Captain",
     "captains.inspectionToday": "Today's Inspection",
     "captains.inspected": "Inspected",
@@ -447,7 +467,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Contracts
     "contracts.title": "Official Contracts",
-    "contracts.subtitle": "Issue and verify Umrah and tourist passenger transport contracts and manifests",
+    "contracts.subtitle":
+      "Issue and verify Umrah and tourist passenger transport contracts and manifests",
     "contracts.newContract": "New Contract",
     "contracts.refNumber": "Contract Ref",
     "contracts.customer": "Customer & Agency",
@@ -463,7 +484,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Inspections
     "inspections.title": "Daily Vehicle Inspections",
-    "inspections.subtitle": "Daily safety and mechanical inspection logs for all fleet vehicles",
+    "inspections.subtitle":
+      "Daily safety and mechanical inspection logs for all fleet vehicles",
     "inspections.pass": "Passed / Safe",
     "inspections.fail": "Issues Reported",
     "inspections.fuelLevel": "Fuel Level",
@@ -471,7 +493,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Admins & Roles
     "admins.title": "Admins & Permissions",
-    "admins.subtitle": "Manage system accounts, access levels, and organizational roles",
+    "admins.subtitle":
+      "Manage system accounts, access levels, and organizational roles",
     "admins.roleAdmin": "General Admin",
     "admins.roleOperations": "Operations Supervisor",
     "admins.roleDispatcher": "Trip Dispatcher",
@@ -479,7 +502,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // ZATCA & Settings
     "zatca.title": "Company Profile & ZATCA Integration",
-    "zatca.subtitle": "Tax invoice settings, national address, and banking credentials",
+    "zatca.subtitle":
+      "Tax invoice settings, national address, and banking credentials",
     "zatca.companyName": "Official Company Name",
     "zatca.vatNumber": "Tax Number (VAT)",
     "zatca.crNumber": "Commercial Registration (CR)",

@@ -5,8 +5,17 @@ import { AuthProvider } from "@/lib/authContext";
 import { LanguageProvider } from "@/lib/languageContext";
 import { Zain, Outfit } from "next/font/google";
 
-const zain = Zain({ weight: ["200", "300", "400", "700", "800", "900"], subsets: ["arabic", "latin"], variable: "--font-zain", display: "swap" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
+const zain = Zain({
+  weight: ["200", "300", "400", "700", "800", "900"],
+  subsets: ["arabic", "latin"],
+  variable: "--font-zain",
+  display: "swap",
+});
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -22,7 +31,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "نظام ميقات الخليج لإدارة الأسطول والرحلات | Miqat Operations",
-  description: "نظام إدارة الأسطول والسائقين والرحلات وإصدار العقود الرسمية - شركة ميقات الخليج للنقل البري",
+  description:
+    "نظام إدارة الأسطول والسائقين والرحلات وإصدار العقود الرسمية - شركة ميقات الخليج للنقل البري",
   icons: {
     icon: "/logo.svg",
   },
@@ -34,7 +44,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning className={`h-full antialiased ${zain.variable} ${outfit.variable}`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      suppressHydrationWarning
+      className={`h-full antialiased ${zain.variable} ${outfit.variable}`}
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -57,9 +72,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <LanguageProvider>
           <ThemeProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </ThemeProvider>
         </LanguageProvider>
       </body>
