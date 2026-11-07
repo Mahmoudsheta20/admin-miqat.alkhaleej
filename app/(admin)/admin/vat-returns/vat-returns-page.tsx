@@ -139,6 +139,7 @@ export default function VatReturnsPage() {
   return (
     <div className="space-y-6 pb-12" dir={dir}>
       {/* 1. Header & Actions with On-Demand Guide */}
+      <Link href="/admin/vat-returns/selected" className="theme-input inline-block rounded-lg border px-4 py-2">{ui("اختيار فواتير لتقرير مستقل")}</Link>
       <PageHeader
         title={ui(t("vat.title"))}
         subtitle={ui(t("vat.subtitle"))}

@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import ReportTripButton from "@/app/_components/commercial/report-trip-button";
 import {
   Car,
   CheckCircle2,
@@ -323,6 +324,7 @@ export default function CaptainHomePage() {
                 <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                   <span className="text-xs text-slate-400 font-mono">
                     {ui(c.passengers?.length || 0)} {ui("ركاب")}</span>
+                  <ReportTripButton contractId={c.id}/>
                   <button
                     onClick={() => openPdf(c)}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"

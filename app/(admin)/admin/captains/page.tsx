@@ -7,6 +7,7 @@ import Modal from "@/app/_components/Modal";
 
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import ImageUpload from "@/app/_components/ImageUpload";
 import {
   UserPlus,
@@ -553,6 +554,7 @@ export default function CaptainsManagementPage() {
                         </button>
                       </td>
                       <td className="px-5 py-4 text-end">
+                        <Link className="mb-2 inline-block rounded-lg border px-2 py-1 text-xs font-bold" href={`/admin/captains/${c.id}/account`}>{ui("حساب السائق والمستحقات")}</Link>
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             onClick={() => handleToggleStatus(c)}

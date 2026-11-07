@@ -25,6 +25,7 @@ interface WorkspaceModeContextType {
 }
 
 export const FINANCE_ROUTE_PREFIXES = [
+  "/admin/customers", "/admin/staff", "/admin/representatives",
   "/admin/invoices",
   "/admin/purchases",
   "/admin/accounting",

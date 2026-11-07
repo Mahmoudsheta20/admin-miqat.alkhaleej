@@ -2,6 +2,8 @@
 import { useUiText } from "@/lib/ui-text";
 
 import dynamic from "next/dynamic";
+import {CommercialFields} from "@/app/_components/commercial/contract-finance";
+import {emptyCommercial,type CommercialInput} from "@/lib/commercial";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -94,6 +96,7 @@ const INSPECTION_CATEGORIES = [
 
 export default function AdminContractBuilderPage() {
   const ui = useUiText();
+  const [commercial,setCommercial]=useState<CommercialInput>(emptyCommercial);
 
   const cachedCaptains = getCachedData<Awaited<ReturnType<typeof getCaptains>>>("captains_list");
   const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
@@ -407,7 +410,7 @@ export default function AdminContractBuilderPage() {
       const payload = sanitizeContractPayload(data, resolvedInspectionId);
 
       // 2. Submit contract action
-      const res = await submitContract(payload);
+      const res = await submitContract({...payload,commercial});
       setIsSubmitting(false);
 
       if (res.success && res.contract) {
@@ -428,6 +431,7 @@ export default function AdminContractBuilderPage() {
 
   const handleResetForm = () => {
     setCreatedContract(null);
+    setCommercial(emptyCommercial());
     setIsConfirmed(false);
     setConfirmError("");
     setAdminInspectionId(null);
@@ -1217,6 +1221,8 @@ export default function AdminContractBuilderPage() {
             </div>
           )}
         </div>
+
+        <CommercialFields value={commercial} onChange={setCommercial} onGuest={(name,phone)=>{setValue("customerName",name);setValue("customerPhone",phone);setValue("passengers.0.name",name);}}/>
 
         {/* Form Bottom Submission Bar */}
         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-3">

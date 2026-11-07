@@ -1,3 +1,4 @@
+import type {CommercialInput} from "@/lib/commercial";
 import { backendRequest, backendFields, queryString } from "@/lib/backend";
 import type { Contract, OperationType, ContractStatus } from "@/lib/types";
 import type { InspectionInput } from "./inspection";
@@ -5,6 +6,7 @@ import type { InspectionInput } from "./inspection";
 export interface PassengerInput { name: string; nationality: string; idNumber: string }
 export type InspectionPayload = Partial<Omit<InspectionInput, "inspectionDate" | "notes">> & { inspectionDate?: string; notes?: string | null };
 export interface ContractFormPayload {
+  commercial?:CommercialInput;
   operationType: OperationType; origin: string; destination: string; tripDate: string; tripTime: string;
   flightCarrier?: string; flightNumber?: string; customerName: string; customerPhone?: string;
   notes?: string; issueDate?: string; captainId: string; vehiclePlate: string; inspectionId?: string;

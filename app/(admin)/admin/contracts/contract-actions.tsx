@@ -3,13 +3,14 @@ import { useUiText } from "@/lib/ui-text";
 
 
 import Link from "next/link";
-import { Edit2, Eye, FileText, ArrowLeftRight, ReceiptText } from "lucide-react";
+import { Edit2, Eye, FileText, ArrowLeftRight, ReceiptText, MessageSquare } from "lucide-react";
 
 interface ContractActionsProps {
   contractId: string;
   onView: () => void;
   onPreview: () => void;
   onReverse?: () => void;
+  onWhatsApp?: () => void;
   isFullWidth?: boolean;
 }
 
@@ -22,6 +23,7 @@ export default function ContractActions({
   onView,
   onPreview,
   onReverse,
+  onWhatsApp,
   isFullWidth = false,
 }: ContractActionsProps) {
   const ui = useUiText();
@@ -61,6 +63,17 @@ export default function ContractActions({
         >
           <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{ui("عكسية")}</span>
+        </button>
+      )}
+      {onWhatsApp && (
+        <button
+          type="button"
+          onClick={onWhatsApp}
+          className={`${ACTION_CLASS} border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 hover:border-emerald-500 hover:bg-emerald-500/20 hover:shadow-md`}
+          title={ui("إرسال عبر واتساب")}
+        >
+          <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{ui("واتساب")}</span>
         </button>
       )}
       <button

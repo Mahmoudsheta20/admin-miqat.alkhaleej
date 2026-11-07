@@ -1,0 +1,14 @@
+"use client";
+import {useCallback,useEffect,useState,type ReactNode} from "react";
+import {commercialRequest} from "@/lib/commercial";
+import {useUiText} from "@/lib/ui-text";
+export const INPUT="theme-input mt-1 w-full min-w-0 rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500/50";
+export const BUTTON="gold-gradient-btn rounded-lg px-4 py-2 font-bold transition-all duration-200 disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-amber-500";
+export const SECONDARY="theme-input rounded-lg border px-3 py-2 transition-all duration-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-amber-500 disabled:opacity-50";
+export function Field({label,children}:{label:string;children:ReactNode}){const ui=useUiText();return <label className="block min-w-0 text-sm font-medium">{ui(label)}{children}</label>;}
+export function Notice({message,error=false}:{message:string;error?:boolean}){const ui=useUiText();return message?<p role={error?"alert":"status"} className={`rounded-lg border p-3 text-sm ${error?"border-rose-300 bg-rose-500/10 text-rose-700 dark:text-rose-300":"border-amber-300 bg-amber-500/10"}`}>{ui(message)}</p>:null;}
+export function useCommercialData<T>(path:string){const [data,setData]=useState<T|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);const reload=useCallback(()=>setRevision(v=>v+1),[]);useEffect(()=>{let alive=true;commercialRequest<T>(path).then(v=>{if(alive){setData(v);setError("");}}).catch((e:unknown)=>{if(alive)setError(e instanceof Error?e.message:"تعذر تحميل البيانات");}).finally(()=>{if(alive)setLoading(false);});return()=>{alive=false;};},[path,revision]);return {data,error,loading,reload};}
+export function LoadingRows(){return <div aria-busy="true" className="space-y-3">{[1,2,3].map(i=><div key={i} className="h-16 animate-pulse rounded-lg bg-slate-400/15 motion-reduce:animate-none"/>)}</div>;}
+export function Panel({title,children}:{title:string;children:ReactNode}){const ui=useUiText();return <section className="theme-card min-w-0 rounded-xl p-4 sm:p-6"><h2 className="mb-4 text-lg font-bold">{ui(title)}</h2>{children}</section>;}
+export function Stat({label,value}:{label:string;value:string}){const ui=useUiText();return <div className="theme-card-subtle rounded-lg border p-4"><p className="text-sm opacity-70">{ui(label)}</p><strong className="mt-2 block text-2xl" dir="ltr">{value} <small className="text-sm">SAR</small></strong></div>;}
+export function useMutation(){const [busy,setBusy]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");async function run(action:()=>Promise<unknown>,after?:()=>void){setBusy(true);setError("");setMessage("");try{await action();setMessage("تم الحفظ بنجاح");after?.();}catch(e:unknown){setError(e instanceof Error?e.message:"تعذر الحفظ");}finally{setBusy(false);}}return {busy,message,error,run};}

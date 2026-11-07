@@ -27,7 +27,9 @@ import {
   FilePlus,
   ShieldCheck,
   Clock,
+  MessageSquare,
 } from "lucide-react";
+import SendWhatsAppModal from "@/app/_components/SendWhatsAppModal";
 import InvoiceTaxSummary from "./invoice-tax-summary";
 import InvoiceQr from "./invoice-qr";
 import InvoiceTransportDetails from "./transport-details";
@@ -75,6 +77,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const [balanceData, setBalanceData] = useState<{ balance: string; direction: string; netDocumentAmount?:string; settledAmount?:string } | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   const loadBalance = useCallback(async () => {
     setIsLoadingBalance(true);
@@ -254,6 +257,15 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           )}
 
           <InvoiceVisibilityAction id={data.id} number={data.invoiceNumber} isArchived={data.visibility?.isArchived} onChanged={()=>void invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(id)}`).then(result=>{if(result.data)setData(result.data);})}/>
+          <button
+            type="button"
+            onClick={() => setShowWhatsAppModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+            title={ui("إرسال الفاتورة للعميل عبر واتساب")}
+          >
+            <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{ui("إرسال عبر واتساب")}</span>
+          </button>
           <button
             type="button"
             disabled={isDownloading}
@@ -666,6 +678,19 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           onPaymentSuccess={() => {
             void loadBalance();
           }}
+        />
+      )}
+
+      {/* WhatsApp Modal */}
+      {showWhatsAppModal && (
+        <SendWhatsAppModal
+          isOpen={showWhatsAppModal}
+          onClose={() => setShowWhatsAppModal(false)}
+          type="INVOICE"
+          targetId={data.id}
+          targetTitle={data.invoiceNumber}
+          recipientName={buyer.name}
+          defaultPhone={data.snapshot.input.transport?.contactPhone || ""}
         />
       )}
     </div>

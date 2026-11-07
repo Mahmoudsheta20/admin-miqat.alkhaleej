@@ -46,6 +46,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  {href:"/admin/customers",label:"العملاء وفواتيرهم",icon:<Building2 className="w-4 h-4"/>,roles:["ADMIN"],section:"DAILY"},
+  {href:"/admin/staff",label:"حسابات السائقين والعاملين",icon:<UserCheck className="w-4 h-4"/>,roles:["ADMIN"],section:"DAILY"},
+  {href:"/admin/representatives",label:"المناديب وعمولات الإحالة",icon:<UserCheck className="w-4 h-4"/>,roles:["ADMIN"],section:"DAILY"},
+  {href:"/captain/account",label:"حسابي ومستحقاتي",icon:<Landmark className="w-4 h-4"/>,roles:["CAPTAIN"],section:"CAPTAIN"},
   // 1. Operations & Fleet (العمليات والأسطول)
   {
     href: "/admin",

@@ -2,6 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 
+import {ContractFinancePanel} from "@/app/_components/commercial/contract-finance";
 import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,7 +22,9 @@ import {
   ShieldCheck,
   RotateCcw,
   ReceiptText,
+  MessageSquare,
 } from "lucide-react";
+import SendWhatsAppModal from "@/app/_components/SendWhatsAppModal";
 import { Contract, ContractStatus } from "@/lib/types";
 import { getContractById, updateContractStatusAction } from "@/app/_actions/contract";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
@@ -47,6 +50,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
   // Review modal/rejection notes state
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
+  const [whatsAppModalOpen, setWhatsAppModalOpen] = useState(false);
   const [notificationMsg, setNotificationMsg] = useState<{
     type: "success" | "error";
     text: string;
@@ -262,6 +266,16 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
               <span>{ui("طباعة / معاينة PDF")}</span>
             </a>
           )}
+
+          <button
+            type="button"
+            onClick={() => setWhatsAppModalOpen(true)}
+            className="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title={ui("إرسال العقد للكابتن عبر واتساب")}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>{ui("إرسال عبر واتساب")}</span>
+          </button>
 
           <Link
             href="/admin/contracts"
@@ -605,6 +619,18 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           </div>
         </div>
       )}
+      {whatsAppModalOpen && (
+        <SendWhatsAppModal
+          isOpen={true}
+          onClose={() => setWhatsAppModalOpen(false)}
+          type="CONTRACT"
+          targetId={contract.id}
+          targetTitle={contract.referenceNumber}
+          recipientName={contract.captain?.name || contract.customerName || "الكابتن"}
+          defaultPhone={contract.captain?.phone || contract.customerPhone || ""}
+        />
+      )}
+      <ContractFinancePanel contractId={contract.id}/>
     </div>
   );
 }

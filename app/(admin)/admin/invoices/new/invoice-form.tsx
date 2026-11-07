@@ -4,6 +4,7 @@ import { useUiText } from "@/lib/ui-text";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import CustomerPicker from "@/app/_components/commercial/customer-picker";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -159,6 +160,7 @@ export default function InvoiceForm({
   const [showSupplementalTrip, setShowSupplementalTrip] = useState(false);
 
   const [buyer, setBuyer] = useState<BuyerForm>(EMPTY_BUYER);
+  const [customerId,setCustomerId]=useState("");
   const [showBuyerDetails, setShowBuyerDetails] = useState(false);
 
   const [selectedContract, setSelectedContract] = useState<InvoiceContractOption | null>(null);
@@ -441,12 +443,12 @@ export default function InvoiceForm({
     if (
       isTaxMode &&
       taxDocument.profile === "STANDARD" &&
-      (!buyer.vatNumber ||
+      ((!buyer.vatNumber&&!buyer.commercialRegistration) ||
         ![buyer.street, buyer.building, buyer.district, buyer.city, buyer.postalCode].every((v) => v.trim()))
     ) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
       setShowBuyerDetails(true);
-      showError("أكمل الرقم الضريبي والعنوان الوطني للمشتري في المرحلة الأولى.");
+      showError("أكمل عنوان ومعرف المشتري في المرحلة الأولى.");
       return;
     }
 
@@ -537,6 +539,7 @@ export default function InvoiceForm({
         operationKey: operationKey.current,
         invoiceDate: new Date(`${invoiceDate}+03:00`).toISOString(),
         buyer: payloadBuyer,
+        ...(customerId&&!original?{customerId}:{}),
         paymentCode,
         accountingApproved: isReviewed,
         ...(documentType !== "PROFORMA" ? { accounting: { revenueAccountCode, settlementAccountCode } } : {}),
@@ -783,6 +786,7 @@ export default function InvoiceForm({
                     )}
                   </div>
 
+                  {!original&&<CustomerPicker value={customerId} onSelect={c=>{setCustomerId(c?.id||"");if(c){setBuyer({name:c.name,vatNumber:c.vatNumber||"",commercialRegistration:c.identification||"",street:c.address?.street||"",building:c.address?.building||"",district:c.address?.district||"",city:c.address?.city||"",postalCode:c.address?.postalCode||""});setTaxDocument(v=>({...v,profile:c.type==="COMPANY"?"STANDARD":"SIMPLIFIED"}));}}}/>}
                   {/* Customer Information Grid */}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
