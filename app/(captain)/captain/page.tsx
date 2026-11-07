@@ -17,7 +17,9 @@ import {
   ArrowUpRight,
   RefreshCw,
   Camera,
+  Download,
 } from "lucide-react";
+import { backendUrl } from "@/lib/backend";
 import { useAuth } from "@/lib/authContext";
 import { getTodayInspection, getAllInspectionsList } from "@/app/_actions/inspection";
 import { getContracts } from "@/app/_actions/contract";
@@ -325,6 +327,16 @@ export default function CaptainHomePage() {
                   <span className="text-xs text-slate-400 font-mono">
                     {ui(c.passengers?.length || 0)} {ui("ركاب")}</span>
                   <ReportTripButton contractId={c.id}/>
+                  <a
+                    href={backendUrl(`/contracts/verify/${encodeURIComponent(c.referenceNumber)}/pdf?download=1`)}
+                    download={`Contract_${c.referenceNumber}.pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-border hover:border-amber-500 text-xs font-bold transition text-slate-700 dark:text-slate-200"
+                    title={ui("تحميل العقد PDF")}
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-500" />
+                    {ui("تحميل")}</a>
                   <button
                     onClick={() => openPdf(c)}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs"

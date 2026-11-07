@@ -2656,7 +2656,18 @@ export const UI_PHRASES: Record<string,string> = {
   "متوقفة": "Inactive",
   "إجمالي الرصيد": "Total balance",
   "لم يُسجل تاريخ تقديم إقرار بعض الفواتير الأصلية؛ عوملت الإشعارات الدائنة لفترات سابقة كتخفيض موجب في التعديل. سجّل تاريخ التقديم في إعدادات الربع الأصلي لتحديد الخانة بدقة.": "Some original returns have no filing date. Prior-period credits are treated as subtractive adjustments. Record the original quarter filing date to determine the column accurately.",
-  "يوجد إشعار دائن في يوم تقديم الإقرار الأصلي؛ عومل ضمن المبلغ. تحقق من ترتيب الإصدار والتقديم في ذلك اليوم قبل نقل الأرقام.": "A credit note shares the original return filing date and is included in Amount. Check the order of issue and filing that day before copying values."
+  "يوجد إشعار دائن في يوم تقديم الإقرار الأصلي؛ عومل ضمن المبلغ. تحقق من ترتيب الإصدار والتقديم في ذلك اليوم قبل نقل الأرقام.": "A credit note shares the original return filing date and is included in Amount. Check the order of issue and filing that day before copying values.",
+  "عقد رسمي مسجل في نظام الشركة": "Contract recorded in company system",
+  "تنزيل العقد PDF": "Download contract PDF",
+  "معاينة العقد PDF": "View contract PDF",
+  "تعذر تنزيل نسخة العقد. حاول مجددًا.": "Unable to download contract copy. Try again.",
+  "خط السير": "Route",
+  "موعد الرحلة": "Trip date & time",
+  "الكابتن المسؤول": "Assigned captain",
+  "الضيف الرئيسي": "Lead guest",
+  "كشف الركاب المعتمد": "Passenger manifest",
+  "تحميل العقد PDF": "Download contract PDF",
+  "تحميل": "Download"
 };
 export const UI_TEMPLATES: Record<string,string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",
