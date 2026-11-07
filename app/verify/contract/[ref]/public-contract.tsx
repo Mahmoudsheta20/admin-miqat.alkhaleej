@@ -75,7 +75,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
             credentials: "omit",
             cache: "no-store",
             signal: controller.signal,
-          },
+          }
         );
         if (response.status === 404) {
           throw new Error("العقد غير متاح");
@@ -93,9 +93,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
       } catch (cause) {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error
-              ? cause.message
-              : "تعذر الاتصال بخدمة التوثيق",
+            cause instanceof Error ? cause.message : "تعذر الاتصال بخدمة التوثيق"
           );
         }
       } finally {
@@ -112,12 +110,12 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
     contract?.pdfPath && /^https?:\/\//i.test(contract.pdfPath)
       ? contract.pdfPath
       : `https://miqatalkhaleej.s3.eu-central-1.amazonaws.com/contracts/Contract_${encodeURIComponent(
-          contract?.referenceNumber || refNumber,
+          contract?.referenceNumber || refNumber
         )}.pdf`;
 
   const pdfViewUrl = directS3Url;
   const pdfDownloadUrl = backendUrl(
-    `/contracts/verify/${encodeURIComponent(refNumber)}/pdf?download=1`,
+    `/contracts/verify/${encodeURIComponent(refNumber)}/pdf?download=1`
   );
 
   async function download() {
@@ -258,9 +256,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                   </dt>
                   <dd className="font-bold">
                     {contract.flightCarrier}{" "}
-                    <span className="font-mono">
-                      {contract.flightNumber || ""}
-                    </span>
+                    <span className="font-mono">{contract.flightNumber || ""}</span>
                   </dd>
                 </div>
               )}
@@ -278,9 +274,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                     <Car className="size-4 text-slate-400" />
                     {ui("رقم اللوحة")}
                   </dt>
-                  <dd className="font-mono font-bold">
-                    {contract.vehiclePlate}
-                  </dd>
+                  <dd className="font-mono font-bold">{contract.vehiclePlate}</dd>
                 </div>
               )}
 
@@ -362,3 +356,4 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
     </main>
   );
 }
+
