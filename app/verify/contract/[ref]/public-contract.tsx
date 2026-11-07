@@ -75,7 +75,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
             credentials: "omit",
             cache: "no-store",
             signal: controller.signal,
-          }
+          },
         );
         if (response.status === 404) {
           throw new Error("العقد غير متاح");
@@ -93,7 +93,9 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
       } catch (cause) {
         if (!controller.signal.aborted) {
           setError(
-            cause instanceof Error ? cause.message : "تعذر الاتصال بخدمة التوثيق"
+            cause instanceof Error
+              ? cause.message
+              : "تعذر الاتصال بخدمة التوثيق",
           );
         }
       } finally {
@@ -106,11 +108,16 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
     return () => controller.abort();
   }, [refNumber]);
 
-  const pdfViewUrl = backendUrl(
-    `/contracts/verify/${encodeURIComponent(refNumber)}/pdf`
-  );
+  const directS3Url =
+    contract?.pdfPath && /^https?:\/\//i.test(contract.pdfPath)
+      ? contract.pdfPath
+      : `https://miqatalkhaleej.s3.eu-central-1.amazonaws.com/contracts/Contract_${encodeURIComponent(
+          contract?.referenceNumber || refNumber,
+        )}.pdf`;
+
+  const pdfViewUrl = directS3Url;
   const pdfDownloadUrl = backendUrl(
-    `/contracts/verify/${encodeURIComponent(refNumber)}/pdf?download=1`
+    `/contracts/verify/${encodeURIComponent(refNumber)}/pdf?download=1`,
   );
 
   async function download() {
@@ -124,23 +131,21 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
         signal: AbortSignal.timeout(60000),
       });
       if (
-        !response.ok ||
-        !response.headers.get("content-type")?.includes("application/pdf")
+        response.ok &&
+        response.headers.get("content-type")?.includes("application/pdf")
       ) {
-        throw new Error("تعذر تنزيل نسخة العقد. حاول مجددًا.");
+        const url = URL.createObjectURL(await response.blob());
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Contract_${contract.referenceNumber}.pdf`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        return;
       }
-      const url = URL.createObjectURL(await response.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Contract_${contract.referenceNumber}.pdf`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "تعذر تنزيل نسخة العقد. حاول مجددًا."
-      );
+      // Fallback directly to S3 URL if backend endpoint is unavailable
+      window.open(directS3Url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.open(directS3Url, "_blank", "noopener,noreferrer");
     } finally {
       setIsDownloading(false);
     }
@@ -253,7 +258,9 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                   </dt>
                   <dd className="font-bold">
                     {contract.flightCarrier}{" "}
-                    <span className="font-mono">{contract.flightNumber || ""}</span>
+                    <span className="font-mono">
+                      {contract.flightNumber || ""}
+                    </span>
                   </dd>
                 </div>
               )}
@@ -271,7 +278,9 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                     <Car className="size-4 text-slate-400" />
                     {ui("رقم اللوحة")}
                   </dt>
-                  <dd className="font-mono font-bold">{contract.vehiclePlate}</dd>
+                  <dd className="font-mono font-bold">
+                    {contract.vehiclePlate}
+                  </dd>
                 </div>
               )}
 
@@ -353,4 +362,3 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
     </main>
   );
 }
-
