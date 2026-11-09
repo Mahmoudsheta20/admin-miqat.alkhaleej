@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 
-import React, { useState, useEffect, useRef, useId } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { Clock, AlertCircle, ChevronDown } from "lucide-react";
 
 export interface CustomTimePickerProps {
@@ -33,14 +33,14 @@ function formatTime(hour: number, minute: number): string {
   return `${hh}:${mm}`;
 }
 
-function formatTimeArabic12h(time24: string): string {
+function formatTimeDisplay12h(time24: string, lang: "ar" | "en"): string {
   if (!time24) return "";
   const [hStr, mStr] = time24.split(":");
   const h = parseInt(hStr, 10);
   const m = parseInt(mStr, 10);
   if (isNaN(h) || isNaN(m)) return time24;
 
-  const period = h >= 12 ? "مساءً" : "صباحاً";
+  const period = lang === "en" ? (h >= 12 ? "PM" : "AM") : (h >= 12 ? "مساءً" : "صباحاً");
   const h12 = h % 12 === 0 ? 12 : h % 12;
   const mm = String(m).padStart(2, "0");
   return `${h12}:${mm} ${period}`;
@@ -105,12 +105,12 @@ export function CustomTimePicker({
 
   const minuteOptions = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
   const popularHours = [
-    { label: "06:00 ص", h: 6, m: 0 },
-    { label: "08:30 ص", h: 8, m: 30 },
-    { label: "12:00 م", h: 12, m: 0 },
-    { label: "15:00 م", h: 15, m: 0 },
-    { label: "18:30 م", h: 18, m: 30 },
-    { label: "21:00 م", h: 21, m: 0 },
+    { time: "06:00", h: 6, m: 0 },
+    { time: "08:30", h: 8, m: 30 },
+    { time: "12:00", h: 12, m: 0 },
+    { time: "15:00", h: 15, m: 0 },
+    { time: "18:30", h: 18, m: 30 },
+    { time: "21:00", h: 21, m: 0 },
   ];
 
   return (
@@ -121,11 +121,11 @@ export function CustomTimePicker({
         <div className="flex items-center justify-between gap-1.5 min-w-0">
           <label htmlFor={controlId} className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0">
             <span>{ui(label)}</span>
-            {required && <span className="text-rose-500 font-black">*</span>}
+            {required && <span className="text-rose-700 font-semibold" aria-hidden="true">*</span>}
           </label>
           {value && (
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium font-mono shrink-0">
-              ({ui(formatTimeArabic12h(value))})
+            <span className="text-xs text-amber-700 dark:text-amber-400 font-medium font-mono shrink-0" dir="ltr">
+              ({formatTimeDisplay12h(value, ui.language)})
             </span>
           )}
         </div>
@@ -139,7 +139,7 @@ export function CustomTimePicker({
         aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-11 px-3 text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
+        className={`w-full h-11 px-3 text-sm sm:text-xs rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
           ${
             error
               ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
@@ -149,15 +149,15 @@ export function CustomTimePicker({
           }`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div aria-hidden="true" className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Clock className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold font-mono tracking-wider truncate">
-            {ui(value || "حدد الوقت")}
+          <span className="text-sm sm:text-xs font-bold font-mono tracking-wider truncate">
+            {value || ui("حدد الوقت")}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 text-slate-400 ms-2">
+        <div aria-hidden="true" className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-amber-500" : ""
@@ -168,25 +168,25 @@ export function CustomTimePicker({
 
       {/* Popover Time Selector */}
       {isOpen && (
-        <div className="form-popover relative sm:absolute z-50 mt-1 right-0 w-full sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 sm:p-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="form-popover relative sm:absolute z-50 mt-1 start-0 w-full sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border theme-border shadow-2xl p-3 sm:p-4">
           {/* Quick Preset Buttons */}
           <div className="flex items-center gap-1.5 pb-3 border-b theme-border">
             <button
               type="button"
               onClick={setNow}
-              className="flex-1 py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold transition text-center"
+              className="flex-1 min-h-9 py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition text-center cursor-pointer"
             >
               {ui("الآن")}</button>
             <button
               type="button"
               onClick={() => addMinutes(30)}
-              className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
+              className="flex-1 min-h-9 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition text-center cursor-pointer"
             >
               {ui("+30 د")}</button>
             <button
               type="button"
               onClick={() => addMinutes(60)}
-              className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition text-center"
+              className="flex-1 min-h-9 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition text-center cursor-pointer"
             >
               {ui("+1 ساعة")}</button>
           </div>
@@ -195,8 +195,8 @@ export function CustomTimePicker({
           <div className="py-3 grid grid-cols-2 gap-4">
             {/* Hours Column */}
             <div>
-              <label className="text-[11px] font-bold text-slate-400 block mb-1 text-center">
-                {ui("الساعة (24h)")}</label>
+              <p className="text-xs font-bold text-[var(--text-muted)] block mb-1 text-center">
+                {ui("الساعة (24h)")}</p>
               <div className="h-44 overflow-y-auto rounded-xl border theme-border p-1 space-y-1">
                 {Array.from({ length: 24 }).map((_, i) => {
                   const isSelected = hour === i;
@@ -204,16 +204,17 @@ export function CustomTimePicker({
                     <button
                       key={i}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => onChange(formatTime(i, minute))}
-                      className={`w-full py-1.5 text-xs font-mono font-bold rounded-lg transition text-center flex items-center justify-around
+                      className={`w-full py-1.5 text-xs font-mono font-bold rounded-lg transition text-center flex items-center justify-around cursor-pointer
                         ${
                           isSelected
-                            ? "gold-gradient-btn text-white shadow-xs"
+                            ? "gold-gradient-btn shadow-xs"
                             : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                         }`}
                     >
-                      <span>{ui(String(i).padStart(2, "0"))}</span>
-                      <span className="text-[10px] opacity-70">
+                      <span>{String(i).padStart(2, "0")}</span>
+                      <span className="text-xs opacity-80">
                         {ui(i >= 12 ? "م" : "ص")}
                       </span>
                     </button>
@@ -224,8 +225,8 @@ export function CustomTimePicker({
 
             {/* Minutes Column */}
             <div>
-              <label className="text-[11px] font-bold text-slate-400 block mb-1 text-center">
-                {ui("الدقائق")}</label>
+              <p className="text-xs font-bold text-[var(--text-muted)] block mb-1 text-center">
+                {ui("الدقائق")}</p>
               <div className="h-44 overflow-y-auto rounded-xl border theme-border p-1 space-y-1">
                 {minuteOptions.map((m) => {
                   const isSelected = minute === m;
@@ -233,15 +234,16 @@ export function CustomTimePicker({
                     <button
                       key={m}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => onChange(formatTime(hour, m))}
-                      className={`w-full py-1.5 text-xs font-mono font-bold rounded-lg transition text-center
+                      className={`w-full py-1.5 text-xs font-mono font-bold rounded-lg transition text-center cursor-pointer
                         ${
                           isSelected
-                            ? "gold-gradient-btn text-white shadow-xs"
+                            ? "gold-gradient-btn shadow-xs"
                             : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                         }`}
                     >
-                      :{ui(String(m).padStart(2, "0"))}
+                      :{String(m).padStart(2, "0")}
                     </button>
                   );
                 })}
@@ -251,31 +253,31 @@ export function CustomTimePicker({
 
           {/* Popular quick slots */}
           <div className="pt-2 border-t theme-border">
-            <span className="text-[10px] text-slate-400 block mb-1.5">
+            <span className="text-xs text-[var(--text-muted)] block mb-1.5">
               {ui("مواعيد شائعة:")}</span>
             <div className="grid grid-cols-3 gap-1.5">
               {popularHours.map((slot) => (
                 <button
-                  key={slot.label}
+                  key={slot.time}
                   type="button"
                   onClick={() => setSpecificTime(slot.h, slot.m)}
-                  className="py-1 px-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500/15 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold transition text-center"
+                  className="py-1.5 px-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500/15 text-slate-700 dark:text-slate-300 text-xs font-mono font-bold transition text-center cursor-pointer"
                 >
-                  {ui(slot.label)}
+                  {slot.time} {ui(slot.h >= 12 ? "م" : "ص")}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Footer time confirmation */}
-          <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-mono">
-              {ui(value)} ({ui(formatTimeArabic12h(value))})
+          <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between gap-2">
+            <span className="text-xs text-[var(--text-muted)] font-mono" dir="ltr">
+              {value || "—"} {value ? `(${formatTimeDisplay12h(value, ui.language)})` : ""}
             </span>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-3 py-1 rounded-lg gold-gradient-btn text-xs font-bold"
+              className="px-3 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold cursor-pointer"
             >
               {ui("تأكيد")}</button>
           </div>
@@ -283,14 +285,14 @@ export function CustomTimePicker({
       )}
 
       {error && (
-        <p id={`${controlId}-description`} role="alert" className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-          <AlertCircle className="w-3 h-3 shrink-0" />
+        <p id={`${controlId}-description`} role="alert" className="text-xs text-rose-700 dark:text-rose-400 font-bold flex items-center gap-1">
+          <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
           <span>{ui(error)}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p id={`${controlId}-description`} className="text-[11px] text-slate-400 dark:text-slate-500">{ui(hint)}</p>
+        <p id={`${controlId}-description`} className="text-xs text-[var(--text-muted)] dark:text-slate-400">{ui(hint)}</p>
       )}
     </div>
   );

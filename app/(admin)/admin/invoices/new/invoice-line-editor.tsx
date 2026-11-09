@@ -5,6 +5,7 @@ import { useUiText } from "@/lib/ui-text";
 import { useState } from "react";
 import { ChevronDown, SlidersHorizontal, Trash2 } from "lucide-react";
 import { percentageDiscount } from "@/lib/invoice-booking";
+import { moneyDecimal, moneyMinor } from "@/lib/money";
 import type { InvoiceLineInput } from "@/lib/invoices";
 import { BILLING_UNIT_LABELS, type BillingUnit } from "@/lib/invoice-transport";
 
@@ -60,11 +61,11 @@ export default function InvoiceLineEditor({
       updatePrice({ unitPrice: rawVal });
     } else {
       setInclusiveInput(rawVal);
-      const num = Number(rawVal);
-      if (Number.isFinite(num) && num > 0) {
-        // Subtotal = ROUND(Total / 1.15, 2)
-        const net = (Math.round((num / 1.15) * 100) / 100).toFixed(2);
-        updatePrice({ unitPrice: net });
+      const grossMinor = moneyMinor(rawVal);
+      if (grossMinor !== null && grossMinor > BigInt(0)) {
+        // Exact minor-unit net extraction: ROUND(grossMinor * 100 / 115)
+        const netMinor = (grossMinor * BigInt(100) + BigInt(57)) / BigInt(115);
+        updatePrice({ unitPrice: moneyDecimal(netMinor) });
       } else {
         updatePrice({ unitPrice: rawVal });
       }
@@ -86,20 +87,23 @@ export default function InvoiceLineEditor({
   return (
     <fieldset className="rounded-2xl border theme-border bg-slate-50/50 p-4 sm:p-5 dark:bg-slate-900/30 space-y-4">
       <div className="flex items-center justify-between gap-3 border-b theme-border pb-3">
-        <legend className="px-1 text-xs font-black text-slate-700 dark:text-slate-200 flex items-center gap-2">
-          <span className="rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 font-mono text-[11px] font-bold">
-            #{ui(index + 1)}
+        <legend className="px-1 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+          <span className="rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 font-mono text-xs font-bold">
+            #{index + 1}
           </span>
-          <span>{value.description || `الخدمة ${index + 1}`}</span>
+          <span>
+            {value.description ||
+              (ui.language === "en" ? `Service ${index + 1}` : `الخدمة ${index + 1}`)}
+          </span>
         </legend>
         {canRemove && (
           <button
             type="button"
             onClick={onRemove}
             aria-label={ui(`حذف الخدمة ${index + 1}`)}
-            className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-xl p-2 text-[var(--text-muted)] transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-500/10 cursor-pointer"
           >
-            <Trash2 className="size-4" />
+            <Trash2 className="size-4" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -117,7 +121,7 @@ export default function InvoiceLineEditor({
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {/* Quantity */}
         <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
           {ui(isBooking && (value.billingUnit || "TRIP") === "TRIP" ? "عدد المركبات" : "الكمية")} *
@@ -151,34 +155,37 @@ export default function InvoiceLineEditor({
         </label>
 
         {/* Unit Price with Mode Toggle */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-200">
+        <div className="col-span-2 md:col-span-1 space-y-1">
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
             <span>{ui("السعر (ر.س) *")}</span>
-            <div className="inline-flex rounded-lg border theme-border p-0.5 bg-slate-100 dark:bg-slate-800 text-[10px]">
+            <div className="inline-flex rounded-lg border theme-border p-0.5 bg-slate-100 dark:bg-slate-800 text-xs shrink-0">
               <button
                 type="button"
+                aria-pressed={priceEntryMode === "EXCL"}
                 onClick={() => setPriceEntryMode("EXCL")}
-                className={`px-1.5 py-0.5 rounded transition ${
+                className={`min-h-9 md:min-h-7 px-2.5 py-0.5 rounded transition cursor-pointer ${
                   priceEntryMode === "EXCL"
-                    ? "bg-white dark:bg-slate-700 font-black text-amber-700 dark:text-amber-400 shadow-2xs"
-                    : "text-slate-500"
+                    ? "bg-white dark:bg-slate-700 font-semibold text-amber-700 dark:text-amber-400 shadow-2xs"
+                    : "text-[var(--text-muted)]"
                 }`}
                 title={ui("إدخال السعر قبل احتساب الضريبة")}
               >
                 {ui("قبل الضريبة")}</button>
               <button
                 type="button"
+                aria-pressed={priceEntryMode === "INCL"}
                 onClick={() => {
                   setPriceEntryMode("INCL");
-                  if (value.unitPrice) {
-                    const gross = (Number(value.unitPrice) * 1.15).toFixed(2);
-                    setInclusiveInput(gross);
+                  const netMinor = value.unitPrice ? moneyMinor(value.unitPrice) : null;
+                  if (netMinor !== null && netMinor >= BigInt(0)) {
+                    const grossMinor = (netMinor * BigInt(115) + BigInt(50)) / BigInt(100);
+                    setInclusiveInput(moneyDecimal(grossMinor));
                   }
                 }}
-                className={`px-1.5 py-0.5 rounded transition ${
+                className={`min-h-9 md:min-h-7 px-2.5 py-0.5 rounded transition cursor-pointer ${
                   priceEntryMode === "INCL"
-                    ? "bg-white dark:bg-slate-700 font-black text-amber-700 dark:text-amber-400 shadow-2xs"
-                    : "text-slate-500"
+                    ? "bg-white dark:bg-slate-700 font-semibold text-amber-700 dark:text-amber-400 shadow-2xs"
+                    : "text-[var(--text-muted)]"
                 }`}
                 title={ui("إدخال السعر النهائي شامل ضريبة 15%")}
               >
@@ -189,9 +196,11 @@ export default function InvoiceLineEditor({
           {priceEntryMode === "EXCL" ? (
             <input
               required
+              aria-label={ui("السعر (ر.س) *")}
               inputMode="decimal"
+              dir="ltr"
               pattern="\d{1,10}(\.\d{1,6})?"
-              className={`${INPUT} font-mono`}
+              className={`${INPUT} font-mono text-start`}
               placeholder="0.00"
               value={value.unitPrice}
               onChange={(e) => handlePriceChange(e.target.value, "EXCL")}
@@ -200,21 +209,24 @@ export default function InvoiceLineEditor({
             <div>
               <input
                 required
+                aria-label={ui("السعر (ر.س) *")}
                 inputMode="decimal"
+                dir="ltr"
                 pattern="\d{1,10}(\.\d{1,6})?"
-                className={`${INPUT} font-mono`}
+                className={`${INPUT} font-mono text-start`}
                 placeholder="0.00"
                 value={inclusiveInput}
                 onChange={(e) => handlePriceChange(e.target.value, "INCL")}
               />
-              <span className="block text-[10px] text-slate-400 mt-1 font-mono">
-                {ui("صافي قبل الضريبة:")}{ui(value.unitPrice || "0.00")} {ui("ر.س")}</span>
+              <span className="block text-xs text-[var(--text-muted)] mt-1 font-mono">
+                {ui("صافي قبل الضريبة:")} <bdi dir="ltr">{value.unitPrice || "0.00"}</bdi> {ui("ر.س")}
+              </span>
             </div>
           )}
         </div>
 
         {/* Tax Category */}
-        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+        <label className="col-span-2 md:col-span-1 text-xs font-bold text-slate-700 dark:text-slate-200">
           {ui("المعاملة الضريبية *")}<select
             required
             className={INPUT}
@@ -270,26 +282,26 @@ export default function InvoiceLineEditor({
           type="button"
           aria-expanded={expanded}
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1.5 rounded-lg py-1.5 text-xs font-bold text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 cursor-pointer"
+          className="min-h-11 sm:min-h-9 flex items-center gap-1.5 rounded-lg py-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-amber-700 dark:hover:text-amber-400 cursor-pointer"
         >
-          <SlidersHorizontal className="size-3.5" />
+          <SlidersHorizontal className="size-3.5" aria-hidden="true" />
           <span>{ui("تطبيق خصم أو تفاصيل توريد إضافية")}</span>
-          <ChevronDown className={`size-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          <ChevronDown className={`size-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
 
         <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-          {ui("إجمالي هذا البند (شامل الضريبة):")}{ui(" ")}
-          <b className="ms-1.5 font-mono text-sm text-slate-900 dark:text-white" dir="ltr">
-            {ui(amount || "—")}
-          </b>
-          <span className="ms-1 text-amber-600 dark:text-amber-400">{ui("ر.س")}</span>
+          {ui("إجمالي هذا البند (شامل الضريبة):")}{" "}
+          <b className="ms-1 font-mono text-sm text-slate-900 dark:text-white" dir="ltr">
+            {amount || "—"}
+          </b>{" "}
+          <span className="text-amber-700 dark:text-amber-400">{ui("ر.س")}</span>
         </p>
       </div>
 
       {expanded && (
         <div className="grid gap-3 border-t theme-border pt-4 sm:grid-cols-3">
           {/* Service Code */}
-          <label className="text-xs font-bold text-slate-500">
+          <label className="text-xs font-bold text-[var(--text-muted)]">
             {ui("رمز الخدمة (الكود الداخلي)")}<input
               required
               maxLength={200}
@@ -301,11 +313,11 @@ export default function InvoiceLineEditor({
 
           {/* Discount */}
           <div>
-            <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-500">
+            <div className="flex items-center justify-between gap-2 text-xs font-bold text-[var(--text-muted)]">
               <span>{ui("الخصم")}</span>
               <select
                 aria-label={ui(`نوع الخصم للخدمة ${index + 1}`)}
-                className="theme-input rounded-md px-1.5 py-0.5 text-[11px]"
+                className="theme-input rounded-md px-1.5 py-0.5 text-xs"
                 value={discountMode}
                 onChange={(e) => {
                   const mode = e.target.value as "AMOUNT" | "PERCENT";
@@ -345,7 +357,7 @@ export default function InvoiceLineEditor({
           </div>
 
           {/* Component */}
-          <label className="text-xs font-bold text-slate-500">
+          <label className="text-xs font-bold text-[var(--text-muted)]">
             {ui("طبيعة التوريد")}<select
               required
               className={INPUT}

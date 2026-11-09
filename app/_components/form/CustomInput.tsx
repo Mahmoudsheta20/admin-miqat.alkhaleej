@@ -35,6 +35,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
       className = "",
       disabled,
       value,
+      dir,
       ...props
     },
     ref
@@ -47,9 +48,9 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
 
     return (
       <FormField id={fieldId} label={label} error={error} hint={hint} required={required} badge={badge}>
-        <div className="relative flex items-center">
+        <div dir={dir} className="relative flex items-center">
           {icon && (
-            <div className="absolute start-3 text-slate-400 pointer-events-none flex items-center justify-center">
+            <div aria-hidden="true" className="absolute start-3 text-[var(--text-muted)] pointer-events-none flex items-center justify-center">
               <LocalizedText value={icon}/>
             </div>
           )}
@@ -58,14 +59,15 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             ref={ref}
             disabled={disabled}
             value={value}
+            dir={dir}
             {...props}
             id={fieldId}
             required={required}
             aria-invalid={error ? true : props["aria-invalid"]}
             aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
-            className={`min-w-0 w-full h-11 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium
-              ${icon ? "pe-9" : "pe-3.5"}
-              ${clearable || trailingIcon ? "pe-9" : "pe-3.5"}
+            className={`min-w-0 w-full h-11 text-sm sm:text-xs rounded-xl transition-all duration-150 outline-hidden font-medium
+              ${icon ? "ps-10" : "ps-3.5"}
+              ${clearable || trailingIcon ? "pe-10" : "pe-3.5"}
               ${
                 error
                   ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
@@ -79,15 +81,15 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             <button
               type="button"
               onClick={onClear}
-              className="absolute end-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-md"
-              aria-label={ui(`مسح ${label || "الحقل"}`)}
+              className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition rounded-lg cursor-pointer"
+              aria-label={label ? ui(`مسح ${label}`) : ui("مسح الحقل")}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           )}
 
           {trailingIcon && (!clearable || !hasValue) && (
-            <div className="absolute end-3 text-slate-400 pointer-events-none flex items-center justify-center">
+            <div aria-hidden="true" className="absolute end-3 text-[var(--text-muted)] pointer-events-none flex items-center justify-center">
               <LocalizedText value={trailingIcon}/>
             </div>
           )}

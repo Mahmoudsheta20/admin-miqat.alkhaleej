@@ -3,21 +3,8 @@ import { useUiText } from "@/lib/ui-text";
 
 import Modal from "./Modal";
 
-import React, { useState } from "react";
-import {
-  X,
-  User,
-  Mail,
-  Shield,
-  CheckCircle2,
-  AlertTriangle,
-  Car,
-  CreditCard,
-  Lock,
-  Eye,
-  EyeOff,
-  KeyRound,
-} from "lucide-react";
+import React, { useId, useState } from "react";
+import { X, User, Mail, Shield, CheckCircle2, AlertTriangle, Car, CreditCard, Lock, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { updateUserProfileAction, changeUserPasswordAction } from "@/app/_actions/auth";
 import ImageUpload from "./ImageUpload";
@@ -45,6 +32,12 @@ function ProfileModalContent({
   const ui = useUiText();
 
   const { user, updateUser } = useAuth();
+  const fieldPrefix = useId();
+  const nameId = `${fieldPrefix}-name`;
+  const phoneId = `${fieldPrefix}-phone`;
+  const curPassId = `${fieldPrefix}-cur-pass`;
+  const newPassId = `${fieldPrefix}-new-pass`;
+  const confirmPassId = `${fieldPrefix}-confirm-pass`;
 
   const [activeTab, setActiveTab] = useState<"profile" | "password">(initialTab);
 
@@ -163,7 +156,7 @@ function ProfileModalContent({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
               {activeTab === "profile" ? (
                 <User className="w-5 h-5" />
               ) : (
@@ -171,10 +164,10 @@ function ProfileModalContent({
               )}
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
                 {ui(activeTab === "profile" ? "الملف الشخصي" : "تغيير كلمة المرور")}
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-400">
+              <p className="text-xs sm:text-xs text-[var(--text-muted)]">
                 {ui(activeTab === "profile"
                   ? "تحديث الصورة الشخصية والبيانات الأساسية"
                   : "تعيين كلمة مرور جديدة وآمنة لحسابك")}
@@ -182,46 +175,51 @@ function ProfileModalContent({
             </div>
           </div>
           <button
+            type="button"
             disabled={isSubmitting || isChangingPass} onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             aria-label={ui("إغلاق")}
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b theme-border px-5 gap-2 pt-1 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+        <div role="tablist" aria-label={ui("أقسام الملف الشخصي")} className="flex border-b theme-border px-5 gap-2 pt-1 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "profile"}
             onClick={() => {
               setActiveTab("profile");
               setError(null);
               setPassError(null);
             }}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
+            className={`min-h-11 px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
               activeTab === "profile"
-                ? "border-amber-500 text-amber-600 dark:text-amber-400 font-black"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-amber-500 text-amber-700 dark:text-amber-400 font-semibold"
+                : "border-transparent text-[var(--text-muted)] hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            <User className="w-3.5 h-3.5" />
+            <User className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{ui("البيانات الشخصية")}</span>
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "password"}
             onClick={() => {
               setActiveTab("password");
               setError(null);
               setPassError(null);
             }}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
+            className={`min-h-11 px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
               activeTab === "password"
-                ? "border-amber-500 text-amber-600 dark:text-amber-400 font-black"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-amber-500 text-amber-700 dark:text-amber-400 font-semibold"
+                : "border-transparent text-[var(--text-muted)] hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            <Lock className="w-3.5 h-3.5" />
+            <Lock className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{ui("تغيير كلمة المرور")}</span>
           </button>
         </div>
@@ -233,15 +231,15 @@ function ProfileModalContent({
             className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1"
           >
             {error && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{ui(error)}</span>
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <div role="status" className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{ui(successMsg)}</span>
               </div>
             )}
@@ -261,74 +259,79 @@ function ProfileModalContent({
             {/* Name & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label htmlFor={nameId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {ui("الاسم الكامل *")}</label>
                 <div className="relative">
                   <input
+                    id={nameId}
                     type="text"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={ui("اسم المستخدم")}
                     required
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
+                    className="w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label htmlFor={phoneId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {ui("رقم الجوال")}</label>
                 <div className="relative">
                   <input
-                    type="text"
+                    id={phoneId}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="05xxxxxxxx"
                     dir="ltr"
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                    className="w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                   />
                 </div>
               </div>
             </div>
 
             {/* Read-Only System Info */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border theme-border space-y-2 text-xs text-slate-500">
-              <div className="flex items-center justify-between">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border theme-border space-y-2 text-xs text-[var(--text-muted)]">
+              <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" />
+                  <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                   {ui("البريد الإلكتروني:")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold" dir="ltr">
-                  {ui(user.email)}
+                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold truncate" dir="ltr">
+                  {user.email}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-slate-400" />
+                  <Shield className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                   {ui("نوع الحساب:")}</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">
+                <span className="font-bold text-amber-700 dark:text-amber-400">
                   {ui(user.role === "ADMIN" ? "المدير العام (Admin)" : "كابتن ميداني (Captain)")}
                 </span>
               </div>
 
               {user.nationalId && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                    <CreditCard className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("رقم الهوية:")}</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
+                  <span className="font-mono text-slate-700 dark:text-slate-300 font-bold" dir="ltr">
                     {user.nationalId}
                   </span>
                 </div>
               )}
 
               {user.assignedVehiclePlate && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5">
-                    <Car className="w-3.5 h-3.5 text-slate-400" />
+                    <Car className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("المركبة المسندة:")}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
-                    {ui(user.assignedVehiclePlate)}
+                    {user.assignedVehiclePlate}
                   </span>
                 </div>
               )}
@@ -339,13 +342,13 @@ function ProfileModalContent({
               <button
                 type="button"
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
-                className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 {ui("إلغاء")}</button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer"
+                className="min-h-11 px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer"
               >
                 {ui(isSubmitting ? "جاري الحفظ..." : "حفظ التغييرات")}
               </button>
@@ -360,96 +363,108 @@ function ProfileModalContent({
             className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1"
           >
             {passError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{ui(passError)}</span>
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>{passError}</span>
               </div>
             )}
 
             {passSuccess && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <div role="status" className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{ui(passSuccess)}</span>
               </div>
             )}
 
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 space-y-1">
               <p className="font-bold flex items-center gap-1.5">
-                <Shield className="w-4 h-4" />
+                <Shield className="w-4 h-4" aria-hidden="true" />
                 <span>{ui("أمان الحساب:")}</span>
               </p>
-              <p className="text-[11px] leading-relaxed">
+              <p className="text-xs leading-relaxed">
                 {ui("يجب ألا تقل كلمة المرور الجديدة عن 8 خانات، وتختلف عن كلمة المرور الحالية.")}</p>
             </div>
 
             {/* Current Password */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={curPassId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {ui("كلمة المرور الحالية *")}</label>
-              <div className="relative">
+              <div dir="ltr" className="relative flex items-center">
                 <input
+                  id={curPassId}
                   type={showCurrentPass ? "text" : "password"}
+                  autoComplete="current-password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder={ui("أدخل كلمة المرور الحالية")}
                   required
                   dir="ltr"
-                  className="w-full px-3.5 py-2.5 ps-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                  className="w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPass(!showCurrentPass)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  aria-label={ui(showCurrentPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
+                  aria-pressed={showCurrentPass}
+                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
-                  {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showCurrentPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
               </div>
             </div>
 
             {/* New Password */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={newPassId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {ui("كلمة المرور الجديدة *")}</label>
-              <div className="relative">
+              <div dir="ltr" className="relative flex items-center">
                 <input
+                  id={newPassId}
                   type={showNewPass ? "text" : "password"}
+                  autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder={ui("كلمة مرور جديدة (8 خانات على الأقل)")}
                   required
                   dir="ltr"
-                  className="w-full px-3.5 py-2.5 ps-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                  className="w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPass(!showNewPass)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  aria-label={ui(showNewPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
+                  aria-pressed={showNewPass}
+                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
-                  {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showNewPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
               </div>
             </div>
 
             {/* Confirm New Password */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={confirmPassId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {ui("تأكيد كلمة المرور الجديدة *")}</label>
-              <div className="relative">
+              <div dir="ltr" className="relative flex items-center">
                 <input
+                  id={confirmPassId}
                   type={showConfirmPass ? "text" : "password"}
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder={ui("أعد إدخال كلمة المرور الجديدة للتأكيد")}
                   required
                   dir="ltr"
-                  className="w-full px-3.5 py-2.5 ps-10 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                  className="w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPass(!showConfirmPass)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  aria-label={ui(showConfirmPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
+                  aria-pressed={showConfirmPass}
+                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
-                  {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showConfirmPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -459,22 +474,22 @@ function ProfileModalContent({
               <button
                 type="button"
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
-                className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 {ui("إلغاء")}</button>
               <button
                 type="submit"
                 disabled={isChangingPass}
-                className="px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                className="min-h-11 px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
               >
                 {isChangingPass ? (
                   <>
-                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div aria-hidden="true" className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
                     <span>{ui("جاري التحديث...")}</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="w-3.5 h-3.5" />
+                    <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{ui("تحديث كلمة المرور")}</span>
                   </>
                 )}

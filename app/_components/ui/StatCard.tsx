@@ -19,18 +19,18 @@ export interface StatCardProps {
 
 const VARIANT_STYLES = {
   default: {
-    iconBg: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
+    iconBg: "bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300",
     textVal: "text-slate-900 dark:text-white",
     activeBorder: "border-slate-500/40 ring-1 ring-slate-500/30",
   },
   amber: {
-    iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    textVal: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    textVal: "text-amber-700 dark:text-amber-400",
     activeBorder: "bg-amber-500/5 border-amber-500/40 ring-1 ring-amber-500/30",
   },
   emerald: {
-    iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    textVal: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+    textVal: "text-emerald-700 dark:text-emerald-400",
     activeBorder: "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30",
   },
   blue: {
@@ -44,8 +44,8 @@ const VARIANT_STYLES = {
     activeBorder: "bg-purple-500/10 border-purple-500/40 ring-1 ring-purple-500/30",
   },
   rose: {
-    iconBg: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-    textVal: "text-rose-600 dark:text-rose-400",
+    iconBg: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
+    textVal: "text-rose-700 dark:text-rose-400",
     activeBorder: "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30",
   },
 };
@@ -79,7 +79,7 @@ export default function StatCard({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
+        <span className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400 truncate">
           {ui(label)}
         </span>
         {Icon && (
@@ -94,17 +94,17 @@ export default function StatCard({
       <div className="mt-2.5 flex items-baseline gap-1.5">
         <bdi
           dir="ltr"
-          className={`text-xl sm:text-2xl lg:text-3xl font-black font-mono tracking-tight ${styles.textVal}`}
+          className={`text-xl sm:text-2xl lg:text-3xl font-semibold font-mono tracking-tight ${styles.textVal}`}
         >
           {ui(isLoading ? "—" : value)}
         </bdi>
         {unit && (
-          <span className="text-xs font-bold text-slate-400">{ui(unit)}</span>
+          <span className="text-xs font-bold text-[var(--text-muted)]">{ui(unit)}</span>
         )}
       </div>
 
       {subtext && (
-        <p className="text-[11px] text-slate-400 mt-1 truncate">{ui(subtext)}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1 truncate">{ui(subtext)}</p>
       )}
     </Component>
   );

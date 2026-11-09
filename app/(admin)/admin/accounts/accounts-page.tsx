@@ -1,29 +1,14 @@
 "use client";
+import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import {
-  BookOpen,
-  Landmark,
-  Plus,
-  Search,
-  X,
-  Copy,
-  Check,
-  FolderTree,
-  Folder,
-  FileSpreadsheet,
-  Layers,
-  ChevronDown,
-  ChevronUp,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
-  HelpCircle,
-} from "lucide-react";
-import { PageHeader } from "@/app/_components/ui";
+import { BookOpen, Landmark, Plus, Search, X, Copy, Check, FolderTree, Folder, FileSpreadsheet, Layers, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, RefreshCw, HelpCircle } from "lucide-react";
+import { Badge, Button, PageHeader } from "@/app/_components/ui";
+import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
+import { Checkbox } from "@/components/ui/checkbox";
 import { accountingRequest, type Account } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import { useLanguage } from "@/lib/languageContext";
@@ -223,36 +208,46 @@ function Editor({
         e.preventDefault();
         if (!saving) onClose();
       }}
-      className="theme-card m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-2xl rounded-2xl p-6 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/70 border theme-border overflow-y-auto"
+      onClose={onClose}
+      aria-labelledby="account-editor-title"
+      className="theme-card mobile-dialog-panel m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-2xl rounded-2xl p-6 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/70 border theme-border overflow-y-auto"
       dir={ui.dir}
     >
       <form onSubmit={save}>
         <div className="flex items-start justify-between gap-4 border-b theme-border pb-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                {ui(isEditing
-                  ? `تعديل الحساب #${account.code}`
-                  : "إنشاء حساب جديد")}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                {isEditing
+                  ? ui.language === "en"
+                    ? `Edit Account #${account.code}`
+                    : `تعديل الحساب #${account.code}`
+                  : ui("إنشاء حساب جديد")}
               </span>
               {prefillParent && (
-                <span className="text-xs text-slate-500">
-                  {ui("تابع للحساب الرئيسي:")}{ui(prefillParent.code)} -{ui(" ")}
-                  {(ui.language === "en" && prefillParent.nameEn ? prefillParent.nameEn : ui(prefillParent.nameAr))}
+                <span className="text-xs text-[var(--text-muted)]">
+                  {ui("تابع للحساب الرئيسي:")}{" "}
+                  <bdi dir="ltr" className="font-mono">{prefillParent.code}</bdi> -{" "}
+                  {ui.language === "en" && prefillParent.nameEn ? prefillParent.nameEn : ui(prefillParent.nameAr)}
                 </span>
               )}
             </div>
-            <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-white">
-              {ui(isEditing ? account.nameAr : "إضافة حساب إلى شجرة الحسابات")}
+            <h2 id="account-editor-title" className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
+              {isEditing
+                ? ui.language === "en" && account.nameEn
+                  ? account.nameEn
+                  : ui(account.nameAr)
+                : ui("إضافة حساب إلى شجرة الحسابات")}
             </h2>
           </div>
           <button
             type="button"
             disabled={saving}
             onClick={onClose}
-            className="rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition"
+            aria-label={ui("إغلاق")}
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] hover:text-slate-600 transition cursor-pointer"
           >
-            <X className="size-5" />
+            <X className="size-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -268,7 +263,7 @@ function Editor({
               value={form.code}
               onChange={(e) => update({ code: e.target.value })}
             />
-            <span className="mt-1 block text-[11px] text-slate-500 font-normal">
+            <span className="mt-1 block text-xs text-[var(--text-muted)] font-normal">
               {ui(isEditing
                 ? "رمز الحساب مقفل للحفاظ على سلامة القيود التاريخية."
                 : "حدد رمزاً فريداً يتبع ترقيم الفئة الرئيسية (مثال: 1xxx للأصول، 5xxx للمصروفات).")}
@@ -294,11 +289,11 @@ function Editor({
             >
               {Object.entries(TYPES).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {ui(v.label)} ({ui(v.codePrefix)})
+                  {ui(v.label)} ({v.codePrefix})
                 </option>
               ))}
             </select>
-            <span className="mt-1 block text-[11px] text-slate-500 font-normal">
+            <span className="mt-1 block text-xs text-[var(--text-muted)] font-normal">
               {ui("يحدد الباب الرئيسي للحساب في ميزان المراجعة وقائمة الدخل.")}</span>
           </label>
 
@@ -341,11 +336,11 @@ function Editor({
                 .filter((a) => !a.isPosting && a.type === form.type)
                 .map((a) => (
                   <option key={a.id} value={a.id}>
-                    {ui(a.code)} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
+                    {a.code} · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
                   </option>
                 ))}
             </select>
-            <span className="mt-1 block text-[11px] text-slate-500 font-normal">
+            <span className="mt-1 block text-xs text-[var(--text-muted)] font-normal">
               {ui("اختر الحساب التجميعي الذي ينتمي إليه هذا الحساب.")}</span>
           </label>
 
@@ -392,34 +387,32 @@ function Editor({
 
         {/* Posting & Active Switches with Clear Educational Explanations */}
         <div className="mt-5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
+          <label className="flex min-h-11 items-start gap-3 cursor-pointer">
+            <Checkbox
               disabled={isEditing}
-              type="checkbox"
-              className="mt-1 size-4 rounded accent-amber-500 cursor-pointer"
+              className="mt-0.5"
               checked={form.isPosting}
               onChange={(e) => update({ isPosting: e.target.checked })}
             />
             <div>
-              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+              <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                 {ui("حساب فرعي يقبل الترحيل المباشر (Posting Sub-Account)")}</span>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5 leading-relaxed">
                 {ui("إذا تم تفعيل هذا الخيار، سيظهر هذا الحساب في شاشات تسجيل الفواتير والمشتريات ومصروفات الأسطول وسندات القبض وقيود اليومية. إذا عطلته، سيصبح حساباً تجميعياً لحساب مجاميع الفروع فقط.")}</p>
             </div>
           </label>
 
-          <label className="flex items-start gap-3 cursor-pointer border-t theme-border pt-3">
-            <input
+          <label className="flex min-h-11 items-start gap-3 cursor-pointer border-t theme-border pt-3">
+            <Checkbox
               disabled={isEditing && Boolean(account.isSystem)}
-              type="checkbox"
-              className="mt-1 size-4 rounded accent-amber-500 cursor-pointer"
+              className="mt-0.5"
               checked={form.isActive}
               onChange={(e) => update({ isActive: e.target.checked })}
             />
             <div>
-              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+              <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                 {ui("الحساب نشط وجاهز للاستخدام")}</span>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5 leading-relaxed">
                 {ui("الحسابات النشطة فقط هي التي تظهر في القوائم المنسدلة للعمليات المحاسبية. الحسابات النظامية الأساسية تظل نشطة دائماً.")}</p>
             </div>
           </label>
@@ -430,7 +423,7 @@ function Editor({
             role="alert"
             className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2"
           >
-            <AlertCircle className="size-4 shrink-0" />
+            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
             <span>{ui(error)}</span>
           </div>
         )}
@@ -439,13 +432,14 @@ function Editor({
           <button
             type="button"
             disabled={saving}
-            className="theme-card rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold cursor-pointer transition disabled:opacity-50"
+            className="theme-card min-h-11 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold cursor-pointer transition disabled:opacity-50"
             onClick={onClose}
           >
             {ui("إلغاء")}</button>
           <button
+            type="submit"
             disabled={saving}
-            className="gold-gradient-btn rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer transition shadow-sm"
+            className="gold-gradient-btn min-h-11 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer transition shadow-sm"
           >
             {ui(saving
               ? "جارٍ الحفظ…"
@@ -463,7 +457,7 @@ export default function AccountsPage() {
   const ui = useUiText();
 
   const { t, dir, isRTL } = useLanguage();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useUrlState<string>("q", "");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [postingFilter, setPostingFilter] = useState<
     "ALL" | "POSTING" | "GROUP"
@@ -652,7 +646,7 @@ export default function AccountsPage() {
     <div className="space-y-6 pb-12" dir={dir}>
       {/* Top Header with On-Demand Help Guide */}
       <PageHeader
-        title={ui(`${t("nav.accounts")} (Chart of Accounts)`)}
+        title={ui(t("nav.accounts"))}
         subtitle={ui(isRTL
             ? "الدليل المحاسبي الموحد للأسطول والعمليات: الأصول، الالتزامات، حقوق الملكية، الإيرادات، والمصروفات"
             : "Unified Chart of Accounts: Assets, Liabilities, Equity, Revenues, and Expenses")}
@@ -674,18 +668,18 @@ export default function AccountsPage() {
           <>
             <Link
               href="/admin/accounting"
-              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
-              <Landmark className="size-4 text-amber-500" />
+              <Landmark className="size-4 text-amber-500" aria-hidden="true" />
               <span>{ui(t("accounting.title"))}</span>
             </Link>
 
             <button
               type="button"
-              className="gold-gradient-btn inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black cursor-pointer shadow-sm hover:shadow-md transition"
+              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
               onClick={() => setEditor({ account: "NEW" })}
             >
-              <Plus className="size-4" />
+              <Plus className="size-4" aria-hidden="true" />
               <span>+ {ui(t("common.create"))}</span>
             </button>
           </>
@@ -699,15 +693,16 @@ export default function AccountsPage() {
           className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-3 shadow-xs"
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
             <span>{ui(seedMessage)}</span>
           </div>
           <button
             type="button"
+            aria-label={ui("إغلاق")}
             onClick={() => setSeedMessage("")}
-            className="text-emerald-700 dark:text-emerald-300 hover:opacity-75"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-emerald-700 dark:text-emerald-300 hover:opacity-75 cursor-pointer"
           >
-            <X className="size-4" />
+            <X className="size-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -717,15 +712,16 @@ export default function AccountsPage() {
           className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-rose-800 dark:text-rose-300 flex items-center justify-between gap-3 shadow-xs"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            <AlertCircle className="size-4 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
             <span>{ui(seedError)}</span>
           </div>
           <button
             type="button"
+            aria-label={ui("إغلاق")}
             onClick={() => setSeedError("")}
-            className="text-rose-700 dark:text-rose-300 hover:opacity-75"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-rose-700 dark:text-rose-300 hover:opacity-75 cursor-pointer"
           >
-            <X className="size-4" />
+            <X className="size-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -738,35 +734,35 @@ export default function AccountsPage() {
         >
           <div className="flex items-start gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
-              <HelpCircle className="size-5" />
+              <HelpCircle className="size-5" aria-hidden="true" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
                 <span>
                   {ui("لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟")}</span>
-                <span className="rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 border border-blue-500/20">
+                <span className="rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-bold px-2 py-0.5 border border-blue-500/20">
                   {ui("حل فوري")}</span>
               </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                {ui("يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل")}{ui(" ")}
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-300 leading-relaxed">
+                {ui("يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل")}{" "}
                 <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
                   1000
-                </code>{ui(" ")}
-                {ui("أو")}{ui(" ")}
+                </code>{" "}
+                {ui("أو")}{" "}
                 <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
                   2000
-                </code>{ui(" ")}
-                {ui("أو")}{ui(" ")}
+                </code>{" "}
+                {ui("أو")}{" "}
                 <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
                   5000
-                </code>{ui(" ")}
-                {ui("في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط التابع له (مثل")}{ui(" ")}
+                </code>{" "}
+                {ui("في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط التابع له (مثل")}{" "}
                 <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                   {ui("1102 البنك")}</code>
-                {ui("،")}{ui(" ")}
+                {ui("،")}{" "}
                 <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                   {ui("4101 الإيرادات")}</code>
-                {ui("، أو")}{ui(" ")}
+                {ui("، أو")}{" "}
                 <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                   {ui("5101 الوقود")}</code>
                 ).
@@ -775,9 +771,9 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setPostingFilter("POSTING")}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-bold transition cursor-pointer"
+                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-bold transition cursor-pointer"
                 >
-                  <CheckCircle2 className="size-3.5" />
+                  <CheckCircle2 className="size-3.5" aria-hidden="true" />
                   <span>{ui("تصفية الحسابات الفرعية القابلة للترحيل الآن")}</span>
                 </button>
                 <button
@@ -787,7 +783,7 @@ export default function AccountsPage() {
                     setTypeFilter("ALL");
                     setSearch("");
                   }}
-                  className="theme-card rounded-lg border theme-border px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-amber-500 transition cursor-pointer"
+                  className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-3 py-1.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300 hover:border-amber-500 transition cursor-pointer"
                 >
                   {ui("إلغاء الفلترة وعرض الكل")}</button>
               </div>
@@ -796,10 +792,11 @@ export default function AccountsPage() {
           <button
             type="button"
             onClick={() => setShowFaqGuide(false)}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition shrink-0"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center p-1 rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition shrink-0 cursor-pointer"
+            aria-label={ui("إخفاء التنبيه")}
             title={ui("إخفاء التنبيه")}
           >
-            <X className="size-4" />
+            <X className="size-4" aria-hidden="true" />
           </button>
         </section>
       )}
@@ -819,12 +816,12 @@ export default function AccountsPage() {
               : "theme-card theme-border hover:border-amber-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-slate-500">
+          <span className="text-xs font-bold text-[var(--text-muted)]">
             {ui("إجمالي الحسابات")}</span>
-          <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
-            {ui(isLoading ? "—" : stats.total)}
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-slate-900 dark:text-white mt-1">
+            {isLoading ? "—" : stats.total}
           </div>
-          <span className="text-[10px] text-slate-400">{ui("شاملة الفئات الـ 5")}</span>
+          <span className="text-xs text-[var(--text-muted)]">{ui("شاملة الفئات الـ 5")}</span>
         </button>
 
         {/* Posting Sub-Accounts */}
@@ -840,14 +837,14 @@ export default function AccountsPage() {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
               {ui("يقبل الترحيل (فرعي)")}</span>
-            <CheckCircle2 className="size-3.5 text-emerald-500" />
+            <CheckCircle2 className="size-3.5 text-emerald-500" aria-hidden="true" />
           </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
-            {ui(isLoading ? "—" : stats.posting)}
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-700 dark:text-emerald-400 mt-1">
+            {isLoading ? "—" : stats.posting}
           </div>
-          <span className="text-[10px] text-emerald-600/80">
+          <span className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
             {ui("صالحة للقيود والفواتير")}</span>
         </button>
 
@@ -864,14 +861,14 @@ export default function AccountsPage() {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
               {ui("تجميعي (رئيسي)")}</span>
-            <Folder className="size-3.5 text-amber-500" />
+            <Folder className="size-3.5 text-amber-500" aria-hidden="true" />
           </div>
-          <div className="text-xl sm:text-2xl font-black font-mono text-amber-600 dark:text-amber-400 mt-1">
-            {ui(isLoading ? "—" : stats.group)}
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-amber-700 dark:text-amber-400 mt-1">
+            {isLoading ? "—" : stats.group}
           </div>
-          <span className="text-[10px] text-amber-600/80">
+          <span className="text-xs text-amber-700/80 dark:text-amber-400/80">
             {ui("لحساب مجاميع الفروع")}</span>
         </button>
 
@@ -887,12 +884,12 @@ export default function AccountsPage() {
               : "theme-card theme-border hover:border-blue-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400">
+          <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
             {ui("1000 الأصول")}</span>
-          <div className="text-xl sm:text-2xl font-black font-mono text-blue-600 dark:text-blue-400 mt-1">
-            {ui(isLoading ? "—" : stats.assets)}
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-blue-700 dark:text-blue-400 mt-1">
+            {isLoading ? "—" : stats.assets}
           </div>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-xs text-[var(--text-muted)]">
             {ui("الصندوق، البنك، الأسطول")}</span>
         </button>
 
@@ -908,12 +905,12 @@ export default function AccountsPage() {
               : "theme-card theme-border hover:border-emerald-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
             {ui("4000 الإيرادات")}</span>
-          <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
-            {ui(isLoading ? "—" : stats.revenues)}
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-700 dark:text-emerald-400 mt-1">
+            {isLoading ? "—" : stats.revenues}
           </div>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-xs text-[var(--text-muted)]">
             {ui("نقل، VIP، عمرة، صادرات")}</span>
         </button>
 
@@ -929,12 +926,12 @@ export default function AccountsPage() {
               : "theme-card theme-border hover:border-rose-500/30"
           }`}
         >
-          <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
+          <span className="text-xs font-bold text-rose-700 dark:text-rose-400">
             {ui("5000 المصروفات")}</span>
-          <div className="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400 mt-1">
-            {ui(isLoading ? "—" : stats.expenses)}
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-rose-700 dark:text-rose-400 mt-1">
+            {isLoading ? "—" : stats.expenses}
           </div>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-xs text-[var(--text-muted)]">
             {ui("وقود، صيانة، رواتب، TGA")}</span>
         </button>
       </div>
@@ -943,22 +940,22 @@ export default function AccountsPage() {
       <div className="theme-card p-4 rounded-2xl border theme-border flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-[var(--text-muted)] absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={ui("ابحث بالرمز (1102)، الاسم العربي (البنك الأهلي)، أو الإنجليزي (Fuel)...")}
-            className="theme-input w-full ps-10 pe-8 py-2.5 text-xs sm:text-sm rounded-xl"
+            className="theme-input w-full h-11 ps-10 pe-11 py-2.5 text-xs sm:text-sm rounded-xl"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+              className="absolute end-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 cursor-pointer"
               aria-label={ui("مسح البحث")}
             >
-              <X className="size-3.5" />
+              <X className="size-3.5" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -968,13 +965,13 @@ export default function AccountsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="theme-input h-10 rounded-xl px-3 text-xs font-bold border theme-border"
+            className="theme-input h-11 rounded-xl px-3 text-xs font-bold border theme-border"
             aria-label={ui("فلترة بنوع الحساب")}
           >
             <option value="ALL">{ui("جميع الأبواب الرئيسية")}</option>
             {Object.entries(TYPES).map(([k, v]) => (
               <option key={k} value={k}>
-                {ui(v.label)} ({ui(v.codePrefix)})
+                {ui(v.label)} ({v.codePrefix})
               </option>
             ))}
           </select>
@@ -984,7 +981,7 @@ export default function AccountsPage() {
             onChange={(e) =>
               setPostingFilter(e.target.value as "ALL" | "POSTING" | "GROUP")
             }
-            className="theme-input h-10 rounded-xl px-3 text-xs font-bold border theme-border"
+            className="theme-input h-11 rounded-xl px-3 text-xs font-bold border theme-border"
             aria-label={ui("فلترة بطبيعة الترحيل")}
           >
             <option value="ALL">{ui("كافة الحسابات (فرعي ورئيسي)")}</option>
@@ -996,26 +993,28 @@ export default function AccountsPage() {
           <div className="inline-flex rounded-xl border theme-border p-1 bg-slate-100 dark:bg-slate-900/60">
             <button
               type="button"
+              aria-pressed={viewMode === "TREE"}
               onClick={() => setViewMode("TREE")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 viewMode === "TREE"
                   ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  : "text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <FolderTree className="size-3.5 text-amber-500" />
+              <FolderTree className="size-3.5 text-amber-500" aria-hidden="true" />
               <span>{ui("شجرة هرمية")}</span>
             </button>
             <button
               type="button"
+              aria-pressed={viewMode === "TABLE"}
               onClick={() => setViewMode("TABLE")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 viewMode === "TABLE"
                   ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  : "text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <Layers className="size-3.5 text-amber-500" />
+              <Layers className="size-3.5 text-amber-500" aria-hidden="true" />
               <span>{ui("جدول منبسط")}</span>
             </button>
           </div>
@@ -1024,7 +1023,7 @@ export default function AccountsPage() {
 
       {/* Error & Loading Indicators */}
       {error && (
-        <p role="alert" className="text-sm font-bold text-rose-600">
+        <p role="alert" className="text-sm font-bold text-rose-700 dark:text-rose-400">
           {ui(error)}
         </p>
       )}
@@ -1033,8 +1032,8 @@ export default function AccountsPage() {
           role="status"
           className="theme-card h-64 animate-pulse rounded-2xl flex items-center justify-center"
         >
-          <div className="flex flex-col items-center gap-2 text-slate-400">
-            <RefreshCw className="size-6 animate-spin text-amber-500" />
+          <div className="flex flex-col items-center gap-2 text-[var(--text-muted)]">
+            <RefreshCw className="size-6 animate-spin text-amber-500" aria-hidden="true" />
             <span className="text-xs font-bold">{ui("جارٍ تحميل شجرة الحسابات…")}</span>
           </div>
         </div>
@@ -1059,63 +1058,66 @@ export default function AccountsPage() {
                 key={typeKey}
                 className="theme-card rounded-2xl border theme-border overflow-hidden transition-all shadow-xs"
               >
-                {/* Category Header */}
-                <div
-                  onClick={() => toggleTypeCollapse(typeKey)}
-                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-slate-50/70 dark:bg-slate-900/50 border-b theme-border cursor-pointer select-none hover:bg-slate-100/70 dark:hover:bg-slate-900 transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
-                      {ui(typeInfo.codePrefix.charAt(0))}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                          {ui(typeInfo.label)}
-                        </h2>
-                        <span className="font-mono text-xs font-bold text-slate-400">
-                          ({ui(typeInfo.codePrefix)})
-                        </span>
+                {/* Category Header (sibling buttons, never nested interactive controls) */}
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-slate-50/70 dark:bg-slate-900/50 border-b theme-border">
+                  <button
+                    type="button"
+                    aria-expanded={!isCollapsed}
+                    onClick={() => toggleTypeCollapse(typeKey)}
+                    className="flex flex-1 min-w-0 min-h-11 items-center justify-between gap-3 text-start cursor-pointer hover:opacity-80 transition"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
+                        {typeInfo.codePrefix.charAt(0)}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        {ui(typeAccounts.length)} {ui("حساب مسجل ·")}{ui(postingCount)} {ui("حساب فرعي يقبل الترحيل")}</p>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                            {ui(typeInfo.label)}
+                          </h2>
+                          <span className="font-mono text-xs font-bold text-[var(--text-muted)]">
+                            ({typeInfo.codePrefix})
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                          {typeAccounts.length} {ui("حساب مسجل ·")} {postingCount}{" "}
+                          {ui("حساب فرعي يقبل الترحيل")}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rootParent =
-                          typeAccounts.find(
-                            (a) => !a.isPosting && depth(a) === 0,
-                          ) || typeAccounts[0];
-                        setEditor({
-                          account: "NEW",
-                          prefillParent: rootParent,
-                        });
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border theme-border bg-white dark:bg-slate-800 hover:border-amber-500 px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
-                    >
-                      <Plus className="size-3 text-amber-500" />
-                      <span>{ui("+ حساب فرعي")}</span>
-                    </button>
-                    <div className="p-1 text-slate-400">
+                    <span className="p-1 text-[var(--text-muted)] shrink-0">
                       {isCollapsed ? (
-                        <ChevronDown className="size-4" />
+                        <ChevronDown className="size-4" aria-hidden="true" />
                       ) : (
-                        <ChevronUp className="size-4" />
+                        <ChevronUp className="size-4" aria-hidden="true" />
                       )}
-                    </div>
-                  </div>
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rootParent =
+                        typeAccounts.find(
+                          (a) => !a.isPosting && depth(a) === 0,
+                        ) || typeAccounts[0];
+                      setEditor({
+                        account: "NEW",
+                        prefillParent: rootParent,
+                      });
+                    }}
+                    className="inline-flex min-h-11 sm:min-h-9 shrink-0 items-center gap-1 rounded-lg border theme-border bg-white dark:bg-slate-800 hover:border-amber-500 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs cursor-pointer"
+                  >
+                    <Plus className="size-3.5 text-amber-500" aria-hidden="true" />
+                    <span>{ui("+ حساب فرعي")}</span>
+                  </button>
                 </div>
 
                 {/* Category Accounts Body */}
                 {!isCollapsed && (
                   <div className="divide-y theme-border">
                     {typeAccounts.length === 0 ? (
-                      <p className="p-5 text-center text-xs text-slate-400">
+                      <p className="p-5 text-center text-xs text-[var(--text-muted)]">
                         {ui("لا توجد حسابات مطابقة للبحث في هذا الباب.")}</p>
                     ) : (
                       typeAccounts.map((a) => {
@@ -1125,21 +1127,33 @@ export default function AccountsPage() {
                         return (
                           <div
                             key={a.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50/60 dark:hover:bg-slate-800/40 ${
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5 transition hover:bg-slate-50/60 dark:hover:bg-slate-800/40 ${
                               isMain
                                 ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold"
                                 : ""
                             }`}
                           >
                             {/* Code, Name, Indent & Icon */}
-                            <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
-                              {/* Visual Tree Indentation */}
+                            <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                              {/* Visual Tree Indentation (compact on mobile) */}
+                              {accountDepth > 0 && (
+                                <div
+                                  style={{
+                                    width: `clamp(14px, ${accountDepth * 12}px, 36px)`,
+                                  }}
+                                  className="shrink-0 flex items-center justify-end sm:hidden"
+                                >
+                                  <span className="text-slate-400 dark:text-slate-600 font-mono text-xs select-none">
+                                    └─
+                                  </span>
+                                </div>
+                              )}
                               <div
-                                style={{ width: accountDepth * 24 }}
-                                className="shrink-0 flex items-center justify-end"
+                                style={{ width: accountDepth * 22 }}
+                                className="hidden sm:flex shrink-0 items-center justify-end"
                               >
                                 {accountDepth > 0 && (
-                                  <span className="text-slate-300 dark:text-slate-600 font-mono text-xs select-none">
+                                  <span className="text-slate-400 dark:text-slate-600 font-mono text-xs select-none">
                                     └─
                                   </span>
                                 )}
@@ -1148,27 +1162,28 @@ export default function AccountsPage() {
                               {/* Branch Icon */}
                               <div className="mt-0.5 sm:mt-0 shrink-0">
                                 {isMain ? (
-                                  <Folder className="size-4 text-amber-500" />
+                                  <Folder className="size-4 text-amber-500" aria-hidden="true" />
                                 ) : (
-                                  <FileSpreadsheet className="size-4 text-emerald-500" />
+                                  <FileSpreadsheet className="size-4 text-emerald-500" aria-hidden="true" />
                                 )}
                               </div>
 
                               {/* Code with Copy Button */}
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <code className="font-mono text-xs font-black text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                                  {ui(a.code)}
+                              <div className="flex items-center gap-1 shrink-0">
+                                <code className="font-mono text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                  {a.code}
                                 </code>
                                 <button
                                   type="button"
                                   onClick={(e) => handleCopyCode(a.code, e)}
-                                  className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                                  className="inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                                  aria-label={`${ui("نسخ رمز الحساب")} ${a.code}`}
                                   title={ui("نسخ رمز الحساب")}
                                 >
                                   {copiedCode === a.code ? (
-                                    <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
+                                    <Check className="size-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
                                   ) : (
-                                    <Copy className="size-3" />
+                                    <Copy className="size-3.5" aria-hidden="true" />
                                   )}
                                 </button>
                               </div>
@@ -1179,7 +1194,7 @@ export default function AccountsPage() {
                                   {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                                 </p>
                                 <p
-                                  className="text-[11px] text-slate-400 dark:text-slate-500 truncate"
+                                  className="text-xs text-[var(--text-muted)] dark:text-slate-400 truncate"
                                   dir={ui.language === "en" ? "rtl" : "ltr"}
                                 >
                                   {ui.language === "en" ? a.nameAr : a.nameEn}
@@ -1191,19 +1206,19 @@ export default function AccountsPage() {
                             <div className="flex flex-wrap items-center gap-2 shrink-0 sm:justify-end">
                               {/* Posting Capability Badge */}
                               {a.isPosting ? (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
-                                  <CheckCircle2 className="size-3" />
+                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                                  <CheckCircle2 className="size-3" aria-hidden="true" />
                                   <span>{ui("يقبل القيود (فرعي)")}</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
-                                  <Folder className="size-3" />
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                                  <Folder className="size-3" aria-hidden="true" />
                                   <span>{ui("تجميعي (رئيسي)")}</span>
                                 </span>
                               )}
 
                               {/* Balance Nature */}
-                              <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                              <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
                                 {ui(a.normalBalance === "DEBIT"
                                   ? "طبيعة: مدين"
                                   : "طبيعة: دائن")}
@@ -1211,7 +1226,7 @@ export default function AccountsPage() {
 
                               {/* Active Status */}
                               <span
-                                className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                                className={`rounded-md px-2 py-0.5 text-xs font-bold ${
                                   a.isActive
                                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                                     : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
@@ -1222,7 +1237,7 @@ export default function AccountsPage() {
 
                               {/* System Badge */}
                               {a.isSystem && (
-                                <span className="rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                <span className="rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
                                   {ui("نظامي")}</span>
                               )}
 
@@ -1236,10 +1251,14 @@ export default function AccountsPage() {
                                       prefillParent: a,
                                     })
                                   }
-                                  className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 transition"
-                                  title={ui(`إضافة حساب فرعي تحت ${a.code}`)}
+                                  className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-400 transition cursor-pointer"
+                                  title={
+                                    ui.language === "en"
+                                      ? `Add sub-account under ${a.code}`
+                                      : `إضافة حساب فرعي تحت ${a.code}`
+                                  }
                                 >
-                                  <Plus className="size-3" />
+                                  <Plus className="size-3" aria-hidden="true" />
                                   <span>{ui("+ فرعي")}</span>
                                 </button>
                               )}
@@ -1247,7 +1266,7 @@ export default function AccountsPage() {
                               {/* Edit Button */}
                               <button
                                 type="button"
-                                className="theme-card rounded-lg border theme-border hover:border-amber-500 px-3 py-1 text-xs font-bold cursor-pointer transition shadow-2xs"
+                                className="theme-card min-h-11 sm:min-h-8 rounded-lg border theme-border hover:border-amber-500 px-3 py-1 text-xs font-bold cursor-pointer transition shadow-2xs"
                                 onClick={() => setEditor({ account: a })}
                               >
                                 {ui("تعديل")}</button>
@@ -1264,11 +1283,109 @@ export default function AccountsPage() {
         </div>
       )}
 
-      {/* View Mode 2: Flat Data Table View */}
+      {/* View Mode 2: Flat Data Table / Mobile Cards View */}
       {viewMode === "TABLE" && !isLoading && (
-        <div className="theme-card overflow-x-auto rounded-2xl border theme-border shadow-xs">
-          <table className="w-full min-w-[760px] text-start text-xs sm:text-sm">
-            <thead className="theme-card-subtle text-xs text-slate-500 font-bold border-b theme-border">
+        <>
+          <div className="md:hidden space-y-3">
+            {filteredAccounts.length === 0 ? (
+              <div className="theme-card rounded-2xl border theme-border p-8 text-center text-[var(--text-muted)] text-xs">
+                {ui("لا توجد حسابات مطابقة لشروط البحث.")}
+              </div>
+            ) : (
+              filteredAccounts.map((a) => (
+                <MobileRecordCard
+                  key={a.id}
+                  title={
+                    <div className="flex items-center gap-1.5">
+                      <code className="font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 text-xs">
+                        {a.code}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyCode(a.code, e)}
+                        className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                        aria-label={`${ui("نسخ رمز الحساب")} ${a.code}`}
+                        title={ui("نسخ رمز الحساب")}
+                      >
+                        {copiedCode === a.code ? (
+                          <Check className="size-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                  }
+                  subtitle={
+                    <div className="space-y-0.5">
+                      <p className="font-bold text-slate-900 dark:text-white">
+                        {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]" dir={ui.language === "en" ? "rtl" : "ltr"}>
+                        {ui.language === "en" ? a.nameAr : a.nameEn}
+                      </p>
+                    </div>
+                  }
+                  badge={
+                    <div className="flex flex-wrap items-center justify-end gap-1">
+                      <Badge variant={a.isActive ? "success" : "destructive"} className="text-[10px]">
+                        {ui(a.isActive ? "نشط" : "معطل")}
+                      </Badge>
+                      {a.isSystem && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {ui("نظامي")}
+                        </Badge>
+                      )}
+                    </div>
+                  }
+                  footer={
+                    <>
+                      {!a.isPosting && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditor({ account: "NEW", prefillParent: a })}
+                          className="flex-1 min-h-11 gap-1 text-xs font-bold text-amber-700 dark:text-amber-400"
+                          title={
+                            ui.language === "en"
+                              ? `Add sub-account under ${a.code}`
+                              : `إضافة حساب فرعي تحت ${a.code}`
+                          }
+                        >
+                          <Plus className="size-3.5" aria-hidden="true" />
+                          <span>{ui("+ فرعي")}</span>
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 min-h-11 text-xs font-bold"
+                        onClick={() => setEditor({ account: a })}
+                      >
+                        {ui("تعديل")}
+                      </Button>
+                    </>
+                  }
+                >
+                  <MobileCardMetaGrid>
+                    <MobileCardField
+                      label={ui("الباب / الطبيعة")}
+                      value={`${ui(TYPES[a.type]?.label || a.type)} · ${ui(a.normalBalance === "DEBIT" ? "مدين" : "دائن")}`}
+                    />
+                    <MobileCardField
+                      label={ui("صلاحية الترحيل")}
+                      value={a.isPosting ? ui("فرعي (يقبل القيود)") : ui("تجميعي (رئيسي)")}
+                    />
+                  </MobileCardMetaGrid>
+                </MobileRecordCard>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block theme-card overflow-x-auto rounded-2xl border theme-border shadow-xs">
+            <table className="w-full min-w-[760px] text-start text-xs sm:text-sm">
+            <thead className="theme-card-subtle text-xs text-[var(--text-muted)] font-bold border-b theme-border">
               <tr>
                 <th className="px-5 py-3.5">{ui("الرمز")}</th>
                 <th className="px-5 py-3.5">{ui("اسم الحساب")}</th>
@@ -1283,7 +1400,7 @@ export default function AccountsPage() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="p-8 text-center text-slate-400 text-xs"
+                    className="p-8 text-center text-[var(--text-muted)] text-xs"
                   >
                     {ui("لا توجد حسابات مطابقة لشروط البحث.")}</td>
                 </tr>
@@ -1301,18 +1418,19 @@ export default function AccountsPage() {
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <code className="font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                          {ui(a.code)}
+                          {a.code}
                         </code>
                         <button
                           type="button"
                           onClick={(e) => handleCopyCode(a.code, e)}
-                          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                          aria-label={`${ui("نسخ رمز الحساب")} ${a.code}`}
                           title={ui("نسخ رمز الحساب")}
                         >
                           {copiedCode === a.code ? (
-                            <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
+                            <Check className="size-3 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
                           ) : (
-                            <Copy className="size-3" />
+                            <Copy className="size-3" aria-hidden="true" />
                           )}
                         </button>
                       </div>
@@ -1324,7 +1442,7 @@ export default function AccountsPage() {
                         <p className="font-bold text-slate-900 dark:text-white">
                           {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                         </p>
-                        <p className="text-[11px] text-slate-400" dir={ui.language === "en" ? "rtl" : "ltr"}>
+                        <p className="text-xs text-[var(--text-muted)]" dir={ui.language === "en" ? "rtl" : "ltr"}>
                           {ui.language === "en" ? a.nameAr : a.nameEn}
                         </p>
                       </div>
@@ -1335,7 +1453,7 @@ export default function AccountsPage() {
                       <p className="font-bold">
                         {ui(TYPES[a.type]?.label || a.type)}
                       </p>
-                      <p className="text-slate-400 text-[11px] mt-0.5">
+                      <p className="text-[var(--text-muted)] text-xs mt-0.5">
                         {ui(a.normalBalance === "DEBIT"
                           ? "طبيعة رصيد: مدين"
                           : "طبيعة رصيد: دائن")}
@@ -1345,12 +1463,12 @@ export default function AccountsPage() {
                     {/* Posting Capability */}
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       {a.isPosting ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
                           <CheckCircle2 className="size-3" />
                           <span>{ui("فرعي (يقبل القيود)")}</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
                           <Folder className="size-3" />
                           <span>{ui("تجميعي (رئيسي)")}</span>
                         </span>
@@ -1360,7 +1478,7 @@ export default function AccountsPage() {
                     {/* Status */}
                     <td className="px-5 py-3.5 text-xs whitespace-nowrap">
                       <span
-                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                        className={`rounded-md px-2 py-0.5 text-xs font-bold ${
                           a.isActive
                             ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                             : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
@@ -1369,7 +1487,7 @@ export default function AccountsPage() {
                         {ui(a.isActive ? "نشط" : "معطل")}
                       </span>
                       {a.isSystem && (
-                        <span className="ms-1.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                        <span className="ms-1.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
                           {ui("نظامي")}</span>
                       )}
                     </td>
@@ -1384,15 +1502,19 @@ export default function AccountsPage() {
                               setEditor({ account: "NEW", prefillParent: a })
                             }
                             className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
-                            title={ui(`إضافة حساب فرعي تحت ${a.code}`)}
+                            title={
+                              ui.language === "en"
+                                ? `Add sub-account under ${a.code}`
+                                : `إضافة حساب فرعي تحت ${a.code}`
+                            }
                           >
-                            <Plus className="size-3" />
+                            <Plus className="size-3" aria-hidden="true" />
                             <span>{ui("+ فرعي")}</span>
                           </button>
                         )}
                         <button
                           type="button"
-                          className="theme-card rounded-lg border theme-border hover:border-amber-500 px-3 py-1.5 text-xs font-bold cursor-pointer transition shadow-2xs"
+                          className="theme-card min-h-9 rounded-lg border theme-border hover:border-amber-500 px-3 py-1.5 text-xs font-bold cursor-pointer transition shadow-2xs"
                           onClick={() => setEditor({ account: a })}
                         >
                           {ui("تعديل")}</button>
@@ -1402,8 +1524,9 @@ export default function AccountsPage() {
                 ))
               )}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Editor Modal */}

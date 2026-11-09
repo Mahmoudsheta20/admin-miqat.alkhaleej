@@ -22,7 +22,7 @@ export default function SeedTestDataButton({
   const { isRTL } = useLanguage();
 
   // Hide completely in production builds
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_DEMO_DATA !== "true") {
     return null;
   }
 
@@ -74,4 +74,3 @@ export default function SeedTestDataButton({
     </button>
   );
 }
-

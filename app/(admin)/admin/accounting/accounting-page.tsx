@@ -1,4 +1,6 @@
 "use client";
+import { useReportPeriod } from "@/lib/use-report-period";
+import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
 
@@ -6,17 +8,11 @@ import Link from "next/link";
 import { useState, useMemo, type FormEvent } from "react";
 import { BookOpen, Calculator, Landmark } from "lucide-react";
 import AccountingPeriodSelector from "@/app/_components/AccountingPeriodSelector";
-import { PageHeader } from "@/app/_components/ui";
-import {
-  accountingRequest,
-  amountLabel,
-  defaultReportPeriod,
-  downloadAccounting,
-  periodBody,
-  periodQuery,
-  type FinancialReport,
-  type ReportPeriod,
-} from "@/lib/accounting";
+import { Badge, Card, PageHeader } from "@/app/_components/ui";
+import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
+import { accountingRequest, amountLabel, downloadAccounting, periodBody, periodQuery, type FinancialReport, type ReportPeriod } from "@/lib/accounting";
+import { formatSignedMinor, signedMoneyMinor } from "@/lib/dashboard-analytics";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import JournalPanel from "./journal-panel";
 import PaymentPanel from "./payment-panel";
@@ -69,10 +65,10 @@ function LegacyReview({
       <h2 className="font-bold">
         {ui("مستندات حتى نهاية الفترة تحتاج مراجعة محاسبية (")}{ui(report.unpostedInvoices.length)})
       </h2>
-      <p className="mt-2 text-xs leading-relaxed text-slate-500">
+      <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
         {ui("الفواتير القديمة تظهر في VAT كما سُجلت، وتحتاج اعتماد حساب التسوية لإدراجها في دفتر الأستاذ، بما يشمل المستندات الأقدم التي تؤثر في الرصيد الافتتاحي. راجع التحصيل الفعلي قبل الترحيل.")}</p>
       <form onSubmit={post} className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="flex-1 text-xs font-bold">
+          <label className="flex-1 text-xs font-bold">
           {ui("الفاتورة")}<select
             required
             className={`${INPUT} mt-2 w-full`}
@@ -82,7 +78,7 @@ function LegacyReview({
             <option value="">{ui("اختر فاتورة للمراجعة")}</option>
             {report.unpostedInvoices.map((v) => (
               <option key={v.id} value={v.id}>
-                {ui(v.number)} · {v.customerName} · {ui(v.invoiceDate.slice(0, 10))}
+                {v.number} · {v.customerName} · {v.invoiceDate.slice(0, 10)}
               </option>
             ))}
           </select>
@@ -109,13 +105,14 @@ function LegacyReview({
           </select>
         </label>
         <button
+          type="submit"
           disabled={saving}
-          className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
+          className="gold-gradient-btn min-h-11 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
         >
           {ui("اعتماد ترحيل الفاتورة")}</button>
       </form>
       {error && (
-        <p role="alert" className="mt-3 text-sm text-rose-600">
+        <p role="alert" className="mt-3 text-sm font-bold text-rose-700 dark:text-rose-400">
           {ui(error)}
         </p>
       )}
@@ -167,20 +164,20 @@ function PeriodArchive({
   return (
     <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
           {ui("حفظ الفترة ومنع تعديلها (إقفال الفترة)")}</h2>
-        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)] dark:text-slate-400">
           {ui("تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة الأرباح. بعد الإقفال تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ نهاية الفترة لضمان مطابقة الدفاتر مع إقرارات هيئة الزكاة؛ تُسجل أي تسويات لاحقة في فترة جديدة مفتوحة.")}</p>
       </div>
       <form onSubmit={close} className="mt-5 space-y-4">
         <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-xs font-bold text-slate-700 dark:text-slate-300">
-          {ui("نطاق الفترة المطلوب إقفالها:")}{ui(" ")}
-          <bdi className="font-mono text-amber-700 dark:text-amber-400">
-            {ui(report.range.start)}
-          </bdi>{ui(" ")}
-          {ui("إلى")}{ui(" ")}
-          <bdi className="font-mono text-amber-700 dark:text-amber-400">
-            {ui(report.range.endInclusive)}
+          {ui("نطاق الفترة المطلوب إقفالها:")}{" "}
+          <bdi dir="ltr" className="font-mono text-amber-700 dark:text-amber-400">
+            {report.range.start}
+          </bdi>{" "}
+          {ui("إلى")}{" "}
+          <bdi dir="ltr" className="font-mono text-amber-700 dark:text-amber-400">
+            {report.range.endInclusive}
           </bdi>
         </div>
         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -194,26 +191,26 @@ function PeriodArchive({
             placeholder={ui("مثال: تمت مطابقة السجل والمستندات وتقديم الإقرار الضريبي")}
           />
         </label>
-        <label className="flex items-start gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
-          <input
-            type="checkbox"
+        <label className="flex min-h-11 items-start gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
+          <Checkbox
             required
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="size-4 accent-amber-600 rounded mt-0.5 cursor-pointer"
+            className="mt-0.5"
           />
           <span>
             {ui("أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه الفترة وحفظها ومنع تعديلها لاحقاً.")}</span>
         </label>
         <button
+          type="submit"
           disabled={saving || !confirmed || report.unpostedInvoices.length > 0}
-          className="gold-gradient-btn rounded-xl px-5 py-3 text-xs sm:text-sm font-black disabled:opacity-40 cursor-pointer shadow-sm"
+          className="gold-gradient-btn min-h-11 rounded-xl px-5 py-3 text-xs sm:text-sm font-semibold disabled:opacity-40 cursor-pointer shadow-sm"
         >
           {ui(saving ? "جارٍ إقفال الفترة…" : "تأكيد إقفال الفترة وحفظ الأرشيف")}
         </button>
       </form>
       {(error || closed.error) && (
-        <p role="alert" className="mt-4 text-sm text-rose-600">
+        <p role="alert" className="mt-4 text-sm font-bold text-rose-700 dark:text-rose-400">
           {ui(error || closed.error)}
         </p>
       )}
@@ -225,15 +222,15 @@ function PeriodArchive({
           >
             <div>
               <p>
-                <bdi className="font-mono">
-                  {ui(v.startDate.slice(0, 10))} — {ui(v.endDate.slice(0, 10))}
+                <bdi dir="ltr" className="font-mono">
+                  {v.startDate.slice(0, 10)} — {v.endDate.slice(0, 10)}
                 </bdi>
               </p>
-              <p className="mt-1 text-xs text-slate-500">{v.reason}</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">{v.reason}</p>
             </div>
             <button
               type="button"
-              className="theme-card rounded-lg border theme-border px-3 py-2 text-xs cursor-pointer"
+              className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-3 py-2 text-xs font-bold cursor-pointer"
               onClick={() =>
                 void downloadAccounting(
                   `/periods/${v.id}`,
@@ -257,8 +254,8 @@ export default function AccountingPage() {
   const ui = useUiText();
 
   const { t, dir, isRTL } = useLanguage();
-  const [period, setPeriod] = useState(defaultReportPeriod);
-  const [tab, setTab] = useState("REPORTS");
+  const [period, setPeriod] = useReportPeriod();
+  const [tab, setTab] = useUrlState<string>("view", "REPORTS", ["REPORTS","PERIODS","JOURNALS","PAYMENTS"]);
   const [reload, setReload] = useState(0);
   const [error, setError] = useState("");
   const [seedMessage, setSeedMessage] = useState("");
@@ -382,17 +379,17 @@ export default function AccountingPage() {
           <>
             <Link
               href="/admin/accounts"
-              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
-              <BookOpen className="size-4 text-amber-500" />
+              <BookOpen className="size-4 text-amber-500" aria-hidden="true" />
               <span>{ui(t("nav.accounts"))}</span>
             </Link>
 
             <Link
               href="/admin/vat-returns"
-              className="theme-card inline-flex items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
             >
-              <Calculator className="size-4 text-amber-500" />
+              <Calculator className="size-4 text-amber-500" aria-hidden="true" />
               <span>{ui(t("nav.vatReturns"))}</span>
             </Link>
           </>
@@ -425,7 +422,7 @@ export default function AccountingPage() {
             type="button"
             aria-pressed={tab === key}
             onClick={() => setTab(key)}
-            className={`rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition cursor-pointer ${
+            className={`min-h-11 sm:min-h-10 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition cursor-pointer ${
               tab === key
                 ? "bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950"
                 : "theme-card border theme-border hover:border-amber-500/40"
@@ -439,10 +436,10 @@ export default function AccountingPage() {
       {(tab === "REPORTS" || tab === "PERIODS") && (
         <section className="theme-card flex flex-wrap items-end justify-between gap-4 rounded-2xl border theme-border p-5">
           <AccountingPeriodSelector value={period} onChange={setPeriod} />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="theme-card rounded-xl border theme-border hover:border-amber-500 px-4 py-3 text-sm font-bold cursor-pointer"
+              className="theme-card min-h-11 rounded-xl border theme-border hover:border-amber-500 px-4 py-3 text-sm font-bold cursor-pointer"
               onClick={changed}
             >
               {ui(t("common.refresh"))}
@@ -453,7 +450,7 @@ export default function AccountingPage() {
                 type="button"
                 disabled={exporting || isLoading || !data}
                 onClick={() => void download(f)}
-                className="gold-gradient-btn rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
+                className="gold-gradient-btn min-h-11 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
               >
                 {ui(f === "pdf"
                   ? t("accounting.exportPdf")
@@ -465,7 +462,7 @@ export default function AccountingPage() {
       )}
 
       {(error || failure) && (
-        <p role="alert" className="theme-card rounded-xl p-4 text-rose-600">
+        <p role="alert" className="theme-card rounded-xl border border-rose-500/30 p-4 text-sm font-bold text-rose-700 dark:text-rose-400">
           {ui(error || failure)}
         </p>
       )}
@@ -515,12 +512,12 @@ export default function AccountingPage() {
                 }
               >
                 <p
-                  className={`text-xs font-bold ${i === 3 ? "text-slate-300" : "text-slate-500"}`}
+                  className={`text-xs font-bold ${i === 3 ? "text-slate-300" : "text-[var(--text-muted)]"}`}
                 >
                   {ui(label)}
                 </p>
-                <p className="mt-4 font-mono text-2xl font-black" dir="ltr">
-                  {ui(amountLabel(value))}{ui(" ")}
+                <p className="mt-4 font-mono text-2xl font-semibold" dir="ltr">
+                  {amountLabel(value)}{" "}
                   <span className="text-xs font-normal opacity-60">SAR</span>
                 </p>
               </div>
@@ -528,13 +525,14 @@ export default function AccountingPage() {
           </section>
 
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm leading-relaxed text-amber-900 dark:text-amber-200 space-y-1">
-            <strong className="font-black text-slate-900 dark:text-white block">
+            <strong className="font-semibold text-slate-900 dark:text-white block">
               {ui("💡 إيضاح مالي هام بشأن حساب الأرباح وضريبة القيمة المضافة:")}</strong>
             <p>
               {ui("ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول والإدارة.")}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono pt-1">
-              {ui("مصروف الزكاة / ضريبة الدخل التقديري المسجل:")}{ui(" ")}
-              {ui(amountLabel(data.profit.taxExpense))} {ui("ر.س (لا يُحسب تلقائياً من ضريبة القيمة المضافة).")}</p>
+            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 font-mono pt-1">
+              {ui("مصروف الزكاة / ضريبة الدخل التقديري المسجل:")}{" "}
+              <bdi dir="ltr">{amountLabel(data.profit.taxExpense)}</bdi> {ui("ر.س (لا يُحسب تلقائياً من ضريبة القيمة المضافة).")}
+            </p>
           </div>
 
           <section className="theme-card overflow-hidden rounded-2xl border theme-border">
@@ -546,36 +544,114 @@ export default function AccountingPage() {
                 .filter(
                   (a) =>
                     ["REVENUE", "EXPENSE"].includes(a.type) &&
-                    (Number(a.debit) || Number(a.credit)),
+                    (signedMoneyMinor(a.debit) !== BigInt(0) ||
+                      signedMoneyMinor(a.credit) !== BigInt(0)),
                 )
-                .map((a) => (
-                  <div
-                    key={a.code}
-                    className="flex justify-between gap-4 border-t theme-border px-5 py-3 text-sm"
-                  >
-                    <p>
-                      <bdi className="font-mono text-slate-500">{ui(a.code)}</bdi> ·{ui(" ")}
-                      {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
-                    </p>
-                    <bdi className="font-mono font-bold">
-                      {ui(amountLabel(
-                        String(
-                          a.type === "REVENUE"
-                            ? Number(a.credit) - Number(a.debit)
-                            : Number(a.debit) - Number(a.credit),
-                        ),
-                      ))}
-                    </bdi>
-                  </div>
-                ))}
+                .map((a) => {
+                  const netMinor =
+                    a.type === "REVENUE"
+                      ? signedMoneyMinor(a.credit) - signedMoneyMinor(a.debit)
+                      : signedMoneyMinor(a.debit) - signedMoneyMinor(a.credit);
+                  return (
+                    <div
+                      key={a.code}
+                      className="flex justify-between gap-4 border-t theme-border px-5 py-3 text-sm"
+                    >
+                      <p>
+                        <bdi className="font-mono text-[var(--text-muted)]">{a.code}</bdi> ·{" "}
+                        {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                      </p>
+                      <bdi dir="ltr" className="font-mono font-bold">
+                        {amountLabel(formatSignedMinor(netMinor))}
+                      </bdi>
+                    </div>
+                  );
+                })}
             </div>
           </section>
 
           <section className="theme-card overflow-hidden rounded-2xl border theme-border">
             <h2 className="p-5 text-lg font-bold">{ui("ميزان المراجعة")}</h2>
-            <div className="overflow-x-auto">
+
+            <div className="md:hidden px-3.5 pb-4 space-y-3">
+              {data.trial.map((a) => (
+                <MobileRecordCard
+                  key={a.code}
+                  title={
+                    <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                      <bdi>{a.code}</bdi>
+                    </span>
+                  }
+                  subtitle={ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                >
+                  <MobileCardMetaGrid columns={2}>
+                    <MobileCardField
+                      label={ui("افتتاحي مدين")}
+                      mono
+                      value={<bdi dir="ltr">{amountLabel(a.openingDebit)}</bdi>}
+                    />
+                    <MobileCardField
+                      label={ui("افتتاحي دائن")}
+                      mono
+                      value={<bdi dir="ltr">{amountLabel(a.openingCredit)}</bdi>}
+                    />
+                    <MobileCardField
+                      label={ui("حركة مدين")}
+                      mono
+                      value={<bdi dir="ltr">{amountLabel(a.debit)}</bdi>}
+                    />
+                    <MobileCardField
+                      label={ui("حركة دائن")}
+                      mono
+                      value={<bdi dir="ltr">{amountLabel(a.credit)}</bdi>}
+                    />
+                    <MobileCardField
+                      label={ui("ختامي مدين")}
+                      mono
+                      value={<bdi dir="ltr">{amountLabel(a.closingDebit)}</bdi>}
+                    />
+                    <MobileCardField
+                      label={ui("ختامي دائن")}
+                      mono
+                      value={<bdi dir="ltr">{amountLabel(a.closingCredit)}</bdi>}
+                    />
+                  </MobileCardMetaGrid>
+                </MobileRecordCard>
+              ))}
+
+              <Card className="theme-card-subtle border theme-border shadow-none p-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ui("الإجمالي")}</span>
+                  <Badge variant="gold" className="text-[11px]">{ui("ميزان المراجعة")}</Badge>
+                </div>
+                <MobileCardMetaGrid columns={2} className="bg-[var(--bg-card)]">
+                  <MobileCardField
+                    label={ui("حركة مدين")}
+                    mono
+                    value={<bdi dir="ltr">{amountLabel(data.totals.debit)}</bdi>}
+                  />
+                  <MobileCardField
+                    label={ui("حركة دائن")}
+                    mono
+                    value={<bdi dir="ltr">{amountLabel(data.totals.credit)}</bdi>}
+                  />
+                  <MobileCardField
+                    label={ui("ختامي مدين")}
+                    mono
+                    value={<bdi dir="ltr">{amountLabel(data.totals.closingDebit)}</bdi>}
+                  />
+                  <MobileCardField
+                    label={ui("ختامي دائن")}
+                    mono
+                    value={<bdi dir="ltr">{amountLabel(data.totals.closingCredit)}</bdi>}
+                  />
+                </MobileCardMetaGrid>
+              </Card>
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full min-w-[980px] text-start text-sm">
-                <thead className="theme-card-subtle text-xs text-slate-500">
+                <thead className="theme-card-subtle text-xs text-[var(--text-muted)]">
                   <tr>
                     {[
                       "الحساب",
@@ -597,9 +673,9 @@ export default function AccountingPage() {
                     <tr key={a.code} className="border-t theme-border">
                       <td className="px-4 py-3">
                         <bdi className="font-mono font-bold text-amber-700 dark:text-amber-400">
-                          {ui(a.code)}
-                        </bdi>{ui(" ")}
-                        · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
+                          {a.code}
+                        </bdi>{" "}
+                        · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
                       </td>
                       {[
                         a.openingDebit,
@@ -609,8 +685,8 @@ export default function AccountingPage() {
                         a.closingDebit,
                         a.closingCredit,
                       ].map((v, i) => (
-                        <td className="px-4 py-3 font-mono" key={i}>
-                          {ui(amountLabel(v))}
+                        <td className="px-4 py-3 font-mono" dir="ltr" key={i}>
+                          {amountLabel(v)}
                         </td>
                       ))}
                     </tr>
@@ -624,8 +700,8 @@ export default function AccountingPage() {
                       data.totals.closingDebit,
                       data.totals.closingCredit,
                     ].map((v, i) => (
-                      <td key={i} className="px-4 py-4 font-mono">
-                        {ui(amountLabel(v))}
+                      <td key={i} className="px-4 py-4 font-mono" dir="ltr">
+                        {amountLabel(v)}
                       </td>
                     ))}
                   </tr>
@@ -636,11 +712,44 @@ export default function AccountingPage() {
 
           <section className="theme-card rounded-2xl border theme-border p-5">
             <h2 className="text-lg font-bold">{ui("تكلفة وربحية المركبات")}</h2>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
               {ui("تعتمد على لوحة المركبة المسجلة في الفواتير والمصروفات والقيود. المصروفات العامة غير المخصصة لا توزع تلقائيًا.")}</p>
             {data.vehicles.length ? (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[500px] text-start text-sm">
+              <>
+                <div className="md:hidden mt-4 space-y-3">
+                  {data.vehicles.map((v) => (
+                    <MobileRecordCard
+                      key={v.plate}
+                      title={
+                        <span className="font-mono">
+                          <bdi>{v.plate}</bdi>
+                        </span>
+                      }
+                      badge={<Badge variant="outline" className="text-[10px]">{ui("مركبة")}</Badge>}
+                    >
+                      <MobileCardMetaGrid columns={3}>
+                        <MobileCardField
+                          label={ui("الإيراد")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(v.revenue)}</bdi>}
+                        />
+                        <MobileCardField
+                          label={ui("التكلفة")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(v.cost)}</bdi>}
+                        />
+                        <MobileCardField
+                          label={ui("الربح")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(v.profit)}</bdi>}
+                        />
+                      </MobileCardMetaGrid>
+                    </MobileRecordCard>
+                  ))}
+                </div>
+
+                <div className="hidden md:block mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[500px] text-start text-sm">
                   <thead>
                     <tr>
                       {["اللوحة", "الإيراد", "التكلفة", "الربح"].map((v) => (
@@ -654,17 +763,18 @@ export default function AccountingPage() {
                     {data.vehicles.map((v) => (
                       <tr key={v.plate} className="border-t theme-border">
                         {[v.plate, v.revenue, v.cost, v.profit].map((x, i) => (
-                          <td key={i} className="py-3 font-mono">
-                            {ui(i ? amountLabel(x) : x)}
+                          <td key={i} className="py-3 font-mono" dir={i ? "ltr" : undefined}>
+                            {i ? amountLabel(x) : x}
                           </td>
                         ))}
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+                  </table>
+                </div>
+              </>
             ) : (
-              <p className="mt-5 text-sm text-slate-500">
+              <p className="mt-5 text-sm text-[var(--text-muted)]">
                 {ui("لا توجد قيود مرتبطة بلوحات مركبات في الفترة.")}</p>
             )}
           </section>

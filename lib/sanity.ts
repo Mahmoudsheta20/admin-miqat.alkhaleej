@@ -24,13 +24,13 @@ export async function fetchSanityFleetModels(): Promise<SanityFleetModel[]> {
     features,
     "imageUrl": image.asset->url
   }`);
-  
+
   const url = `https://${projectId}.api.sanity.io/v2024-01-01/data/query/${dataset}?query=${query}`;
-  
+
   try {
-    const res = await fetch(url, { 
+    const res = await fetch(url, {
       // Next.js fetch options for caching
-      next: { revalidate: 60 } 
+      next: { revalidate: 60 }
     });
     const data = await res.json();
     return data.result || [];

@@ -1,6 +1,30 @@
 "use client";
-import {useState} from "react";
-import type {Customer} from "@/lib/commercial";
-import {useUiText} from "@/lib/ui-text";
-import {Field,INPUT,Notice,useCommercialData} from "./shared";
-export default function CustomerPicker({value,onSelect}:{value:string;onSelect:(customer:Customer|null)=>void}){const ui=useUiText(),[search,setSearch]=useState(""),list=useCommercialData<{items:Customer[]}>(`/customers?search=${encodeURIComponent(search)}`);return <div className="mb-4 grid gap-3 rounded-xl border p-4 sm:grid-cols-2"><Field label="بحث عن عميل"><input className={INPUT} value={search} onChange={e=>setSearch(e.target.value)}/></Field><Field label="ربط الفاتورة بملف عميل"><select className={INPUT} value={value} onChange={e=>onSelect(list.data?.items.find(c=>c.id===e.target.value)||null)}><option value="">{ui("إدخال يدوي بدون ربط")}</option>{value&&!list.data?.items.some(c=>c.id===value)&&<option value={value}>{ui("العميل المحدد")}</option>}{list.data?.items.filter(c=>c.active).map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select></Field><Notice message={list.error} error/></div>;}
+
+import * as React from "react";
+import type { Customer } from "@/lib/commercial";
+import { useUiText } from "@/lib/ui-text";
+import { Label } from "@/app/_components/ui";
+import { CustomerCombobox } from "./customer-combobox";
+
+export default function CustomerPicker({
+  value,
+  onSelect,
+}: {
+  value: string;
+  onSelect: (customer: Customer | null) => void;
+}) {
+  const ui = useUiText();
+  const fieldId = React.useId();
+
+  return (
+    <div className="mb-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-2">
+      <Label htmlFor={fieldId}>{ui("ربط الفاتورة بملف عميل")}</Label>
+      <CustomerCombobox
+        id={fieldId}
+        value={value || null}
+        emptyLabel="إدخال يدوي بدون ربط"
+        onSelect={onSelect}
+      />
+    </div>
+  );
+}

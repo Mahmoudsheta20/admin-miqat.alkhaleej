@@ -1,4 +1,4 @@
-import { backendUrl, getAuthToken } from "./backend";
+import { backendUrl } from "./backend";
 
 export interface WhatsAppStatus {
   success: boolean;
@@ -15,20 +15,20 @@ export interface WhatsAppQrResponse {
 }
 
 export async function fetchWhatsAppStatus(): Promise<WhatsAppStatus> {
-  const token = getAuthToken();
   const res = await fetch(backendUrl("/whatsapp/status"), {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+
     cache: "no-store",
+    credentials: "include",
   });
   if (!res.ok) throw new Error("تعذر جلب حالة الواتساب");
   return res.json();
 }
 
 export async function fetchWhatsAppQr(): Promise<WhatsAppQrResponse> {
-  const token = getAuthToken();
   const res = await fetch(backendUrl("/whatsapp/qr"), {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+
     cache: "no-store",
+    credentials: "include",
   });
   if (!res.ok) throw new Error("تعذر جلب رمز QR للواتساب");
   return res.json();
@@ -38,12 +38,11 @@ export async function sendContractWhatsApp(
   contractId: string,
   phone?: string
 ): Promise<{ success: boolean; preview?: string; messageId?: string; phone?: string }> {
-  const token = getAuthToken();
   const res = await fetch(backendUrl("/whatsapp/send-contract"), {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ contractId, phone }),
   });
@@ -58,12 +57,11 @@ export async function sendInvoiceWhatsApp(
   invoiceId: string,
   phone?: string
 ): Promise<{ success: boolean; preview?: string; messageId?: string; phone?: string }> {
-  const token = getAuthToken();
   const res = await fetch(backendUrl("/whatsapp/send-invoice"), {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ invoiceId, phone }),
   });
@@ -73,4 +71,3 @@ export async function sendInvoiceWhatsApp(
   }
   return { success: true, preview: data.preview, messageId: data.messageId, phone: data.phone };
 }
-

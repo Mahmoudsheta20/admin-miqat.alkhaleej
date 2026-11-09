@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Modal from "./Modal";
 import { AlertTriangle, X } from "lucide-react";
 import { useLanguage } from "@/lib/languageContext";
@@ -48,11 +48,11 @@ export default function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+      icon: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
       btn: "bg-rose-600 hover:bg-rose-700 text-white",
     },
     warning: {
-      icon: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+      icon: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
       btn: "bg-amber-600 hover:bg-amber-700 text-white",
     },
     info: {
@@ -71,9 +71,9 @@ export default function ConfirmDialog({
         <button
           type="button" disabled={isBusy} onClick={onCancel}
           aria-label={ui(t("common.close"))}
-          className="absolute top-2 left-2 min-w-11 min-h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+          className="absolute top-2 end-2 min-w-11 min-h-11 flex items-center justify-center text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" aria-hidden="true" />
         </button>
 
         {/* Icon + Content */}
@@ -81,16 +81,19 @@ export default function ConfirmDialog({
           <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center ${styles.icon}`}>
             <AlertTriangle className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
-          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{ui(title)}</h3>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{ui(message)}</p>
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">{ui(title)}</h2>
+          <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 leading-relaxed">{ui(message)}</p>
         </div>
 
-        {error && <p role="alert" className="mt-3 text-center text-sm text-rose-600">{ui(error)}</p>}
-        {/* Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 mt-5 sm:mt-6">
+        {error && <p role="alert" className="mt-3 text-center text-sm text-rose-700 dark:text-rose-400">{ui(error)}</p>}
+        {/* Buttons (DOM order matches visual order: Cancel safe action first, Confirm second) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2.5 sm:gap-3 mt-5 sm:mt-6">
           <button
-            type="button" disabled={isBusy} onClick={onCancel}
-            className="w-full sm:flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            type="button"
+            autoFocus={variant !== "info"}
+            disabled={isBusy}
+            onClick={onCancel}
+            className="w-full min-h-11 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             {ui(cancelBtnLabel)}
           </button>
@@ -103,10 +106,13 @@ export default function ConfirmDialog({
               setIsBusy(true);
               setError("");
               try { await onConfirm(); }
-              catch { setError(isRTL ? "تعذر تنفيذ العملية، يرجى إعادة المحاولة." : "Operation failed, please try again."); }
+              catch (err) {
+                const msg = err instanceof Error && err.message.trim() ? err.message : "";
+                setError(msg || (isRTL ? "تعذر تنفيذ العملية، يرجى إعادة المحاولة." : "Operation failed, please try again."));
+              }
               finally { pending.current = false; setIsBusy(false); }
             }}
-            className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${styles.btn}`}
+            className={`w-full min-h-11 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${styles.btn}`}
           >
             {ui(isBusy ? (isRTL ? "جاري التنفيذ..." : "Processing...") : confirmBtnLabel)}
           </button>

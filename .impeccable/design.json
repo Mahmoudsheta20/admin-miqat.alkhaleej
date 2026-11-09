@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-08T14:47:45Z",
+  "title": "Design System: Miqat Operations",
+  "extensions": {
+    "colorMeta": {
+      "accent-gold": {
+        "role": "primary",
+        "displayName": "Accent Gold",
+        "tonalRamp": [
+          "oklch(15% 0.1207 66.44)",
+          "oklch(27% 0.1207 66.44)",
+          "oklch(39% 0.1207 66.44)",
+          "oklch(51% 0.1207 66.44)",
+          "oklch(63% 0.1207 66.44)",
+          "oklch(75% 0.1207 66.44)",
+          "oklch(87% 0.1207 66.44)",
+          "oklch(95% 0.1207 66.44)"
+        ]
+      },
+      "accent-gold-dark": {
+        "role": "primary",
+        "displayName": "Accent Gold Dark",
+        "tonalRamp": [
+          "oklch(15% 0.1217 83.62)",
+          "oklch(27% 0.1217 83.62)",
+          "oklch(39% 0.1217 83.62)",
+          "oklch(51% 0.1217 83.62)",
+          "oklch(63% 0.1217 83.62)",
+          "oklch(75% 0.1217 83.62)",
+          "oklch(87% 0.1217 83.62)",
+          "oklch(95% 0.1217 83.62)"
+        ]
+      },
+      "accent-surface": {
+        "role": "primary",
+        "displayName": "Accent Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0220 89.79)",
+          "oklch(27% 0.0220 89.79)",
+          "oklch(39% 0.0220 89.79)",
+          "oklch(51% 0.0220 89.79)",
+          "oklch(63% 0.0220 89.79)",
+          "oklch(75% 0.0220 89.79)",
+          "oklch(87% 0.0220 89.79)",
+          "oklch(95% 0.0220 89.79)"
+        ]
+      },
+      "accent-surface-dark": {
+        "role": "primary",
+        "displayName": "Accent Surface Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0199 80.32)",
+          "oklch(27% 0.0199 80.32)",
+          "oklch(39% 0.0199 80.32)",
+          "oklch(51% 0.0199 80.32)",
+          "oklch(63% 0.0199 80.32)",
+          "oklch(75% 0.0199 80.32)",
+          "oklch(87% 0.0199 80.32)",
+          "oklch(95% 0.0199 80.32)"
+        ]
+      },
+      "action-primary": {
+        "role": "primary",
+        "displayName": "Action Primary",
+        "tonalRamp": [
+          "oklch(15% 0.1147 69.71)",
+          "oklch(27% 0.1147 69.71)",
+          "oklch(39% 0.1147 69.71)",
+          "oklch(51% 0.1147 69.71)",
+          "oklch(63% 0.1147 69.71)",
+          "oklch(75% 0.1147 69.71)",
+          "oklch(87% 0.1147 69.71)",
+          "oklch(95% 0.1147 69.71)"
+        ]
+      },
+      "action-primary-hover": {
+        "role": "primary",
+        "displayName": "Action Primary Hover",
+        "tonalRamp": [
+          "oklch(15% 0.1008 69.25)",
+          "oklch(27% 0.1008 69.25)",
+          "oklch(39% 0.1008 69.25)",
+          "oklch(51% 0.1008 69.25)",
+          "oklch(63% 0.1008 69.25)",
+          "oklch(75% 0.1008 69.25)",
+          "oklch(87% 0.1008 69.25)",
+          "oklch(95% 0.1008 69.25)"
+        ]
+      },
+      "action-primary-dark": {
+        "role": "primary",
+        "displayName": "Action Primary Dark",
+        "tonalRamp": [
+          "oklch(15% 0.1284 81.87)",
+          "oklch(27% 0.1284 81.87)",
+          "oklch(39% 0.1284 81.87)",
+          "oklch(51% 0.1284 81.87)",
+          "oklch(63% 0.1284 81.87)",
+          "oklch(75% 0.1284 81.87)",
+          "oklch(87% 0.1284 81.87)",
+          "oklch(95% 0.1284 81.87)"
+        ]
+      },
+      "action-primary-text": {
+        "role": "primary",
+        "displayName": "Action Primary Text",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(27% 0.0000 89.88)",
+          "oklch(39% 0.0000 89.88)",
+          "oklch(51% 0.0000 89.88)",
+          "oklch(63% 0.0000 89.88)",
+          "oklch(75% 0.0000 89.88)",
+          "oklch(87% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "action-primary-text-dark": {
+        "role": "primary",
+        "displayName": "Action Primary Text Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0220 82.23)",
+          "oklch(27% 0.0220 82.23)",
+          "oklch(39% 0.0220 82.23)",
+          "oklch(51% 0.0220 82.23)",
+          "oklch(63% 0.0220 82.23)",
+          "oklch(75% 0.0220 82.23)",
+          "oklch(87% 0.0220 82.23)",
+          "oklch(95% 0.0220 82.23)"
+        ]
+      },
+      "bg-main": {
+        "role": "neutral",
+        "displayName": "Bg Main",
+        "tonalRamp": [
+          "oklch(15% 0.0034 247.86)",
+          "oklch(27% 0.0034 247.86)",
+          "oklch(39% 0.0034 247.86)",
+          "oklch(51% 0.0034 247.86)",
+          "oklch(63% 0.0034 247.86)",
+          "oklch(75% 0.0034 247.86)",
+          "oklch(87% 0.0034 247.86)",
+          "oklch(95% 0.0034 247.86)"
+        ]
+      },
+      "bg-main-dark": {
+        "role": "neutral",
+        "displayName": "Bg Main Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0168 259.92)",
+          "oklch(27% 0.0168 259.92)",
+          "oklch(39% 0.0168 259.92)",
+          "oklch(51% 0.0168 259.92)",
+          "oklch(63% 0.0168 259.92)",
+          "oklch(75% 0.0168 259.92)",
+          "oklch(87% 0.0168 259.92)",
+          "oklch(95% 0.0168 259.92)"
+        ]
+      },
+      "bg-card": {
+        "role": "neutral",
+        "displayName": "Bg Card",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(27% 0.0000 89.88)",
+          "oklch(39% 0.0000 89.88)",
+          "oklch(51% 0.0000 89.88)",
+          "oklch(63% 0.0000 89.88)",
+          "oklch(75% 0.0000 89.88)",
+          "oklch(87% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "bg-card-dark": {
+        "role": "neutral",
+        "displayName": "Bg Card Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0398 265.75)",
+          "oklch(27% 0.0398 265.75)",
+          "oklch(39% 0.0398 265.75)",
+          "oklch(51% 0.0398 265.75)",
+          "oklch(63% 0.0398 265.75)",
+          "oklch(75% 0.0398 265.75)",
+          "oklch(87% 0.0398 265.75)",
+          "oklch(95% 0.0398 265.75)"
+        ]
+      },
+      "bg-card-subtle": {
+        "role": "neutral",
+        "displayName": "Bg Card Subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0069 247.90)",
+          "oklch(27% 0.0069 247.90)",
+          "oklch(39% 0.0069 247.90)",
+          "oklch(51% 0.0069 247.90)",
+          "oklch(63% 0.0069 247.90)",
+          "oklch(75% 0.0069 247.90)",
+          "oklch(87% 0.0069 247.90)",
+          "oklch(95% 0.0069 247.90)"
+        ]
+      },
+      "bg-card-subtle-dark": {
+        "role": "neutral",
+        "displayName": "Bg Card Subtle Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0470 263.85)",
+          "oklch(27% 0.0470 263.85)",
+          "oklch(39% 0.0470 263.85)",
+          "oklch(51% 0.0470 263.85)",
+          "oklch(63% 0.0470 263.85)",
+          "oklch(75% 0.0470 263.85)",
+          "oklch(87% 0.0470 263.85)",
+          "oklch(95% 0.0470 263.85)"
+        ]
+      },
+      "border-color": {
+        "role": "neutral",
+        "displayName": "Border Color",
+        "tonalRamp": [
+          "oklch(15% 0.0126 255.51)",
+          "oklch(27% 0.0126 255.51)",
+          "oklch(39% 0.0126 255.51)",
+          "oklch(51% 0.0126 255.51)",
+          "oklch(63% 0.0126 255.51)",
+          "oklch(75% 0.0126 255.51)",
+          "oklch(87% 0.0126 255.51)",
+          "oklch(95% 0.0126 255.51)"
+        ]
+      },
+      "border-color-dark": {
+        "role": "neutral",
+        "displayName": "Border Color Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0368 260.03)",
+          "oklch(27% 0.0368 260.03)",
+          "oklch(39% 0.0368 260.03)",
+          "oklch(51% 0.0368 260.03)",
+          "oklch(63% 0.0368 260.03)",
+          "oklch(75% 0.0368 260.03)",
+          "oklch(87% 0.0368 260.03)",
+          "oklch(95% 0.0368 260.03)"
+        ]
+      },
+      "border-hover": {
+        "role": "neutral",
+        "displayName": "Border Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0198 252.89)",
+          "oklch(27% 0.0198 252.89)",
+          "oklch(39% 0.0198 252.89)",
+          "oklch(51% 0.0198 252.89)",
+          "oklch(63% 0.0198 252.89)",
+          "oklch(75% 0.0198 252.89)",
+          "oklch(87% 0.0198 252.89)",
+          "oklch(95% 0.0198 252.89)"
+        ]
+      },
+      "border-hover-dark": {
+        "role": "neutral",
+        "displayName": "Border Hover Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0392 257.29)",
+          "oklch(27% 0.0392 257.29)",
+          "oklch(39% 0.0392 257.29)",
+          "oklch(51% 0.0392 257.29)",
+          "oklch(63% 0.0392 257.29)",
+          "oklch(75% 0.0392 257.29)",
+          "oklch(87% 0.0392 257.29)",
+          "oklch(95% 0.0392 257.29)"
+        ]
+      },
+      "text-main": {
+        "role": "neutral",
+        "displayName": "Text Main",
+        "tonalRamp": [
+          "oklch(15% 0.0398 265.75)",
+          "oklch(27% 0.0398 265.75)",
+          "oklch(39% 0.0398 265.75)",
+          "oklch(51% 0.0398 265.75)",
+          "oklch(63% 0.0398 265.75)",
+          "oklch(75% 0.0398 265.75)",
+          "oklch(87% 0.0398 265.75)",
+          "oklch(95% 0.0398 265.75)"
+        ]
+      },
+      "text-main-dark": {
+        "role": "neutral",
+        "displayName": "Text Main Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0034 247.86)",
+          "oklch(27% 0.0034 247.86)",
+          "oklch(39% 0.0034 247.86)",
+          "oklch(51% 0.0034 247.86)",
+          "oklch(63% 0.0034 247.86)",
+          "oklch(75% 0.0034 247.86)",
+          "oklch(87% 0.0034 247.86)",
+          "oklch(95% 0.0034 247.86)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0374 257.28)",
+          "oklch(27% 0.0374 257.28)",
+          "oklch(39% 0.0374 257.28)",
+          "oklch(51% 0.0374 257.28)",
+          "oklch(63% 0.0374 257.28)",
+          "oklch(75% 0.0374 257.28)",
+          "oklch(87% 0.0374 257.28)",
+          "oklch(95% 0.0374 257.28)"
+        ]
+      },
+      "text-muted-dark": {
+        "role": "neutral",
+        "displayName": "Text Muted Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0351 256.79)",
+          "oklch(27% 0.0351 256.79)",
+          "oklch(39% 0.0351 256.79)",
+          "oklch(51% 0.0351 256.79)",
+          "oklch(63% 0.0351 256.79)",
+          "oklch(75% 0.0351 256.79)",
+          "oklch(87% 0.0351 256.79)",
+          "oklch(95% 0.0351 256.79)"
+        ]
+      },
+      "input-bg": {
+        "role": "neutral",
+        "displayName": "Input Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(27% 0.0000 89.88)",
+          "oklch(39% 0.0000 89.88)",
+          "oklch(51% 0.0000 89.88)",
+          "oklch(63% 0.0000 89.88)",
+          "oklch(75% 0.0000 89.88)",
+          "oklch(87% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "input-bg-dark": {
+        "role": "neutral",
+        "displayName": "Input Bg Dark",
+        "tonalRamp": [
+          "oklch(15% 0.0325 266.62)",
+          "oklch(27% 0.0325 266.62)",
+          "oklch(39% 0.0325 266.62)",
+          "oklch(51% 0.0325 266.62)",
+          "oklch(63% 0.0325 266.62)",
+          "oklch(75% 0.0325 266.62)",
+          "oklch(87% 0.0325 266.62)",
+          "oklch(95% 0.0325 266.62)"
+        ]
+      },
+      "focus-input": {
+        "role": "neutral",
+        "displayName": "Focus Input",
+        "tonalRamp": [
+          "oklch(15% 0.1647 70.08)",
+          "oklch(27% 0.1647 70.08)",
+          "oklch(39% 0.1647 70.08)",
+          "oklch(51% 0.1647 70.08)",
+          "oklch(63% 0.1647 70.08)",
+          "oklch(75% 0.1647 70.08)",
+          "oklch(87% 0.1647 70.08)",
+          "oklch(95% 0.1647 70.08)"
+        ]
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "Danger",
+        "tonalRamp": [
+          "oklch(15% 0.2154 16.44)",
+          "oklch(27% 0.2154 16.44)",
+          "oklch(39% 0.2154 16.44)",
+          "oklch(51% 0.2154 16.44)",
+          "oklch(63% 0.2154 16.44)",
+          "oklch(75% 0.2154 16.44)",
+          "oklch(87% 0.2154 16.44)",
+          "oklch(95% 0.2154 16.44)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Shared page heading."
+      },
+      "body-arabic": {
+        "displayName": "Body Arabic",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "body-english": {
+        "displayName": "Body English",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "page-description": {
+        "displayName": "Page Description",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "action-label": {
+        "displayName": "Action Label",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "navigation-label": {
+        "displayName": "Navigation Label",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "navigation-group": {
+        "displayName": "Navigation Group",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "table-heading": {
+        "displayName": "Table Heading",
+        "purpose": "Implemented interface role; language controls the bundled face."
+      },
+      "number": {
+        "displayName": "Number",
+        "purpose": "Desktop statistic value; smaller screens use stepped 20px/24px utilities."
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating-submission-bar",
+        "value": "0 4px 20px rgb(0 0 0 / 0.08)",
+        "purpose": "Sticky contract submission controls."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "150ms ease",
+        "purpose": "Buttons, navigation, and fields."
+      },
+      {
+        "name": "theme-state",
+        "value": "200ms ease",
+        "purpose": "Body background and foreground transition."
+      },
+      {
+        "name": "loading-spin",
+        "value": "800ms linear infinite",
+        "purpose": "Loading indicator only."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "Global reduced-motion override; animation iteration count becomes one."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary page task; theme-specific action gold.",
+      "html": "<button class=\"ds-primary\">إنشاء عقد</button>",
+      "css": ".ds-primary{font-family:var(--font-ui,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:var(--radius-control);font-size:14px;font-weight:600;cursor:pointer;border:0;background:#9a620b;color:#fff;transition:background-color 150ms ease,transform 150ms ease}.ds-primary:hover{background:#805006}.ds-primary:active{transform:scale(.98)}.ds-primary:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}:host-context(.dark) .ds-primary{background:#e8b654;color:#201a0f}:host-context(.dark) .ds-primary:hover{background:#f4c76b}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}.ds-primary:active{transform:none}}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary page task with border and subtle fill.",
+      "html": "<button class=\"ds-secondary\">عرض التفاصيل</button>",
+      "css": ".ds-secondary{font-family:var(--font-ui,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:var(--radius-control);font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-card-subtle);color:var(--text-main);transition:background-color 150ms ease,border-color 150ms ease}.ds-secondary:hover{border-color:var(--border-hover);background:var(--bg-card)}.ds-secondary:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}"
+    },
+    {
+      "name": "Danger button",
+      "kind": "button",
+      "description": "Destructive record action.",
+      "html": "<button class=\"ds-danger\">حذف</button>",
+      "css": ".ds-danger{font-family:var(--font-ui,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:var(--radius-control);font-size:14px;font-weight:600;cursor:pointer;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);color:#f43f5e;transition:background-color 150ms ease}.ds-danger:hover{background:rgba(244,63,94,.2)}.ds-danger:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Record search with a native search control.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input type=\"search\" aria-label=\"البحث في النتائج\" placeholder=\"البحث في النتائج\" /></label>",
+      "css": ".ds-search{position:relative;display:block}.ds-search svg{position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}.ds-search input{font-family:var(--font-ui,system-ui,sans-serif);box-sizing:border-box;width:100%;min-height:44px;padding:10px 42px;background:var(--input-bg);color:var(--text-main);border:1px solid var(--border-color);border-radius:var(--radius-control);font-size:14px;transition:border-color 150ms ease,box-shadow 150ms ease}.ds-search input:focus{outline:none;border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.15)}.ds-search input:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}@media(max-width:639px){.ds-search input{font-size:16px}}"
+    },
+    {
+      "name": "Current navigation link",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Active role-aware sidebar destination.",
+      "html": "<nav aria-label=\"التنقل\"><a class=\"ds-navigation\" href=\"#contracts\" aria-current=\"page\">العقود</a></nav>",
+      "css": ".ds-navigation{font-family:var(--font-ui,system-ui,sans-serif);display:flex;align-items:center;gap:11px;min-height:44px;padding:10px 12px;border-radius:8px;background:var(--accent-surface);color:var(--accent-gold);font-size:14px;font-weight:600;text-decoration:none;transition:background-color 150ms ease}.ds-navigation:hover{background:var(--accent-surface);color:var(--accent-gold)}.ds-navigation:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}"
+    },
+    {
+      "name": "Selected filter",
+      "kind": "chip",
+      "refersTo": "filter-selected",
+      "description": "Pressed filter in a list status group.",
+      "html": "<button class=\"ds-filter\" aria-pressed=\"true\">الكل <bdi>12</bdi></button>",
+      "css": ".ds-filter{font-family:var(--font-ui,system-ui,sans-serif);display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:8px 13px;white-space:nowrap;border:0;border-radius:var(--radius-control);background:var(--accent-surface);color:var(--accent-gold);font-size:13px;font-weight:600;cursor:pointer}.ds-filter:hover{background:var(--bg-card-subtle)}.ds-filter:focus-visible{outline:2px solid var(--accent-gold);outline-offset:3px;}"
+    },
+    {
+      "name": "Status pill",
+      "kind": "chip",
+      "description": "Text status remains visible alongside the semantic green color.",
+      "html": "<span class=\"ds-status\">جاهزة</span>",
+      "css": ".ds-status{font-family:var(--font-ui,system-ui,sans-serif);display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid oklch(69.6% .17 162.48 / .3);border-radius:9999px;background:oklch(69.6% .17 162.48 / .15);color:oklch(50.8% .118 165.612);font-size:12px;font-weight:700}:host-context(.dark) .ds-status{color:oklch(76.5% .177 163.223)}"
+    },
+    {
+      "name": "Working card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Bordered record container at rest.",
+      "html": "<section class=\"ds-card\"><h3>جاهزية التشغيل اليوم</h3><p>اكتمال الفحوصات اليومية للكباتن</p></section>",
+      "css": ".ds-card{font-family:var(--font-ui,system-ui,sans-serif);padding:20px;border-radius:16px;background:var(--bg-card);color:var(--text-main);border:1px solid var(--border-color);box-shadow:none}.ds-card h3{margin:0 0 8px;font-size:16px;font-weight:600}.ds-card p{margin:0;font-size:14px;color:var(--text-muted)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Miqat working operations desk",
+    "overview": "Miqat is a working operations desk: restrained gold identifies actions and current location, while quiet neutral surfaces keep records, readiness, and financial figures readable. Arabic and English have equal functional status; language selects the locally bundled face, and data can retain its own reading direction.\n\nThis is an extracted record of the implemented system, using the approved product direction rather than a generated concept. The existing Miqat logo and identity remain authoritative. Surface composition belongs in the workspace brief; this file records reusable visual rules.",
+    "keyCharacteristics": [
+      "Arabic-first with native RTL/LTR behavior.",
+      "Gold for primary actions and current navigation.",
+      "Tonal surfaces, fine borders, and compact working controls.",
+      "Responsive records, readable numbers, and visible keyboard focus."
+    ],
+    "rules": [
+      {
+        "name": "The Language Selects the Face Rule",
+        "body": "Use IBM Plex Sans Arabic for Arabic and Inter for English; direction alone must not choose the face. Use only the bundled 400/500/600/700 weights and disable font synthesis.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "Separate resting workspace regions with tonal surfaces and fine borders. Reserve strong dimming for modal context and modest elevation for floating controls.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the semantic light/dark surface, foreground, border, and accent tokens together.",
+      "Do keep Arabic and English labels readable, preserve stored names, and isolate mixed-direction identifiers.",
+      "Do give controls visible focus and preserve native dialog, button, input, and disclosure behavior.",
+      "Do keep status meaning in text as well as color.",
+      "Do use the shared page header, filters, document controls, and role-aware navigation."
+    ],
+    "donts": [
+      "Don't replace the Miqat identity with Newsky branding; only the approved font pairing is shared.",
+      "Don't introduce decorative glass, gradient headlines, purple glows, or synthesized black font weights.",
+      "Don't convert source-code compatibility names containing gradient into a requirement for gradient fills.",
+      "Don't use the muted foreground on a permanently dark panel without checking that panel's own foreground contrast."
+    ]
+  }
+}

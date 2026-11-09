@@ -1,57 +1,32 @@
 "use client";
+import { ContractGuestFields, ContractJourneyFields, ContractIssueDate } from "@/app/_components/form/ContractFields";
+import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
 import { useUiText } from "@/lib/ui-text";
 
 import dynamic from "next/dynamic";
 
-import React, { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useId } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  FileText,
-  MapPin,
-  CheckCircle2,
-  ArrowRight,
-  AlertCircle,
-  Save,
-  Sparkles,
-  Eye,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  ClipboardCheck,
-  Calendar,
-  Car,
-  Trash2,
-  ArrowLeftRight,
-} from "lucide-react";
+import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Sparkles, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getCaptains } from "@/app/_actions/captain";
 import { getVehicles } from "@/app/_actions/fleet";
 import { getContractById, updateContract, deleteContract } from "@/app/_actions/contract";
 import { Contract, Vehicle } from "@/lib/types";
-import {
-  adminContractSchema,
-  AdminContractFormValues,
-  sanitizeContractPayload,
-} from "@/lib/validations/contract";
+import { adminContractSchema, AdminContractFormValues, sanitizeContractPayload } from "@/lib/validations/contract";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
-import {
-  getSaudiTodayDateStr,
-  getSaudiCurrentTimeStr,
-  formatOfficialDate,
-} from "@/lib/contractConstants";
+import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
-import { CustomInput } from "@/app/_components/form/CustomInput";
+
 import { CustomTextarea } from "@/app/_components/form/CustomTextarea";
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
-import { CustomTimePicker } from "@/app/_components/form/CustomTimePicker";
-import {
-  CaptainSelector,
-  CaptainWithMeta,
-} from "@/app/_components/form/CaptainSelector";
+
+import { CaptainSelector, CaptainWithMeta } from "@/app/_components/form/CaptainSelector";
 import { VehicleSelector } from "@/app/_components/form/VehicleSelector";
 import { PassengerManifestManager } from "@/app/_components/form/PassengerManifestManager";
 
@@ -62,39 +37,7 @@ const OPERATION_TYPES = [
   "خدمات الحج والعمرة",
 ];
 
-const INSPECTION_CATEGORIES = [
-  {
-    title: "لوحة العدادات والتنبيهات",
-    items: [
-      { key: "fuelGauge", label: "مؤشر الوقود" },
-      { key: "tempGauge", label: "مؤشر الحرارة" },
-      { key: "oilPressure", label: "ضغط الزيت" },
-      { key: "checkEngine", label: "فحص المحرك" },
-      { key: "absLight", label: "فرامل ABS" },
-      { key: "warningLights", label: "لمبات التحذير" },
-    ],
-  },
-  {
-    title: "الفحص الخارجي وهيكل المركبة",
-    items: [
-      { key: "tires", label: "الإطارات والضغط" },
-      { key: "headlights", label: "الأنوار الأمامية والخلفية" },
-      { key: "signals", label: "إشارات الطوارئ" },
-      { key: "mirrors", label: "الزجاج والمرايا" },
-      { key: "noLeaks", label: "خلو التسريبات" },
-    ],
-  },
-  {
-    title: "أدوات ومعدات السلامة الإلزامية",
-    items: [
-      { key: "fireExtinguisher", label: "طفاية الحريق" },
-      { key: "warningTriangle", label: "مثلث الطوارئ" },
-      { key: "firstAidKit", label: "حقيبة الإسعافات" },
-      { key: "glassHammer", label: "مطرقة الزجاج" },
-      { key: "seatBelts", label: "أحزمة الأمان" },
-    ],
-  },
-];
+
 
 function mapOperationToLabel(type: string): string {
   switch (type) {
@@ -117,6 +60,7 @@ interface PageProps {
 
 export default function EditContractPage({ params }: PageProps) {
   const ui = useUiText();
+  const operationTypeId = useId();
 
   const { id } = use(params);
   const router = useRouter();
@@ -157,7 +101,6 @@ export default function EditContractPage({ params }: PageProps) {
     setIsDeleting(true);
     try {
       const res = await deleteContract(contract.id);
-      setIsDeleting(false);
       if (res.success) {
         invalidateClientCache("contracts_");
         invalidateClientCache("dashboard_stats");
@@ -166,12 +109,13 @@ export default function EditContractPage({ params }: PageProps) {
         setIsDeleteDialogOpen(false);
         router.push("/admin/contracts");
       } else {
-        alert(res.error || "فشل حذف العقد");
+        throw new Error(res.error || "فشل حذف العقد");
       }
     } catch (err) {
-      setIsDeleting(false);
       console.error("Delete contract error:", err);
-      alert("حدث خطأ أثناء محاولة حذف العقد");
+      throw err instanceof Error ? err : new Error("حدث خطأ أثناء محاولة حذف العقد");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -234,7 +178,7 @@ export default function EditContractPage({ params }: PageProps) {
 
   const selectedCaptainId = useWatch({ control, name: "captainId" });
   const selectedVehiclePlate = useWatch({ control, name: "vehiclePlate" });
-  const issueDateMode = useWatch({ control, name: "issueDateMode" }) || "AUTO";
+  const watchedOperationType = useWatch({ control, name: "operationType" });
 
   // Load contract, captains & vehicles
   useEffect(() => {
@@ -418,7 +362,7 @@ export default function EditContractPage({ params }: PageProps) {
       <div className="flex items-center justify-center p-24">
         <div className="flex flex-col items-center gap-3">
           <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
             {ui("جاري تحميل بيانات العقد والأسطول...")}</p>
         </div>
       </div>
@@ -427,20 +371,20 @@ export default function EditContractPage({ params }: PageProps) {
 
   if (!contract && serverError) {
     return (
-      <div className="max-w-2xl mx-auto p-8 my-12 text-center theme-card rounded-3xl border theme-border space-y-4">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-          <AlertCircle className="w-7 h-7" />
+      <div role="alert" className="max-w-2xl mx-auto p-8 my-12 text-center theme-card rounded-3xl border theme-border space-y-4">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center">
+          <AlertCircle className="w-7 h-7" aria-hidden="true" />
         </div>
-        <h2 className="text-lg font-black text-slate-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           {ui(serverError)}
         </h2>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[var(--text-muted)]">
           {ui("تأكد من صحة رقم العقد أو المعرف المطلوب، أو عد إلى سجل العقود.")}</p>
         <Link
           href="/admin/contracts"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold"
+          className="inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold"
         >
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-4 h-4 ltr:rotate-180" aria-hidden="true" />
           <span>{ui("العودة إلى سجل العقود")}</span>
         </Link>
       </div>
@@ -452,31 +396,31 @@ export default function EditContractPage({ params }: PageProps) {
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+          <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)]">
             <Link
               href="/admin/contracts"
               className="hover:text-amber-600 dark:hover:text-amber-400 transition"
             >
               {ui("سجل العقود")}</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
             <span className="font-mono text-slate-700 dark:text-slate-300">
-              {contract?.referenceNumber}
+              <bdi>{contract?.referenceNumber}</bdi>
             </span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-amber-600 dark:text-amber-400">{ui("تعديل")}</span>
+            <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+            <span className="text-amber-700 dark:text-amber-400">{ui("تعديل")}</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold">
-              <FileText className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold shrink-0">
+              <FileText className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
-              <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+              <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
                 <span>{ui("تعديل العقد الرسمي")}</span>
-                <span className="font-mono text-amber-600 dark:text-amber-400 text-sm sm:text-lg break-all">
-                  {contract?.referenceNumber}
+                <span className="font-mono text-amber-700 dark:text-amber-400 text-sm sm:text-lg break-all">
+                  <bdi>{contract?.referenceNumber}</bdi>
                 </span>
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400">
                 {ui("تحديث بيانات الرحلة، الركاب، والتوجيه التشغيلي مع إعادة توليد الـ PDF تلقائياً")}</p>
             </div>
           </div>
@@ -488,28 +432,28 @@ export default function EditContractPage({ params }: PageProps) {
             type="button"
             onClick={() => setIsPdfOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs"
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
           >
-            <Eye className="w-3.5 h-3.5 text-amber-500" />
+            <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
             <span>{ui("معاينة")}</span>
           </button>
           <button
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 transition shadow-2xs"
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
             title={ui("حذف هذا العقد نهائياً")}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{ui("حذف")}</span>
           </button>
           <button
             type="button"
             onClick={() => setIsReverseOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-card text-xs font-bold"
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
           >
-            <ArrowLeftRight className="w-4 h-4 text-amber-500" />
+            <ArrowLeftRight className="w-4 h-4 text-amber-500" aria-hidden="true" />
             <span>{ui("رحلة عودة")}</span>
           </button>
         </div>
@@ -517,22 +461,23 @@ export default function EditContractPage({ params }: PageProps) {
 
       {/* Success Alert Banner */}
       {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div role="status" className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
             <span>{ui(successMessage)}</span>
           </div>
           <div className="flex items-center gap-2 ms-auto sm:ms-0">
             <button
+              type="button"
               onClick={() => setIsPdfOpen(true)}
-              className="px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-bold transition flex items-center gap-1"
+              className="min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
             >
-              <Eye className="w-3.5 h-3.5" />
+              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{ui("معاينة العقد المحدث")}</span>
             </button>
             <Link
               href="/admin/contracts"
-              className="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-100"
+              className="min-h-11 sm:min-h-9 inline-flex items-center px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-100 dark:hover:bg-slate-700 border theme-border"
             >
               {ui("سجل العقود")}</Link>
           </div>
@@ -541,44 +486,49 @@ export default function EditContractPage({ params }: PageProps) {
 
       {/* Server Error Alert */}
       {serverError && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs">
-          <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+        <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs">
+          <AlertCircle className="w-5 h-5 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
           <span>{ui(serverError)}</span>
         </div>
       )}
 
       {/* Form Container */}
       <form onSubmit={handleSubmit(onFormSubmit)} aria-busy={isSubmitting} className="space-y-6">
-        <fieldset disabled={isSubmitting} className={`contents space-y-4 sm:space-y-6 ${isSubmitting ? "pointer-events-none" : ""}`}>
+        <fieldset disabled={isSubmitting} className={`min-w-0 border-0 p-0 m-0 ${isSubmitting ? "pointer-events-none" : ""}`}>
+        <div className="space-y-4 sm:space-y-6">
         {/* Section 1: Operation & Client Info */}
         <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
-          <div className="flex items-center justify-between border-b theme-border pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
-                <Sparkles className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+                <Sparkles className="w-4 h-4" aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                   {ui("بيانات العملية والعميل (الطرف الثاني)")}</h2>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   {ui("نوع الخدمة التشغيلية واسم الضيف ورقم التواصل")}</p>
               </div>
             </div>
-            <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              {ui("مرجع:")}{contract?.referenceNumber}
+            <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300">
+              {ui("مرجع:")} <bdi>{contract?.referenceNumber}</bdi>
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Operation Type */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                {ui("نوع العملية التشغيلية")}<span className="text-rose-500">*</span>
+              <label htmlFor={operationTypeId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                {ui("نوع العملية التشغيلية")} <span className="text-rose-700 dark:text-rose-400">*</span>
               </label>
               <select
+                id={operationTypeId}
                 {...register("operationType")}
-                className="w-full bg-slate-50 dark:bg-slate-900/80 border theme-border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-amber-500 transition"
+                className="w-full min-h-11 bg-slate-50 dark:bg-slate-900/80 border theme-border rounded-xl px-3.5 py-2.5 text-base sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-amber-500 transition"
               >
+                {watchedOperationType && !OPERATION_TYPES.includes(watchedOperationType) && (
+                  <option value={watchedOperationType}>{watchedOperationType}</option>
+                )}
                 {OPERATION_TYPES.map((op) => (
                   <option key={op} value={op}>
                     {ui(op)}
@@ -587,23 +537,8 @@ export default function EditContractPage({ params }: PageProps) {
               </select>
             </div>
 
-            {/* Customer Name */}
-            <CustomInput
-              label={ui("اسم العميل / الضيف الأساسي")}
-              required
-              placeholder={ui("مثال: محمد عبد الله")}
-              {...register("customerName")}
-              error={errors.customerName?.message}
-            />
+            <ContractGuestFields register={register} errors={errors} />
 
-            {/* Customer Phone */}
-            <CustomInput
-              label={ui("رقم هاتف العميل (اختياري)")}
-              placeholder={ui("مثال: 0501234567")}
-              dir="ltr"
-              {...register("customerPhone")}
-              error={errors.customerPhone?.message}
-            />
           </div>
         </div>
 
@@ -616,145 +551,16 @@ export default function EditContractPage({ params }: PageProps) {
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 {ui("مسار الرحلة والجدول الزمني وتاريخ الإصدار")}</h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 {ui("محطات الانطلاق والوصول، موعد الرحلة، وتاريخ إصدار العقد")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Origin */}
-            <CustomInput
-              label={ui("نقطة / محطة الانطلاق")}
-              required
-              placeholder={ui("مثال: مكة المكرمة")}
-              {...register("origin")}
-              error={errors.origin?.message}
-            />
-
-            {/* Destination */}
-            <CustomInput
-              label={ui("محطة / وجهة الوصول")}
-              required
-              placeholder={ui("مثال: مطار الملك عبد العزيز بجدة")}
-              {...register("destination")}
-              error={errors.destination?.message}
-            />
-
-            {/* Trip Date Picker */}
-            <Controller
-              control={control}
-              name="tripDate"
-              render={({ field, fieldState }) => (
-                <CustomDatePicker
-                  label={ui("تاريخ الرحلة")}
-                  required
-                  value={field.value || todayStr}
-                  onChange={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            {/* Trip Time Picker */}
-            <Controller
-              control={control}
-              name="tripTime"
-              render={({ field, fieldState }) => (
-                <CustomTimePicker
-                  label={ui("وقت وتوقيت الرحلة")}
-                  required
-                  value={field.value || timeNow}
-                  onChange={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            {/* Flight Carrier */}
-            <CustomInput
-              label={ui("الناقل الجوي (لخدمات المطار)")}
-              placeholder={ui("مثال: الخطوط السعودية")}
-              {...register("flightCarrier")}
-              error={errors.flightCarrier?.message}
-            />
-
-            {/* Flight Number */}
-            <CustomInput
-              label={ui("رقم الرحلة الجوية")}
-              placeholder={ui("مثال: SV841")}
-              dir="ltr"
-              {...register("flightNumber")}
-              error={errors.flightNumber?.message}
-            />
+            <ContractJourneyFields control={control} register={register} errors={errors} />
 
             {/* Release Date (تاريخ الإصدار) Mode Toggle & Picker */}
-            <div className="sm:col-span-2 lg:col-span-3 p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border theme-border space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                    {ui("تاريخ إصدار العقد (Release Date في الترويسة)")}</label>
-                  <p className="text-[11px] text-slate-400">
-                    {ui("يمكن إبقاء تاريخ اليوم الفعلي أو تحديد تاريخ مخصص لوثيقة العقد الرسمية")}</p>
-                </div>
-
-                <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-1 rounded-xl border theme-border self-start sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => setValue("issueDateMode", "AUTO", { shouldDirty: true })}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                      issueDateMode === "AUTO"
-                        ? "gold-gradient-btn text-white shadow-xs"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {ui("اليوم (تلقائي)")}</button>
-                  <button
-                    type="button"
-                    onClick={() => setValue("issueDateMode", "MANUAL", { shouldDirty: true })}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                      issueDateMode === "MANUAL"
-                        ? "gold-gradient-btn text-white shadow-xs"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {ui("يدوي (تاريخ مخصص)")}</button>
-                </div>
-              </div>
-
-              {issueDateMode === "AUTO" ? (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    {ui("تاريخ الإصدار المعتمد في ترويسة العقد:")}</span>
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    {ui(formatOfficialDate(todayStr))} {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
-                  <div className="w-full sm:w-64">
-                    <Controller
-                      control={control}
-                      name="issueDate"
-                      render={({ field, fieldState }) => (
-                        <CustomDatePicker
-                          label={ui("تاريخ الإصدار المعتمد في العقد")}
-                          required
-                          value={field.value || todayStr}
-                          onChange={field.onChange}
-                          error={fieldState.error?.message}
-                        />
-                      )}
-                    />
-                  </div>
-                  <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                    <span>
-                      {ui("سيظهر هذا التاريخ في وثيقة الـ PDF تحت «تاريخ الإصدار»، مع الحفاظ على تاريخ الإنشاء الأصلي في قاعدة البيانات.")}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ContractIssueDate control={control} setValue={setValue} />
 
             {/* Notes */}
             <div className="sm:col-span-2 lg:col-span-3">
@@ -772,13 +578,13 @@ export default function EditContractPage({ params }: PageProps) {
         {/* Section 3: Captain & Vehicle Assignment */}
         <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex items-center gap-2 border-b theme-border pb-4">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
               <Car className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 {ui("تعيين الكابتن والمركبة")}</h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 {ui("اختيار الكابتن المعتمد وتحديد لوحة المركبة المنفذة للرحلة")}</p>
             </div>
           </div>
@@ -795,12 +601,6 @@ export default function EditContractPage({ params }: PageProps) {
                     captains={captains.filter(captain => captain.active)}
                     selectedCaptainId={field.value}
                     onSelectCaptain={(cap) => {
-                      if (cap.id !== field.value) {
-                        setDriverDeclared(false);
-                        setInspectionNotes("");
-                        setInspectionDate(todayStr);
-                        setChecks(previous => Object.fromEntries(Object.keys(previous).map(key => [key, false])));
-                      }
                       field.onChange(cap.id);
                       setValue("vehiclePlate", cap.assignedVehiclePlate || "", { shouldValidate: true });
                     }}
@@ -822,12 +622,6 @@ export default function EditContractPage({ params }: PageProps) {
                     selectedPlate={field.value}
                     captainPlate={(Array.isArray(captains) ? captains : []).find((c) => c.id === selectedCaptainId)?.assignedVehiclePlate}
                     onSelectVehicle={(veh) => {
-                      if (veh.plateNumberAr !== field.value) {
-                        setDriverDeclared(false);
-                        setInspectionNotes("");
-                        setInspectionDate(todayStr);
-                        setChecks(previous => Object.fromEntries(Object.keys(previous).map(key => [key, false])));
-                      }
                       field.onChange(veh.plateNumberAr);
                     }}
                     error={fieldState.error?.message}
@@ -848,7 +642,7 @@ export default function EditContractPage({ params }: PageProps) {
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
                 <ClipboardCheck className="w-5 h-5" />
               </div>
               <div>
@@ -856,18 +650,18 @@ export default function EditContractPage({ params }: PageProps) {
                   <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                     {ui("الفحص الفني والإقرار التشغيلي للمركبة")}</h2>
                   {(contract?.inspection?.id || contract?.inspectionId) && (
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border theme-border">
-                      #{ui(((contract.inspection?.id || contract.inspectionId) as string).slice(0, 8))}
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-400 border theme-border" dir="ltr">
+                      #{((contract.inspection?.id || contract.inspectionId) as string).slice(0, 8)}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
                   {ui("تعديل واعتماد بنود الفحص الفني، تاريخ الفحص، والملاحظات التشغيلية التي تظهر في وثيقة العقد الرسمية")}</p>
               </div>
             </div>
 
             {/* Compliance Badge & Quick Select Button */}
-            <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+            <div className="flex flex-wrap items-center gap-2 shrink-0 self-start sm:self-center">
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border ${
                   passedChecksCount === 16
@@ -875,8 +669,8 @@ export default function EditContractPage({ params }: PageProps) {
                     : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
                 }`}
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{ui(passedChecksCount)} {ui("من 16 بند سليم")}</span>
+                <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{passedChecksCount} {ui("من 16 بند سليم")}</span>
               </span>
 
               <button
@@ -888,7 +682,7 @@ export default function EditContractPage({ params }: PageProps) {
                   );
                   setChecks(allPassed);
                 }}
-                className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition border theme-border cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition border theme-border cursor-pointer"
                 title={ui("تحديد كافة البنود الـ 16 كسليمة ومطابقة")}
               >
                 {ui("تحديد الكل سليم (100%)")}</button>
@@ -907,11 +701,11 @@ export default function EditContractPage({ params }: PageProps) {
             </div>
 
             <div className="sm:col-span-1 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
+              <div className="text-xs text-[var(--text-muted)] dark:text-slate-400 space-y-0.5">
                 <p className="font-semibold text-slate-700 dark:text-slate-300">
-                  {ui("لوحة المركبة المفحوصة:")}{ui(" ")}
-                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
-                    {ui(selectedVehiclePlate || "غير محددة")}
+                  {ui("لوحة المركبة المفحوصة:")}{" "}
+                  <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                    {selectedVehiclePlate || ui("غير محددة")}
                   </span>
                 </p>
                 <p>
@@ -921,7 +715,7 @@ export default function EditContractPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowDetailedChecks(!showDetailedChecks)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-border bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer self-stretch sm:self-auto justify-center"
+                className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-border bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer self-stretch sm:self-auto justify-center"
               >
                 {showDetailedChecks ? (
                   <>
@@ -941,63 +735,7 @@ export default function EditContractPage({ params }: PageProps) {
           {/* Detailed 16 Checklist Items */}
           {showDetailedChecks && (
             <div className="space-y-4 pt-1">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {INSPECTION_CATEGORIES.map((category) => (
-                  <div
-                    key={category.title}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border theme-border space-y-2.5 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between border-b theme-border pb-2">
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                        {ui(category.title)}
-                      </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                        {ui(category.items.filter((it) => checks[it.key]).length)}/{ui(category.items.length)}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      {category.items.map((item) => {
-                        const isPassed = checks[item.key] ?? true;
-                        return (
-                          <label
-                            key={item.key}
-                            className={`flex items-center justify-between gap-2 p-2 rounded-xl border text-xs font-medium cursor-pointer transition ${
-                              isPassed
-                                ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-slate-800 dark:text-slate-200"
-                                : "bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-300"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={isPassed}
-                                onChange={(e) =>
-                                  setChecks((prev) => ({
-                                    ...prev,
-                                    [item.key]: e.target.checked,
-                                  }))
-                                }
-                                className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 cursor-pointer"
-                              />
-                              <span>{ui(item.label)}</span>
-                            </div>
-                            <span
-                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                isPassed
-                                  ? "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
-                                  : "text-rose-700 dark:text-rose-400 bg-rose-500/10"
-                              }`}
-                            >
-                              {ui(isPassed ? "سليم" : "غير سليم")}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <InspectionChecklist checks={checks} onChange={(key, value) => setChecks(previous => ({ ...previous, [key]: value }))} />
             </div>
           )}
 
@@ -1014,17 +752,16 @@ export default function EditContractPage({ params }: PageProps) {
           </div>
 
           {/* Driver Declaration Checkbox */}
-          <label className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border theme-border cursor-pointer hover:border-amber-500/50 transition">
-            <input
-              type="checkbox"
+          <label className="flex min-h-11 items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border theme-border cursor-pointer hover:border-amber-500/50 transition">
+            <Checkbox
               checked={driverDeclared}
               onChange={(e) => setDriverDeclared(e.target.checked)}
-              className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 mt-0.5 cursor-pointer shrink-0"
+              className="mt-0.5"
             />
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-slate-900 dark:text-white block">
                 {ui("إقرار وتأكيد الفحص التشغيلي المعتمد للعقد")}</span>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 leading-relaxed">
                 {ui("أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل وفق الشروط والمعايير المحددة أعلاه، والمركبة جاهزة تماماً للتشغيل لنقل الركاب.")}</p>
             </div>
           </label>
@@ -1032,12 +769,13 @@ export default function EditContractPage({ params }: PageProps) {
 
         {/* Keep the main actions reachable above mobile bottom navigation. */}
         <div className="contract-submit-bar">
-          <p className="hidden sm:block flex-1 text-xs text-slate-500">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
+          <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
           <Link href="/admin/contracts" className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">{ui("إلغاء")}</Link>
-          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50">
-            <Save className="h-4 w-4 shrink-0" />
+          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50 cursor-pointer">
+            <Save className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>
           </button>
+        </div>
         </div>
         </fieldset>
       </form>

@@ -1,4 +1,4 @@
-import type {CommercialInput} from "@/lib/commercial";
+import type { CommercialInput } from "@/lib/commercial";
 import { backendRequest, backendFields, queryString } from "@/lib/backend";
 import type { Contract, OperationType, ContractStatus } from "@/lib/types";
 import type { InspectionInput } from "./inspection";

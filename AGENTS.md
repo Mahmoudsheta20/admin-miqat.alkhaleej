@@ -1,153 +1,46 @@
-# Project Conventions & Engineering Guidelines
+# Miqat engineering guide
 
-## 1. Project Overview
+## Architecture
+- Next.js 16 App Router, React 19, strict TypeScript, Tailwind v4. Interactive admin/captain routes intentionally use client components.
+- Express, Prisma/PostgreSQL, storage, email, and PDF generation belong in the sibling `backend-miqat.alkhaleej` project. Do not reintroduce a frontend database client or duplicate business API routes.
+- Existing browser URLs are compatibility contracts: retain deep links and query parameters when reorganizing features.
+- Request APIs (`params`, `searchParams`, `cookies`, `headers`) are asynchronous. Read the installed Next.js guides before changing framework behavior.
 
-- **Project**: Miqat Operations & Fleet Management System (نظام ميقات الخليج لإدارة الأسطول والرحلات)
-- **Stack**: Next.js 16 (App Router), React 19, TypeScript 5, TailwindCSS v4, Prisma ORM (SQLite dev / PostgreSQL prod), Puppeteer-core (PDF generation), Lucide React (icons)
-- **Language/Direction**: Arabic-first RTL UI. `<html lang="ar" dir="rtl">`.
-- **Fonts**: Zain (Arabic body/display, Google Fonts wght 200..900), Outfit (Latin/English fallback).
-- **Theme**: Dual Light/Dark mode via CSS custom properties + `localStorage` persistence. Theme class toggled on `<html>`.
-- **Auth**: Client-side session via React Context + `localStorage` (`miqat_auth_user`). 4 roles: `ADMIN`, `OPERATIONS`, `DISPATCHER`, `DRIVER`.
+## Authentication and authorization
+- Roles are `ADMIN` and `CAPTAIN`; Express enforces role and record ownership. The privileged administrator restriction remains in the backend.
+- Browser requests use `/api/proxy/` and server-issued HttpOnly cookies. Never persist session tokens/profile identities in localStorage, return browser tokens in JSON, or put credentials in document URLs.
+- Preserve session-only versus persistent login behavior. Validate mutation origins independently of CORS in every environment.
+- Secrets and database credentials belong exclusively in the backend environment. Server-side `BACKEND_URL` configures the proxy target; `NEXT_PUBLIC_BACKEND_URL` is a compatibility fallback.
 
----
+## Organization and data
+- Shared navigation metadata lives in `lib/navigation.ts`; desktop/mobile navigation, breadcrumbs, and titles derive from it. Do not restore workspace switching or separate navigation arrays.
+- Colocate feature-specific UI and guides with their route. Reuse shared form, document, and UI components under `app/_components/`.
+- Typed HTTP adapters remain under `app/_actions/` for import compatibility; these are ordinary client-safe modules, not Server Actions.
+- Use `useApiQuery` for keyed, session-scoped reads. Successful mutations invalidate cached reads. Keep UI-only draft state separate from API state.
+- Persist list filters with `useUrlState`; preserve unrelated query parameters. Do not silently merge different financial entities or invoice types.
+- Use exact decimal/minor-unit helpers for money. Never rewrite historical totals, contract IDs, document numbering, tax snapshots, or QR data during a UI refactor.
+- Changes to database schemas require an explicit migration and isolated verification; never run schema push or seed against production as part of UI work.
 
-## 2. Next.js Architecture (App Router)
+## Design and accessibility
+- Arabic RTL is the default; English LTR and both themes are supported. Translate UI labels only, never customer names or stored business data.
+- Use locally bundled IBM Plex Sans Arabic (Arabic) and Inter (English), weights 400/500/600/700. Font licenses ship alongside assets.
+- Preserve Miqat branding and gold accents. Use semantic tokens in `app/globals.css`, quiet surfaces, clear tables, readable labels, and purposeful spacing. No decorative glass, gradient headlines, purple glows, or synthesized black font weights.
+- Prefer native controls and dialogs. Keep focus visible, all actions keyboard-accessible, and touch targets at least 44px. Respect reduced motion.
+- Shared inspection definitions live in `lib/inspection.ts`; contract guest/journey/issue-date fields and inspection checklist UI are shared components.
+- New PDF templates use the backend's bundled `documentFontCss`; do not fetch external fonts while rendering.
+- Use Next Image for images and dynamic loading for heavy document previews. Provide loading, empty, and recoverable error states.
 
-- **Async Request APIs**: `params`, `searchParams`, `cookies()`, `headers()`, and `draftMode()` are all asynchronous. Always `await` them in Server Components/Route Handlers, or unwrap a passed-down promise with `use()` in Client Components.
-- **Route Group Convention**: Dashboard pages live under `app/(dashboard)/` which provides the shared sidebar + header layout. The route group does NOT appear in the URL. Login lives at `app/login/` outside the group.
-- **Client Components for Interactive Pages**: Dashboard pages use `"use client"` because they depend on `useAuth()`, `useTheme()`, and interactive state. This is intentional — the admin portal is a client-heavy SPA.
-- **Server Components for API Routes**: All `app/api/**/route.ts` files are server-only. They use Prisma directly.
-- **Data Fetching & Waterfalls**: Fetch independent data in parallel with `Promise.all()`, not sequential `await` chains. Push slow, non-critical fetches below a `<Suspense fallback={<Skeleton />}>` boundary so the shell paints first.
-- **Caching & Revalidation**: Be explicit about `fetch` cache behavior (`cache: 'force-cache' | 'no-store'`, `next: { revalidate, tags }`). Invalidate with `revalidatePath()` / `revalidateTag()` from Server Actions.
-- **Route Segment Files**: Every route that can fail or take time gets its own `loading.tsx` and `error.tsx` (client component, receives `error`/`reset`). Use `not-found.tsx` for explicit 404s.
-- **Metadata & SEO**: Use the `generateMetadata` export (async, can read `params`) instead of hardcoded `<head>` tags for page-level metadata. Root metadata is in `app/layout.tsx`.
-- **Image & Font Optimization**: No raw `<img>` tags. Use `next/image` with explicit `width`/`height` or `fill` + a sized parent.
-
----
-
-## 3. Database & Prisma ORM
-
-- **Schema Location**: `prisma/schema.prisma`. SQLite for local dev (`prisma/dev.db`), switchable to PostgreSQL for production.
-- **Prisma Client Singleton**: Imported from `@/lib/prisma` — uses global caching to avoid multiple instances in dev.
-- **Enum Types**: `Role`, `VehicleStatus`, `DriverStatus`, `TripStatus`, `PaymentStatus` defined in Prisma schema. Mirror these in `lib/types.ts` as TypeScript union types.
-- **Relations**: `User` ↔ `Driver` (1:1), `Driver` ↔ `Vehicle` (1:1), `TripOrder` ↔ `Driver`/`Vehicle`/`Passenger`/`VehicleInspection`/`ContractDocument`.
-- **Seed Data**: `prisma/seed.mjs` — run with `npx prisma db seed`.
-- **Schema Changes**: After editing `schema.prisma`, run `npx prisma db push` (dev) or `npx prisma migrate dev` (production migrations).
-
----
-
-## 4. RBAC (Role-Based Access Control)
-
-- **4 Roles**: `ADMIN` (full access), `OPERATIONS` (fleet + drivers + trips), `DISPATCHER` (trips + contracts only), `DRIVER` (driver portal only).
-- **Sidebar Visibility**: `Sidebar.tsx` filters nav items by `user.role`. Each `NavItem` has a `roles` array.
-- **API-Level Enforcement**: API routes should validate the caller's role before performing write operations. Admin & Operations can create/edit drivers. Only Admin can deactivate users.
-- **Page-Level Guards**: The `(dashboard)/layout.tsx` redirects unauthenticated users to `/login` and drivers to `/driver-portal`.
-
----
-
-## 5. Data, State & Validation
-
-- **TypeScript Types**: Defined in `lib/types.ts`. Every entity has a named interface: `SystemUser`, `Vehicle`, `Driver`, `TripOrder`, `TripPassenger`, `DailyInspection`, etc.
-- **API Hook**: `lib/useApi.ts` provides `useApi<T>(url)` for GET requests with loading/error/refetch states, and `apiMutate(url, method, body)` for POST/PUT/PATCH/DELETE.
-- **Server State vs. UI State**: Pages fetch data from API routes on mount. Local UI state (search filters, modal open/close, form inputs) uses `useState`. Data refetch is triggered after mutations via `refetch()`.
-- **Environment & Secrets**: `DATABASE_URL` and any API keys go in `.env`. Validate presence at startup. Anything without `NEXT_PUBLIC_` never reaches client code.
-
----
-
-## 6. Design System & Aesthetic
-
-### Color Tokens (CSS Custom Properties in `globals.css`)
-
-- **Light Mode** (default): Canvas `#f8fafc`, cards `#ffffff`, text `#0f172a`, borders `#e2e8f0`, muted text `#64748b`.
-- **Dark Mode** (`html.dark`): Canvas `#080c14`, cards `#0f172a`, text `#f8fafc`, borders `#1e293b`.
-- **Accent**: Amber/gold for primary actions (`#d97706` → `#f59e0b`). Emerald for success/available. Rose for danger/cancelled. Blue for new/info.
-
-### Utility CSS Classes
-
-- `.theme-card` — card with background, border, shadow
-- `.theme-card-subtle` — muted card background
-- `.theme-input` — form input styling
-- `.theme-border` — border color
-- `.gold-gradient-btn` — primary CTA button
-- `.gold-gradient-text` — gradient text accent
-
-### Anti-AI Design Rules
-
-- **No purple/indigo glows**, no generic glassmorphism, no cliché 3-column feature grids, no gradient text headlines.
-- **Typography**: Zain (Arabic, weights 200–900) + Outfit (Latin). Monospace `font-mono` for IDs, phone numbers, dates, contract numbers.
-- **Spacing**: Vary rhythm deliberately — tight tables vs. generous card padding. Not uniform `space-y-4` everywhere.
-- **Micro-Interactions**: `transition-all duration-200`, `hover:shadow-md`, `active:scale-[0.98]` for buttons. Skeleton loaders that mirror data shape.
-
----
-
-## 7. Component Architecture
-
-### Shared Components (`app/_components/`)
-
-Components used across multiple pages. Each is a `"use client"` component:
-
-- `Sidebar.tsx` — collapsible sidebar with role-based navigation
-- `Header.tsx` — persistent top header with clock, user pill, theme toggle, logout
-- `StatusBadge.tsx` — reusable status badge for trips/drivers/vehicles/payments/inspections
-- `ConfirmDialog.tsx` — confirmation modal (danger/warning/info variants)
-- `AddDriverModal.tsx` — form to create new captain
-- `EditDriverModal.tsx` — form to edit captain details
-- `NewTripModal.tsx` — form to create new trip
-- `AssignDriverModal.tsx` — assign driver + vehicle to a trip
-- `PassengerManifestModal.tsx` — manage passenger list for a trip
-- `PdfPreviewModal.tsx` — preview/download generated contract PDF
-
-### Route Structure
-
-```
-app/
-├── layout.tsx              # Root layout (html/body, providers, fonts)
-├── login/page.tsx          # Login page (outside dashboard group)
-├── (dashboard)/
-│   ├── layout.tsx          # Dashboard layout (sidebar + header + auth guard)
-│   ├── page.tsx            # Root redirect → /overview
-│   ├── overview/page.tsx   # KPI cards, recent trips, quick actions
-│   ├── drivers/page.tsx    # Captain management (CRUD)
-│   ├── fleet/page.tsx      # Vehicle management
-│   ├── requests/page.tsx   # Trip request workflow board
-│   ├── trips/page.tsx      # Trip dispatch management
-│   ├── contracts/page.tsx  # Contract generation & list
-│   └── driver-portal/page.tsx  # Mobile driver inspection portal
-├── _components/            # Shared client components
-├── api/                    # API routes (Prisma server-side)
-│   ├── drivers/            # GET list, POST create
-│   ├── drivers/[id]/       # GET single, PUT update, PATCH status
-│   ├── fleet/              # GET list, POST create
-│   ├── trips/              # GET list, POST create
-│   ├── trips/[id]/         # GET single, PUT update
-│   ├── contracts/          # Preview + PDF generation
-│   ├── inspections/        # Vehicle inspection CRUD
-│   └── dashboard/stats/    # Aggregated KPI statistics
-```
-
----
-
-## 8. Code Standards & File Hygiene
-
-- **Strict TypeScript**: No `any`, no non-null assertions (`!`). Every server payload and component prop gets a named interface.
-- **Naming**: `PascalCase` components, `camelCase` functions/variables, `kebab-case` file and route segment names, `SCREAMING_SNAKE_CASE` for module-level constants. Boolean props read as questions (`isLoading`, `hasError`).
-- **Colocation**: Route-specific helpers and subcomponents live inside that route's folder. Shared components go in `app/_components/`. Shared lib utilities go in `lib/`.
-- **Error Handling**: API Route Handlers return `NextResponse.json({ error: "message" }, { status: 4xx/5xx })` for errors, never throw to the client. Use try/catch in all API handlers.
-- **Arabic Strings**: All user-facing text is Arabic. Variable names and code comments are in English.
-
----
-
-## 9. Accessibility & Performance
-
-- **RTL Layout**: All layouts use `dir="rtl"`. CSS properties like `margin-right` / `padding-left` are handled by Tailwind's logical properties where possible.
-- **Semantic HTML First**: Native `<button>`, `<a>`, `<nav>`, `<dialog>`, `<table>` before reaching for ARIA. Every interactive element is keyboard-reachable with a visible focus state.
-- **Contrast & Motion**: Text meets WCAG AA contrast in both light and dark mode. Non-essential animations respect `prefers-reduced-motion`.
-- **Bundle Discipline**: Default to client components only when interactivity is needed. Use `dynamic(() => import(...), { ssr: false })` for heavy widgets (PDF preview, charts) to avoid blocking hydration.
-- **Scrollbar Styling**: Custom slim scrollbars via `::-webkit-scrollbar` for a polished look in both themes.
+## Quality
+- No new `any` or non-null assertions. Use named payload/prop interfaces and `unknown` for untrusted data.
+- Frontend checks: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:e2e`.
+- Browser tests use the isolated fixture backend on 5109 and UI on 3419. They do not use a live database. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` for non-macOS Chrome installations.
+- The production build uses the supported webpack compiler; development uses Next's default compiler. Browser-test caches and reports are ignored.
+- Test data controls are available only in development with `NEXT_PUBLIC_ENABLE_DEMO_DATA=true`.
+- Run backend tests/typecheck/build after changing APIs. Distinguish fixture coverage from SMTP, S3, external ZATCA, and live database verification.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

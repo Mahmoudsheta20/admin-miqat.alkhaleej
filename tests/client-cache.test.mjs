@@ -48,3 +48,17 @@ test('a synchronously thrown fetcher can be retried', async () => {
   await assert.rejects(fetchCached('retry', () => { throw new Error('offline'); }));
   assert.equal(await fetchCached('retry', () => Promise.resolve('online')), 'online');
 });
+
+test('switching sessions prevents former in-flight reads from caching another user’s data', async () => {
+  const moduleOutput = ts.transpileModule(fs.readFileSync(new URL('../lib/clientCache.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const exports = {}; new Function('exports', 'window', moduleOutput)(exports, {});
+  let resolveOld;
+  exports.setClientCacheScope('first-user');
+  const pending = exports.fetchCached('contracts', () => new Promise(resolve => { resolveOld = resolve; }));
+  await Promise.resolve();
+  exports.setClientCacheScope('second-user');
+  resolveOld({ items: ['private-old-record'] }); await pending;
+  assert.equal(exports.getCachedData('contracts'), null);
+  const next = await exports.fetchCached('contracts', async () => ({ items: ['second-user-record'] }));
+  assert.deepEqual(next.items, ['second-user-record']);
+});

@@ -1,44 +1,40 @@
-# Miqat Admin
+# Miqat Operations
 
-Arabic RTL administration and captain UI, built with Next.js 16 and React 19.
-All business APIs run in the sibling **`backend-miqat.alkhaleej` Express project**.
+Arabic-first fleet, contract, captain, customer, and accounting workspace. Next.js 16 / React 19 frontend; Express / Prisma backend in the sibling `backend-miqat.alkhaleej` repository.
 
-## Run locally
+## Local setup
 
-Use Node.js 22.12+ (Node 24 recommended).
+Use Node.js 22.12+ (Node 24 recommended). Start the backend with its documented configuration, then configure `.env.local` with `BACKEND_URL=http://localhost:5001` and run `npm ci`, `npm run dev`.
 
-1. Configure and start the backend using its README.
-2. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_BACKEND_URL=http://localhost:5001`.
-3. Run `npm ci`, then `npm run dev`.
-4. Open `http://localhost:3000`. Use the same hostname consistently; do not mix `localhost` and `127.0.0.1`.
-
-The backend's `FRONTEND_URL` must exactly match the frontend origin, including port.
-Database, SMTP, JWT, S3, and service-role secrets belong exclusively in the backend environment.
-Existing local `.env` files were preserved; remove obsolete backend secrets from the frontend deployment configuration.
+Use one hostname consistently. Set the backend's `FRONTEND_URL` to the exact frontend origin, including its port.
 
 ## Architecture
 
-- `lib/backend.ts`: credentialed HTTP client, timeouts, query encoding, response envelopes.
-- `app/_actions/`: typed HTTP adapters retained at their existing import paths. These are ordinary modules, **not Next.js Server Actions**.
-- `lib/authContext.tsx`: session profile retrieved from Express. Authentication uses an HttpOnly backend cookie; no localStorage identity or editable role cookie.
-- `app/(admin)` / `app/(captain)`: presentation and client-side navigation guards. Express enforces authorization for every protected operation.
-- Document previews/downloads and uploads go directly to Express. Public verification pages fetch limited verification data without passenger or captain personal details.
-- Prisma, email, PDF generation, storage and password processing are owned by Express. No Next.js API routes or database client remain here.
+- One navigation registry drives Overview, Operations, People, Finance, Settings, and the four captain destinations. Existing routes remain valid.
+- Every browser API request, protected document preview, and download goes through the same-origin `/api/proxy/` rewrite. Server-side calls resolve `BACKEND_URL` directly.
+- Authentication uses backend-issued HttpOnly cookies. Tokens are never stored in browser storage or embedded in document URLs. Old browser credentials are retired during session initialization.
+- API adapters under `app/_actions/` are regular modules, not Next Server Actions. Express owns authorization, persistence, PDF generation, storage, and email.
+- Shared keyed queries use session-scoped caching; mutations invalidate reads. List filters are URL-backed. Exact financial calculation helpers remain the source of truth.
+- UI and new PDFs use bundled IBM Plex Sans Arabic and Inter. Arabic/English, RTL/LTR, and light/dark themes are supported without external font requests.
 
-## Deploy
-
-Deploy the frontend and backend together. Use HTTPS sibling origins on the same site, for example `admin.example.com` and `api.example.com`, so SameSite=Lax cookies work for API requests and document iframes.
-`NEXT_PUBLIC_BACKEND_URL` is compiled into the frontend: rebuild after changing it.
-Configure the backend origin and a fresh JWT secret before starting it. Existing legacy sessions must sign in again.
-
-Existing PDFs previously exposed in `public/` were moved, without deleting their contents, to ignored `private-storage/legacy-public/`. Back up or import that directory into private backend storage; it is not included in a frontend deployment or git commit.
-
-## Checks
+## Verification
 
 ```sh
-npm run lint
+npm test
 npm run typecheck
+npm run lint
 npm run build
+npm run test:e2e
 ```
 
-Run `npm test` and `npm run build` in the backend too. Its regression tests mock database calls and do not modify a live database. Full live CRUD, SMTP delivery and S3/PDF rendering require configured services and a test account.
+The build uses Next's supported webpack compiler. Browser tests start a separate fixture backend and Next instance, with no database credentials, on ports 5109 and 3419. Chrome defaults to the macOS app path; override `PLAYWRIGHT_CHROMIUM_EXECUTABLE` on other systems. Browser test data and reports are separate from application storage.
+
+See `docs/REFACTOR.md` for the compatibility inventory, defect fixes, and validation boundaries. Test-data controls require `NEXT_PUBLIC_ENABLE_DEMO_DATA=true` in development.
+
+## Deployment
+
+Deploy frontend and backend together. Configure `BACKEND_URL` before building; rewrites are resolved during the build. HTTPS on the frontend protects its HttpOnly session cookie. Keep the backend's trusted frontend origin accurate and restrict direct backend exposure as appropriate for your hosting setup.
+
+Database, SMTP, JWT, storage, and service-role secrets belong only in the backend environment. Browser identity remains server-validated. A coordinated rollout is required for cookie-only authentication and document access; users with only legacy browser tokens must sign in again.
+
+Existing data, database schema, numbering, and historical PDFs are unchanged. Ignored `private-storage/legacy-public/` remains a backend backup/import concern and is not deployed with the frontend.

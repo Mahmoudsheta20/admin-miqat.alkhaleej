@@ -1,17 +1,142 @@
 "use client";
-import { useUiText } from "@/lib/ui-text";
 
 import { useState, type FormEvent } from "react";
 import { Archive, RotateCcw } from "lucide-react";
 import Modal from "@/app/_components/Modal";
 import { useLanguage } from "@/lib/languageContext";
 import { invoiceRequest } from "@/lib/invoices";
-interface Props {id:string;number:string;isArchived?:boolean;onChanged:()=>void}
-export default function InvoiceVisibilityAction({id,number,isArchived=false,onChanged}:Props){
-  const ui = useUiText();
 
- const {isRTL}=useLanguage(),[isOpen,setIsOpen]=useState(false),[reason,setReason]=useState(""),[error,setError]=useState(""),[isSaving,setIsSaving]=useState(false);
- const label=isArchived?(isRTL?"استعادة الفاتورة":"Restore invoice"):(isRTL?"إزالة الفاتورة من القائمة":"Remove invoice from list");
- async function submit(event:FormEvent){event.preventDefault();if(isSaving)return;setIsSaving(true);setError("");const result=await invoiceRequest(isArchived?`/${id}/restore`:`/${id}`,isArchived?"POST":"DELETE",{reason});setIsSaving(false);if(result.success){setIsOpen(false);onChanged();}else setError(result.error||(isRTL?"تعذر تغيير حالة الفاتورة":"Unable to update invoice visibility"));}
- return <><button type="button" onClick={()=>{setReason("");setError("");setIsOpen(true);}} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border theme-border px-3 py-2 text-xs font-bold text-slate-600 hover:border-amber-500 hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-400" aria-label={ui(`${label} ${number}`)} title={ui(label)}>{isArchived?<RotateCcw className="size-4"/>:<Archive className="size-4"/>}<span>{ui(isArchived?(isRTL?"استعادة":"Restore"):(isRTL?"إزالة":"Remove"))}</span></button>{isOpen&&<Modal label={ui(label)} onClose={()=>setIsOpen(false)} isBusy={isSaving}><form onSubmit={submit} className="theme-card m-auto w-full max-w-lg space-y-5 rounded-2xl p-5 sm:p-7"><div><h2 className="text-xl font-bold">{ui(label)}</h2><p className="mt-2 font-mono text-sm" dir="ltr">{ui(number)}</p></div><p className="text-sm leading-relaxed text-[var(--text-muted)]">{ui(isArchived?(isRTL?"ستعود الفاتورة إلى القائمة الرئيسية. تبقى بياناتها وحركاتها المالية كما هي.":"The invoice will return to the main list. Its document and financial entries stay unchanged."):(isRTL?"ستنتقل الفاتورة إلى قائمة المحذوفات ويمكن استعادتها. هذه الإزالة لا تلغي الفاتورة أو دفعاتها ولا تستبعدها من الضريبة. لتخفيض فاتورة صادرة، استخدم إشعارًا دائنًا.":"The invoice will move to Removed invoices and can be restored. This does not cancel the invoice or its payments, or remove it from VAT. Use a credit note to reduce an issued invoice."))}</p><label className="block text-sm font-bold">{ui(isRTL?"سبب الإجراء":"Reason")}<textarea required minLength={3} maxLength={500} rows={3} className="theme-input mt-2 w-full rounded-xl p-3 text-sm" value={reason} onChange={event=>setReason(event.target.value)} autoFocus/></label>{error&&<p role="alert" className="text-sm text-rose-600 dark:text-rose-400">{ui(error)}</p>}<div className="flex flex-wrap justify-end gap-3"><button type="button" disabled={isSaving} onClick={()=>setIsOpen(false)} className="theme-card rounded-xl px-4 py-3 text-sm">{ui(isRTL?"إلغاء":"Cancel")}</button><button disabled={isSaving} className="gold-gradient-btn rounded-xl px-5 py-3 text-sm font-bold disabled:opacity-50">{ui(isSaving?(isRTL?"جارٍ الحفظ…":"Saving…"):label)}</button></div></form></Modal>}</>;
+interface Props {
+  id: string;
+  number: string;
+  isArchived?: boolean;
+  onChanged: () => void;
+}
+
+export default function InvoiceVisibilityAction({
+  id,
+  number,
+  isArchived = false,
+  onChanged,
+}: Props) {
+  const { isRTL } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const label = isArchived
+    ? isRTL
+      ? "استعادة الفاتورة"
+      : "Restore invoice"
+    : isRTL
+      ? "إزالة الفاتورة من القائمة"
+      : "Remove invoice from list";
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    setError("");
+    const result = await invoiceRequest(
+      isArchived ? `/${id}/restore` : `/${id}`,
+      isArchived ? "POST" : "DELETE",
+      { reason }
+    );
+    setIsSaving(false);
+    if (result.success) {
+      setIsOpen(false);
+      onChanged();
+    } else {
+      setError(
+        result.error ||
+          (isRTL ? "تعذر تغيير حالة الفاتورة" : "Unable to update invoice visibility")
+      );
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setReason("");
+          setError("");
+          setIsOpen(true);
+        }}
+        className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 rounded-xl border theme-border px-3 py-2 text-xs font-bold text-[var(--text-muted)] hover:border-amber-500 hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-400 transition cursor-pointer"
+        aria-label={`${label} ${number}`}
+        title={label}
+      >
+        {isArchived ? (
+          <RotateCcw className="size-4" aria-hidden="true" />
+        ) : (
+          <Archive className="size-4" aria-hidden="true" />
+        )}
+        <span>
+          {isArchived ? (isRTL ? "استعادة" : "Restore") : isRTL ? "إزالة" : "Remove"}
+        </span>
+      </button>
+
+      {isOpen && (
+        <Modal label={label} onClose={() => setIsOpen(false)} isBusy={isSaving}>
+          <form
+            onSubmit={submit}
+            className="mobile-dialog-panel theme-card m-auto w-full max-w-lg space-y-5 rounded-2xl border theme-border p-5 sm:p-7"
+          >
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{label}</h2>
+              <p className="mt-2 font-mono text-sm text-amber-700 dark:text-amber-400" dir="ltr">
+                {number}
+              </p>
+            </div>
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              {isArchived
+                ? isRTL
+                  ? "ستعود الفاتورة إلى القائمة الرئيسية. تبقى بياناتها وحركاتها المالية كما هي."
+                  : "The invoice will return to the main list. Its document and financial entries stay unchanged."
+                : isRTL
+                  ? "ستنتقل الفاتورة إلى قائمة المحذوفات ويمكن استعادتها. هذه الإزالة لا تلغي الفاتورة أو دفعاتها ولا تستبعدها من الضريبة. لتخفيض فاتورة صادرة، استخدم إشعارًا دائنًا."
+                  : "The invoice will move to Removed invoices and can be restored. This does not cancel the invoice or its payments, or remove it from VAT. Use a credit note to reduce an issued invoice."}
+            </p>
+            <label className="block text-sm font-bold">
+              {isRTL ? "سبب الإجراء" : "Reason"}
+              <textarea
+                required
+                minLength={3}
+                maxLength={500}
+                rows={3}
+                className="theme-input mt-2 w-full rounded-xl p-3 text-sm"
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                autoFocus
+              />
+            </label>
+            {error && (
+              <p role="alert" className="text-sm font-bold text-rose-700 dark:text-rose-400">
+                {error}
+              </p>
+            )}
+            <div className="flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={() => setIsOpen(false)}
+                className="theme-card min-h-11 rounded-xl border theme-border px-4 py-2.5 text-sm font-bold cursor-pointer"
+              >
+                {isRTL ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="gold-gradient-btn min-h-11 rounded-xl px-5 py-2.5 text-sm font-bold disabled:opacity-50 cursor-pointer"
+              >
+                {isSaving ? (isRTL ? "جارٍ الحفظ…" : "Saving…") : label}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
 }

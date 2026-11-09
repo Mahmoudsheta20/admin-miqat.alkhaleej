@@ -31,11 +31,11 @@ function setup(response) {
   return { download: context.exports.downloadInspectionPdf, requests, links, revoked, scheduled };
 }
 
-test('downloads the inspection separately using header authentication and releases the blob', async () => {
+test('downloads the inspection separately using cookie authentication and releases the blob', async () => {
   const state = setup(new Response('%PDF-1.7\ninspection', { headers: { 'content-type': 'application/pdf' } }));
   await state.download('abcd-1234');
   assert.equal(state.requests[0].url, 'https://api.example/api/inspections/abcd-1234/pdf?download=1');
-  assert.equal(state.requests[0].init.headers.Authorization, 'Bearer test-session');
+  assert.equal(state.requests[0].init.headers?.Authorization, undefined);
   assert.equal(state.requests[0].init.credentials, 'include');
   assert.equal(state.links[0].download, 'inspection-ABCD1234.pdf');
   assert.equal(state.links[0].clicked, true);

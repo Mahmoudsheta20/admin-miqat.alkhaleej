@@ -1,45 +1,43 @@
 "use client";
+import { createHelpGuide } from "./help-guide";
+import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
 import LoadError from "@/app/_components/LoadError";
 
 import Modal from "@/app/_components/Modal";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ImageUpload from "@/app/_components/ImageUpload";
-import {
-  UserPlus,
-  Car,
-  CheckCircle2,
-  XCircle,
-  Edit2,
-  Trash2,
-  X,
-  KeyRound,
-  Copy,
-  Check,
-  Power,
-} from "lucide-react";
-import {
-  getCaptains,
-  createCaptain,
-  updateCaptain,
-  toggleCaptainStatus,
-  deleteCaptain,
-  resetCaptainTemporaryPassword,
-  CaptainFormData,
-} from "@/app/_actions/captain";
+import { UserPlus, Car, CheckCircle2, XCircle, Edit2, Trash2, X, KeyRound, Copy, Check, Power, Download, AlertCircle, Wallet } from "lucide-react";
+import { csvDownload } from "@/lib/commercial";
+import { currentSaudiPeriod } from "@/lib/accounting";
+import { getCaptains, createCaptain, updateCaptain, toggleCaptainStatus, deleteCaptain, resetCaptainTemporaryPassword, CaptainFormData } from "@/app/_actions/captain";
 import { SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
-import { PageHeader, FilterBar } from "@/app/_components/ui";
 import {
-  fetchCached,
-  getCachedData,
-  invalidateClientCache,
-} from "@/lib/clientCache";
+  PageHeader,
+  FilterBar,
+  Button,
+  ActionMenu,
+  ActionMenuItem,
+  ActionMenuSeparator,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/app/_components/ui";
+import {
+  MobileCardField,
+  MobileCardMetaGrid,
+  MobileRecordCard,
+} from "@/app/_components/mobile";
+import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 type CaptainItem = SystemUser & {
@@ -66,9 +64,12 @@ export default function CaptainsManagementPage() {
   });
   const [isLoading, setIsLoading] = useState(() => !cachedCaptains);
   const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [seedMessage, setSeedMessage] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const formId = useId();
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [search, setSearch] = useUrlState<string>("q", "");
+  const [statusFilter, setStatusFilter] = useUrlState<string>("status", "ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
     null,
@@ -125,11 +126,15 @@ export default function CaptainsManagementPage() {
 
   useEffect(() => {
     loadCaptains();
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
   }, []);
 
   const handleToggleStatus = async (c: CaptainItem) => {
     const newStatus = !c.active;
     setIsTogglingId(c.id);
+    setActionError("");
     try {
       setCaptains((prev) =>
         prev.map((item) =>
@@ -146,7 +151,7 @@ export default function CaptainsManagementPage() {
             item.id === c.id ? { ...item, active: c.active } : item,
           ),
         );
-        alert(res.error || "تعذر تغيير حالة الكابتن");
+        setActionError(res.error || (isRTL ? "تعذر تغيير حالة الكابتن" : "Failed to update captain status"));
       }
     } catch {
       setCaptains((prev) =>
@@ -154,7 +159,7 @@ export default function CaptainsManagementPage() {
           item.id === c.id ? { ...item, active: c.active } : item,
         ),
       );
-      alert("حدث خطأ غير متوقع أثناء تغيير حالة الكابتن");
+      setActionError(isRTL ? "حدث خطأ غير متوقع أثناء تغيير حالة الكابتن" : "Unexpected error while updating captain status");
     } finally {
       setIsTogglingId(null);
     }
@@ -207,6 +212,7 @@ export default function CaptainsManagementPage() {
       const res = await updateCaptain(editingCaptain.id, formData);
       if (res.success) {
         setEditingCaptain(null);
+        setIsAddModalOpen(false);
         invalidateClientCache("captains_list");
         invalidateClientCache("dashboard_stats");
         await loadCaptains(true);
@@ -238,6 +244,7 @@ export default function CaptainsManagementPage() {
 
   const handleResetPassword = async (c: CaptainItem) => {
     setIsResettingId(c.id);
+    setActionError("");
     try {
       const res = await resetCaptainTemporaryPassword(c.id);
       if (res.success && res.temporaryPassword) {
@@ -248,7 +255,7 @@ export default function CaptainsManagementPage() {
           tempPassword: res.temporaryPassword,
         });
       } else {
-        alert(res.error || "تعذر توليد كلمة المرور المؤقتة");
+        setActionError(res.error || (isRTL ? "تعذر توليد كلمة المرور المؤقتة" : "Failed to generate temporary password"));
       }
     } finally {
       setIsResettingId(null);
@@ -257,7 +264,11 @@ export default function CaptainsManagementPage() {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    await deleteCaptain(deleteId);
+    setActionError("");
+    const res = await deleteCaptain(deleteId);
+    if (!res.success) {
+      throw new Error(res.error || (isRTL ? "تعذر حذف الكابتن" : "Failed to delete captain"));
+    }
     setDeleteId(null);
     invalidateClientCache("captains_list");
     invalidateClientCache("dashboard_stats");
@@ -285,72 +296,7 @@ export default function CaptainsManagementPage() {
     );
   });
 
-  const captainsHelpGuide = useMemo(() => ({
-    title: isRTL ? "دليل إدارة الكباتن ورخص القيادة وإسناد المركبات" : "Captains & Drivers Management Guide",
-    summary: isRTL
-      ? "يُدار في هذا القسم سجل كباتن شركة ميقات الخليج للنقل البري، بيانات الهوية الوطنية/الإقامة، رخص القيادة وتواريخ انتهائها، المركبة المسندة لكل كابتن، وحالة الفحص اليومي."
-      : "Manages Miqat Al-Khaleej captains registry, national/residence IDs, driving licenses and expiry dates, assigned vehicle plates, and daily safety inspection records.",
-    cards: [
-      {
-        title: isRTL ? "١. بيانات الكابتن والاعتماد" : "1. Captain Credentials & Licensing",
-        badge: isRTL ? "السجل الرسمي" : "Official Registry",
-        items: [
-          {
-            label: isRTL ? "الهوية ورخصة القيادة" : "National ID & Driving License",
-            description: isRTL
-              ? "توثيق رقم الهوية/الإقامة ورقم رخصة القيادة العمومي وتاريخ انتهائها لضمان الامتثال النظامي."
-              : "Verifies national/iqama ID and commercial driver license expiry dates for regulatory compliance.",
-          },
-          {
-            label: isRTL ? "إسناد المركبة (Vehicle Plate)" : "Assigned Vehicle Plate",
-            description: isRTL
-              ? "ربط الكابتن بلوحة المركبة المخصصة له لتعبئتها تلقائياً في شاشة الفحص اليومي وعقود النقل."
-              : "Links captain to their assigned vehicle plate to auto-populate daily inspection and transport contracts.",
-          },
-        ],
-      },
-      {
-        title: isRTL ? "٢. بوابة الكابتن وكلمات المرور" : "2. Driver Portal & Security",
-        badge: isRTL ? "الأمان والدخول" : "Portal Security",
-        items: [
-          {
-            label: isRTL ? "إنشاء كلمة مرور مؤقتة" : "Temporary Passwords",
-            description: isRTL
-              ? "عند إضافة كابتن جديد أو الضغط على أيقونة المفتاح، يُصدر النظام كلمة مرور مؤقتة لدخول بوابة الكابتن."
-              : "Issues temporary access credentials upon captain creation or password reset for the mobile inspection portal.",
-          },
-          {
-            label: isRTL ? "التنشيط والإيقاف الفوري" : "Instant Activation / Deactivation",
-            description: isRTL
-              ? "يمكن تفعيل أو إيقاف حساب الكابتن بضغطة واحدة دون فقدان سجل عقوده وفحوصاته السابقة."
-              : "Instantly toggle account active state while safely preserving all historical trips and inspections.",
-          },
-        ],
-      },
-      {
-        title: isRTL ? "٣. الربط التشغيلي والمحاسبي" : "3. Operations & Payroll Link",
-        badge: isRTL ? "التكامل" : "Integration",
-        items: [
-          {
-            label: isRTL ? "حالة فحص اليوم" : "Today's Inspection Status",
-            description: isRTL
-              ? "يظهر أمام كل كابتن شارة فورية توضح ما إذا أتم فحص السلامة اليومي للمركبة أم بانتظار الفحص."
-              : "Live indicator showing whether the captain has completed today's vehicle safety inspection.",
-          },
-          {
-            label: isRTL ? "مسير الرواتب والعهد" : "Salaries & Custody",
-            code: "5105 / 1104",
-            description: isRTL
-              ? "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%)."
-              : "Driver salaries and commissions link to account 5105 as non-taxable transactions (0% VAT).",
-          },
-        ],
-      },
-    ],
-    tip: isRTL
-      ? "استخدم زر المفتاح (إعادة تعيين كلمة المرور) لإصدار بيانات دخول جديدة للكابتن ونسخها بضغطة واحدة."
-      : "Use the key icon to generate new temporary login credentials and copy them with one click.",
-  }), [isRTL]);
+  const captainsHelpGuide = useMemo(() => createHelpGuide(isRTL), [isRTL]);
 
   return (
     <div className="space-y-6">
@@ -387,7 +333,83 @@ export default function CaptainsManagementPage() {
           icon: UserPlus,
           variant: "primary",
         }}
+        secondaryActions={[
+          {
+            label: "تصدير التقرير",
+            icon: Download,
+            onClick: () => {
+              csvDownload(`captains-report-${currentSaudiPeriod().day}.csv`, [
+                [
+                  isRTL ? "تقرير الكباتن" : "Captains Report",
+                  isRTL ? `إجمالي: ${safeCaptains.length}` : `Total: ${safeCaptains.length}`,
+                ],
+                isRTL
+                  ? [
+                      "اسم الكابتن",
+                      "البريد الإلكتروني",
+                      "رقم الجوال",
+                      "رقم الهوية",
+                      "رقم الرخصة",
+                      "انتهاء الرخصة",
+                      "المركبة المسندة",
+                      "فحص اليوم",
+                      "إجمالي العقود",
+                      "الحالة",
+                    ]
+                  : [
+                      "Captain Name",
+                      "Email",
+                      "Phone",
+                      "National ID",
+                      "License No.",
+                      "License Expiry",
+                      "Assigned Vehicle",
+                      "Today Inspection",
+                      "Total Contracts",
+                      "Status",
+                    ],
+                ...filtered.map((c) => [
+                  c.name,
+                  c.email,
+                  c.phone || "—",
+                  c.nationalId || "—",
+                  c.licenseNumber || "—",
+                  c.licenseExpiry || "—",
+                  c.assignedVehiclePlate || "—",
+                  c.hasTodayInspection
+                    ? (isRTL ? "تم الفحص" : "Inspected")
+                    : (isRTL ? "بانتظار الفحص" : "Pending"),
+                  c.contractCount,
+                  c.active
+                    ? (isRTL ? "نشط" : "Active")
+                    : (isRTL ? "معطل" : "Inactive"),
+                ]),
+              ]);
+            },
+            variant: "secondary",
+          },
+        ]}
       />
+
+      {actionError && (
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-400 flex items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>{actionError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActionError("")}
+            aria-label={ui("إغلاق")}
+            className="min-h-9 min-w-9 flex items-center justify-center rounded-lg hover:bg-rose-500/15 transition"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       {seedMessage && (
         <p
@@ -418,37 +440,34 @@ export default function CaptainsManagementPage() {
         {isLoading ? (
           <div className="p-12 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--text-muted)]">
               {ui("جاري تحميل قائمة الكباتن...")}</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-sm">
+          <div className="p-12 text-center text-[var(--text-muted)] text-sm">
             {ui("لا يوجد كباتن مسجلين يطابقون شروط البحث.")}</div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-start text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
-                  <tr>
-                    <th className="px-5 py-3.5">{ui("الكابتن")}</th>
-                    <th className="px-5 py-3.5">{ui("رقم الهوية / الرخصة")}</th>
-                    <th className="px-5 py-3.5">{ui("المركبة المسندة")}</th>
-                    <th className="px-5 py-3.5">{ui("فحص اليوم")}</th>
-                    <th className="px-5 py-3.5">{ui("إجمالي العقود")}</th>
-                    <th className="px-5 py-3.5">{ui("الحالة")}</th>
-                    <th className="px-5 py-3.5 text-end">{ui("الإجراءات")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
+            {/* Desktop Table (shadcn Table) */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{ui("الكابتن")}</TableHead>
+                    <TableHead>{ui("رقم الهوية / الرخصة")}</TableHead>
+                    <TableHead>{ui("المركبة المسندة")}</TableHead>
+                    <TableHead>{ui("فحص اليوم")}</TableHead>
+                    <TableHead>{ui("إجمالي العقود")}</TableHead>
+                    <TableHead>{ui("الحالة")}</TableHead>
+                    <TableHead className="text-end">{ui("الإجراءات")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filtered.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition"
-                    >
-                      <td className="px-5 py-4">
+                    <TableRow key={c.id}>
+                      <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-xs shrink-0">
+                          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-bold flex items-center justify-center text-xs shrink-0">
                             {c.avatarUrl ? (
                               <Image
                                 src={c.avatarUrl}
@@ -466,72 +485,75 @@ export default function CaptainsManagementPage() {
                             <div className="font-bold text-slate-900 dark:text-white text-sm">
                               {c.name}
                             </div>
-                            <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                              <span>{ui(c.email)}</span>
+                            <div className="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-0.5">
+                              <span dir="ltr">{c.email}</span>
                               {c.phone && (
                                 <span
-                                  className="font-mono text-slate-400"
+                                  className="font-mono text-[var(--text-muted)]"
                                   dir="ltr"
                                 >
-                                  {ui(c.phone)}
+                                  {c.phone}
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="space-y-0.5">
-                          <div className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                          <div className="font-mono font-bold text-slate-700 dark:text-slate-300" dir="ltr">
                             {c.nationalId || "—"}
                           </div>
                           {c.licenseNumber && (
-                            <div className="text-[11px] text-slate-500 font-mono">
-                              {ui("رخصة:")}{ui(c.licenseNumber)}
+                            <div className="text-xs text-[var(--text-muted)] font-mono">
+                              {ui("رخصة:")}{" "}
+                              <span dir="ltr">{c.licenseNumber}</span>
                             </div>
                           )}
                           {c.licenseExpiry && (
-                            <div className="text-[10px] text-slate-400">
-                              {ui("انتهاء:")}{ui(c.licenseExpiry)}
+                            <div className="text-xs text-[var(--text-muted)]">
+                              {ui("انتهاء:")}{" "}
+                              <span dir="ltr">{c.licenseExpiry}</span>
                             </div>
                           )}
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
+                      </TableCell>
+                      <TableCell>
                         {c.assignedVehiclePlate ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200">
-                            <Car className="w-3.5 h-3.5 text-amber-500" />
-                            {ui(c.assignedVehiclePlate)}
+                            <Car className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                            <bdi>{c.assignedVehiclePlate}</bdi>
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">
+                          <span className="text-[var(--text-muted)] text-xs">
                             {ui("غير مسندة")}</span>
                         )}
-                      </td>
-                      <td className="px-5 py-4">
+                      </TableCell>
+                      <TableCell>
                         {c.hasTodayInspection ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                             {ui("تم الفحص")}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                            <XCircle className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                            <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                             {ui("بانتظار الفحص")}</span>
                         )}
-                      </td>
-                      <td className="px-5 py-4">
+                      </TableCell>
+                      <TableCell>
                         <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
-                          {ui(c.contractCount)}
+                          {c.contractCount}
                         </span>
-                        <span className="text-[11px] text-slate-400 ms-1">
+                        <span className="text-xs text-[var(--text-muted)] ms-1">
                           {ui("عقد")}</span>
-                      </td>
-                      <td className="px-5 py-4">
+                      </TableCell>
+                      <TableCell>
                         <button
                           type="button"
                           onClick={() => handleToggleStatus(c)}
                           disabled={isTogglingId === c.id}
                           className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          aria-label={`${c.name} — ${ui(c.active ? "انقر لتعطيل الحساب" : "انقر لتفعيل وتنشيط الحساب")}`}
                           title={ui(c.active
                               ? "انقر لتعطيل الحساب"
                               : "انقر لتفعيل وتنشيط الحساب")}
@@ -541,28 +563,37 @@ export default function CaptainsManagementPage() {
                             status={c.active ? "ACTIVE" : "INACTIVE"}
                           />
                           <span
-                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] transition border ${
+                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs transition border ${
                               c.active
-                                ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 group-hover:border-rose-500/30 group-hover:text-rose-600 group-hover:bg-rose-500/10"
-                                : "border-slate-300 dark:border-slate-700 text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-600 group-hover:bg-emerald-500/10"
+                                ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 group-hover:border-rose-500/30 group-hover:text-rose-700 dark:group-hover:text-rose-400 group-hover:bg-rose-500/10"
+                                : "border-slate-300 dark:border-slate-700 text-[var(--text-muted)] group-hover:border-emerald-500/30 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 group-hover:bg-emerald-500/10"
                             }`}
                           >
                             <Power
                               className={`w-3 h-3 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                              aria-hidden="true"
                             />
                           </span>
                         </button>
-                      </td>
-                      <td className="px-5 py-4 text-end">
-                        <Link className="mb-2 inline-block rounded-lg border px-2 py-1 text-xs font-bold" href={`/admin/captains/${c.id}/account`}>{ui("حساب السائق والمستحقات")}</Link>
-                        <div className="inline-flex items-center gap-1.5">
+                      </TableCell>
+                      <TableCell className="text-end">
+                        <div className="flex flex-wrap items-center justify-end gap-1.5">
+                          <Link
+                            className="inline-flex items-center gap-1 min-h-9 rounded-lg border theme-border px-2.5 py-1 text-xs font-bold hover:border-amber-500 hover:bg-amber-500/5 transition whitespace-nowrap"
+                            href={`/admin/captains/${c.id}/account`}
+                          >
+                            <Wallet className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                            <span>{ui("حساب السائق والمستحقات")}</span>
+                          </Link>
                           <button
+                            type="button"
                             onClick={() => handleToggleStatus(c)}
                             disabled={isTogglingId === c.id}
-                            className={`p-1.5 rounded-lg border transition ${
+                            aria-label={`${ui(c.active ? "تعطيل حساب الكابتن مؤقتاً" : "تنشيط وتفعيل حساب الكابتن")} — ${c.name}`}
+                            className={`min-h-9 min-w-9 p-2 rounded-lg border inline-flex items-center justify-center transition ${
                               c.active
-                                ? "theme-card hover:border-rose-500 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                                ? "theme-card hover:border-rose-500 text-[var(--text-muted)] dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
                             }`}
                             title={ui(c.active
                                 ? "تعطيل حساب الكابتن مؤقتاً"
@@ -570,57 +601,62 @@ export default function CaptainsManagementPage() {
                           >
                             <Power
                               className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                              aria-hidden="true"
                             />
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleResetPassword(c)}
                             disabled={isResettingId === c.id}
-                            className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-amber-600 dark:text-amber-400 transition"
+                            aria-label={`${ui("توليد كلمة مرور مؤقتة جديدة للكابتن")} — ${c.name}`}
+                            className="min-h-9 min-w-9 p-2 rounded-lg border theme-card hover:border-amber-500 text-amber-700 dark:text-amber-400 inline-flex items-center justify-center transition"
                             title={ui("توليد كلمة مرور مؤقتة جديدة للكابتن")}
                           >
                             <KeyRound
                               className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
+                              aria-hidden="true"
                             />
                           </button>
                           <button
+                            type="button"
                             onClick={() => openEditModal(c)}
-                            className="p-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-600 dark:text-slate-400 transition"
+                            aria-label={`${ui("تعديل بيانات الكابتن وحالته")} — ${c.name}`}
+                            className="min-h-9 min-w-9 p-2 rounded-lg border theme-card hover:border-amber-500 text-[var(--text-muted)] dark:text-slate-400 inline-flex items-center justify-center transition"
                             title={ui("تعديل بيانات الكابتن وحالته")}
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => setDeleteId(c.id)}
-                            className="p-1.5 rounded-lg border theme-card hover:border-rose-500 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                            aria-label={`${ui("حذف / تعطيل الكابتن")} — ${c.name}`}
+                            className="min-h-9 min-w-9 p-2 rounded-lg border theme-card hover:border-rose-500 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 inline-flex items-center justify-center transition"
                             title={ui("حذف / تعطيل الكابتن")}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             {/* Mobile Captain Cards */}
-            <div className="md:hidden divide-y theme-border">
+            <div className="md:hidden p-3.5 space-y-3">
               {filtered.map((c) => (
-                <div
+                <MobileRecordCard
                   key={c.id}
-                  className="p-4 space-y-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
-                >
-                  {/* Top Bar: Avatar, Name, and Status */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-sm shrink-0">
+                  title={
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-bold flex items-center justify-center text-sm shrink-0">
                         {c.avatarUrl ? (
                           <Image
                             src={c.avatarUrl}
                             alt={c.name}
                             fill
-                            sizes="40px"
+                            sizes="36px"
                             className="object-cover"
                             unoptimized
                           />
@@ -628,122 +664,124 @@ export default function CaptainsManagementPage() {
                           <span>{c.name.slice(0, 1)}</span>
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <div className="font-bold text-slate-900 dark:text-white text-sm truncate">
-                          {c.name}
-                        </div>
-                        <div
-                          className="text-[11px] text-slate-500 font-mono truncate"
-                          dir="ltr"
-                        >
-                          {ui(c.email)}
-                        </div>
-                      </div>
+                      <span className="truncate">{c.name}</span>
                     </div>
+                  }
+                  subtitle={
+                    <span className="font-mono" dir="ltr">
+                      <bdi>{c.email}</bdi>
+                    </span>
+                  }
+                  badge={
                     <button
                       type="button"
                       onClick={() => handleToggleStatus(c)}
                       disabled={isTogglingId === c.id}
-                      className="group inline-flex items-center gap-1.5 p-1 rounded-xl transition hover:opacity-85"
+                      className="inline-flex items-center gap-1 min-h-11 rounded-xl transition hover:opacity-85 cursor-pointer"
+                      aria-label={`${c.name} — ${ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}`}
                       title={ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}
                     >
                       <StatusBadge
                         type="captain"
                         status={c.active ? "ACTIVE" : "INACTIVE"}
                       />
-                      <Power
-                        className={`w-3.5 h-3.5 ${c.active ? "text-emerald-500" : "text-slate-400"} ${isTogglingId === c.id ? "animate-spin" : ""}`}
-                      />
                     </button>
-                  </div>
-
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border">
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">
-                        {ui("الهوية الوطنية")}</span>
-                      <span
-                        className="font-mono font-bold text-slate-800 dark:text-slate-200"
-                        dir="ltr"
+                  }
+                  footer={
+                    <>
+                      <Link
+                        href={`/admin/captains/${c.id}/account`}
+                        className="inline-flex items-center justify-center gap-1.5 flex-1 min-h-11 px-3 rounded-xl border theme-border bg-[var(--bg-card)] hover:border-amber-500 text-xs font-bold transition"
                       >
-                        {c.nationalId || "—"}
-                      </span>
-                    </div>
+                        <Wallet className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                        <span>{ui("حساب السائق")}</span>
+                      </Link>
 
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">
-                        {ui("المركبة المسندة")}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {ui(c.assignedVehiclePlate || "غير مسندة")}
-                      </span>
-                    </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditModal(c)}
+                        className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                        <span>{ui("تعديل البيانات")}</span>
+                      </Button>
 
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">
-                        {ui("فحص اليوم")}</span>
-                      <span className="mt-0.5 inline-block">
-                        {c.hasTodayInspection ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> {ui("تم الفحص")}</span>
+                      <ActionMenu
+                        label={`${ui("المزيد من الإجراءات")} — ${c.name}`}
+                        triggerClassName="min-h-11 w-11 shrink-0"
+                      >
+                        <ActionMenuItem
+                          onClick={() => handleResetPassword(c)}
+                          tone="gold"
+                          icon={
+                            <KeyRound
+                              className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
+                              aria-hidden="true"
+                            />
+                          }
+                        >
+                          {ui("توليد كلمة مرور مؤقتة")}
+                        </ActionMenuItem>
+                        <ActionMenuItem
+                          onClick={() => handleToggleStatus(c)}
+                          tone={c.active ? "default" : "emerald"}
+                          icon={
+                            <Power
+                              className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                              aria-hidden="true"
+                            />
+                          }
+                        >
+                          {ui(c.active ? "تعطيل حساب الكابتن" : "تنشيط وتفعيل الحساب")}
+                        </ActionMenuItem>
+                        <ActionMenuSeparator />
+                        <ActionMenuItem
+                          onClick={() => setDeleteId(c.id)}
+                          tone="danger"
+                          icon={<Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                        >
+                          {ui("حذف الكابتن")}
+                        </ActionMenuItem>
+                      </ActionMenu>
+                    </>
+                  }
+                >
+                  <MobileCardMetaGrid>
+                    <MobileCardField
+                      label={ui("الهوية الوطنية")}
+                      mono
+                      value={<bdi dir="ltr">{c.nationalId || "—"}</bdi>}
+                    />
+                    <MobileCardField
+                      label={ui("المركبة المسندة")}
+                      mono
+                      value={c.assignedVehiclePlate ? <bdi>{c.assignedVehiclePlate}</bdi> : ui("غير مسندة")}
+                    />
+                    <MobileCardField
+                      label={ui("فحص اليوم")}
+                      value={
+                        c.hasTodayInspection ? (
+                          <span className="text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
+                            <span>{ui("تم الفحص")}</span>
+                          </span>
                         ) : (
-                          <span className="text-amber-600 dark:text-amber-400 font-bold text-[11px] flex items-center gap-1">
-                            <XCircle className="w-3 h-3" /> {ui("بانتظار الفحص")}</span>
-                        )}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">
-                        {ui("إجمالي العقود")}</span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-white">
-                        {ui(c.contractCount)} {ui("عقد")}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      onClick={() => handleToggleStatus(c)}
-                      disabled={isTogglingId === c.id}
-                      className={`p-2 rounded-xl border transition ${
-                        c.active
-                          ? "theme-card text-slate-500 hover:text-rose-500 border-slate-200 dark:border-slate-800"
-                          : "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      }`}
-                      title={ui(c.active
-                          ? "تعطيل حساب الكابتن"
-                          : "تنشيط وتفعيل حساب الكابتن")}
-                    >
-                      <Power
-                        className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                    <button
-                      onClick={() => handleResetPassword(c)}
-                      disabled={isResettingId === c.id}
-                      className="px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold transition text-xs flex items-center gap-1.5"
-                      title={ui("توليد كلمة مرور مؤقتة")}
-                    >
-                      <KeyRound
-                        className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
-                      />
-                      <span>{ui("كلمة مؤقتة")}</span>
-                    </button>
-                    <button
-                      onClick={() => openEditModal(c)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
-                    >
-                      <Edit2 className="w-3.5 h-3.5 text-amber-500" />
-                      {ui("تعديل البيانات")}</button>
-                    <button
-                      onClick={() => setDeleteId(c.id)}
-                      className="px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-xs"
-                      title={ui("حذف / تعطيل الكابتن")}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
+                          <span className="text-amber-700 dark:text-amber-400 inline-flex items-center gap-1">
+                            <XCircle className="w-3 h-3" aria-hidden="true" />
+                            <span>{ui("بانتظار الفحص")}</span>
+                          </span>
+                        )
+                      }
+                    />
+                    <MobileCardField
+                      label={ui("إجمالي العقود")}
+                      mono
+                      value={`${c.contractCount} ${ui("عقد")}`}
+                    />
+                  </MobileCardMetaGrid>
+                </MobileRecordCard>
               ))}
             </div>
           </>
@@ -762,19 +800,21 @@ export default function CaptainsManagementPage() {
         >
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
-              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
                 {ui(editingCaptain
                   ? "تعديل بيانات الكابتن"
                   : "إضافة كابتن جديد للنظام")}
               </h3>
               <button
+                type="button"
+                aria-label={ui("إغلاق")}
                 onClick={() => {
                   setIsAddModalOpen(false);
                   setEditingCaptain(null);
                 }}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -783,7 +823,10 @@ export default function CaptainsManagementPage() {
               className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1"
             >
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
+                <div
+                  role="alert"
+                  className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-bold"
+                >
                   {ui(formError)}
                 </div>
               )}
@@ -804,9 +847,10 @@ export default function CaptainsManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1 sm:col-span-2">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-name`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("اسم الكابتن بالكامل *")}</label>
                   <input
+                    id={`${formId}-name`}
                     type="text"
                     required
                     value={formData.name}
@@ -814,14 +858,15 @@ export default function CaptainsManagementPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder={ui("مثال: علي أحمد غلام أحمد")}
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-email`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("البريد الإلكتروني *")}</label>
                   <input
+                    id={`${formId}-email`}
                     type="email"
                     required
                     value={formData.email}
@@ -829,44 +874,50 @@ export default function CaptainsManagementPage() {
                       setFormData({ ...formData, email: e.target.value })
                     }
                     placeholder="captain@miqat.com"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    dir="ltr"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-phone`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("رقم الجوال")}</label>
                   <input
+                    id={`${formId}-phone`}
                     type="tel"
+                    inputMode="tel"
                     value={formData.phone || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
                     placeholder="0542273515"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-nationalId`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("رقم الهوية الوطنية / الإقامة")}</label>
                   <input
+                    id={`${formId}-nationalId`}
                     type="text"
+                    inputMode="numeric"
                     value={formData.nationalId || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, nationalId: e.target.value })
                     }
                     placeholder="2553660073"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-licenseNumber`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("رقم رخصة القيادة")}</label>
                   <input
+                    id={`${formId}-licenseNumber`}
                     type="text"
                     value={formData.licenseNumber || ""}
                     onChange={(e) =>
@@ -877,14 +928,15 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="SA-39482910"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-licenseExpiry`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("تاريخ انتهاء الرخصة")}</label>
                   <input
+                    id={`${formId}-licenseExpiry`}
                     type="text"
                     value={formData.licenseExpiry || ""}
                     onChange={(e) =>
@@ -895,14 +947,15 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2028/04/22"
                     dir="ltr"
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-plate`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("لوحة المركبة المسندة")}</label>
                   <input
+                    id={`${formId}-plate`}
                     type="text"
                     value={formData.assignedVehiclePlate || ""}
                     onChange={(e) =>
@@ -912,39 +965,41 @@ export default function CaptainsManagementPage() {
                       })
                     }
                     placeholder={ui("ا ص ل 7223")}
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                   />
                 </div>
 
                 {/* Account Status */}
                 <div className="space-y-1.5 col-span-full pt-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    {ui("حالة الحساب والتشغيل")}</label>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    {ui("حالة الحساب والتشغيل")}</p>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
+                      aria-pressed={formData.active !== false}
                       onClick={() => setFormData({ ...formData, active: true })}
-                      className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      className={`min-h-11 p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active !== false
                           ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20"
-                          : "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700"
+                          : "border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" aria-hidden="true" />
                       <span>{ui("حساب نشط (مفعل)")}</span>
                     </button>
                     <button
                       type="button"
+                      aria-pressed={formData.active === false}
                       onClick={() =>
                         setFormData({ ...formData, active: false })
                       }
-                      className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      className={`min-h-11 p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active === false
                           ? "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20"
-                          : "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700"
+                          : "border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
-                      <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                      <XCircle className="w-4 h-4 text-rose-700 shrink-0" aria-hidden="true" />
                       <span>{ui("حساب معطل (موقوف)")}</span>
                     </button>
                   </div>
@@ -958,13 +1013,13 @@ export default function CaptainsManagementPage() {
                     setIsAddModalOpen(false);
                     setEditingCaptain(null);
                   }}
-                  className="px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   {ui("إلغاء")}</button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
+                  className="min-h-11 px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
                 >
                   {ui(isSubmitting
                     ? "جاري الحفظ..."
@@ -999,56 +1054,58 @@ export default function CaptainsManagementPage() {
           <div className="mobile-dialog-panel overflow-y-auto theme-card w-full max-w-md rounded-3xl border theme-border shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b theme-border pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <KeyRound className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                     {ui("كلمة المرور المؤقتة للحساب")}</h3>
-                  <p className="text-[11px] text-slate-400">
-                    {ui(tempPasswordModal.captainName)}
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {tempPasswordModal.captainName}
                   </p>
                 </div>
               </div>
               <button
+                type="button"
+                aria-label={ui("إغلاق")}
                 onClick={() => {
                   setTempPasswordModal(null);
                   setCopied(false);
                 }}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-600 transition"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
               <p className="font-bold">
                 {ui("يرجى تزويد الكابتن ببيانات الدخول التالية:")}</p>
-              <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                 {ui("سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.")}</p>
             </div>
 
             <div className="space-y-2 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border theme-border flex items-center justify-between">
-                <span className="text-slate-500 text-[11px]">
+                <span className="text-[var(--text-muted)] text-xs">
                   {ui("البريد الإلكتروني:")}</span>
                 <span
                   className="font-mono font-bold text-slate-900 dark:text-white"
                   dir="ltr"
                 >
-                  {ui(tempPasswordModal.email)}
+                  {tempPasswordModal.email}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-amber-500/40 flex items-center justify-between">
                 <div>
-                  <span className="text-slate-400 text-[10px] block font-bold">
+                  <span className="text-[var(--text-muted)] text-xs block font-bold">
                     {ui("كلمة المرور المؤقتة:")}</span>
                   <span
-                    className="font-mono text-xl font-black text-amber-600 dark:text-amber-400 tracking-wider select-all"
+                    className="font-mono text-xl font-semibold text-amber-700 dark:text-amber-400 tracking-wider select-all"
                     dir="ltr"
                   >
-                    {ui(tempPasswordModal.tempPassword)}
+                    {tempPasswordModal.tempPassword}
                   </span>
                 </div>
                 <button
@@ -1058,21 +1115,22 @@ export default function CaptainsManagementPage() {
                       tempPasswordModal.tempPassword,
                     );
                     setCopied(true);
-                    setTimeout(() => setCopied(false), 3000);
+                    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+                    copyTimerRef.current = setTimeout(() => setCopied(false), 3000);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                     copied
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "gold-gradient-btn text-slate-900 font-black shadow-xs hover:shadow-md"
+                      ? "bg-emerald-700 text-white shadow-xs"
+                      : "gold-gradient-btn font-semibold shadow-xs hover:shadow-md"
                   }`}
                 >
                   {copied ? (
                     <>
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-3.5 h-3.5" aria-hidden="true" />
                       {ui("تم النسخ!")}</>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                       {ui("نسخ")}</>
                   )}
                 </button>
@@ -1086,7 +1144,7 @@ export default function CaptainsManagementPage() {
                   setTempPasswordModal(null);
                   setCopied(false);
                 }}
-                className="w-full py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
+                className="w-full min-h-11 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
               >
                 {ui("تم، إغلاق النافذة")}</button>
             </div>

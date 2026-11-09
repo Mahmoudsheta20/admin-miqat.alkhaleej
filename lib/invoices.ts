@@ -1,4 +1,4 @@
-import { backendRequest, backendUrl, getAuthToken } from "./backend";
+import { backendRequest, backendUrl } from "./backend";
 import type { TransportDetails } from "./invoice-transport";
 import type { Buyer, InvoiceLineInput } from "./zatca";
 export type { Buyer, InvoiceLineInput } from "./zatca";
@@ -20,8 +20,7 @@ export interface InvoiceDetail extends InvoiceRow { verificationUrl: string; sna
 export const invoiceRequest = <T>(path = "", method = "GET", body?: unknown) => backendRequest<T>(`/invoices${path}`, method, body);
 export function dateLabel(value: string, language: "ar"|"en" = "ar"): string { return new Date(value).toLocaleString(language === "en"?"en-GB":"ar-SA", { timeZone: "Asia/Riyadh", calendar: "gregory" }); }
 export async function downloadInvoice(id: string): Promise<void> {
-  const token = getAuthToken();
-  const response = await fetch(backendUrl(`/invoices/${encodeURIComponent(id)}/pdf`), { credentials: "include", cache: "no-store", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const response = await fetch(backendUrl(`/invoices/${encodeURIComponent(id)}/pdf`), { credentials: "include", cache: "no-store" });
   if (!response.ok || !response.headers.get("content-type")?.includes("application/pdf")) throw new Error("تعذر تنزيل الفاتورة؛ حاول مرة أخرى");
   const url = URL.createObjectURL(await response.blob()), link = document.createElement("a");
   link.href = url; link.download = `invoice-${id}.pdf`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);

@@ -61,3 +61,8 @@ public/storage/avatars/*
 public/storage/inspections/*
 !public/storage/inspections/.gitkeep
 
+
+# Browser verification artifacts
+/.next-e2e/
+/playwright-report/
+/test-results/

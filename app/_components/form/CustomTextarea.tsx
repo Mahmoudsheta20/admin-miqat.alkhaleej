@@ -43,7 +43,7 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
       <FormField id={fieldId} label={label} error={error} hint={hint} required={required} badge={showCount && maxLength ? `${currentLength} / ${maxLength}` : undefined}>
         <div className="relative">
           {icon && (
-            <div className="absolute top-3 right-3 text-slate-400 pointer-events-none">
+            <div aria-hidden="true" className="absolute top-3 start-3 text-[var(--text-muted)] pointer-events-none">
               <LocalizedText value={icon}/>
             </div>
           )}
@@ -58,7 +58,7 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
             required={required}
             aria-invalid={error ? true : props["aria-invalid"]}
             aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
-            className={`min-w-0 w-full py-2.5 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium resize-y
+            className={`min-w-0 w-full py-2.5 text-sm sm:text-xs rounded-xl transition-all duration-150 outline-hidden font-medium resize-y
               ${icon ? "ps-9" : "ps-3.5"}
               pe-3.5
               ${

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.MIQAT_E2E === "1" ? ".next-e2e" : ".next",
+  devIndicators: false,
   images: {
     remotePatterns: [
       {
@@ -27,7 +29,8 @@ const nextConfig: NextConfig = {
     )
       .trim()
       .replace(/^["']+|["']+$/g, "")
-      .replace(/\/+$/, "");
+      .replace(/\/+$/, "")
+      .replace(/\/api$/, "");
 
     const target = rawBackend.startsWith("http") ? rawBackend : `http://${rawBackend}`;
 

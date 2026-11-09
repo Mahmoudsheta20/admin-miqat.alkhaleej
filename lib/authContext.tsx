@@ -3,14 +3,13 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import type { SystemUser } from "./types";
 import { loginAction, logoutAction, completePasswordChangeAction, getCurrentSession } from "@/app/_actions/auth";
-import { invalidateClientCache as clearCache } from "./clientCache";
-import { setAuthToken } from "./backend";
+import { invalidateClientCache as clearCache, setClientCacheScope } from "./clientCache";
+import { clearLegacyCredentials } from "./backend";
 
 interface AuthResult {
   success: boolean;
   mustChangePassword?: boolean;
   user?: SystemUser;
-  token?: string;
   error?: string;
 }
 
@@ -30,20 +29,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function hasPersistentSession(): boolean {
-  try { return Boolean(localStorage.getItem("miqat_token") || localStorage.getItem("miqat_auth_user")); }
-  catch { return false; }
-}
-
-function saveUser(user: SystemUser, rememberMe: boolean): void {
-  try {
-    const storage = rememberMe ? localStorage : sessionStorage;
-    const otherStorage = rememberMe ? sessionStorage : localStorage;
-    otherStorage.removeItem("miqat_auth_user");
-    storage.setItem("miqat_auth_user", JSON.stringify(user));
-  } catch { /* Storage may be unavailable in private browsing. */ }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authVersion = useRef(0);
   const [user, setUser] = useState<SystemUser | null>(null);
@@ -53,15 +38,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     const version = authVersion.current;
 
+    clearLegacyCredentials();
     getCurrentSession()
       .then((session) => {
         if (!active || version !== authVersion.current) return;
         if (session && !session.mustChangePassword) {
+          setClientCacheScope(session.id);
           setUser(session);
-          saveUser(session, hasPersistentSession());
         } else {
           setUser(null);
-          setAuthToken(null);
           try {
             localStorage.removeItem("miqat_auth_user");
             sessionStorage.removeItem("miqat_auth_user");
@@ -86,12 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authVersion.current++;
     const result = await loginAction(email, password, rememberMe);
     if (result.success && result.user && !result.mustChangePassword) {
-      if (result.token) {
-        setAuthToken(result.token, rememberMe);
-      }
       clearCache();
+      setClientCacheScope(result.user.id);
       setUser(result.user);
-      saveUser(result.user, rememberMe);
     }
     setIsLoading(false);
     return result;
@@ -111,12 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       rememberMe,
     });
     if (result.success && result.user) {
-      if (result.token) {
-        setAuthToken(result.token, rememberMe);
-      }
       clearCache();
+      setClientCacheScope(result.user.id);
       setUser(result.user);
-      saveUser(result.user, rememberMe);
     }
     setIsLoading(false);
     return result;
@@ -124,11 +103,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     authVersion.current++;
-    try {
-      await logoutAction();
-    } catch {}
-    setAuthToken(null);
+    const result = await logoutAction();
+    if (!result.success) throw new Error(result.error || "تعذر تسجيل الخروج، يرجى إعادة المحاولة");
+    clearLegacyCredentials();
     clearCache();
+    setClientCacheScope(null);
     setUser(null);
     try {
       localStorage.removeItem("miqat_auth_user");
@@ -144,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         completePasswordChange,
         logout,
-        updateUser: (updated) => { setUser(updated); saveUser(updated, hasPersistentSession()); },
+        updateUser: setUser,
       }}
     >
       {children}

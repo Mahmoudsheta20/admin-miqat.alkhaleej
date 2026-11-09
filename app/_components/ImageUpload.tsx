@@ -128,13 +128,13 @@ export default function ImageUpload({
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center text-slate-400 group-hover:text-amber-500 transition p-2 text-center">
+            <div className="flex flex-col items-center justify-center text-[var(--text-muted)] group-hover:text-amber-500 transition p-2 text-center">
               {isUploading ? (
                 <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
               ) : (
                 <>
                   <Camera className="w-6 h-6 mb-1" />
-                  <span className="text-[10px] font-bold">{ui("رفع صورة")}</span>
+                  <span className="text-xs font-bold">{ui("رفع صورة")}</span>
                 </>
               )}
             </div>
@@ -167,14 +167,14 @@ export default function ImageUpload({
                 type="button"
                 disabled={isUploading}
                 onClick={handleRemove}
-                className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
                 title={ui("حذف الصورة")}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-xs text-[var(--text-muted)]">
             {ui("الصيغ المدعومة: JPG, PNG, WEBP (حتى 5 ميجابايت)")}</p>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function ImageUpload({
       />
 
       {error && (
-        <div className="text-xs text-rose-500 flex items-center gap-1.5 mt-1">
+        <div className="text-xs text-rose-700 flex items-center gap-1.5 mt-1">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>{ui(error)}</span>
         </div>

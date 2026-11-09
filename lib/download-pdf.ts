@@ -1,10 +1,9 @@
-import { backendUrl, getAuthToken } from "./backend";
+import { backendUrl } from "./backend";
 
 /** Download through the authorized endpoint; never put session tokens in a URL. */
 export async function downloadInspectionPdf(inspectionId: string): Promise<void> {
-  const token = getAuthToken();
   const response = await fetch(backendUrl(`/inspections/${encodeURIComponent(inspectionId)}/pdf?download=1`), {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+
     credentials: "include",
     cache: "no-store",
     signal: AbortSignal.timeout(120_000),

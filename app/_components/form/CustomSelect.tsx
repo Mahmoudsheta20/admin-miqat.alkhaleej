@@ -1,5 +1,5 @@
 "use client";
-import { LocalizedText } from "@/lib/ui-text";
+import { useUiText, LocalizedText } from "@/lib/ui-text";
 
 
 import React, { forwardRef, useId } from "react";
@@ -41,6 +41,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
     },
     ref
   ) => {
+    const ui = useUiText();
     const generatedId = useId();
     const fieldId = id || generatedId;
 
@@ -48,7 +49,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
       <FormField id={fieldId} label={label} error={error} hint={hint} required={required} badge={badge}>
         <div className="relative flex items-center">
           {icon && (
-            <div className="absolute right-3 text-slate-400 pointer-events-none flex items-center justify-center">
+            <div aria-hidden="true" className="absolute start-3 text-[var(--text-muted)] pointer-events-none flex items-center justify-center">
               <LocalizedText value={icon}/>
             </div>
           )}
@@ -61,7 +62,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
             required={required}
             aria-invalid={error ? true : props["aria-invalid"]}
             aria-describedby={[props["aria-describedby"], (error || hint) && `${fieldId}-description`].filter(Boolean).join(" ") || undefined}
-            className={`min-w-0 w-full h-11 text-xs rounded-xl transition-all duration-150 outline-hidden font-medium appearance-none cursor-pointer
+            className={`min-w-0 w-full h-11 text-sm sm:text-xs rounded-xl transition-all duration-150 outline-hidden font-medium appearance-none cursor-pointer
               ${icon ? "ps-9" : "ps-3.5"}
               pe-9
               ${
@@ -79,12 +80,12 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
                 disabled={opt.disabled}
                 className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5"
               >
-                <LocalizedText value={opt.label}/>
+                {ui(opt.label)}
               </option>
             ))}
           </select>
 
-          <div className="absolute left-3 text-slate-400 pointer-events-none flex items-center justify-center">
+          <div aria-hidden="true" className="absolute end-3 text-[var(--text-muted)] pointer-events-none flex items-center justify-center">
             <ChevronDown className="w-4 h-4" />
           </div>
         </div>

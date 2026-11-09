@@ -21,14 +21,16 @@ export default function Modal({ children, label, onClose, isBusy = false }: Moda
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    dialog.showModal();
-    return () => dialog.close();
+    if (!dialog.open) dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
   }, []);
 
   return <dialog ref={ref} dir={dir} aria-label={ui(label)} aria-busy={isBusy}
     className="app-modal fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-2 sm:p-4"
     onCancel={event => { event.preventDefault(); if (!isBusy) onClose(); }}
     onClick={event => { if (event.target === event.currentTarget && !isBusy) onClose(); }}>
-    {ui(children)}
+    {children}
   </dialog>;
 }

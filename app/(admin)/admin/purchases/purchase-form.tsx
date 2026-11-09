@@ -2,32 +2,11 @@
 import { useUiText } from "@/lib/ui-text";
 
 
-import React, { useEffect, useRef, useState, type FormEvent } from "react";
-import {
-  X,
-  Loader2,
-  Building2,
-  Receipt,
-  CreditCard,
-  AlertCircle,
-  ChevronDown,
-  Percent,
-  CheckCircle2,
-  Truck,
-  RotateCcw,
-} from "lucide-react";
-import {
-  accountingRequest,
-  currentSaudiPeriod,
-  EXPENSE_CATEGORIES,
-  TAX_TREATMENTS,
-  CATEGORY_ACCOUNTS,
-  purchasePreview,
-  purchaseInclusive,
-  type Account,
-  type PurchaseInput,
-  type PurchaseRow,
-} from "@/lib/accounting";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { X, Loader2, Building2, Receipt, CreditCard, AlertCircle, ChevronDown, Percent, CheckCircle2, Truck, RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { accountingRequest, currentSaudiPeriod, EXPENSE_CATEGORIES, TAX_TREATMENTS, CATEGORY_ACCOUNTS, purchasePreview, purchaseInclusive, type Account, type PurchaseInput, type PurchaseRow } from "@/lib/accounting";
+import { moneyMinor } from "@/lib/money";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 
 interface Props {
@@ -168,6 +147,37 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
     event.preventDefault();
     if (isSaving || isSelecting) return;
     setError("");
+
+    const netMinor = moneyMinor(form.netAmount);
+    const vatMinor = moneyMinor(form.vatAmount);
+    if (netMinor === null || netMinor <= BigInt(0)) {
+      setError(
+        ui.language === "en"
+          ? "Enter a valid net amount greater than 0.00."
+          : "يرجى إدخال صافي مبلغ صحيح أكبر من 0.00."
+      );
+      return;
+    }
+    if (vatMinor === null || vatMinor < BigInt(0)) {
+      setError(
+        ui.language === "en"
+          ? "Enter a valid VAT amount (0.00 or higher)."
+          : "يرجى إدخال قيمة ضريبة صحيحة (0.00 فأكثر)."
+      );
+      return;
+    }
+    if (form.taxTreatment === "STANDARD" && isRecoverable) {
+      const pctMinor = moneyMinor(form.recoverablePercent);
+      if (pctMinor === null || pctMinor <= BigInt(0) || pctMinor > BigInt(10000)) {
+        setError(
+          ui.language === "en"
+            ? "Recoverable VAT percentage must be between 0.01 and 100."
+            : "يجب أن تكون نسبة الخصم القابلة للاسترداد بين 0.01 و 100."
+        );
+        return;
+      }
+    }
+
     setIsSaving(true);
 
     const purchase = {
@@ -224,25 +234,25 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
       }}
       onClose={onClose}
       aria-labelledby="purchase-title"
-      className="theme-card m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-3xl rounded-3xl p-0 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/60 overflow-hidden"
+      className="theme-card mobile-dialog-panel m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-3xl rounded-3xl p-0 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/60 overflow-hidden"
       dir={ui.dir}
     >
       <form onSubmit={submit} className="flex flex-col max-h-[92dvh]">
         {/* Modal Header */}
         <header className="flex items-center justify-between gap-4 border-b theme-border px-6 py-4 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              {isReturn ? <RotateCcw className="w-5 h-5" /> : <Receipt className="w-5 h-5" />}
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+              {isReturn ? <RotateCcw className="w-5 h-5" aria-hidden="true" /> : <Receipt className="w-5 h-5" aria-hidden="true" />}
             </div>
             <div>
-              <h2 id="purchase-title" className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+              <h2 id="purchase-title" className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                 {ui(existing
                   ? `تعديل مستند ${existing.voucher}`
                   : isReturn
                     ? "تسجيل مرتجع مشتريات (إشعار دائن من مورد)"
                     : "تسجيل فاتورة مصروف أو مشتريات")}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5">
                 {ui("تُحفظ الفاتورة والضريبة والقيود المحاسبية بالريال السعودي تلقائياً.")}</p>
             </div>
           </div>
@@ -251,31 +261,31 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             disabled={isSaving}
             onClick={onClose}
             aria-label={ui("إغلاق")}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
-            <X className="size-4" />
+            <X className="size-4" aria-hidden="true" />
           </button>
         </header>
 
         {/* Modal Body - Scrollable 3 Clean Sections (§9) */}
         <div className="space-y-6 px-6 py-6 overflow-y-auto flex-1">
           {/* Document Type Selector */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               disabled={Boolean(existing)}
               onClick={() => update({ documentType: "PURCHASE_INVOICE", originalPurchaseId: undefined })}
-              className={`p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
+              className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 !isReturn
                   ? "bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30"
                   : "theme-card theme-border opacity-70 hover:opacity-100"
               }`}
             >
-              <Receipt className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <Receipt className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
               <div>
-                <strong className="text-xs font-black block text-slate-900 dark:text-white">
+                <strong className="text-xs font-semibold block text-slate-900 dark:text-white">
                   {ui("فاتورة مشتريات / مصروف")}</strong>
-                <span className="text-[10px] text-slate-400">{ui("إثبات تكلفة جديدة للأسطول")}</span>
+                <span className="text-xs text-[var(--text-muted)]">{ui("إثبات تكلفة جديدة للأسطول")}</span>
               </div>
             </button>
 
@@ -283,17 +293,17 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               type="button"
               disabled={Boolean(existing)}
               onClick={() => update({ documentType: "PURCHASE_RETURN" })}
-              className={`p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
+              className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 isReturn
                   ? "bg-rose-500/10 border-rose-500/50 ring-1 ring-rose-500/30"
                   : "theme-card theme-border opacity-70 hover:opacity-100"
               }`}
             >
-              <RotateCcw className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              <RotateCcw className="w-4 h-4 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
               <div>
-                <strong className="text-xs font-black block text-slate-900 dark:text-white">
+                <strong className="text-xs font-semibold block text-slate-900 dark:text-white">
                   {ui("مرتجع مورد (إشعار دائن)")}</strong>
-                <span className="text-[10px] text-slate-400">{ui("رد بضاعة أو تخفيض مصروف")}</span>
+                <span className="text-xs text-[var(--text-muted)]">{ui("رد بضاعة أو تخفيض مصروف")}</span>
               </div>
             </button>
           </div>
@@ -301,8 +311,8 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
           {/* Supplier Return Picker (§10) */}
           {isReturn && (
             <section className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 space-y-3">
-              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 text-xs font-black">
-                <RotateCcw className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 text-xs font-semibold">
+                <RotateCcw className="w-4 h-4" aria-hidden="true" />
                 <span>{ui("ربط المرتجع بفاتورة المورد الأصلية *")}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -328,19 +338,18 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     {form.originalPurchaseId &&
                       !originals.data?.items.some((v) => v.id === form.originalPurchaseId) && (
                         <option value={form.originalPurchaseId}>
-                          {ui("الفاتورة الأصلية المحددة ·")}{form.supplierName}
+                          {ui("الفاتورة الأصلية المحددة ·")} {form.supplierName}
                         </option>
                       )}
                     {originals.data?.items.map((v) => (
                       <option key={v.id} value={v.id}>
-                        EXP-{ui(String(v.voucherNumber).padStart(5, "0"))} · {v.supplierName} ·{ui(" ")}
-                        {ui(v.invoiceNumber)}
+                        EXP-{String(v.voucherNumber).padStart(5, "0")} · {v.supplierName} · {v.invoiceNumber}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
-              <p className="text-[11px] text-rose-700/80 dark:text-rose-400/80">
+              <p className="text-xs text-rose-700/80 dark:text-rose-400/80">
                 {ui("يتم نسخ بيانات المورد والحساب والضريبة تلقائياً من الأصل، ولا يتجاوز مبلغ المرتجع الرصيد المتبقي.")}</p>
             </section>
           )}
@@ -348,11 +357,11 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
           {/* SECTION 1: Expense & Supplier Data (§9.1) */}
           <section className="p-4 sm:p-5 rounded-2xl theme-card border theme-border space-y-4">
             <div className="border-b theme-border pb-2.5">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-amber-500" />
                 <span>{ui("١. بيانات المصروف والمورد")}</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 {ui("أدخل بيانات المورد ورقم المستند الورقي وتصنيف الخدمة أو الشراء.")}</p>
             </div>
 
@@ -438,9 +447,10 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 sm:col-span-2">
-                {ui("لوحة المركبة المرتبطة")}<span className="text-slate-400 font-normal">{ui("(اختياري للمصروفات الخاصة بمركبة معينة)")}</span>
+                {ui("لوحة المركبة المرتبطة")}{" "}
+                <span className="text-[var(--text-muted)] font-normal">{ui("(اختياري للمصروفات الخاصة بمركبة معينة)")}</span>
                 <div className="relative">
-                  <Truck className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Truck className="w-4 h-4 text-[var(--text-muted)] absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
                   <input
                     maxLength={50}
                     className={`${INPUT_STYLE} ps-10`}
@@ -456,19 +466,18 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
           {/* SECTION 2: Amount & Tax Treatment (§9.2) */}
           <section className="p-4 sm:p-5 rounded-2xl theme-card border theme-border space-y-4">
             <div className="border-b theme-border pb-2.5">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Percent className="w-4 h-4 text-amber-500" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <Percent className="w-4 h-4 text-amber-500" aria-hidden="true" />
                 <span>{ui("٢. المبلغ والضريبة")}</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 {ui("حدد طريقة إدخال السعر وخصم ضريبة المدخلات 15% في الإقرار الضريبي.")}</p>
             </div>
 
             {/* Input Mode Toggle (Before VAT vs Inclusive 15%) */}
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex flex-wrap items-center justify-between gap-2">
+              <label htmlFor="inclusive-toggle" className="inline-flex min-h-11 items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
+                <Checkbox
                   id="inclusive-toggle"
                   checked={inclusive}
                   disabled={isZeroTaxExpense}
@@ -476,12 +485,10 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                     setInclusive(e.target.checked);
                     setGross(purchasePreview(form.netAmount, form.vatAmount).total);
                   }}
-                  className="size-4 accent-amber-600 rounded cursor-pointer"
                 />
-                <label htmlFor="inclusive-toggle" className="text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
-                  {ui("إدخال الإجمالي شامل 15% من الإيصال أو الفاتورة")}</label>
-              </div>
-              <span className="text-[11px] text-slate-400">
+                <span>{ui("إدخال الإجمالي شامل 15% من الإيصال أو الفاتورة")}</span>
+              </label>
+              <span className="text-xs text-[var(--text-muted)]">
                 {ui(inclusive ? "احتساب الصافي والضريبة عكسياً" : "إدخال الصافي قبل الضريبة")}
               </span>
             </div>
@@ -490,14 +497,15 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <div className="grid gap-4 sm:grid-cols-3">
               {inclusive && (
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {ui("الإجمالي المدفوع شامل الضريبة *")}<div className="relative">
+                  {ui("الإجمالي المدفوع شامل الضريبة *")}
+                  <div className="relative">
                     <input
                       required
-                      type="number"
-                      min="0.01"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       dir="ltr"
-                      className={`${INPUT_STYLE} font-mono font-bold ps-3 pe-10`}
+                      placeholder="0.00"
+                      className={`${INPUT_STYLE} font-mono font-bold pl-3 pr-12`}
                       value={gross}
                       onChange={(e) => {
                         setGross(e.target.value);
@@ -505,22 +513,24 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                         update({ netAmount: v.net, vatAmount: v.vat });
                       }}
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
-                      {ui("ر.س")}</span>
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] font-bold">
+                      {ui("ر.س")}
+                    </span>
                   </div>
                 </label>
               )}
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                {ui("المبلغ قبل الضريبة (الصافي) *")}<div className="relative">
+                {ui("المبلغ قبل الضريبة (الصافي) *")}
+                <div className="relative">
                   <input
                     required
                     readOnly={inclusive}
-                    type="number"
-                    min="0.01"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     dir="ltr"
-                    className={`${INPUT_STYLE} font-mono font-bold ps-3 pe-10 ${inclusive ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
+                    placeholder="0.00"
+                    className={`${INPUT_STYLE} font-mono font-bold pl-3 pr-12 ${inclusive ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
                     value={form.netAmount}
                     onChange={(e) =>
                       update({
@@ -532,34 +542,38 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                       })
                     }
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
-                    {ui("ر.س")}</span>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] font-bold">
+                    {ui("ر.س")}
+                  </span>
                 </div>
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                {ui("ضريبة 15% *")}<div className="relative">
+                {ui("ضريبة 15% *")}
+                <div className="relative">
                   <input
                     required
                     readOnly={inclusive || form.taxTreatment !== "STANDARD"}
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     dir="ltr"
-                    className={`${INPUT_STYLE} font-mono font-bold ps-3 pe-10 ${inclusive || form.taxTreatment !== "STANDARD" ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
+                    placeholder="0.00"
+                    className={`${INPUT_STYLE} font-mono font-bold pl-3 pr-12 ${inclusive || form.taxTreatment !== "STANDARD" ? "bg-slate-100 dark:bg-slate-800/60" : ""}`}
                     value={form.vatAmount}
                     onChange={(e) => update({ vatAmount: e.target.value })}
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
-                    {ui("ر.س")}</span>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] font-bold">
+                    {ui("ر.س")}
+                  </span>
                 </div>
               </label>
 
               {!inclusive && (
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border theme-border flex flex-col justify-center">
-                  <span className="text-[11px] text-slate-400">{ui("الإجمالي الشامل المحسوب:")}</span>
-                  <strong className="text-base font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                    {ui(totals.total)} {ui("ر.س")}</strong>
+                  <span className="text-xs text-[var(--text-muted)]">{ui("الإجمالي الشامل المحسوب:")}</span>
+                  <strong className="text-base font-semibold font-mono text-slate-900 dark:text-white mt-0.5">
+                    <bdi dir="ltr">{totals.total}</bdi> {ui("ر.س")}
+                  </strong>
                 </div>
               )}
             </div>
@@ -567,17 +581,16 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             {/* Tax Deductibility Question (§9.2) */}
             {form.taxTreatment === "STANDARD" ? (
               <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-3">
-                <label className="flex items-start gap-2.5 text-xs font-black text-slate-900 dark:text-white cursor-pointer">
-                  <input
-                    type="checkbox"
+                <label className="flex min-h-11 items-start gap-2.5 text-xs font-semibold text-slate-900 dark:text-white cursor-pointer">
+                  <Checkbox
                     disabled={isReturn}
                     checked={isRecoverable}
                     onChange={(e) => update({ recoverablePercent: e.target.checked ? "100" : "0" })}
-                    className="size-4 accent-amber-600 rounded mt-0.5 cursor-pointer"
+                    className="mt-0.5"
                   />
                   <div>
                     <span>{ui("هل يمكن خصم ضريبة هذه الفاتورة في الإقرار الضريبي؟")}</span>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+                    <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 font-normal mt-0.5">
                       {ui("يُشترط توفر فاتورة ضريبية رسمية باسم المنشأة وتحتوي على الرقم الضريبي للمورد.")}</p>
                   </div>
                 </label>
@@ -588,11 +601,10 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                       {ui("نسبة الخصم القابلة للاسترداد (%) *")}<input
                         required
                         readOnly={isReturn}
-                        type="number"
-                        min="0.01"
-                        max="100"
-                        step="0.01"
-                        className={INPUT_STYLE}
+                        type="text"
+                        inputMode="decimal"
+                        dir="ltr"
+                        className={`${INPUT_STYLE} font-mono`}
                         value={form.recoverablePercent}
                         onChange={(e) => update({ recoverablePercent: e.target.value })}
                       />
@@ -612,7 +624,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                 )}
               </div>
             ) : (
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-center gap-2 text-xs text-slate-500">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-center gap-2 text-xs text-[var(--text-muted)]">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>
                   {ui("هذا المصروف (")}{ui(TAX_TREATMENTS[form.taxTreatment])}{ui(") غير خاضع لضريبة المدخلات وتم ضبط الضريبة على 0.00 ر.س لضمان دقة إقرار هيئة الزكاة.")}</span>
@@ -623,11 +635,11 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
           {/* SECTION 3: Payment, Attachments & Notes (§9.3) */}
           <section className="p-4 sm:p-5 rounded-2xl theme-card border theme-border space-y-4">
             <div className="border-b theme-border pb-2.5">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-amber-500" />
                 <span>{ui("٣. طريقة الدفع والمرفقات")}</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 {ui("حدد وسيلة السداد للمورد وأرفق صورة أو PDF الفاتورة للأرشفة.")}</p>
             </div>
 
@@ -649,14 +661,14 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                   <input
                     type="file"
                     accept="application/pdf,image/png,image/jpeg,image/webp"
-                    className="block w-full text-xs text-slate-500 file:me-3 file:rounded-xl file:border-0 file:bg-amber-500/10 file:px-3 file:py-2.5 file:text-xs file:font-bold file:text-amber-700 dark:file:text-amber-400 cursor-pointer"
+                    className="block w-full text-xs text-[var(--text-muted)] file:me-3 file:rounded-xl file:border-0 file:bg-amber-500/10 file:px-3 file:py-2.5 file:text-xs file:font-bold file:text-amber-700 dark:file:text-amber-400 cursor-pointer"
                     onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
                   />
                 </div>
               </label>
 
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 sm:col-span-2">
-                {ui("ملاحظات أو بيان إضافي")}<span className="text-slate-400 font-normal">{ui("(اختياري)")}</span>
+                {ui("ملاحظات أو بيان إضافي")}<span className="text-[var(--text-muted)] font-normal">{ui("(اختياري)")}</span>
                 <textarea
                   maxLength={1000}
                   rows={2}
@@ -669,13 +681,11 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             </div>
 
             {/* Posting Checkbox */}
-            <label className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-white cursor-pointer pt-2">
-              <input
-                type="checkbox"
+            <label className="flex min-h-11 items-center gap-2.5 text-xs font-semibold text-slate-900 dark:text-white cursor-pointer pt-2">
+              <Checkbox
                 disabled={existing?.postingStatus === "POSTED"}
                 checked={form.postImmediately !== false}
                 onChange={(e) => update({ postImmediately: e.target.checked })}
-                className="size-4 accent-amber-600 rounded cursor-pointer"
               />
               <span>{ui("اعتماد وترحيل المصروف فوراً إلى الحسابات والإقرار الضريبي")}</span>
             </label>
@@ -684,16 +694,17 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
             <div className="pt-2">
               <button
                 type="button"
+                aria-expanded={showAccountantDetails}
                 onClick={() => setShowAccountantDetails((v) => !v)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
+                className="inline-flex min-h-11 sm:min-h-8 items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
               >
-                <ChevronDown className={`size-3.5 transition-transform ${showAccountantDetails ? "rotate-180" : ""}`} />
+                <ChevronDown className={`size-3.5 transition-transform ${showAccountantDetails ? "rotate-180" : ""}`} aria-hidden="true" />
                 <span>{ui("تفاصيل للمحاسب (تلقائية)")}</span>
               </button>
 
               {showAccountantDetails && (
                 <div className="mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border grid gap-3 sm:grid-cols-2 text-xs animate-in fade-in">
-                  <label className="font-bold text-slate-600 dark:text-slate-300">
+                  <label className="font-bold text-[var(--text-muted)] dark:text-slate-300">
                     {ui("حساب المصروف (المدين):")}<select
                       disabled={isReturn}
                       className={INPUT_STYLE}
@@ -710,13 +721,13 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                         )
                         .map((a) => (
                           <option key={a.code} value={a.code}>
-                            {ui(a.code)} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
+                            {a.code} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                           </option>
                         ))}
                     </select>
                   </label>
 
-                  <label className="font-bold text-slate-600 dark:text-slate-300">
+                  <label className="font-bold text-[var(--text-muted)] dark:text-slate-300">
                     {ui("المعاملة الضريبية الرسمية:")}<select
                       disabled={isReturn || isZeroTaxExpense}
                       className={INPUT_STYLE}
@@ -750,11 +761,12 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
         </div>
 
         {/* Modal Footer */}
-        <footer className="flex items-center justify-between border-t theme-border px-6 py-4 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t theme-border px-6 py-4 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
           <div className="text-xs">
-            <span className="text-slate-400">{ui("الإجمالي النهائي:")}</span>
-            <strong className="font-mono font-black text-slate-900 dark:text-white text-sm">
-              {ui(totals.total)} {ui("ر.س")}</strong>
+            <span className="text-[var(--text-muted)]">{ui("الإجمالي النهائي:")}</span>{" "}
+            <strong className="font-mono font-semibold text-slate-900 dark:text-white text-sm">
+              <bdi dir="ltr">{totals.total}</bdi> {ui("ر.س")}
+            </strong>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -762,22 +774,22 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               type="button"
               disabled={isSaving}
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border theme-border text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="min-h-11 px-4 py-2.5 rounded-xl border theme-border text-xs font-bold text-[var(--text-muted)] dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
               {ui("إلغاء")}</button>
             <button
               type="submit"
               disabled={isSaving || isSelecting || accounts.isLoading}
-              className="px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+              className="min-h-11 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                   <span>{ui("جارٍ الحفظ…")}</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="size-4" />
+                  <CheckCircle2 className="size-4" aria-hidden="true" />
                   <span>{ui(existing ? "تحديث المستند" : "حفظ المستند")}</span>
                 </>
               )}

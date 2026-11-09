@@ -3,8 +3,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useUiText } from "@/lib/ui-text";
 import { commercialRequest, csvDownload } from "@/lib/commercial";
 import { currentSaudiPeriod } from "@/lib/accounting";
-import { PageHeader, StatCard, StatRow } from "@/app/_components/ui";
-import { FileCheck2, Download, ArrowRight, Receipt, FileText, Scale } from "lucide-react";
+import { Checkbox, PageHeader, StatCard, StatRow } from "@/app/_components/ui";
+import { FileCheck2, Download, ArrowLeft, ArrowRight, Receipt, FileText, Scale } from "lucide-react";
 import { INPUT, SECONDARY, Field, Notice, Panel, useCommercialData, useMutation } from "./shared";
 
 interface SelectionSale {
@@ -148,12 +148,12 @@ export default function SelectedInvoices() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={ui("تقرير مختار — ليس الإقرار الكامل")}
-        subtitle={ui("اختيار الفواتير للمراجعة فقط، ولا يغيّر الإقرار أو القيود أو الفترات الضريبية.")}
-        badge={ui("تقرير تحليلي مستقل")}
+        title="تقرير مختار — ليس الإقرار الكامل"
+        subtitle="اختيار الفواتير للمراجعة فقط، ولا يغيّر الإقرار أو القيود أو الفترات الضريبية."
+        badge="تقرير تحليلي مستقل"
         icon={FileCheck2}
         primaryAction={{
-          label: ui(loading ? "جارٍ تحديث الأرقام…" : "تنزيل تقرير المختار CSV"),
+          label: loading ? "جارٍ تحديث الأرقام…" : "تنزيل تقرير المختار CSV",
           onClick: downloadCsv,
           icon: Download,
           variant: "primary",
@@ -161,9 +161,9 @@ export default function SelectedInvoices() {
         }}
         secondaryActions={[
           {
-            label: ui("العودة للإقرار الكامل"),
+            label: "العودة للإقرار الكامل",
             href: "/admin/vat-returns",
-            icon: ArrowRight,
+            icon: ui.dir === "rtl" ? ArrowRight : ArrowLeft,
             variant: "subtle",
           },
         ]}
@@ -278,6 +278,7 @@ export default function SelectedInvoices() {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <button
+            type="button"
             className={SECONDARY}
             disabled={m.busy || !name.trim()}
             onClick={() =>
@@ -296,6 +297,7 @@ export default function SelectedInvoices() {
           </button>
           {savedId && (
             <button
+              type="button"
               className={SECONDARY}
               disabled={m.busy}
               onClick={() =>
@@ -317,7 +319,7 @@ export default function SelectedInvoices() {
       </Panel>
 
       <Panel title="اختيار الفواتير">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Field label="بحث">
             <input
               className={INPUT}
@@ -357,34 +359,33 @@ export default function SelectedInvoices() {
               <option value="BOOKING">{ui("فاتورة حجز")}</option>
             </select>
           </Field>
-          <div className="flex gap-2">
-            <Field label="من تاريخ">
-              <input
-                className={INPUT}
-                type="date"
-                value={from}
-                onChange={(e) => {
-                  setFrom(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </Field>
-            <Field label="إلى تاريخ">
-              <input
-                className={INPUT}
-                type="date"
-                value={to}
-                onChange={(e) => {
-                  setTo(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </Field>
-          </div>
+          <Field label="من تاريخ">
+            <input
+              className={INPUT}
+              type="date"
+              value={from}
+              onChange={(e) => {
+                setFrom(e.target.value);
+                setPage(1);
+              }}
+            />
+          </Field>
+          <Field label="إلى تاريخ">
+            <input
+              className={INPUT}
+              type="date"
+              value={to}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setPage(1);
+              }}
+            />
+          </Field>
         </div>
 
         <div className="my-4 flex flex-wrap items-center gap-2">
           <button
+            type="button"
             className={SECONDARY}
             onClick={() => {
               setLoading(true);
@@ -394,6 +395,7 @@ export default function SelectedInvoices() {
             {ui("اختيار كل النتائج عبر الصفحات")}
           </button>
           <button
+            type="button"
             className={SECONDARY}
             onClick={() => {
               setLoading(true);
@@ -402,7 +404,7 @@ export default function SelectedInvoices() {
           >
             {ui("إلغاء كل الاختيارات")}
           </button>
-          <span className="text-sm font-semibold text-slate-500">
+          <span className="text-sm font-semibold text-[var(--text-muted)]">
             {ui("المحدد في الفترة")}: {report?.sales.filter((r) => r.selected).length || 0} / {report?.sales.length || 0}
           </span>
         </div>
@@ -410,10 +412,10 @@ export default function SelectedInvoices() {
         <div className="divide-y theme-border rounded-xl border overflow-hidden">
           {visible.map((r) => (
             <label key={`${r.id}:${r.number}`} className="flex flex-wrap items-center gap-3 p-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition cursor-pointer">
-              <input type="checkbox" className="accent-amber-600 h-4 w-4 rounded" checked={ids.includes(r.id)} onChange={(e) => toggle(r.id, e.target.checked)} />
+              <Checkbox checked={ids.includes(r.id)} onChange={(e) => toggle(r.id, e.target.checked)} />
               <span className="min-w-0 flex-1">
                 <b className="font-mono text-sm text-slate-900 dark:text-white">{r.number}</b>
-                <small className="block text-slate-400 mt-0.5">
+                <small className="block text-[var(--text-muted)] mt-0.5">
                   {r.customerName} · {r.date} · {ui(r.kind === "CREDIT" ? "إشعار دائن" : r.kind === "DEBIT" ? "إشعار مدين" : "فاتورة")}
                 </small>
               </span>
@@ -422,15 +424,15 @@ export default function SelectedInvoices() {
               </b>
             </label>
           ))}
-          {!visible.length && <p className="p-6 text-center text-sm text-slate-400">{ui("لا توجد نتائج")}</p>}
+          {!visible.length && <p className="p-6 text-center text-sm text-[var(--text-muted)]">{ui("لا توجد نتائج")}</p>}
         </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <button className={SECONDARY} disabled={page === 1} onClick={() => setPage((v) => v - 1)}>
+          <button type="button" className={SECONDARY} disabled={page === 1} onClick={() => setPage((v) => v - 1)}>
             {ui("السابق")}
           </button>
           <span className="font-mono text-sm font-bold">{page}</span>
-          <button className={SECONDARY} disabled={page * 30 >= filtered.length} onClick={() => setPage((v) => v + 1)}>
+          <button type="button" className={SECONDARY} disabled={page * 30 >= filtered.length} onClick={() => setPage((v) => v + 1)}>
             {ui("التالي")}
           </button>
         </div>

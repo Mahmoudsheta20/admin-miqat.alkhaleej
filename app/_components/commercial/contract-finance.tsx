@@ -1,13 +1,1447 @@
 "use client";
-import {useState,type FormEvent} from "react";
+
+import * as React from "react";
 import Link from "next/link";
-import {useUiText} from "@/lib/ui-text";
-import {commercialRequest,commissionPreview,emptyCommercial,emptyCommission,type Commercial,type CommercialInput,type Commission,type Customer,type Member} from "@/lib/commercial";
-import {purchasePreview,currentSaudiPeriod} from "@/lib/accounting";
-import {BUTTON,INPUT,SECONDARY,Field,Notice,Panel,useCommercialData,useMutation,LoadingRows} from "./shared";
-export function CommercialFields({value,onChange,onGuest,disabled=false}:{value:CommercialInput;onChange:(v:CommercialInput)=>void;onGuest?:(name:string,phone:string)=>void;disabled?:boolean}){const ui=useUiText(),[search,setSearch]=useState(""),[sameGuest,setSameGuest]=useState(false),customers=useCommercialData<{items:Customer[]}>(`/customers?search=${encodeURIComponent(search)}`),members=useCommercialData<{items:Member[]}>("/members?representatives=true");const preview=purchasePreview(value.netAmount,value.taxCategory==="S"?undefined:"0");return <Panel title="العميل ومستحقات الرحلة — بيانات داخلية"><fieldset disabled={disabled} className="space-y-5"><p className="text-sm opacity-70">{ui("العميل مسؤول عن الفاتورة. العمولة مستقلة عن سعر العميل ولا تظهر في مستنداته.")}</p><div className="grid gap-4 sm:grid-cols-2"><Field label="بحث عن عميل"><input className={INPUT} value={search} onChange={e=>setSearch(e.target.value)}/></Field><Field label="العميل المسؤول عن الحساب"><select className={INPUT} value={value.customerId||""} onChange={e=>{const c=customers.data?.items.find(c=>c.id===e.target.value);onChange({...value,customerId:e.target.value||null});if(sameGuest&&c)onGuest?.(c.name,c.phone||"");}}><option value="">{ui("بدون ربط عميل")}</option>{value.customerId&&!customers.data?.items.some(c=>c.id===value.customerId)&&<option value={value.customerId}>{ui("العميل المحدد")}</option>}{customers.data?.items.filter(c=>c.active).map(c=><option value={c.id} key={c.id}>{c.name} · {ui(c.type==="COMPANY"?"شركة":"فرد")}</option>)}</select></Field>{onGuest&&<label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-amber-600" checked={sameGuest} onChange={e=>{setSameGuest(e.target.checked);const c=customers.data?.items.find(c=>c.id===value.customerId);if(e.target.checked&&c)onGuest(c.name,c.phone||"");}}/>{ui("العميل هو الضيف")}</label>}<Link className="self-end text-sm underline" target="_blank" href="/admin/customers">{ui("إضافة أو تعديل عميل")}</Link><Field label="قيمة الخدمة بعد الخصم وقبل الضريبة"><input required className={INPUT} inputMode="decimal" value={value.netAmount} onChange={e=>onChange({...value,netAmount:e.target.value})}/></Field><Field label="معاملة الرحلة الضريبية"><select className={INPUT} value={value.taxCategory} onChange={e=>onChange({...value,taxCategory:e.target.value as CommercialInput["taxCategory"]})}><option value="S">{ui("خاضع للضريبة 15%")}</option><option value="Z">{ui("خاضع للنسبة الصفرية 0%")}</option><option value="E">{ui("معفى من الضريبة")}</option><option value="O">{ui("خارج نطاق الضريبة")}</option></select></Field>{value.taxCategory!=="S"&&<><Field label="رمز الإعفاء أو المعاملة"><input className={INPUT} required value={value.exemptionCode||""} onChange={e=>onChange({...value,exemptionCode:e.target.value})}/></Field><Field label="سبب المعاملة الضريبية"><input className={INPUT} required value={value.exemptionReason||""} onChange={e=>onChange({...value,exemptionReason:e.target.value})}/></Field></>}</div><p className="rounded-lg border p-3 text-sm">{ui("الضريبة")}: <b dir="ltr">{preview.vat}</b> · {ui("الإجمالي")}: <b dir="ltr">{preview.total} SAR</b></p><CommissionFields title="عمولة السائق" value={value.driverCommission} onChange={v=>onChange({...value,driverCommission:v})}/><Field label="المندوب الذي أحضر الرحلة"><select className={INPUT} value={value.representativeId||""} onChange={e=>onChange({...value,representativeId:e.target.value||null,representativeCommission:e.target.value?value.representativeCommission:emptyCommission()})}><option value="">{ui("بدون مندوب")}</option>{members.data?.items.filter(m=>m.active).map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>{value.representativeId&&<CommissionFields title="عمولة المندوب" value={value.representativeCommission} onChange={v=>onChange({...value,representativeCommission:v})}/>}<p className="text-sm opacity-70">{ui("النسبة تُحسب على أساس مستقل تدخله بنفسك، وتستحق بعد اعتماد تنفيذ الرحلة.")}</p><Notice message={customers.error||members.error} error/></fieldset></Panel>;}
-function CommissionFields({title,value,onChange}:{title:string;value:Commission;onChange:(v:Commission)=>void}){const ui=useUiText();return <div className="rounded-lg border p-4"><h3 className="mb-3 font-bold">{ui(title)} <bdi dir="ltr" className="ms-3 font-mono text-amber-700 dark:text-amber-400">{commissionPreview(value)} SAR</bdi></h3><div className="grid gap-3 sm:grid-cols-3"><Field label="طريقة العمولة"><select className={INPUT} value={value.mode} onChange={e=>onChange({...value,mode:e.target.value as Commission["mode"]})}><option value="NONE">{ui("بدون عمولة")}</option><option value="FIXED">{ui("مبلغ ثابت")}</option><option value="PERCENT">{ui("نسبة من أساس مستقل")}</option></select></Field>{value.mode==="FIXED"&&<Field label="مبلغ العمولة"><input required className={INPUT} inputMode="decimal" value={value.amount} onChange={e=>onChange({...value,amount:e.target.value})}/></Field>}{value.mode==="PERCENT"&&<><Field label="أساس احتساب العمولة"><input required className={INPUT} inputMode="decimal" value={value.base} onChange={e=>onChange({...value,base:e.target.value})}/></Field><Field label="نسبة العمولة %"><input required className={INPUT} inputMode="decimal" value={value.percent} onChange={e=>onChange({...value,percent:e.target.value})}/></Field></>}</div></div>;}
-export function ContractFinancePanel({contractId}:{contractId:string}){const data=useCommercialData<Commercial|null>(`/contracts/${contractId}`);if(data.loading)return <LoadingRows/>;if(data.error)return <Notice message={data.error} error/>;return <ContractFinanceEditor key={data.data?.version||0} initial={data.data} contractId={contractId} reload={data.reload}/>;}
-function ContractFinanceEditor({initial,contractId,reload}:{initial:Commercial|null;contractId:string;reload:()=>void}){const ui=useUiText(),[v,setV]=useState<CommercialInput>(initial?{customerId:initial.customerId,netAmount:initial.netAmount,taxCategory:initial.taxCategory,exemptionCode:initial.exemptionCode||undefined,exemptionReason:initial.exemptionReason||undefined,driverCommission:initial.driverCommission,representativeId:initial.representativeId,representativeCommission:initial.representativeCommission}:emptyCommercial()),[day,setDay]=useState(currentSaudiPeriod().day),[reason,setReason]=useState(""),m=useMutation();async function submit(e:FormEvent){e.preventDefault();await m.run(()=>commercialRequest(`/contracts/${contractId}`,"PUT",{version:initial?.version||0,commercial:v}),reload);}
- return <div className="space-y-4"><form onSubmit={submit}><CommercialFields value={v} onChange={setV} disabled={initial?.executionStatus==="COMPLETED"}/>{initial?.executionStatus!=="COMPLETED"&&<button className={`${BUTTON} mt-3`} disabled={m.busy}>{ui("حفظ بيانات العميل والمستحقات")}</button>}</form>{initial&&<Panel title="تنفيذ الرحلة واستحقاق العمولة"><p className="mb-3">{initial.customerId&&<Link className="me-3 underline" href={`/admin/customers/${initial.customerId}`}>{ui("الفواتير وكشف الحساب")}</Link>}{ui(initial.executionStatus==="COMPLETED"?"تم التنفيذ":initial.executionStatus==="CANCELLED"?"أُلغيت":"لم تُنفذ")}{initial.reportedAt&&` · ${ui("أبلغ السائق عن التنفيذ")}`}</p>{initial.executionStatus==="PENDING"&&<><form className="flex flex-wrap items-end gap-3" onSubmit={e=>{e.preventDefault();void m.run(()=>commercialRequest(`/contracts/${contractId}/complete`,"POST",{day,version:initial.version}),reload);}}><Field label="تاريخ التنفيذ الفعلي"><input required type="date" className={INPUT} max={currentSaudiPeriod().day} value={day} onChange={e=>setDay(e.target.value)}/></Field><button disabled={m.busy} className={BUTTON}>{ui("اعتماد التنفيذ واستحقاق العمولة")}</button></form><form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={e=>{e.preventDefault();void m.run(()=>commercialRequest(`/contracts/${contractId}/cancel`,"POST",{reason,version:initial.version}),reload);}}><Field label="سبب إلغاء التنفيذ"><input required className={INPUT} value={reason} onChange={e=>setReason(e.target.value)}/></Field><button className={SECONDARY} disabled={m.busy}>{ui("إلغاء قبل التنفيذ")}</button></form></>}</Panel>}<Notice message={m.error} error/><Notice message={m.message}/></div>;
+import {
+  AlertCircle,
+  Ban,
+  Briefcase,
+  CalendarCheck,
+  Check,
+  CheckCircle2,
+  ExternalLink,
+  Info,
+  Loader2,
+  Lock,
+  Percent,
+  ReceiptText,
+  Save,
+  ShieldCheck,
+  UserCheck,
+  Users,
+  Wallet,
+} from "lucide-react";
+import { useUiText } from "@/lib/ui-text";
+import { cn } from "@/lib/utils";
+import {
+  commercialRequest,
+  commissionTotalPreview,
+  emptyCommercial,
+  emptyCommission,
+  hasActiveCommission,
+  hasActivePricing,
+  hasAnyCommission,
+  hasPositiveMoney,
+  normalizeCommercialInput,
+  type Commercial,
+  type CommercialInput,
+  type Commission,
+  type Customer,
+  type Member,
+} from "@/lib/commercial";
+import { purchasePreview, currentSaudiPeriod } from "@/lib/accounting";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Checkbox,
+  Input,
+  Label,
+  NativeSelect,
+  Separator,
+} from "@/app/_components/ui";
+import { CustomerCombobox } from "./customer-combobox";
+import { useCommercialData, useMutation } from "./shared";
+
+const TAX_CATEGORY_OPTIONS: {
+  value: CommercialInput["taxCategory"];
+  label: string;
+  rate: string;
+}[] = [
+  { value: "S", label: "خاضع للضريبة 15%", rate: "15%" },
+  { value: "Z", label: "خاضع للنسبة الصفرية 0%", rate: "0%" },
+  { value: "E", label: "معفى من الضريبة", rate: "0%" },
+  { value: "O", label: "خارج نطاق الضريبة", rate: "0%" },
+];
+
+const COMMISSION_METHOD_OPTIONS: {
+  value: Exclude<Commission["mode"], "NONE">;
+  label: string;
+}[] = [
+  { value: "FIXED", label: "مبلغ ثابت" },
+  { value: "PERCENT", label: "نسبة من أساس مستقل" },
+];
+
+interface PricingDraft {
+  netAmount: string;
+  taxCategory: CommercialInput["taxCategory"];
+  exemptionCode?: string;
+  exemptionReason?: string;
+}
+
+function activeCommissionOrEmpty(c: Commission): Commission {
+  if (c.mode === "FIXED") {
+    return {
+      mode: "FIXED",
+      amount: hasPositiveMoney(c.amount) ? c.amount : "",
+      base: "0",
+      percent: "0",
+    };
+  }
+  if (c.mode === "PERCENT") {
+    return {
+      mode: "PERCENT",
+      amount: "0",
+      base: hasPositiveMoney(c.base) ? c.base : "",
+      percent: hasPositiveMoney(c.percent) ? c.percent : "",
+    };
+  }
+  return { mode: "FIXED", amount: "", base: "0", percent: "0" };
+}
+
+export function CommercialFields({
+  value,
+  onChange,
+  onGuest,
+  disabled = false,
+  footer,
+  embedded = false,
+}: {
+  value: CommercialInput;
+  onChange: (v: CommercialInput) => void;
+  onGuest?: (name: string, phone: string) => void;
+  disabled?: boolean;
+  footer?: React.ReactNode;
+  embedded?: boolean;
+}) {
+  const ui = useUiText();
+  const baseId = React.useId();
+  const [sameGuest, setSameGuest] = React.useState(false);
+  const [pickedCustomer, setPickedCustomer] = React.useState<Customer | null>(null);
+
+  const [pricingOpen, setPricingOpen] = React.useState(() => hasActivePricing(value));
+  const [commissionsOpen, setCommissionsOpen] = React.useState(() =>
+    hasAnyCommission(value)
+  );
+  const [driverEnabled, setDriverEnabled] = React.useState(() =>
+    hasActiveCommission(value.driverCommission)
+  );
+  const [repEnabled, setRepEnabled] = React.useState(
+    () =>
+      Boolean(value.representativeId) ||
+      hasActiveCommission(value.representativeCommission)
+  );
+
+  const pricingDraftRef = React.useRef<PricingDraft | null>(null);
+  const driverDraftRef = React.useRef<Commission | null>(null);
+  const repDraftRef = React.useRef<{
+    representativeId: string | null;
+    representativeCommission: Commission;
+  } | null>(null);
+
+  const isPricingOpen = pricingOpen || hasActivePricing(value);
+  const isDriverOpen = driverEnabled || hasActiveCommission(value.driverCommission);
+  const isRepOpen =
+    repEnabled ||
+    Boolean(value.representativeId) ||
+    hasActiveCommission(value.representativeCommission);
+  const isCommissionsOpen =
+    commissionsOpen || hasAnyCommission(value) || isDriverOpen || isRepOpen;
+
+  const customers = useCommercialData<{ items: Customer[] }>("/customers?search=");
+  const members = useCommercialData<{ items: Member[] }>("/members?representatives=true");
+
+  const activeMembers = React.useMemo(
+    () => members.data?.items.filter((m) => m.active) ?? [],
+    [members.data]
+  );
+
+  const activeCustomer = React.useMemo(() => {
+    if (!value.customerId) return null;
+    return (
+      customers.data?.items.find((c) => c.id === value.customerId) ??
+      (pickedCustomer?.id === value.customerId ? pickedCustomer : null)
+    );
+  }, [value.customerId, customers.data, pickedCustomer]);
+
+  const preview = purchasePreview(
+    value.netAmount,
+    value.taxCategory === "S" ? undefined : "0"
+  );
+  const totalCommissionText = commissionTotalPreview(
+    value.driverCommission,
+    value.representativeCommission
+  );
+  const driverPreviewText = commissionTotalPreview(
+    value.driverCommission,
+    emptyCommission()
+  );
+  const repPreviewText = commissionTotalPreview(
+    emptyCommission(),
+    value.representativeCommission
+  );
+
+  function handleTogglePricing(checked: boolean) {
+    if (checked) {
+      setPricingOpen(true);
+      const draft = pricingDraftRef.current;
+      pricingDraftRef.current = null;
+      if (draft) {
+        onChange({
+          ...value,
+          netAmount: draft.netAmount,
+          taxCategory: draft.taxCategory,
+          exemptionCode: draft.exemptionCode,
+          exemptionReason: draft.exemptionReason,
+        });
+      } else {
+        onChange({
+          ...value,
+          netAmount: hasPositiveMoney(value.netAmount) ? value.netAmount : "",
+        });
+      }
+      return;
+    }
+
+    if (hasActivePricing(value)) {
+      pricingDraftRef.current = {
+        netAmount: value.netAmount,
+        taxCategory: value.taxCategory,
+        exemptionCode: value.exemptionCode,
+        exemptionReason: value.exemptionReason,
+      };
+    }
+    setPricingOpen(false);
+    onChange({
+      ...value,
+      netAmount: "0",
+      taxCategory: "S",
+      exemptionCode: undefined,
+      exemptionReason: undefined,
+    });
+  }
+
+  function handleToggleCommissions(checked: boolean) {
+    if (checked) {
+      setCommissionsOpen(true);
+      const savedDriver = driverDraftRef.current;
+      const savedRep = repDraftRef.current;
+      driverDraftRef.current = null;
+      repDraftRef.current = null;
+
+      if (savedDriver || savedRep) {
+        setDriverEnabled(Boolean(savedDriver));
+        setRepEnabled(Boolean(savedRep));
+        onChange({
+          ...value,
+          driverCommission: savedDriver ?? emptyCommission(),
+          representativeId: savedRep?.representativeId ?? null,
+          representativeCommission: savedRep?.representativeCommission ?? emptyCommission(),
+        });
+      }
+      return;
+    }
+
+    if (hasActiveCommission(value.driverCommission)) {
+      driverDraftRef.current = value.driverCommission;
+    }
+    if (value.representativeId || hasActiveCommission(value.representativeCommission)) {
+      repDraftRef.current = {
+        representativeId: value.representativeId,
+        representativeCommission: value.representativeCommission,
+      };
+    }
+
+    setCommissionsOpen(false);
+    setDriverEnabled(false);
+    setRepEnabled(false);
+    onChange({
+      ...value,
+      driverCommission: emptyCommission(),
+      representativeId: null,
+      representativeCommission: emptyCommission(),
+    });
+  }
+
+  function handleToggleDriverCommission(checked: boolean) {
+    if (checked) {
+      const draft = driverDraftRef.current;
+      driverDraftRef.current = null;
+      setDriverEnabled(true);
+      onChange({
+        ...value,
+        driverCommission: draft ?? activeCommissionOrEmpty(value.driverCommission),
+      });
+      return;
+    }
+
+    if (hasActiveCommission(value.driverCommission)) {
+      driverDraftRef.current = value.driverCommission;
+    }
+    setDriverEnabled(false);
+    onChange({
+      ...value,
+      driverCommission: emptyCommission(),
+    });
+  }
+
+  function handleToggleRepCommission(checked: boolean) {
+    if (checked) {
+      const draft = repDraftRef.current;
+      repDraftRef.current = null;
+      setRepEnabled(true);
+      onChange({
+        ...value,
+        representativeId: draft?.representativeId ?? value.representativeId ?? null,
+        representativeCommission:
+          draft?.representativeCommission ??
+          activeCommissionOrEmpty(value.representativeCommission),
+      });
+      return;
+    }
+
+    if (value.representativeId || hasActiveCommission(value.representativeCommission)) {
+      repDraftRef.current = {
+        representativeId: value.representativeId,
+        representativeCommission: value.representativeCommission,
+      };
+    }
+    setRepEnabled(false);
+    onChange({
+      ...value,
+      representativeId: null,
+      representativeCommission: emptyCommission(),
+    });
+  }
+
+  const customerFieldId = `${baseId}-customer`;
+  const guestCheckboxId = `${baseId}-same-guest`;
+  const pricingCheckboxId = `${baseId}-pricing-toggle`;
+  const pricingPanelId = `${baseId}-pricing-panel`;
+  const amountFieldId = `${baseId}-net-amount`;
+  const exemptionCodeId = `${baseId}-exemption-code`;
+  const exemptionReasonId = `${baseId}-exemption-reason`;
+  const taxRadioName = `${baseId}-tax-category`;
+  const commissionsCheckboxId = `${baseId}-commissions-toggle`;
+  const commissionsPanelId = `${baseId}-commissions-panel`;
+  const driverCheckboxId = `${baseId}-driver-toggle`;
+  const driverPanelId = `${baseId}-driver-panel`;
+  const repCheckboxId = `${baseId}-rep-toggle`;
+  const repPanelId = `${baseId}-rep-panel`;
+  const repSelectId = `${baseId}-representative`;
+
+  return (
+    <Card
+      className={cn(
+        "overflow-hidden",
+        embedded && "border-0 rounded-none shadow-none bg-transparent dark:bg-transparent"
+      )}
+    >
+      <CardHeader
+        className={cn(
+          "border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/40 px-5 py-4 sm:px-6",
+          embedded && "hidden md:block"
+        )}
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+              <Wallet className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <CardTitle className="text-base sm:text-lg">
+                {ui("العميل ومستحقات الرحلة — بيانات داخلية")}
+              </CardTitle>
+              <CardDescription className="mt-1">
+                {ui(
+                  "العميل مسؤول عن الفاتورة. العمولة مستقلة عن سعر العميل ولا تظهر في مستنداته."
+                )}
+              </CardDescription>
+            </div>
+          </div>
+
+          {disabled && (
+            <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{ui("مقفل بعد اعتماد التنفيذ")}</span>
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-5 sm:p-6">
+        <fieldset disabled={disabled} className="space-y-5">
+          {/* Section 1: Billing Customer */}
+          <div className="space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label
+                htmlFor={customerFieldId}
+                className="text-sm font-bold text-slate-900 dark:text-white"
+              >
+                {ui("العميل المسؤول عن الحساب")}
+              </Label>
+
+              <Link
+                href="/admin/customers"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline"
+              >
+                <span>{ui("إضافة أو تعديل عميل")}</span>
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+
+            <div className={cn("grid gap-3", onGuest ? "sm:grid-cols-12 sm:items-center" : "")}>
+              <div className={onGuest ? "sm:col-span-8" : ""}>
+                <CustomerCombobox
+                  id={customerFieldId}
+                  value={value.customerId}
+                  disabled={disabled}
+                  onSelect={(customer) => {
+                    setPickedCustomer(customer);
+                    onChange({ ...value, customerId: customer?.id ?? null });
+                    if (sameGuest && customer) {
+                      onGuest?.(customer.name, customer.phone || "");
+                    }
+                  }}
+                />
+              </div>
+
+              {onGuest && (
+                <div className="sm:col-span-4">
+                  <label
+                    htmlFor={guestCheckboxId}
+                    className={cn(
+                      "flex min-h-11 sm:min-h-10 cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors select-none",
+                      sameGuest
+                        ? "border-amber-500/60 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+                        : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700",
+                      disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <Checkbox
+                      id={guestCheckboxId}
+                      checked={sameGuest}
+                      disabled={disabled}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setSameGuest(checked);
+                        if (checked && activeCustomer) {
+                          onGuest(activeCustomer.name, activeCustomer.phone || "");
+                        }
+                      }}
+                    />
+                    <UserCheck
+                      className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">{ui("العميل هو الضيف")}</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Section 2 & 3: Optional Checkboxes for Pricing and Commissions */}
+          <div className="space-y-4">
+            {/* Option 1: Trip Pricing & VAT Checkbox Card */}
+            <div
+              className={cn(
+                "rounded-2xl border transition-colors",
+                isPricingOpen
+                  ? "border-amber-500/40 bg-amber-500/[0.02] dark:bg-amber-500/[0.03]"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40"
+              )}
+            >
+              <label
+                htmlFor={pricingCheckboxId}
+                className={cn(
+                  "flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 select-none",
+                  disabled && "cursor-not-allowed opacity-70"
+                )}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <Checkbox
+                    id={pricingCheckboxId}
+                    checked={isPricingOpen}
+                    disabled={disabled}
+                    aria-controls={isPricingOpen ? pricingPanelId : undefined}
+                    onChange={(e) => handleTogglePricing(e.target.checked)}
+                  />
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20">
+                    <ReceiptText className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                      {ui("تسعير الرحلة والضريبة")}
+                    </span>
+                    <span className="block text-xs text-slate-600 dark:text-slate-400">
+                      {ui("تحديد قيمة الخدمة ومعاملتها الضريبية لإصدار الفاتورة")}
+                    </span>
+                  </span>
+                </span>
+
+                {isPricingOpen ? (
+                  <Badge variant="gold" className="shrink-0 font-mono">
+                    <bdi dir="ltr">{preview.total} SAR</bdi>
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="shrink-0">
+                    {ui("اختياري")}
+                  </Badge>
+                )}
+              </label>
+
+              {isPricingOpen && (
+                <div
+                  id={pricingPanelId}
+                  className="border-t border-slate-200/80 dark:border-slate-800 p-4 sm:p-5"
+                >
+                  <div className="grid gap-5 lg:grid-cols-12">
+                    {/* Amount + Live VAT Breakdown */}
+                    <div className="space-y-3 lg:col-span-5">
+                      <div className="space-y-1.5">
+                        <Label htmlFor={amountFieldId}>
+                          {ui("قيمة الخدمة بعد الخصم وقبل الضريبة")}
+                        </Label>
+                        <div className="relative" dir="ltr">
+                          <Input
+                            id={amountFieldId}
+                            required
+                            dir="ltr"
+                            inputMode="decimal"
+                            pattern="^\d{1,12}(\.\d{1,2})?$"
+                            placeholder="0.00"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck={false}
+                            value={value.netAmount}
+                            onChange={(e) =>
+                              onChange({ ...value, netAmount: e.target.value })
+                            }
+                            className="pe-14 font-mono text-base font-semibold h-11"
+                          />
+                          <span className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                            SAR
+                          </span>
+                        </div>
+                      </div>
+
+                      <div
+                        role="status"
+                        className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5"
+                      >
+                        <div>
+                          <span className="block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                            {ui("الضريبة")}
+                          </span>
+                          <bdi
+                            dir="ltr"
+                            className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100"
+                          >
+                            {preview.vat} SAR
+                          </bdi>
+                        </div>
+                        <div className="border-s border-slate-200 dark:border-slate-800 ps-3">
+                          <span className="block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                            {ui("الإجمالي")}
+                          </span>
+                          <bdi
+                            dir="ltr"
+                            className="mt-0.5 block font-mono text-base font-extrabold tabular-nums text-amber-800 dark:text-amber-300"
+                          >
+                            {preview.total} SAR
+                          </bdi>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* VAT Treatment Radio Cards (< 6 choices) */}
+                    <div className="space-y-3 lg:col-span-7">
+                      <fieldset className="space-y-1.5">
+                        <legend className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          {ui("معاملة الرحلة الضريبية")}
+                        </legend>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                          {TAX_CATEGORY_OPTIONS.map((option) => {
+                            const checked = value.taxCategory === option.value;
+                            return (
+                              <label
+                                key={option.value}
+                                className={cn(
+                                  "relative flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs transition-all focus-within:ring-2 focus-within:ring-amber-500/40",
+                                  checked
+                                    ? "border-amber-500 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-bold shadow-2xs"
+                                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 font-medium hover:border-slate-300 dark:hover:border-slate-700",
+                                  disabled && "cursor-not-allowed opacity-60"
+                                )}
+                              >
+                                <input
+                                  type="radio"
+                                  name={taxRadioName}
+                                  value={option.value}
+                                  checked={checked}
+                                  onChange={() =>
+                                    onChange({
+                                      ...value,
+                                      taxCategory: option.value,
+                                    })
+                                  }
+                                  className="sr-only"
+                                />
+                                <span className="flex min-w-0 items-center gap-2">
+                                  <span
+                                    className={cn(
+                                      "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                                      checked
+                                        ? "border-amber-700 bg-amber-700 dark:border-amber-500 dark:bg-amber-500 text-white dark:text-slate-950"
+                                        : "border-slate-400 dark:border-slate-600"
+                                    )}
+                                    aria-hidden="true"
+                                  >
+                                    {checked && <Check className="h-2.5 w-2.5" />}
+                                  </span>
+                                  <span className="truncate">{ui(option.label)}</span>
+                                </span>
+                                <Badge
+                                  variant={checked ? "gold" : "secondary"}
+                                  className="shrink-0 font-mono text-[10px] px-1.5 py-0"
+                                >
+                                  {option.rate}
+                                </Badge>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+
+                      {value.taxCategory !== "S" && (
+                        <div className="grid gap-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3.5 sm:grid-cols-2">
+                          <div className="space-y-1.5">
+                            <Label htmlFor={exemptionCodeId}>
+                              {ui("رمز الإعفاء أو المعاملة")}
+                            </Label>
+                            <Input
+                              id={exemptionCodeId}
+                              required
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              spellCheck={false}
+                              value={value.exemptionCode || ""}
+                              onChange={(e) =>
+                                onChange({ ...value, exemptionCode: e.target.value })
+                              }
+                              className="font-mono text-base sm:text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor={exemptionReasonId}>
+                              {ui("سبب المعاملة الضريبية")}
+                            </Label>
+                            <Input
+                              id={exemptionReasonId}
+                              required
+                              value={value.exemptionReason || ""}
+                              onChange={(e) =>
+                                onChange({ ...value, exemptionReason: e.target.value })
+                              }
+                              className="text-base sm:text-sm"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Option 2: Trip Commissions Checkbox Card */}
+            <div
+              className={cn(
+                "rounded-2xl border transition-colors",
+                isCommissionsOpen
+                  ? "border-amber-500/40 bg-amber-500/[0.02] dark:bg-amber-500/[0.03]"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40"
+              )}
+            >
+              <label
+                htmlFor={commissionsCheckboxId}
+                className={cn(
+                  "flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 select-none",
+                  disabled && "cursor-not-allowed opacity-70"
+                )}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <Checkbox
+                    id={commissionsCheckboxId}
+                    checked={isCommissionsOpen}
+                    disabled={disabled}
+                    aria-controls={isCommissionsOpen ? commissionsPanelId : undefined}
+                    onChange={(e) => handleToggleCommissions(e.target.checked)}
+                  />
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20">
+                    <Percent className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                      {ui("العمولات")}
+                    </span>
+                    <span className="block text-xs text-slate-600 dark:text-slate-400">
+                      {ui("تحديد عمولة السائق أو المندوب للرحلة — منفصلة عن سعر العميل")}
+                    </span>
+                  </span>
+                </span>
+
+                {isCommissionsOpen ? (
+                  <Badge variant="gold" className="shrink-0 font-mono">
+                    <bdi dir="ltr">
+                      {totalCommissionText === "—" ? "—" : `${totalCommissionText} SAR`}
+                    </bdi>
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="shrink-0">
+                    {ui("اختياري")}
+                  </Badge>
+                )}
+              </label>
+
+              {isCommissionsOpen && (
+                <div
+                  id={commissionsPanelId}
+                  className="border-t border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-4"
+                >
+                  <p className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <Info
+                      className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-400"
+                      aria-hidden="true"
+                    />
+                    <span>
+                      {ui(
+                        "النسبة تُحسب على أساس مستقل تدخله بنفسك، وتستحق بعد اعتماد تنفيذ الرحلة."
+                      )}
+                    </span>
+                  </p>
+
+                  <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+                    {/* Sub-option A: Driver Commission */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 overflow-hidden">
+                      <label
+                        htmlFor={driverCheckboxId}
+                        className={cn(
+                          "flex min-h-12 cursor-pointer items-center justify-between gap-2.5 px-4 py-2.5 select-none",
+                          disabled && "cursor-not-allowed opacity-70"
+                        )}
+                      >
+                        <span className="flex min-w-0 items-center gap-2.5">
+                          <Checkbox
+                            id={driverCheckboxId}
+                            checked={isDriverOpen}
+                            disabled={disabled}
+                            aria-controls={isDriverOpen ? driverPanelId : undefined}
+                            onChange={(e) =>
+                              handleToggleDriverCommission(e.target.checked)
+                            }
+                          />
+                          <Users
+                            className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {ui("عمولة السائق")}
+                          </span>
+                        </span>
+
+                        <Badge
+                          variant={isDriverOpen ? "gold" : "secondary"}
+                          className="shrink-0 font-mono"
+                        >
+                          {isDriverOpen ? (
+                            <bdi dir="ltr">
+                              {driverPreviewText === "—"
+                                ? "—"
+                                : `${driverPreviewText} SAR`}
+                            </bdi>
+                          ) : (
+                            ui("غير مفعلة")
+                          )}
+                        </Badge>
+                      </label>
+
+                      {isDriverOpen && (
+                        <div
+                          id={driverPanelId}
+                          className="border-t border-slate-100 dark:border-slate-800 p-4"
+                        >
+                          <CommissionMethodFields
+                            value={value.driverCommission}
+                            onChange={(next) =>
+                              onChange({ ...value, driverCommission: next })
+                            }
+                            disabled={disabled}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sub-option B: Representative Commission */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 overflow-hidden">
+                      <label
+                        htmlFor={repCheckboxId}
+                        className={cn(
+                          "flex min-h-12 cursor-pointer items-center justify-between gap-2.5 px-4 py-2.5 select-none",
+                          disabled && "cursor-not-allowed opacity-70"
+                        )}
+                      >
+                        <span className="flex min-w-0 items-center gap-2.5">
+                          <Checkbox
+                            id={repCheckboxId}
+                            checked={isRepOpen}
+                            disabled={disabled}
+                            aria-controls={isRepOpen ? repPanelId : undefined}
+                            onChange={(e) => handleToggleRepCommission(e.target.checked)}
+                          />
+                          <Briefcase
+                            className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {ui("عمولة المندوب")}
+                          </span>
+                        </span>
+
+                        <Badge
+                          variant={isRepOpen ? "gold" : "secondary"}
+                          className="shrink-0 font-mono"
+                        >
+                          {isRepOpen ? (
+                            <bdi dir="ltr">
+                              {repPreviewText === "—" ? "—" : `${repPreviewText} SAR`}
+                            </bdi>
+                          ) : (
+                            ui("غير مفعلة")
+                          )}
+                        </Badge>
+                      </label>
+
+                      {isRepOpen && (
+                        <div
+                          id={repPanelId}
+                          className="border-t border-slate-100 dark:border-slate-800 p-4 space-y-3"
+                        >
+                          <div className="space-y-1.5">
+                            <Label htmlFor={repSelectId}>
+                              {ui("المندوب الذي أحضر الرحلة")}
+                            </Label>
+                            <NativeSelect
+                              id={repSelectId}
+                              required={activeMembers.length > 0}
+                              value={value.representativeId || ""}
+                              onChange={(e) =>
+                                onChange({
+                                  ...value,
+                                  representativeId: e.target.value || null,
+                                })
+                              }
+                              className="h-11 sm:h-10 text-base sm:text-sm"
+                            >
+                              <option value="">{ui("اختر المندوب")}</option>
+                              {activeMembers.map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.name}
+                                </option>
+                              ))}
+                            </NativeSelect>
+
+                            {!members.loading && activeMembers.length === 0 && (
+                              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
+                                <span>{ui("لا يوجد مناديب نشطون مسجلون حالياً")}</span>
+                                <Link
+                                  href="/admin/representatives"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 font-semibold text-amber-800 dark:text-amber-400 hover:underline"
+                                >
+                                  <span>{ui("إدارة المناديب")}</span>
+                                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                                </Link>
+                              </div>
+                            )}
+                          </div>
+
+                          {(activeMembers.length > 0 ||
+                            Boolean(value.representativeId) ||
+                            members.loading) && (
+                            <CommissionMethodFields
+                              value={value.representativeCommission}
+                              onChange={(next) =>
+                                onChange({ ...value, representativeCommission: next })
+                              }
+                              disabled={disabled}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {(customers.error || members.error) && (
+            <div
+              role="alert"
+              className="flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-500/10 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{ui(customers.error || members.error)}</span>
+            </div>
+          )}
+        </fieldset>
+      </CardContent>
+
+      {footer && (
+        <CardFooter className="mt-0 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 px-5 py-4 sm:px-6">
+          {footer}
+        </CardFooter>
+      )}
+    </Card>
+  );
+}
+
+function CommissionMethodFields({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: Commission;
+  onChange: (v: Commission) => void;
+  disabled?: boolean;
+}) {
+  const ui = useUiText();
+  const baseId = React.useId();
+  const modeRadioName = `${baseId}-mode`;
+  const amountId = `${baseId}-amount`;
+  const basisId = `${baseId}-basis`;
+  const percentId = `${baseId}-percent`;
+
+  if (value.mode === "NONE") {
+    return (
+      <p className="text-xs text-slate-600 dark:text-slate-400">
+        {ui("بدون عمولة")}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <fieldset className="space-y-1.5">
+        <legend className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          {ui("طريقة العمولة")}
+        </legend>
+        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 p-1">
+          {COMMISSION_METHOD_OPTIONS.map((option) => {
+            const checked = value.mode === option.value;
+            return (
+              <label
+                key={option.value}
+                className={cn(
+                  "flex min-h-11 sm:min-h-10 cursor-pointer items-center justify-center rounded-lg px-2.5 py-2 text-center text-xs leading-snug transition-all focus-within:ring-2 focus-within:ring-amber-500/40",
+                  checked
+                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-slate-200",
+                  disabled && "cursor-not-allowed opacity-60"
+                )}
+              >
+                <input
+                  type="radio"
+                  name={modeRadioName}
+                  value={option.value}
+                  checked={checked}
+                  onChange={() =>
+                    onChange(
+                      option.value === "FIXED"
+                        ? {
+                            mode: "FIXED",
+                            amount: hasPositiveMoney(value.amount) ? value.amount : "",
+                            base: "0",
+                            percent: "0",
+                          }
+                        : {
+                            mode: "PERCENT",
+                            amount: "0",
+                            base: hasPositiveMoney(value.base) ? value.base : "",
+                            percent: hasPositiveMoney(value.percent)
+                              ? value.percent
+                              : "",
+                          }
+                    )
+                  }
+                  className="sr-only"
+                />
+                <span>{ui(option.label)}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      {value.mode === "FIXED" && (
+        <div className="space-y-1.5">
+          <Label htmlFor={amountId}>{ui("مبلغ العمولة")}</Label>
+          <div className="relative" dir="ltr">
+            <Input
+              id={amountId}
+              required
+              dir="ltr"
+              inputMode="decimal"
+              pattern="^\d{1,12}(\.\d{1,2})?$"
+              placeholder="0.00"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              value={value.amount}
+              onChange={(e) => onChange({ ...value, amount: e.target.value })}
+              className="pe-12 font-mono text-base sm:text-sm h-11 sm:h-10"
+            />
+            <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
+              SAR
+            </span>
+          </div>
+        </div>
+      )}
+
+      {value.mode === "PERCENT" && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor={basisId}>{ui("أساس احتساب العمولة")}</Label>
+            <div className="relative" dir="ltr">
+              <Input
+                id={basisId}
+                required
+                dir="ltr"
+                inputMode="decimal"
+                pattern="^\d{1,12}(\.\d{1,2})?$"
+                placeholder="0.00"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                value={value.base}
+                onChange={(e) => onChange({ ...value, base: e.target.value })}
+                className="pe-12 font-mono text-base sm:text-sm h-11 sm:h-10"
+              />
+              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                SAR
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={percentId}>{ui("نسبة العمولة %")}</Label>
+            <div className="relative" dir="ltr">
+              <Input
+                id={percentId}
+                required
+                dir="ltr"
+                inputMode="decimal"
+                pattern="^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)$"
+                placeholder="0"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                value={value.percent}
+                onChange={(e) => onChange({ ...value, percent: e.target.value })}
+                className="pe-9 font-mono text-base sm:text-sm h-11 sm:h-10"
+              />
+              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                %
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ContractFinancePanel({ contractId }: { contractId: string }) {
+  const ui = useUiText();
+  const data = useCommercialData<Commercial | null>(`/contracts/${contractId}`);
+  const m = useMutation();
+  const [feedbackScope, setFeedbackScope] = React.useState<"save" | "execution" | null>(
+    null
+  );
+
+  if (data.loading) {
+    return (
+      <div className="space-y-5" aria-busy="true">
+        <Card className="p-6 space-y-4 animate-pulse motion-reduce:animate-none">
+          <div className="h-6 w-64 rounded-lg bg-slate-200 dark:bg-slate-800" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="h-11 rounded-xl bg-slate-200 dark:bg-slate-800" />
+            <div className="h-11 rounded-xl bg-slate-200 dark:bg-slate-800" />
+          </div>
+          <div className="h-24 rounded-xl bg-slate-100 dark:bg-slate-800/60" />
+        </Card>
+        <Card className="p-6 space-y-4 animate-pulse motion-reduce:animate-none">
+          <div className="h-6 w-52 rounded-lg bg-slate-200 dark:bg-slate-800" />
+          <div className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800/60" />
+        </Card>
+      </div>
+    );
+  }
+
+  if (data.error) {
+    return (
+      <div
+        role="alert"
+        className="flex items-center gap-2 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-500/10 p-4 text-sm font-medium text-rose-700 dark:text-rose-300"
+      >
+        <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{ui(data.error)}</span>
+      </div>
+    );
+  }
+
+  return (
+    <ContractFinanceEditor
+      key={data.data?.version || 0}
+      initial={data.data}
+      contractId={contractId}
+      reload={data.reload}
+      m={m}
+      feedbackScope={feedbackScope}
+      setFeedbackScope={setFeedbackScope}
+    />
+  );
+}
+
+function ContractFinanceEditor({
+  initial,
+  contractId,
+  reload,
+  m,
+  feedbackScope,
+  setFeedbackScope,
+}: {
+  initial: Commercial | null;
+  contractId: string;
+  reload: () => void;
+  m: ReturnType<typeof useMutation>;
+  feedbackScope: "save" | "execution" | null;
+  setFeedbackScope: React.Dispatch<React.SetStateAction<"save" | "execution" | null>>;
+}) {
+  const ui = useUiText();
+  const baseId = React.useId();
+  const executionDayId = `${baseId}-execution-day`;
+  const cancelReasonId = `${baseId}-cancel-reason`;
+
+  const [v, setV] = React.useState<CommercialInput>(
+    initial
+      ? {
+          customerId: initial.customerId,
+          netAmount: initial.netAmount,
+          taxCategory: initial.taxCategory,
+          exemptionCode: initial.exemptionCode || undefined,
+          exemptionReason: initial.exemptionReason || undefined,
+          driverCommission: initial.driverCommission,
+          representativeId: initial.representativeId,
+          representativeCommission: initial.representativeCommission,
+        }
+      : emptyCommercial()
+  );
+  const [day, setDay] = React.useState(currentSaudiPeriod().day);
+  const [reason, setReason] = React.useState("");
+
+  async function submitFinancial(e: React.FormEvent) {
+    e.preventDefault();
+    setFeedbackScope("save");
+    await m.run(
+      () =>
+        commercialRequest(`/contracts/${contractId}`, "PUT", {
+          version: initial?.version || 0,
+          commercial: normalizeCommercialInput(v),
+        }),
+      reload
+    );
+  }
+
+  async function submitComplete(e: React.FormEvent) {
+    e.preventDefault();
+    if (!initial) return;
+    setFeedbackScope("execution");
+    await m.run(
+      () =>
+        commercialRequest(`/contracts/${contractId}/complete`, "POST", {
+          day,
+          version: initial.version,
+        }),
+      reload
+    );
+  }
+
+  async function submitCancel(e: React.FormEvent) {
+    e.preventDefault();
+    if (!initial) return;
+    setFeedbackScope("execution");
+    await m.run(
+      () =>
+        commercialRequest(`/contracts/${contractId}/cancel`, "POST", {
+          reason,
+          version: initial.version,
+        }),
+      reload
+    );
+  }
+
+  const isCompleted = initial?.executionStatus === "COMPLETED";
+
+  const renderFeedback = (scope: "save" | "execution") => {
+    if (feedbackScope !== scope) return null;
+    if (!m.error && !m.message) return null;
+
+    if (m.error) {
+      return (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{ui(m.error)}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        role="status"
+        className="flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+      >
+        <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{ui(m.message)}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <form onSubmit={submitFinancial}>
+        <CommercialFields
+          value={v}
+          onChange={setV}
+          disabled={isCompleted}
+          footer={
+            !isCompleted ? (
+              <>
+                <div className="flex-1">{renderFeedback("save")}</div>
+                <Button
+                  type="submit"
+                  variant="gold"
+                  disabled={m.busy}
+                  className="w-full sm:w-auto min-h-11 sm:min-h-10"
+                >
+                  {m.busy && feedbackScope === "save" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Save className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <span>{ui("حفظ بيانات العميل والمستحقات")}</span>
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
+      </form>
+
+      {initial && (
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/40 px-5 py-4 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-base sm:text-lg">
+                      {ui("تنفيذ الرحلة واستحقاق العمولة")}
+                    </CardTitle>
+
+                    {initial.executionStatus === "COMPLETED" ? (
+                      <Badge variant="success">
+                        {ui("تم التنفيذ")}
+                      </Badge>
+                    ) : initial.executionStatus === "CANCELLED" ? (
+                      <Badge variant="destructive">
+                        {ui("أُلغيت")}
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning">
+                        {ui("لم تُنفذ")}
+                      </Badge>
+                    )}
+
+                    {initial.reportedAt && (
+                      <Badge variant="gold" className="gap-1">
+                        <Check className="h-3 w-3" aria-hidden="true" />
+                        <span>{ui("أبلغ السائق عن التنفيذ")}</span>
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {initial.customerId && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/admin/customers/${initial.customerId}`}>
+                    <ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{ui("الفواتير وكشف الحساب")}</span>
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-5 sm:p-6 space-y-4">
+            {initial.executionStatus === "PENDING" ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Complete & Accrue Commission Card */}
+                <form
+                  onSubmit={submitComplete}
+                  className="flex flex-col justify-between gap-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-500/[0.03] p-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <CalendarCheck
+                        className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                          {ui("اعتماد التنفيذ واستحقاق العمولة")}
+                        </h4>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                          {ui(
+                            "يؤكد إتمام الرحلة ويفعّل استحقاق العمولات وإمكانية إصدار الفاتورة الضريبية."
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor={executionDayId}>
+                        {ui("تاريخ التنفيذ الفعلي")}
+                      </Label>
+                      <Input
+                        id={executionDayId}
+                        required
+                        type="date"
+                        max={currentSaudiPeriod().day}
+                        value={day}
+                        onChange={(e) => setDay(e.target.value)}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="gold"
+                    disabled={m.busy}
+                    className="w-full sm:w-auto self-start min-h-11 sm:min-h-10"
+                  >
+                    {m.busy && feedbackScope === "execution" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    <span>{ui("اعتماد التنفيذ واستحقاق العمولة")}</span>
+                  </Button>
+                </form>
+
+                {/* Cancel Before Execution Card */}
+                <form
+                  onSubmit={submitCancel}
+                  className="flex flex-col justify-between gap-4 rounded-xl border border-rose-200/80 dark:border-rose-900/50 bg-rose-500/[0.03] p-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <Ban
+                        className="mt-0.5 h-4 w-4 shrink-0 text-rose-700 dark:text-rose-400"
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                          {ui("إلغاء قبل التنفيذ")}
+                        </h4>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                          {ui(
+                            "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب عمولات."
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor={cancelReasonId}>
+                        {ui("سبب إلغاء التنفيذ")}
+                      </Label>
+                      <Input
+                        id={cancelReasonId}
+                        required
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={m.busy}
+                    className="w-full sm:w-auto self-start min-h-11 sm:min-h-10 border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  >
+                    <Ban className="h-4 w-4" aria-hidden="true" />
+                    <span>{ui("إلغاء قبل التنفيذ")}</span>
+                  </Button>
+                </form>
+              </div>
+            ) : initial.executionStatus === "COMPLETED" ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-500/[0.04] p-4 text-xs">
+                <div className="flex items-center gap-2 font-semibold text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{ui("تم التنفيذ")}</span>
+                </div>
+                {initial.executedOn && (
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <span>{ui("تاريخ التنفيذ المعتمد")}:</span>
+                    <bdi dir="ltr" className="font-mono font-bold text-slate-900 dark:text-white">
+                      {initial.executedOn.slice(0, 10)}
+                    </bdi>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-500/[0.04] p-4 text-xs font-semibold text-rose-700 dark:text-rose-300">
+                <Ban className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{ui("تم إغلاق سجل التنفيذ قبل بدء الرحلة")}</span>
+              </div>
+            )}
+
+            {renderFeedback("execution")}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }

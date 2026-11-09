@@ -1,5 +1,5 @@
 import type { BillingUnit, TransportDetails } from "./invoice-transport";
-import { backendRequest, backendUrl, getAuthToken } from "./backend";
+import { backendRequest, backendUrl } from "./backend";
 export const STATUS_LABELS: Record<string, string> = { DRAFT: "مسودة", READY: "جاهزة للتحقق الرسمي", GENERATED: "مولدة", PENDING_CLEARANCE: "بانتظار الاعتماد", CLEARED: "معتمدة", PENDING_REPORTING: "بانتظار الإبلاغ", REPORTED: "تم الإبلاغ", ACCEPTED_WITH_WARNINGS: "مقبولة بتحذيرات", REJECTED: "مرفوضة", TRANSMISSION_FAILED: "تعذر الإرسال" };
 export const ENV_LABELS: Record<string, string> = { SANDBOX: "اختبار المطورين", SIMULATION: "المحاكاة", PRODUCTION: "الإنتاج" };
 export interface Issuer { id: string; legalName: string; vatNumber: string }
@@ -13,8 +13,7 @@ export interface InvoiceDetail extends InvoiceRow { snapshot: InvoiceSnapshot; u
 export const zatcaRequest = <T>(path: string, method = "GET", body?: unknown) => backendRequest<T>(`/zatca${path}`, method, body);
 export function dateLabel(value: string | null, language: "ar"|"en" = "ar"): string { return value ? new Date(value).toLocaleString(language === "en" ? "en-GB":"ar-SA", { timeZone: "Asia/Riyadh", calendar: "gregory" }) : "—"; }
 export async function downloadInvoice(id: string, kind: "PDF" | "XML" | "QR"): Promise<void> {
-  const token = getAuthToken();
-  const response = await fetch(backendUrl(`/zatca/invoices/${encodeURIComponent(id)}/artifacts/${kind}`), { credentials: "include", cache: "no-store", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const response = await fetch(backendUrl(`/zatca/invoices/${encodeURIComponent(id)}/artifacts/${kind}`), { credentials: "include", cache: "no-store" });
   if (!response.ok) throw new Error("تعذر تنزيل المستند؛ تحقق من حالة الفاتورة");
   const url = URL.createObjectURL(await response.blob()), link = document.createElement("a");
   link.href = url; link.download = `invoice-${id}.${kind === "QR" ? "txt" : kind.toLowerCase()}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);

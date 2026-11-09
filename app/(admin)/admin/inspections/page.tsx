@@ -1,95 +1,45 @@
 "use client";
+import { createHelpGuide } from "./help-guide";
+import { DASHBOARD_ITEMS, EXTERNAL_ITEMS, SAFETY_ITEMS, ALL_CHECK_ITEMS } from "@/lib/inspection";
+import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
 import dynamic from "next/dynamic";
 
 import Modal from "@/app/_components/Modal";
+import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useId, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
-import {
-  ClipboardCheck,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Zap,
-  Search,
-  RefreshCw,
-  Plus,
-  Eye,
-  Trash2,
-  Check,
-  ShieldCheck,
-  Car,
-  Phone,
-  Calendar,
-  Clock,
-  X,
-  FileText,
-  AlertTriangle,
-  UserCheck,
-  Gauge,
-  ShieldAlert,
-  Sparkles,
-  Edit3,
-} from "lucide-react";
-import {
-  getCaptainsInspectionOverview,
-  directPassInspection,
-  getAllInspectionsList,
-  deleteInspection,
-  submitInspection,
-  CaptainInspectionItem,
-  InspectionWithMeta,
-  InspectionInput,
-} from "@/app/_actions/inspection";
+import { ClipboardCheck, CheckCircle2, XCircle, AlertCircle, Zap, Search, RefreshCw, Plus, Eye, Trash2, Check, ShieldCheck, Car, Phone, Calendar, X, FileText, AlertTriangle, UserCheck, Gauge, ShieldAlert, Sparkles, Edit3 } from "lucide-react";
+import { getCaptainsInspectionOverview, directPassInspection, getAllInspectionsList, deleteInspection, submitInspection, CaptainInspectionItem, InspectionWithMeta } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
 const InspectionPdfPreviewModal = dynamic(() => import("@/app/_components/InspectionPdfPreviewModal"), { ssr: false });
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
-import { PageHeader, StatCard, StatRow } from "@/app/_components/ui";
+import {
+  PageHeader,
+  StatCard,
+  StatRow,
+  Badge,
+  Button,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/app/_components/ui";
+import {
+  MobileCardField,
+  MobileCardMetaGrid,
+  MobileRecordCard,
+} from "@/app/_components/mobile";
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 // Checklist Definitions
-interface CheckItemConfig {
-  key: keyof Omit<
-    InspectionInput,
-    "captainId" | "vehiclePlate" | "driverDeclared" | "notes" | "inspectionDate"
-  >;
-  titleAr: string;
-  titleEn: string;
-  category: "dashboard" | "external" | "safety";
-}
-
-const DASHBOARD_ITEMS: CheckItemConfig[] = [
-  { key: "fuelGauge", titleAr: "مؤشر الوقود", titleEn: "Fuel Gauge", category: "dashboard" },
-  { key: "tempGauge", titleAr: "مؤشر الحرارة", titleEn: "Temp Gauge", category: "dashboard" },
-  { key: "oilPressure", titleAr: "مؤشر ضغط الزيت", titleEn: "Oil Pressure", category: "dashboard" },
-  { key: "checkEngine", titleAr: "لمبة فحص المحرك", titleEn: "Check Engine", category: "dashboard" },
-  { key: "absLight", titleAr: "لمبة نظام ABS", titleEn: "ABS Light", category: "dashboard" },
-  { key: "warningLights", titleAr: "لمبات التحذير العامة", titleEn: "Warning Lights", category: "dashboard" },
-];
-
-const EXTERNAL_ITEMS: CheckItemConfig[] = [
-  { key: "tires", titleAr: "الإطارات وضغط الهواء", titleEn: "Tires & Pressure", category: "external" },
-  { key: "headlights", titleAr: "الأنوار الأمامية والخلفية", titleEn: "Headlights", category: "external" },
-  { key: "signals", titleAr: "إشارات الانعطاف والطوارئ", titleEn: "Signals & Hazard", category: "external" },
-  { key: "mirrors", titleAr: "الزجاج والمرايا الجانبية", titleEn: "Mirrors & Glass", category: "external" },
-  { key: "noLeaks", titleAr: "عدم وجود تسريبات أسفل الحافلة", titleEn: "No Fluid Leaks", category: "external" },
-];
-
-const SAFETY_ITEMS: CheckItemConfig[] = [
-  { key: "fireExtinguisher", titleAr: "طفاية حريق سارية الصلاحية", titleEn: "Fire Extinguisher", category: "safety" },
-  { key: "warningTriangle", titleAr: "المثلث العاكس للتحذير", titleEn: "Warning Triangle", category: "safety" },
-  { key: "firstAidKit", titleAr: "حقيبة الإسعافات الأولية", titleEn: "First Aid Kit", category: "safety" },
-  { key: "glassHammer", titleAr: "مطرقة كسر الزجاج", titleEn: "Glass Hammer", category: "safety" },
-  { key: "seatBelts", titleAr: "أحزمة الأمان لجميع المقاعد", titleEn: "Seat Belts", category: "safety" },
-];
-
-const ALL_CHECK_ITEMS = [...DASHBOARD_ITEMS, ...EXTERNAL_ITEMS, ...SAFETY_ITEMS];
-
 export default function AdminInspectionsPage() {
   const ui = useUiText();
 
@@ -98,7 +48,7 @@ export default function AdminInspectionsPage() {
   const cachedHistory = getCachedData<Awaited<ReturnType<typeof getAllInspectionsList>>>("inspections_history");
   const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
 
-  const [activeTab, setActiveTab] = useState<"captains" | "history">("captains");
+  const [activeTab, setActiveTab] = useUrlState<"captains" | "history">("view", "captains", ["captains", "history"]);
   const [captains, setCaptains] = useState<CaptainInspectionItem[]>(() => {
     if (Array.isArray(cachedOverview)) return cachedOverview;
     if (cachedOverview && typeof cachedOverview === "object" && Array.isArray(cachedOverview.captains)) {
@@ -134,8 +84,8 @@ export default function AdminInspectionsPage() {
 
   const [isLoading, setIsLoading] = useState(() => !cachedOverview);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "INSPECTED">("ALL");
+  const [search, setSearch] = useUrlState<string>("q", "");
+  const [statusFilter, setStatusFilter] = useUrlState<"ALL" | "PENDING" | "INSPECTED">("status", "ALL", ["ALL","PENDING","INSPECTED"]);
   const [historyDateFilter, setHistoryDateFilter] = useState("");
   const [captainFilter, setCaptainFilter] = useState("");
 
@@ -144,6 +94,8 @@ export default function AdminInspectionsPage() {
 
   // Notification Banner
   const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formId = useId();
 
   // Modals
   const [selectedInspectionForView, setSelectedInspectionForView] = useState<VehicleInspection | null>(null);
@@ -176,30 +128,37 @@ export default function AdminInspectionsPage() {
   const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
   const safeInspections = inspections;
 
-  // Load Data with caching and deduplication
-  const loadData = useCallback(async (showRefresh = false) => {
-
+  // Fetch inspection datasets (shared between mount effect and user-triggered refresh)
+  const fetchInspectionDatasets = useCallback((forceRefresh: boolean) => {
     return Promise.all([
-        fetchCached("inspections_overview", getCaptainsInspectionOverview, {
+      fetchCached("inspections_overview", getCaptainsInspectionOverview, {
+        ttlMs: 60_000,
+        forceRefresh,
+      }),
+      fetchCached(
+        "inspections_history",
+        () => getAllInspectionsList({ limit: 40 }),
+        {
           ttlMs: 60_000,
-          forceRefresh: showRefresh,
-        }),
-        fetchCached(
-          "inspections_history",
-          () => getAllInspectionsList({ limit: 40 }),
-          {
-            ttlMs: 60_000,
-            forceRefresh: showRefresh,
-          }
-        ),
-        fetchCached("fleet_vehicles", getVehicles, {
-          ttlMs: 120_000,
-          forceRefresh: showRefresh,
-        }),
-      ]).then(([overviewRes, historyRes, vehiclesRes]) => {
+          forceRefresh,
+        }
+      ),
+      fetchCached("fleet_vehicles", getVehicles, {
+        ttlMs: 120_000,
+        forceRefresh,
+      }),
+    ]);
+  }, []);
 
+  const applyInspectionDatasets = useCallback(
+    ([overviewRes, historyRes, vehiclesRes]: Awaited<ReturnType<typeof fetchInspectionDatasets>>) => {
       const failure = [overviewRes, historyRes, vehiclesRes].find(result => !result.success);
-      if (failure) setBanner({ type: "error", message: failure.error || "تعذر تحميل بيانات الفحص" });
+      if (failure) {
+        setBanner({
+          type: "error",
+          message: failure.error || (isRTL ? "تعذر تحميل بيانات الفحص" : "Failed to load inspection data"),
+        });
+      }
 
       if (overviewRes?.success && Array.isArray(overviewRes?.captains)) {
         setCaptains(overviewRes.captains);
@@ -215,25 +174,63 @@ export default function AdminInspectionsPage() {
       if (vehiclesRes?.success && Array.isArray(vehiclesRes?.vehicles)) {
         setVehicles(vehiclesRes.vehicles);
       }
-    }).catch(error => {
-      console.error("Failed to load inspection data:", error);
-      setBanner({ type: "error", message: "تعذر جلب بيانات الفحص التشغيلي" });
-    }).finally(() => {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    });
-  }, []);
+    },
+    [isRTL]
+  );
+
+  const loadData = useCallback(
+    async (showRefresh = false) => {
+      if (showRefresh) setIsRefreshing(true);
+      try {
+        const results = await fetchInspectionDatasets(showRefresh);
+        applyInspectionDatasets(results);
+      } catch (error) {
+        console.error("Failed to load inspection data:", error);
+        setBanner({
+          type: "error",
+          message: isRTL ? "تعذر جلب بيانات الفحص التشغيلي" : "Failed to fetch operational inspection records",
+        });
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [applyInspectionDatasets, fetchInspectionDatasets, isRTL]
+  );
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+    void fetchInspectionDatasets(false)
+      .then((results) => {
+        if (!active) return;
+        applyInspectionDatasets(results);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error("Failed to load inspection data:", error);
+        setBanner({
+          type: "error",
+          message: isRTL ? "تعذر جلب بيانات الفحص التشغيلي" : "Failed to fetch operational inspection records",
+        });
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    };
+  }, [applyInspectionDatasets, fetchInspectionDatasets, isRTL]);
 
   function showBanner(type: "success" | "error", message: string) {
     setBanner({ type, message });
-    setTimeout(() => {
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = setTimeout(() => {
       setBanner((prev) => (prev?.message === message ? null : prev));
     }, 5000);
-  };
+  }
 
   // 1-Click Direct Inspection Finish Action
   const handleDirectPass = async (captain: CaptainInspectionItem) => {
@@ -247,7 +244,12 @@ export default function AdminInspectionsPage() {
 
       if (res.success && res.inspection) {
         const inspection = res.inspection;
-        showBanner("success", `⚡ تم إتمام واعتماد الفحص المباشر للكابتن (${captain.name}) بنجاح!`);
+        showBanner(
+          "success",
+          isRTL
+            ? `تم إتمام واعتماد الفحص المباشر للكابتن (${captain.name}) بنجاح!`
+            : `Direct inspection passed and certified for captain (${captain.name})!`,
+        );
 
         // Update local state immediately for snappy response
         setCaptains((prev) =>
@@ -281,11 +283,11 @@ export default function AdminInspectionsPage() {
           }
         });
       } else {
-        showBanner("error", res.error || "فشل إتمام الفحص المباشر");
+        showBanner("error", res.error || (isRTL ? "فشل إتمام الفحص المباشر" : "Direct inspection failed"));
       }
     } catch (err) {
       console.error("Direct pass error:", err);
-      showBanner("error", "حدث خطأ غير متوقع أثناء إتمام الفحص");
+      showBanner("error", isRTL ? "حدث خطأ غير متوقع أثناء إتمام الفحص" : "Unexpected error while completing inspection");
     } finally {
       setExecutingCaptainId(null);
     }
@@ -295,7 +297,7 @@ export default function AdminInspectionsPage() {
   const handleCustomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customCaptainId) {
-      showBanner("error", "يرجى اختيار الكابتن");
+      showBanner("error", isRTL ? "يرجى اختيار الكابتن" : "Please select a captain");
       return;
     }
 
@@ -303,7 +305,10 @@ export default function AdminInspectionsPage() {
     const effectivePlate =
       customVehiclePlate.trim() || selectedCap?.assignedVehiclePlate || "";
 
-    if (!effectivePlate) { showBanner("error", "يرجى اختيار المركبة قبل تسجيل الفحص"); return; }
+    if (!effectivePlate) {
+      showBanner("error", isRTL ? "يرجى اختيار المركبة قبل تسجيل الفحص" : "Please select a vehicle before recording inspection");
+      return;
+    }
 
     const effectiveDate =
       customInspectionDateMode === "MANUAL" && customInspectionDate
@@ -338,18 +343,18 @@ export default function AdminInspectionsPage() {
       });
 
       if (res.success && res.inspection) {
-        showBanner("success", "تم حفظ وتوثيق الفحص التشغيلي بنجاح");
+        showBanner("success", isRTL ? "تم حفظ وتوثيق الفحص التشغيلي بنجاح" : "Operational inspection saved and certified successfully");
         setIsCustomModalOpen(false);
         resetCustomForm();
         invalidateClientCache("inspections_");
         invalidateClientCache("dashboard_stats");
         loadData(true);
       } else {
-        showBanner("error", res.error || "تعذر حفظ الفحص");
+        showBanner("error", res.error || (isRTL ? "تعذر حفظ الفحص" : "Failed to save inspection"));
       }
     } catch (err) {
       console.error("Custom inspection submit error:", err);
-      showBanner("error", "حدث خطأ غير متوقع");
+      showBanner("error", isRTL ? "حدث خطأ غير متوقع" : "Unexpected error");
     } finally {
       setIsSubmittingCustom(false);
     }
@@ -374,18 +379,18 @@ export default function AdminInspectionsPage() {
     try {
       const res = await deleteInspection(deleteConfirmId);
       if (res.success) {
-        showBanner("success", "تم حذف سجل الفحص التشغيلي بنجاح");
+        showBanner("success", isRTL ? "تم حذف سجل الفحص التشغيلي بنجاح" : "Operational inspection record deleted");
         setInspections((prev) => prev.filter((i) => i.id !== deleteConfirmId));
         setDeleteConfirmId(null);
         invalidateClientCache("inspections_");
         invalidateClientCache("dashboard_stats");
         loadData(true);
       } else {
-        showBanner("error", res.error || "تعذر حذف سجل الفحص");
+        showBanner("error", res.error || (isRTL ? "تعذر حذف سجل الفحص" : "Failed to delete inspection record"));
       }
     } catch (err) {
       console.error("Delete inspection error:", err);
-      showBanner("error", "حدث خطأ أثناء الحذف");
+      showBanner("error", isRTL ? "حدث خطأ أثناء الحذف" : "Error while deleting record");
     } finally {
       setIsDeleting(false);
     }
@@ -430,78 +435,15 @@ export default function AdminInspectionsPage() {
     });
   }, [safeInspections, search, historyDateFilter, captainFilter]);
 
-  const inspectionsHelpGuide = useMemo(() => ({
-    title: isRTL ? "دليل الفحص اليومي للكباتن والمركبات (15 بند سلامة)" : "Daily Vehicle & Captain Safety Inspection Guide",
-    summary: isRTL
-      ? "يضمن هذا القسم عدم انطلاق أي مركبة في رحلة رسمية قبل التحقق من جاهزيتها الميكانيكية وتوفر أدوات السلامة والطوارئ على متنها وتوثيق إقرار السائق."
-      : "Ensures no vehicle departs on an official passenger trip without verified mechanical readiness, emergency equipment, and logged driver safety declaration.",
-    cards: [
-      {
-        title: isRTL ? "١. بنود لوحة القيادة والمحرك" : "1. Dashboard & Engine Vital Signs",
-        badge: isRTL ? "٦ بنود ميكانيكية" : "6 Mechanical Checks",
-        items: [
-          {
-            label: isRTL ? "المؤشرات الحيوية" : "Engine Vitals",
-            description: isRTL
-              ? "مؤشر الوقود، مؤشر حرارة المحرك، ضغط الزيت، ولمبة فحص المحرك (Check Engine)."
-              : "Fuel gauge, engine temperature, oil pressure, and check engine indicator.",
-          },
-          {
-            label: isRTL ? "أنظمة المكابح والتحذير" : "Braking & Warning Lights",
-            description: isRTL
-              ? "سلامة نظام الفرامل المانعة للانغلاق (ABS) وخلو الطبلون من أي إشارات تحذيرية حرجة."
-              : "ABS warning lamp status and absence of critical alert lights.",
-          },
-        ],
-      },
-      {
-        title: isRTL ? "٢. الفحص الخارجي وأدوات السلامة" : "2. Exterior & Emergency Gear",
-        badge: isRTL ? "٩ بنود أمان" : "9 Safety Checks",
-        items: [
-          {
-            label: isRTL ? "الهيكل والإطارات والأنوار" : "Tyres, Body & Lights",
-            description: isRTL
-              ? "سلامة الإطارات، الأنوار الأمامية، الإشارات الجانبية، المرايا، وعدم وجود أي تسريبات أسفل المركبة."
-              : "Tyre pressure, head/tail lights, turn signals, mirrors, and inspection for fluid leaks.",
-          },
-          {
-            label: isRTL ? "تجهيزات الطوارئ الإلزامية" : "Mandatory Safety Equipment",
-            description: isRTL
-              ? "طفاية الحريق، مثلث التحذير العاكس، حقيبة الإسعافات الأولية، مطرقة كسر الزجاج، وأحزمة الأمان."
-              : "Valid fire extinguisher, reflective warning triangle, first aid kit, window hammer, and seat belts.",
-          },
-        ],
-      },
-      {
-        title: isRTL ? "٣. طرق الاعتماد والتوثيق" : "3. Approval & Documentation",
-        badge: isRTL ? "التشغيل السريع" : "Dispatch Dispatch",
-        items: [
-          {
-            label: isRTL ? "الاعتماد الفوري المباشر" : "Instant Direct Pass",
-            description: isRTL
-              ? "يُتيح للمشرف اعتماد جاهزية الكابتن والمركبة بضغطة زر واحدة بعد المعاينة الميدانية."
-              : "Allows operations supervisor to pass an active captain and assigned vehicle with one click.",
-          },
-          {
-            label: isRTL ? "تقرير الفحص الرسمي PDF" : "Official Inspection PDF",
-            description: isRTL
-              ? "يُصدر النظام شهادة فحص يومية قابلة للطباعة وتُربط تلقائياً بعقود الرحلات الصادرة في نفس اليوم."
-              : "Generates an official printable PDF certificate automatically attached to daily contracts.",
-          },
-        ],
-      },
-    ],
-    tip: isRTL
-      ? "انقر على «اجتياز فحص مباشر» أمام أي كابتن لاعتماد فحص اليوم فوراً، أو استخدم «فحص مخصص جديد» لتسجيل ملاحظات تفصيلية على بنود محددة."
-      : "Click 'Direct Pass' next to any captain to approve immediately, or use 'New Custom Inspection' to record detailed observations.",
-  }), [isRTL]);
+  const inspectionsHelpGuide = useMemo(() => createHelpGuide(isRTL), [isRTL]);
 
   return (
     <div className="space-y-6">
       {/* Toast Banner */}
       {banner && (
         <div
-          className={`p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-top-3 ${
+          role={banner.type === "error" ? "alert" : "status"}
+          className={`p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-lg transition-all duration-300 ${
             banner.type === "success"
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
               : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
@@ -509,17 +451,19 @@ export default function AdminInspectionsPage() {
         >
           <div className="flex items-center gap-3">
             {banner.type === "success" ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <AlertCircle className="w-5 h-5 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
             )}
-            <p className="text-sm font-bold">{ui(banner.message)}</p>
+            <p className="text-sm font-bold">{banner.message}</p>
           </div>
           <button
+            type="button"
+            aria-label={ui("إغلاق")}
             onClick={() => setBanner(null)}
-            className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition"
+            className="min-h-10 min-w-10 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -547,9 +491,9 @@ export default function AdminInspectionsPage() {
               resetCustomForm();
               setIsCustomModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 min-h-11 sm:min-h-10 px-4 py-2 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-amber-500" />
+            <Plus className="w-4 h-4 text-amber-500" aria-hidden="true" />
             <span>{ui(t("inspections.customInspection"))}</span>
           </button>
         }
@@ -611,20 +555,20 @@ export default function AdminInspectionsPage() {
       {stats.totalCaptains > 0 && (
         <div className="theme-card px-4 py-3 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4" aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between text-xs font-bold mb-1.5">
                 <span className="text-slate-700 dark:text-slate-200">
                   {ui("مؤشر جاهزية الكباتن للفحص اليومي")}</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400">
-                  {ui(Math.round((stats.inspectedToday / Math.max(1, stats.totalCaptains)) * 100))}% ({ui(stats.inspectedToday)}/{ui(stats.totalCaptains)})
+                <span className="font-mono text-emerald-700 dark:text-emerald-400">
+                  {Math.round((stats.inspectedToday / Math.max(1, stats.totalCaptains)) * 100)}% ({stats.inspectedToday}/{stats.totalCaptains})
                 </span>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-l from-emerald-500 to-amber-500 transition-all duration-500"
+                  className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                   style={{
                     width: `${Math.min(100, Math.round((stats.inspectedToday / Math.max(1, stats.totalCaptains)) * 100))}%`,
                   }}
@@ -640,9 +584,9 @@ export default function AdminInspectionsPage() {
                 setActiveTab("captains");
                 setStatusFilter("PENDING");
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-bold transition shrink-0 cursor-pointer"
+              className="min-h-10 px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-bold transition shrink-0 cursor-pointer"
             >
-              {ui("عرض الكباتن بانتظار الفحص (")}{ui(stats.pendingToday)})
+              {ui("عرض الكباتن بانتظار الفحص (")}{stats.pendingToday})
             </button>
           )}
         </div>
@@ -654,32 +598,34 @@ export default function AdminInspectionsPage() {
           {/* Tab buttons */}
           <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 w-full sm:w-auto overflow-x-auto no-scrollbar">
             <button
+              type="button"
               onClick={() => setActiveTab("captains")}
-              className={`flex items-center justify-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-2 min-h-10 sm:min-h-8 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
                 activeTab === "captains"
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  : "text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <UserCheck className="w-3.5 h-3.5 shrink-0" />
+              <UserCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span>{ui("كباتن اليوم وحالة الفحص")}</span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                {ui(safeCaptains.length)}
+              <span className="px-1.5 py-0.5 rounded-md text-xs font-mono font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                {safeCaptains.length}
               </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("history")}
-              className={`flex items-center justify-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-2 min-h-10 sm:min-h-8 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
                 activeTab === "history"
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  : "text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <FileText className="w-3.5 h-3.5 shrink-0" />
+              <FileText className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span>{ui("سجل الفحوصات التشغيلية")}</span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-purple-500/10 text-purple-700 dark:text-purple-400">
-                {ui(safeInspections.length)}
+              <span className="px-1.5 py-0.5 rounded-md text-xs font-mono font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-400">
+                {safeInspections.length}
               </span>
             </button>
           </div>
@@ -688,15 +634,16 @@ export default function AdminInspectionsPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 md:max-w-lg">
             {/* Captain Selector */}
             <div className="relative min-w-[170px] sm:w-52 shrink-0">
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                <UserCheck className="w-3.5 h-3.5" />
+              <div className="absolute start-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]">
+                <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
               </div>
               <select
+                aria-label={isRTL ? "تصفية حسب الكابتن" : "Filter by captain"}
                 value={captainFilter}
                 onChange={(e) => setCaptainFilter(e.target.value)}
-                className="theme-input w-full ps-8 pe-6 py-1.5 text-xs rounded-xl cursor-pointer"
+                className="theme-input w-full min-h-11 sm:min-h-9 ps-8 pe-8 py-1.5 text-sm sm:text-xs rounded-xl cursor-pointer"
               >
-                <option value="">{ui("جميع الكباتن (")}{ui(safeCaptains.length)})</option>
+                <option value="">{ui("جميع الكباتن (")}{safeCaptains.length})</option>
                 {safeCaptains.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -707,32 +654,38 @@ export default function AdminInspectionsPage() {
                 <button
                   type="button"
                   onClick={() => setCaptainFilter("")}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                  aria-label={ui("إلغاء تصفية الكابتن")}
+                  className="absolute end-1.5 top-1/2 -translate-y-1/2 min-h-8 min-w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 transition cursor-pointer"
                   title={ui("إلغاء تصفية الكابتن")}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               )}
             </div>
 
             {/* Quick Search */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]" aria-hidden="true" />
               <input
                 type="text"
+                aria-label={ui(activeTab === "captains"
+                    ? "بحث باسم الكابتن أو الجوال أو اللوحة..."
+                    : "بحث في السجل أو الكابتن أو الملاحظات...")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={ui(activeTab === "captains"
                     ? "بحث باسم الكابتن أو الجوال أو اللوحة..."
                     : "بحث في السجل أو الكابتن أو الملاحظات...")}
-                className="theme-input w-full ps-9 pe-7 py-1.5 text-xs rounded-xl"
+                className="theme-input w-full min-h-11 sm:min-h-9 ps-9 pe-9 py-1.5 text-sm sm:text-xs rounded-xl"
               />
               {search && (
                 <button
+                  type="button"
+                  aria-label={ui("مسح الحقل")}
                   onClick={() => setSearch("")}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute end-1 top-1/2 -translate-y-1/2 min-h-9 min-w-9 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -742,51 +695,56 @@ export default function AdminInspectionsPage() {
         {/* Status Filter Chips (only for captains tab) */}
         {activeTab === "captains" && (
           <div className="flex items-center gap-2 pt-2 border-t theme-border flex-wrap text-xs">
-            <span className="text-slate-400 font-medium me-1">{ui("تصفية الحالة:")}</span>
+            <span className="text-[var(--text-muted)] font-medium me-1">{ui("تصفية الحالة:")}</span>
             <button
+              type="button"
               onClick={() => setStatusFilter("ALL")}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+              className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition text-xs ${
                 statusFilter === "ALL"
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                  : "border theme-border text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  : "border theme-border text-[var(--text-muted)] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
-              {ui("الكل (")}{ui(safeCaptains.length)})
+              {ui("الكل (")}{safeCaptains.length})
             </button>
             <button
+              type="button"
               onClick={() => setStatusFilter("PENDING")}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs flex items-center gap-1.5 ${
+              className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition text-xs flex items-center gap-1.5 ${
                 statusFilter === "PENDING"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : "border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+                  ? "bg-amber-700 text-white shadow-xs"
+                  : "border border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/10"
               }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              {ui("بانتظار الفحص (")}{ui(stats.pendingToday)})
+              <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
+              {ui("بانتظار الفحص (")}{stats.pendingToday})
             </button>
             <button
+              type="button"
               onClick={() => setStatusFilter("INSPECTED")}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs flex items-center gap-1.5 ${
+              className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition text-xs flex items-center gap-1.5 ${
                 statusFilter === "INSPECTED"
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+                  ? "bg-emerald-700 text-white shadow-xs"
+                  : "border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/10"
               }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {ui("تم الفحص اليوم (")}{ui(stats.inspectedToday)})
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+              {ui("تم الفحص اليوم (")}{stats.inspectedToday})
             </button>
 
             {captainFilter && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-xs font-bold animate-in fade-in">
-                <UserCheck className="w-3.5 h-3.5" />
-                {ui("الكابتن:")}{ui(safeCaptains.find((c) => c.id === captainFilter)?.name || captainFilter)}
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-xs font-bold">
+                <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                {ui("الكابتن:")}{" "}
+                {safeCaptains.find((c) => c.id === captainFilter)?.name || captainFilter}
                 <button
                   type="button"
                   onClick={() => setCaptainFilter("")}
-                  className="hover:text-rose-600 dark:hover:text-rose-400 p-0.5 transition cursor-pointer"
+                  aria-label={ui("إلغاء تصفية الكابتن")}
+                  className="hover:text-rose-700 dark:hover:text-rose-400 p-0.5 transition cursor-pointer"
                   title={ui("إلغاء تصفية الكابتن")}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </span>
             )}
@@ -797,23 +755,25 @@ export default function AdminInspectionsPage() {
         {activeTab === "history" && (
           <div className="flex items-center justify-between gap-3 pt-2 border-t theme-border flex-wrap text-xs">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-slate-400 font-medium me-1 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                {ui("تصفية التاريخ:")}</span>
+              <label htmlFor={`${formId}-history-date`} className="text-[var(--text-muted)] font-medium me-1 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                {ui("تصفية التاريخ:")}</label>
               <input
+                id={`${formId}-history-date`}
                 type="date"
+                dir="ltr"
                 value={historyDateFilter}
                 onChange={(e) => setHistoryDateFilter(e.target.value)}
-                className="theme-input px-2.5 py-1 text-xs rounded-xl font-mono cursor-pointer"
+                className="theme-input min-h-11 sm:min-h-9 px-2.5 py-1 text-sm sm:text-xs rounded-xl font-mono cursor-pointer text-start"
               />
               {historyDateFilter && (
                 <button
                   type="button"
                   onClick={() => setHistoryDateFilter("")}
-                  className="px-2.5 py-1 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 transition cursor-pointer"
+                  className="min-h-10 sm:min-h-8 px-2.5 py-1 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 transition cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
-                  {ui("إلغاء تصفية التاريخ (")}{ui(historyDateFilter)})
+                  <X className="w-3 h-3" aria-hidden="true" />
+                  {ui("إلغاء تصفية التاريخ (")}{historyDateFilter})
                 </button>
               )}
 
@@ -821,18 +781,19 @@ export default function AdminInspectionsPage() {
                 <button
                   type="button"
                   onClick={() => setCaptainFilter("")}
-                  className="px-2.5 py-1 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/20 transition cursor-pointer"
+                  className="min-h-10 sm:min-h-8 px-2.5 py-1 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/20 transition cursor-pointer"
                 >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  {ui("الكابتن:")}{ui(safeCaptains.find((c) => c.id === captainFilter)?.name || captainFilter)}
-                  <X className="w-3 h-3" />
+                  <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                  {ui("الكابتن:")}{" "}
+                  {safeCaptains.find((c) => c.id === captainFilter)?.name || captainFilter}
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               )}
             </div>
 
             {(historyDateFilter || captainFilter) && (
-              <span className="text-[11px] text-slate-400 font-mono">
-                {ui("عدد النتائج:")}{ui(filteredInspections.length)} {ui("سجل")}</span>
+              <span className="text-xs text-[var(--text-muted)] font-mono">
+                {ui("عدد النتائج:")} {filteredInspections.length} {ui("سجل")}</span>
             )}
           </div>
         )}
@@ -842,7 +803,7 @@ export default function AdminInspectionsPage() {
       {isLoading ? (
         <div className="theme-card p-12 rounded-2xl border theme-border flex flex-col items-center justify-center gap-3">
           <div className="w-10 h-10 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
             {ui("جاري تحميل سجلات الفحص التشغيلي...")}</p>
         </div>
       ) : activeTab === "captains" ? (
@@ -853,7 +814,7 @@ export default function AdminInspectionsPage() {
               <ClipboardCheck className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto" />
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
                 {ui("لا توجد نتائج مطابقة")}</h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 {ui("جرب تغيير خيارات التصفية أو مسح عبارة البحث")}</p>
             </div>
           ) : (
@@ -861,370 +822,386 @@ export default function AdminInspectionsPage() {
               {/* Header Bar with Count */}
               <div className="p-3 sm:p-4 border-b theme-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {ui("قائمة الكباتن (")}{ui(filteredCaptains.length)})
+                  {ui("قائمة الكباتن (")}{filteredCaptains.length})
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">
-                  {ui(stats.inspectedToday)} {ui("تم الفحص /")}{ui(stats.pendingToday)} {ui("بانتظار")}</span>
+                <span className="text-xs text-[var(--text-muted)] font-mono">
+                  {stats.inspectedToday} {ui("تم الفحص /")} {stats.pendingToday} {ui("بانتظار")}</span>
               </div>
 
               {/* Desktop Table View (Hidden on mobile, visible on md and up) */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-start border-collapse">
-                      <thead>
-                        <tr className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-xs font-bold whitespace-nowrap">
-                          <th className="py-3 px-4 min-w-[200px]">{ui("الكابتن")}</th>
-                          <th className="py-3 px-4 min-w-[120px]">{ui("رقم الجوال")}</th>
-                          <th className="py-3 px-4 min-w-[130px]">{ui("المركبة المسندة")}</th>
-                          <th className="py-3 px-4 min-w-[160px]">{ui("حالة فحص اليوم")}</th>
-                          <th className="py-3 px-4 min-w-[120px]">{ui("توقيت الفحص")}</th>
-                          <th className="py-3 px-4 text-center min-w-[190px]">{ui("الإجراءات المباشرة")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y theme-border text-xs">
-                        {filteredCaptains.map((c) => {
-                          const isExecutingThis = executingCaptainId === c.id;
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-[var(--text-muted)] dark:text-slate-400 text-xs font-bold whitespace-nowrap">
+                      <TableHead className="py-3 px-4 min-w-[200px]">{ui("الكابتن")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[120px]">{ui("رقم الجوال")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[130px]">{ui("المركبة المسندة")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[160px]">{ui("حالة فحص اليوم")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[120px]">{ui("توقيت الفحص")}</TableHead>
+                      <TableHead className="py-3 px-4 text-center min-w-[190px]">{ui("الإجراءات المباشرة")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y theme-border text-xs">
+                    {filteredCaptains.map((c) => {
+                      const isExecutingThis = executingCaptainId === c.id;
 
-                          return (
-                            <tr
-                              key={c.id}
-                              className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150 ${
-                                !c.hasTodayInspection
-                                  ? "bg-amber-500/[0.02] dark:bg-amber-500/[0.02]"
-                                  : ""
-                              }`}
-                            >
-                              {/* Captain details */}
-                              <td className="py-3.5 px-4 whitespace-nowrap">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative w-9 h-9 rounded-full overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-bold text-amber-700 dark:text-amber-300">
-                                    {c.avatarUrl ? (
-                                      <Image
-                                        src={c.avatarUrl}
-                                        alt={c.name}
-                                        fill
-                                        sizes="36px"
-                                        className="object-cover"
-                                      />
-                                    ) : (
-                                      c.name.charAt(0)
-                                    )}
-                                  </div>
-                                  <div>
-                                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                      {c.name}
-                                      {!c.active && (
-                                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500/10 text-rose-600">
-                                          {ui("معطل")}</span>
-                                      )}
-                                    </div>
-                                    <div className="text-[11px] text-slate-400 font-mono">
-                                      {c.nationalId ? `هوية: ${c.nationalId}` : c.email}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-
-                              {/* Phone */}
-                              <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap" dir="ltr">
-                                {ui(c.phone || "—")}
-                              </td>
-
-                              {/* Assigned Vehicle */}
-                              <td className="py-3.5 px-4 whitespace-nowrap">
-                                {c.assignedVehiclePlate ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border theme-border font-mono font-bold">
-                                    <Car className="w-3.5 h-3.5 text-amber-500" />
-                                    {ui(c.assignedVehiclePlate)}
-                                  </span>
+                      return (
+                        <TableRow
+                          key={c.id}
+                          className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150 ${
+                            !c.hasTodayInspection
+                              ? "bg-amber-500/[0.02] dark:bg-amber-500/[0.02]"
+                              : ""
+                          }`}
+                        >
+                          {/* Captain details */}
+                          <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-9 h-9 rounded-full overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-bold text-amber-700 dark:text-amber-300">
+                                {c.avatarUrl ? (
+                                  <Image
+                                    src={c.avatarUrl}
+                                    alt={c.name}
+                                    fill
+                                    sizes="36px"
+                                    className="object-cover"
+                                  />
                                 ) : (
-                                  <span className="text-slate-400 text-[11px]">{ui("غير محددة")}</span>
+                                  c.name.charAt(0)
                                 )}
-                              </td>
-
-                              {/* Inspection Status */}
-                              <td className="py-3.5 px-4 whitespace-nowrap">
-                                {c.hasTodayInspection ? (
-                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[11px]">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    {ui("تم الفحص ومؤهل للرحلات")}</div>
-                                ) : (
-                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold text-[11px]">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                    {ui("لم يتم الفحص اليوم")}</div>
-                                )}
-                              </td>
-
-                              {/* Inspection Date/Time */}
-                              <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                                {c.todayInspection ? (
-                                  <div className="flex flex-col">
-                                    <span className="text-slate-900 dark:text-white font-bold" dir="ltr">
-                                      {ui(new Date(c.todayInspection.createdAt || c.todayInspection.inspectionDate).toLocaleTimeString(ui.locale, {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      }))}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400" dir="ltr">
-                                      {ui(new Date(c.todayInspection.inspectionDate).toLocaleDateString("en-GB"))}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <span className="text-slate-400">—</span>
-                                )}
-                              </td>
-
-                              {/* Actions */}
-                              <td className="py-3.5 px-4 whitespace-nowrap">
-                                <div className="flex items-center justify-center gap-2">
-                                  {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button + Manual Date Option */}
-                                  {!c.hasTodayInspection ? (
-                                    <div className="flex items-center gap-1.5">
-                                      <button
-                                        onClick={() => handleDirectPass(c)}
-                                        disabled={isExecutingThis}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-black shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
-                                        title={ui("إتمام واعتماد الفحص المباشر فوراً بضغطة زر")}
-                                      >
-                                        {isExecutingThis ? (
-                                          <>
-                                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                            {ui("جاري الاعتماد...")}</>
-                                        ) : (
-                                          <>
-                                            <Zap className="w-3.5 h-3.5 fill-current" />
-                                            {ui("إتمام الفحص المباشر")}</>
-                                        )}
-                                      </button>
-
-                                      <button
-                                        onClick={() => {
-                                          resetCustomForm();
-                                          setCustomCaptainId(c.id);
-                                          if (c.assignedVehiclePlate) {
-                                            setCustomVehiclePlate(c.assignedVehiclePlate);
-                                          }
-                                          setCustomInspectionDateMode("MANUAL");
-                                          setIsCustomModalOpen(true);
-                                        }}
-                                        className="p-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition shadow-2xs cursor-pointer"
-                                        title={ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")}
-                                      >
-                                        <Calendar className="w-4 h-4 text-amber-500" />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <button
-                                        onClick={() => setSelectedInspectionForView(c.todayInspection)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition shadow-xs cursor-pointer"
-                                        title={ui("عرض تفاصيل كشف الفحص التشغيلي")}
-                                      >
-                                        <Eye className="w-3.5 h-3.5 text-amber-500" />
-                                        {ui("تفاصيل الفحص")}</button>
-
-                                      <button
-                                        onClick={() => {
-                                          if (c.todayInspection?.id) {
-                                            setPreviewPdfInspection({
-                                              id: c.todayInspection.id,
-                                              captainName: c.name,
-                                              vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                              pdfPath: c.todayInspection.pdfPath,
-                                            });
-                                          }
-                                        }}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition shadow-xs cursor-pointer"
-                                        title={ui("توليد ومعاينة مستند PDF الرسمي للفحص")}
-                                      >
-                                        <FileText className="w-3.5 h-3.5" />
-                                        <span>PDF</span>
-                                      </button>
-
-                                      <button
-                                        onClick={() => handleDirectPass(c)}
-                                        disabled={isExecutingThis}
-                                        className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                                        title={ui("إعادة الفحص المباشر وتحديث التوقيت")}
-                                      >
-                                        <RefreshCw className={`w-3.5 h-3.5 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} />
-                                      </button>
-                                    </>
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                  {c.name}
+                                  {!c.active && (
+                                    <span className="px-1.5 py-0.5 rounded text-xs bg-rose-500/10 text-rose-700 dark:text-rose-400">
+                                      {ui("معطل")}</span>
                                   )}
                                 </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                                <div className="text-xs text-[var(--text-muted)] font-mono">
+                                  {c.nationalId ? <>{ui("هوية:")} <span dir="ltr">{c.nationalId}</span></> : <span dir="ltr">{c.email}</span>}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Phone */}
+                          <TableCell className="py-3.5 px-4 font-mono text-[var(--text-muted)] dark:text-slate-300 whitespace-nowrap" dir="ltr">
+                            {c.phone || "—"}
+                          </TableCell>
+
+                          {/* Assigned Vehicle */}
+                          <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                            {c.assignedVehiclePlate ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border theme-border font-mono font-bold">
+                                <Car className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                                <bdi>{c.assignedVehiclePlate}</bdi>
+                              </span>
+                            ) : (
+                              <span className="text-[var(--text-muted)] text-xs">{ui("غير محددة")}</span>
+                            )}
+                          </TableCell>
+
+                          {/* Inspection Status */}
+                          <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                            {c.hasTodayInspection ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold text-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+                                {ui("تم الفحص ومؤهل للرحلات")}</div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold text-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                                {ui("لم يتم الفحص اليوم")}</div>
+                            )}
+                          </TableCell>
+
+                          {/* Inspection Date/Time */}
+                          <TableCell className="py-3.5 px-4 font-mono text-xs text-[var(--text-muted)] dark:text-slate-400 whitespace-nowrap">
+                            {c.todayInspection ? (
+                              <div className="flex flex-col">
+                                <span className="text-slate-900 dark:text-white font-bold" dir="ltr">
+                                  {new Date(c.todayInspection.createdAt || c.todayInspection.inspectionDate).toLocaleTimeString(ui.locale, {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                <span className="text-xs text-[var(--text-muted)]" dir="ltr">
+                                  {new Date(c.todayInspection.inspectionDate).toLocaleDateString("en-GB")}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[var(--text-muted)]">—</span>
+                            )}
+                          </TableCell>
+
+                          {/* Actions */}
+                          <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-2">
+                              {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button + Manual Date Option */}
+                              {!c.hasTodayInspection ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDirectPass(c)}
+                                    disabled={isExecutingThis}
+                                    className="min-h-9 flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-semibold shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+                                    title={ui("إتمام واعتماد الفحص المباشر فوراً بضغطة زر")}
+                                  >
+                                    {isExecutingThis ? (
+                                      <>
+                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                                        {ui("جاري الاعتماد...")}</>
+                                    ) : (
+                                      <>
+                                        <Zap className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
+                                        {ui("إتمام الفحص المباشر")}</>
+                                    )}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      resetCustomForm();
+                                      setCustomCaptainId(c.id);
+                                      if (c.assignedVehiclePlate) {
+                                        setCustomVehiclePlate(c.assignedVehiclePlate);
+                                      }
+                                      setCustomInspectionDateMode("MANUAL");
+                                      setIsCustomModalOpen(true);
+                                    }}
+                                    aria-label={`${ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")} — ${c.name}`}
+                                    className="min-h-9 min-w-9 p-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 inline-flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                    title={ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")}
+                                  >
+                                    <Calendar className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedInspectionForView(c.todayInspection)}
+                                    className="min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition shadow-xs cursor-pointer"
+                                    title={ui("عرض تفاصيل كشف الفحص التشغيلي")}
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                                    {ui("تفاصيل الفحص")}</button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (c.todayInspection?.id) {
+                                        setPreviewPdfInspection({
+                                          id: c.todayInspection.id,
+                                          captainName: c.name,
+                                          vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                          pdfPath: c.todayInspection.pdfPath,
+                                        });
+                                      }
+                                    }}
+                                    className="min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition shadow-xs cursor-pointer"
+                                    title={ui("توليد ومعاينة مستند PDF الرسمي للفحص")}
+                                  >
+                                    <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>PDF</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDirectPass(c)}
+                                    disabled={isExecutingThis}
+                                    aria-label={`${ui("إعادة الفحص المباشر وتحديث التوقيت")} — ${c.name}`}
+                                    className="min-h-9 min-w-9 p-1.5 rounded-lg text-[var(--text-muted)] hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center transition cursor-pointer"
+                                    title={ui("إعادة الفحص المباشر وتحديث التوقيت")}
+                                  >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} aria-hidden="true" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
 
               {/* Mobile Captains Inspection Cards (Shown on mobile screens < md) */}
-              <div className="md:hidden divide-y theme-border">
-                  {filteredCaptains.map((c) => {
-                    const isExecutingThis = executingCaptainId === c.id;
-                    return (
-                      <div
-                        key={c.id}
-                        className={`p-4 space-y-3 transition duration-150 ${
-                          !c.hasTodayInspection
-                            ? "bg-amber-500/[0.03] dark:bg-amber-500/[0.03]"
-                            : ""
-                        }`}
-                      >
-                        {/* Top: Avatar, Name, Status */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="relative w-11 h-11 rounded-2xl overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-black text-amber-700 dark:text-amber-300">
-                              {c.avatarUrl ? (
-                                <Image
-                                  src={c.avatarUrl}
-                                  alt={c.name}
-                                  fill
-                                  sizes="44px"
-                                  className="object-cover"
-                                />
-                              ) : (
-                                c.name.charAt(0)
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
-                                <span className="truncate">{c.name}</span>
-                                {!c.active && (
-                                  <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-600 font-bold shrink-0">
-                                    {ui("معطل")}</span>
-                                )}
-                              </div>
-                              <div className="text-xs text-slate-400 font-mono mt-0.5 flex items-center gap-2">
-                                {c.phone && (
-                                  <span dir="ltr" className="text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                                    <Phone className="w-3 h-3 text-amber-500" />
-                                    {ui(c.phone)}
-                                  </span>
-                                )}
-                                {c.nationalId && <span>{ui("هوية:")}{c.nationalId}</span>}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Status Badge */}
-                          <div className="shrink-0">
-                            {c.hasTodayInspection ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[11px]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                {ui("تم الفحص")}</span>
+              <div className="md:hidden p-3.5 space-y-3">
+                {filteredCaptains.map((c) => {
+                  const isExecutingThis = executingCaptainId === c.id;
+                  return (
+                    <MobileRecordCard
+                      key={c.id}
+                      className={!c.hasTodayInspection ? "border-amber-500/30 bg-amber-500/[0.03]" : undefined}
+                      title={
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 shrink-0 flex items-center justify-center font-semibold text-amber-700 dark:text-amber-300">
+                            {c.avatarUrl ? (
+                              <Image
+                                src={c.avatarUrl}
+                                alt={c.name}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                              />
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold text-[11px]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                {ui("غير مفحوص")}</span>
+                              c.name.charAt(0)
                             )}
                           </div>
-                        </div>
-
-                        {/* Middle: Vehicle & Time info */}
-                        <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border theme-border text-xs">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <Car className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span className="text-slate-400 text-[11px]">{ui("المركبة:")}</span>
-                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate">
-                              {ui(c.assignedVehiclePlate || "غير محددة")}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="text-slate-400 text-[11px]">{ui("التوقيت:")}</span>
-                            {c.todayInspection ? (
-                              <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]" dir="ltr">
-                                {ui(new Date(c.todayInspection.createdAt || c.todayInspection.inspectionDate).toLocaleTimeString(ui.locale, {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }))}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 text-[11px]">—</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Bottom Actions */}
-                        <div className="pt-1">
-                          {!c.hasTodayInspection ? (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleDirectPass(c)}
-                                disabled={isExecutingThis}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl gold-gradient-btn text-xs font-black shadow-xs active:scale-98 disabled:opacity-50 cursor-pointer"
-                              >
-                                {isExecutingThis ? (
-                                  <>
-                                    <RefreshCw className="w-4 h-4 animate-spin" />
-                                    {ui("جاري الاعتماد...")}</>
-                                ) : (
-                                  <>
-                                    <Zap className="w-4 h-4 fill-current" />
-                                    {ui("إتمام الفحص المباشر")}</>
-                                )}
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  resetCustomForm();
-                                  setCustomCaptainId(c.id);
-                                  if (c.assignedVehiclePlate) {
-                                    setCustomVehiclePlate(c.assignedVehiclePlate);
-                                  }
-                                  setCustomInspectionDateMode("MANUAL");
-                                  setIsCustomModalOpen(true);
-                                }}
-                                className="p-2.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shrink-0 cursor-pointer"
-                                title={ui("تحديد تاريخ يدوي")}
-                              >
-                                <Calendar className="w-4 h-4 text-amber-500" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setSelectedInspectionForView(c.todayInspection)}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
-                              >
-                                <Eye className="w-4 h-4 text-amber-500" />
-                                <span>{ui("تفاصيل الفحص")}</span>
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  if (c.todayInspection?.id) {
-                                    setPreviewPdfInspection({
-                                      id: c.todayInspection.id,
-                                      captainName: c.name,
-                                      vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                      pdfPath: c.todayInspection.pdfPath,
-                                    });
-                                  }
-                                }}
-                                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
-                              >
-                                <FileText className="w-4 h-4" />
-                                <span>PDF</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleDirectPass(c)}
-                                disabled={isExecutingThis}
-                                className="p-2 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer"
-                                title={ui("إعادة الفحص")}
-                              >
-                                <RefreshCw className={`w-4 h-4 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} />
-                              </button>
-                            </div>
+                          <span className="truncate">{c.name}</span>
+                          {!c.active && (
+                            <Badge variant="destructive" className="text-[10px]">
+                              {ui("معطل")}
+                            </Badge>
                           )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      }
+                      subtitle={
+                        <div className="text-xs text-[var(--text-muted)] font-mono flex flex-wrap items-center gap-2">
+                          {c.phone && (
+                            <span dir="ltr" className="inline-flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-amber-500" aria-hidden="true" />
+                              {c.phone}
+                            </span>
+                          )}
+                          {c.nationalId && <span>{ui("هوية:")} <span dir="ltr">{c.nationalId}</span></span>}
+                        </div>
+                      }
+                      badge={
+                        c.hasTodayInspection ? (
+                          <Badge variant="success" className="text-[11px] gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                            <span>{ui("تم الفحص")}</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="warning" className="text-[11px] gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                            <span>{ui("غير مفحوص")}</span>
+                          </Badge>
+                        )
+                      }
+                      footer={
+                        !c.hasTodayInspection ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="gold"
+                              size="sm"
+                              onClick={() => handleDirectPass(c)}
+                              disabled={isExecutingThis}
+                              className="flex-1 min-h-11 gap-1.5 text-xs font-semibold"
+                            >
+                              {isExecutingThis ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
+                                  <span>{ui("جاري الاعتماد...")}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Zap className="w-4 h-4 fill-current" aria-hidden="true" />
+                                  <span>{ui("إتمام الفحص المباشر")}</span>
+                                </>
+                              )}
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                resetCustomForm();
+                                setCustomCaptainId(c.id);
+                                if (c.assignedVehiclePlate) {
+                                  setCustomVehiclePlate(c.assignedVehiclePlate);
+                                }
+                                setCustomInspectionDateMode("MANUAL");
+                                setIsCustomModalOpen(true);
+                              }}
+                              className="min-h-11 w-11 p-0 shrink-0"
+                              aria-label={`${ui("تحديد تاريخ يدوي")} — ${c.name}`}
+                              title={ui("تحديد تاريخ يدوي")}
+                            >
+                              <Calendar className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedInspectionForView(c.todayInspection)}
+                              className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
+                            >
+                              <Eye className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                              <span>{ui("تفاصيل الفحص")}</span>
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (c.todayInspection?.id) {
+                                  setPreviewPdfInspection({
+                                    id: c.todayInspection.id,
+                                    captainName: c.name,
+                                    vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                    pdfPath: c.todayInspection.pdfPath,
+                                  });
+                                }
+                              }}
+                              className="min-h-11 px-3.5 gap-1.5 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold"
+                            >
+                              <FileText className="w-4 h-4" aria-hidden="true" />
+                              <span>PDF</span>
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDirectPass(c)}
+                              disabled={isExecutingThis}
+                              className="min-h-11 w-11 p-0 shrink-0"
+                              aria-label={`${ui("إعادة الفحص")} — ${c.name}`}
+                              title={ui("إعادة الفحص")}
+                            >
+                              <RefreshCw className={`w-4 h-4 ${isExecutingThis ? "animate-spin text-amber-500" : ""}`} aria-hidden="true" />
+                            </Button>
+                          </>
+                        )
+                      }
+                    >
+                      <MobileCardMetaGrid>
+                        <MobileCardField
+                          label={ui("المركبة")}
+                          mono
+                          value={c.assignedVehiclePlate ? <bdi>{c.assignedVehiclePlate}</bdi> : ui("غير محددة")}
+                        />
+                        <MobileCardField
+                          label={ui("التوقيت")}
+                          mono
+                          value={
+                            c.todayInspection ? (
+                              <span dir="ltr">
+                                {new Date(c.todayInspection.createdAt || c.todayInspection.inspectionDate).toLocaleTimeString(ui.locale, {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            ) : (
+                              "—"
+                            )
+                          }
+                        />
+                      </MobileCardMetaGrid>
+                    </MobileRecordCard>
+                  );
+                })}
+              </div>
             </>
           )}
         </div>
@@ -1236,7 +1213,7 @@ export default function AdminInspectionsPage() {
               <FileText className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto" />
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
                 {ui("لا توجد سجلات فحص تشغيلي")}</h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 {ui("لم يتم العثور على أي سجل فحص مطابق لخيارات البحث")}</p>
             </div>
           ) : (
@@ -1244,200 +1221,201 @@ export default function AdminInspectionsPage() {
               {/* Header Bar with Count */}
               <div className="p-3 sm:p-4 border-b theme-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {ui("سجلات الفحص التشغيلي (")}{ui(filteredInspections.length)})
+                  {ui("سجلات الفحص التشغيلي (")}{filteredInspections.length})
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">
-                  {ui("إجمالي السجلات:")}{ui(stats.totalInspections)}
+                <span className="text-xs text-[var(--text-muted)] font-mono">
+                  {ui("إجمالي السجلات:")} {stats.totalInspections}
                 </span>
               </div>
 
               {/* Desktop Table View (Hidden on mobile, visible on md and up) */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-start border-collapse">
-                      <thead>
-                        <tr className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-xs font-bold whitespace-nowrap">
-                          <th className="py-3 px-4 min-w-[100px]">{ui("كود الفحص")}</th>
-                          <th className="py-3 px-4 min-w-[180px]">{ui("الكابتن")}</th>
-                          <th className="py-3 px-4 min-w-[120px]">{ui("المركبة")}</th>
-                          <th className="py-3 px-4 min-w-[140px]">{ui("التاريخ والوقت")}</th>
-                          <th className="py-3 px-4 min-w-[130px]">{ui("حالة البنود")}</th>
-                          <th className="py-3 px-4 min-w-[110px]">{ui("العقود المرتبطة")}</th>
-                          <th className="py-3 px-4 text-center min-w-[160px]">{ui("الإجراءات")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y theme-border text-xs">
-                        {filteredInspections.map((insp) => (
-                          <tr
-                            key={insp.id}
-                            className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150"
-                          >
-                            {/* Code */}
-                            <td className="py-3.5 px-4 font-mono font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                              #{ui(insp.id.slice(0, 8))}
-                            </td>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 text-[var(--text-muted)] dark:text-slate-400 text-xs font-bold whitespace-nowrap">
+                      <TableHead className="py-3 px-4 min-w-[100px]">{ui("كود الفحص")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[180px]">{ui("الكابتن")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[120px]">{ui("المركبة")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[140px]">{ui("التاريخ والوقت")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[130px]">{ui("حالة البنود")}</TableHead>
+                      <TableHead className="py-3 px-4 min-w-[110px]">{ui("العقود المرتبطة")}</TableHead>
+                      <TableHead className="py-3 px-4 text-center min-w-[160px]">{ui("الإجراءات")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y theme-border text-xs">
+                    {filteredInspections.map((insp) => {
+                      const passedCount = ALL_CHECK_ITEMS.filter((item) => Boolean(insp[item.key])).length;
+                      const allPassed = passedCount === ALL_CHECK_ITEMS.length;
+                      return (
+                      <TableRow
+                        key={insp.id}
+                        className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition duration-150"
+                      >
+                        {/* Code */}
+                        <TableCell className="py-3.5 px-4 font-mono font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap" dir="ltr">
+                          #{insp.id.slice(0, 8)}
+                        </TableCell>
 
-                            {/* Captain */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="font-bold text-slate-900 dark:text-white">
-                                {ui(insp.captainName || "كابتن غير محدد")}
-                              </div>
-                              {insp.captainPhone && (
-                                <div className="text-[11px] text-slate-400 font-mono" dir="ltr">
-                                  {ui(insp.captainPhone)}
-                                </div>
-                              )}
-                            </td>
-
-                            {/* Vehicle */}
-                            <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                              {insp.vehiclePlate}
-                            </td>
-
-                            {/* Date & Time */}
-                            <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">
-                                  {ui(insp.inspectionDate || insp.createdAt ? new Date(insp.inspectionDate || insp.createdAt || "").toLocaleDateString("en-GB") : "—")}
-                                </span>
-                                <span className="text-[10px]" dir="ltr">
-                                  {ui(new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString(ui.locale, {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }))}
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* Pass status (16/16) */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
-                                <CheckCircle2 className="w-3 h-3" />
-                                {ui("16/16 مكتمل")}</span>
-                            </td>
-
-                            {/* Linked Contracts Count */}
-                            <td className="py-3.5 px-4 font-mono text-center whitespace-nowrap">
-                              {insp.contractCount > 0 ? (
-                                <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold text-xs">
-                                  {ui(insp.contractCount)} {ui("عقد")}</span>
-                              ) : (
-                                <span className="text-slate-400 text-[11px]">{ui("لا يوجد")}</span>
-                              )}
-                            </td>
-
-                            {/* Actions */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  onClick={() => setSelectedInspectionForView(insp)}
-                                  className="p-1.5 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition cursor-pointer"
-                                  title={ui("عرض تفاصيل الفحص")}
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
-
-                                <button
-                                  onClick={() =>
-                                    setPreviewPdfInspection({
-                                      id: insp.id,
-                                      captainName: insp.captainName,
-                                      vehiclePlate: insp.vehiclePlate,
-                                      pdfPath: insp.pdfPath,
-                                    })
-                                  }
-                                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
-                                  title={ui("توليد وتحميل مستند PDF الرسمي للفحص")}
-                                >
-                                  <FileText className="w-3.5 h-3.5" />
-                                  <span>PDF</span>
-                                </button>
-
-                                <button
-                                  onClick={() => setDeleteConfirmId(insp.id)}
-                                  className="p-1.5 rounded-lg border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
-                                  title={ui("حذف سجل الفحص")}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Mobile History Record Cards (Shown on mobile screens < md) */}
-                  <div className="md:hidden divide-y theme-border">
-                  {filteredInspections.map((insp) => (
-                    <div key={insp.id} className="p-4 space-y-3">
-                      {/* Top: Code, Safe Badge */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono font-bold text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                          #{ui(insp.id.slice(0, 8))}
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          {ui("16/16 مكتمل")}</span>
-                      </div>
-
-                      {/* Middle: Captain & Vehicle */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-slate-400 text-[11px] block">{ui("الكابتن:")}</span>
-                          <strong className="text-slate-900 dark:text-white truncate block">
-                            {ui(insp.captainName || "كابتن غير محدد")}
-                          </strong>
+                        {/* Captain */}
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {insp.captainName || ui("كابتن غير محدد")}
+                          </div>
                           {insp.captainPhone && (
-                            <span className="text-[11px] text-slate-400 font-mono" dir="ltr">
-                              {ui(insp.captainPhone)}
+                            <div className="text-xs text-[var(--text-muted)] font-mono" dir="ltr">
+                              {insp.captainPhone}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* Vehicle */}
+                        <TableCell className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                          <bdi>{insp.vehiclePlate}</bdi>
+                        </TableCell>
+
+                        {/* Date & Time */}
+                        <TableCell className="py-3.5 px-4 font-mono text-xs text-[var(--text-muted)] dark:text-slate-400 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                              {insp.inspectionDate || insp.createdAt ? new Date(insp.inspectionDate || insp.createdAt || "").toLocaleDateString("en-GB") : "—"}
                             </span>
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-slate-400 text-[11px] block">{ui("المركبة:")}</span>
-                          <strong className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {insp.vehiclePlate}
-                          </strong>
-                        </div>
-                      </div>
+                            <span className="text-xs" dir="ltr">
+                              {new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString(ui.locale, {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </TableCell>
 
-                      {/* Date & Linked Contracts */}
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border theme-border text-xs">
-                        <div className="flex items-center gap-1.5 font-mono text-slate-600 dark:text-slate-300">
-                          <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span dir="ltr">
-                            {ui(insp.inspectionDate || insp.createdAt ? new Date(insp.inspectionDate || insp.createdAt || "").toLocaleDateString("en-GB") : "—")}
+                        {/* Pass status */}
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border ${
+                              allPassed
+                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                                : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25"
+                            }`}
+                          >
+                            {allPassed ? (
+                              <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
+                            ) : (
+                              <AlertTriangle className="w-3 h-3" aria-hidden="true" />
+                            )}
+                            <span dir="ltr">{passedCount}/{ALL_CHECK_ITEMS.length}</span>{" "}
+                            <span>{allPassed ? ui("مكتمل") : (isRTL ? "بها ملاحظات" : "needs review")}</span>
                           </span>
-                          <span className="text-slate-400 text-[10px]" dir="ltr">
-                            {ui(new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString(ui.locale, {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }))}
-                          </span>
-                        </div>
+                        </TableCell>
 
-                        <div>
+                        {/* Linked Contracts Count */}
+                        <TableCell className="py-3.5 px-4 font-mono text-center whitespace-nowrap">
                           {insp.contractCount > 0 ? (
-                            <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold text-[11px]">
-                              {ui(insp.contractCount)} {ui("عقد مرتبط")}</span>
+                            <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold text-xs">
+                              {insp.contractCount} {ui("عقد")}</span>
                           ) : (
-                            <span className="text-slate-400 text-[11px]">{ui("لا عقود")}</span>
+                            <span className="text-[var(--text-muted)] text-xs">{ui("لا يوجد")}</span>
                           )}
-                        </div>
-                      </div>
+                        </TableCell>
 
-                      {/* Bottom Actions */}
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
+                        {/* Actions */}
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              aria-label={`${ui("عرض تفاصيل الفحص")} #${insp.id.slice(0, 8)}`}
+                              onClick={() => setSelectedInspectionForView(insp)}
+                              className="min-h-9 min-w-9 p-1.5 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 inline-flex items-center justify-center transition cursor-pointer"
+                              title={ui("عرض تفاصيل الفحص")}
+                            >
+                              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPreviewPdfInspection({
+                                  id: insp.id,
+                                  captainName: insp.captainName,
+                                  vehiclePlate: insp.vehiclePlate,
+                                  pdfPath: insp.pdfPath,
+                                })
+                              }
+                              className="min-h-9 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
+                              title={ui("توليد وتحميل مستند PDF الرسمي للفحص")}
+                            >
+                              <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>PDF</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              aria-label={`${ui("حذف سجل الفحص")} #${insp.id.slice(0, 8)}`}
+                              onClick={() => setDeleteConfirmId(insp.id)}
+                              className="min-h-9 min-w-9 p-1.5 rounded-lg border border-rose-500/20 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 inline-flex items-center justify-center transition cursor-pointer"
+                              title={ui("حذف سجل الفحص")}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile History Record Cards (Shown on mobile screens < md) */}
+              <div className="md:hidden p-3.5 space-y-3">
+                {filteredInspections.map((insp) => {
+                  const passedCount = ALL_CHECK_ITEMS.filter((item) => Boolean(insp[item.key])).length;
+                  const allPassed = passedCount === ALL_CHECK_ITEMS.length;
+                  return (
+                  <MobileRecordCard
+                    key={insp.id}
+                    title={
+                      <span dir="ltr" className="font-mono font-bold text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">
+                        #{insp.id.slice(0, 8)}
+                      </span>
+                    }
+                    subtitle={
+                      <span dir="ltr" className="font-mono">
+                        {insp.inspectionDate || insp.createdAt ? new Date(insp.inspectionDate || insp.createdAt || "").toLocaleDateString("en-GB") : "—"}{" "}
+                        ·{" "}
+                        {new Date(insp.createdAt || insp.inspectionDate).toLocaleTimeString(ui.locale, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    }
+                    badge={
+                      <Badge variant={allPassed ? "success" : "warning"} className="text-[11px] gap-1">
+                        {allPassed ? (
+                          <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
+                        )}
+                        <span dir="ltr">{passedCount}/{ALL_CHECK_ITEMS.length}</span>{" "}
+                        <span>{allPassed ? ui("مكتمل") : (isRTL ? "بها ملاحظات" : "needs review")}</span>
+                      </Badge>
+                    }
+                    footer={
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => setSelectedInspectionForView(insp)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+                          className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
                         >
-                          <Eye className="w-4 h-4 text-amber-500" />
+                          <Eye className="w-4 h-4 text-amber-500" aria-hidden="true" />
                           <span>{ui("تفاصيل")}</span>
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() =>
                             setPreviewPdfInspection({
                               id: insp.id,
@@ -1446,23 +1424,50 @@ export default function AdminInspectionsPage() {
                               pdfPath: insp.pdfPath,
                             })
                           }
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition cursor-pointer"
+                          className="flex-1 min-h-11 gap-1.5 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold"
                         >
-                          <FileText className="w-4 h-4" />
+                          <FileText className="w-4 h-4" aria-hidden="true" />
                           <span>{ui("وثيقة PDF")}</span>
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => setDeleteConfirmId(insp.id)}
-                          className="p-2 rounded-xl border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition shrink-0 cursor-pointer"
+                          className="min-h-11 w-11 p-0 border-rose-500/20 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 shrink-0"
+                          aria-label={`${ui("حذف")} #${insp.id.slice(0, 8)}`}
                           title={ui("حذف")}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
+                        </Button>
+                      </>
+                    }
+                  >
+                    <MobileCardMetaGrid columns={3}>
+                      <MobileCardField
+                        label={ui("الكابتن")}
+                        value={insp.captainName || ui("كابتن غير محدد")}
+                      />
+                      <MobileCardField
+                        label={ui("المركبة")}
+                        mono
+                        value={<bdi>{insp.vehiclePlate}</bdi>}
+                      />
+                      <MobileCardField
+                        label={ui("العقود")}
+                        mono
+                        value={
+                          insp.contractCount > 0
+                            ? `${insp.contractCount} ${ui("عقد")}`
+                            : ui("لا عقود")
+                        }
+                      />
+                    </MobileCardMetaGrid>
+                  </MobileRecordCard>
+                  );
+                })}
+              </div>
             </>
           )}
         </div>
@@ -1477,23 +1482,25 @@ export default function AdminInspectionsPage() {
             {/* Modal Header */}
             <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center">
                   <ClipboardCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                     {ui("كشف الفحص التشغيلي اليومي للمركبة")}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {ui("كود الفحص: #")}{ui(selectedInspectionForView.id.slice(0, 10))}
+                  <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 font-mono">
+                    {ui("كود الفحص: #")}<span dir="ltr">{selectedInspectionForView.id.slice(0, 10)}</span>
                   </p>
                 </div>
               </div>
 
               <button
+                type="button"
+                aria-label={ui("إغلاق")}
                 onClick={() => setSelectedInspectionForView(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -1502,21 +1509,21 @@ export default function AdminInspectionsPage() {
               {/* Meta Info Pill */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border theme-border text-xs">
                 <div>
-                  <span className="text-slate-400 block text-[11px]">{ui("الكابتن:")}</span>
+                  <span className="text-[var(--text-muted)] block text-xs">{ui("الكابتن:")}</span>
                   <strong className="text-slate-900 dark:text-white">
-                    {ui(selectedInspectionForView.captainName || "غير محدد")}
+                    {selectedInspectionForView.captainName || ui("غير محدد")}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">{ui("لوحة المركبة:")}</span>
+                  <span className="text-[var(--text-muted)] block text-xs">{ui("لوحة المركبة:")}</span>
                   <strong className="font-mono text-slate-900 dark:text-white">
                     {selectedInspectionForView.vehiclePlate}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">{ui("تاريخ الفحص:")}</span>
+                  <span className="text-[var(--text-muted)] block text-xs">{ui("تاريخ الفحص:")}</span>
                   <strong className="font-mono text-slate-900 dark:text-white" dir="ltr">
-                    {ui(new Date(selectedInspectionForView.inspectionDate).toLocaleDateString("en-GB"))}
+                    {new Date(selectedInspectionForView.inspectionDate).toLocaleDateString("en-GB")}
                   </strong>
                 </div>
               </div>
@@ -1524,7 +1531,7 @@ export default function AdminInspectionsPage() {
               {/* Group 1: Dashboard Indicators */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <Gauge className="w-4 h-4 text-amber-500" />
+                  <Gauge className="w-4 h-4 text-amber-500" aria-hidden="true" />
                   {ui("مؤشرات لوحة القيادة والعدادات (Dashboard)")}</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {DASHBOARD_ITEMS.map((item) => {
@@ -1535,15 +1542,15 @@ export default function AdminInspectionsPage() {
                         className="flex items-center justify-between p-2.5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-800/30 text-xs"
                       >
                         <span className="font-medium text-slate-700 dark:text-slate-300">
-                          {ui(item.titleAr)}
+                          {isRTL ? item.titleAr : item.titleEn}
                         </span>
                         {val ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-[11px]">
-                            <CheckCircle2 className="w-4 h-4" />
+                          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+                            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                             {ui("سليم")}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-rose-500 font-bold text-[11px]">
-                            <XCircle className="w-4 h-4" />
+                          <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-bold text-xs">
+                            <XCircle className="w-4 h-4" aria-hidden="true" />
                             {ui("عطل")}</span>
                         )}
                       </div>
@@ -1555,7 +1562,7 @@ export default function AdminInspectionsPage() {
               {/* Group 2: External Inspection */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <Car className="w-4 h-4 text-blue-500" />
+                  <Car className="w-4 h-4 text-blue-500" aria-hidden="true" />
                   {ui("الفحص الخارجي والهيكل والإنارة")}</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {EXTERNAL_ITEMS.map((item) => {
@@ -1566,15 +1573,15 @@ export default function AdminInspectionsPage() {
                         className="flex items-center justify-between p-2.5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-800/30 text-xs"
                       >
                         <span className="font-medium text-slate-700 dark:text-slate-300">
-                          {ui(item.titleAr)}
+                          {isRTL ? item.titleAr : item.titleEn}
                         </span>
                         {val ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-[11px]">
-                            <CheckCircle2 className="w-4 h-4" />
+                          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+                            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                             {ui("سليم")}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-rose-500 font-bold text-[11px]">
-                            <XCircle className="w-4 h-4" />
+                          <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-bold text-xs">
+                            <XCircle className="w-4 h-4" aria-hidden="true" />
                             {ui("عطل")}</span>
                         )}
                       </div>
@@ -1586,7 +1593,7 @@ export default function AdminInspectionsPage() {
               {/* Group 3: Safety & Emergency */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <ShieldAlert className="w-4 h-4 text-rose-500" />
+                  <ShieldAlert className="w-4 h-4 text-rose-700 dark:text-rose-400" aria-hidden="true" />
                   {ui("تجهيزات السلامة والطوارئ")}</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {SAFETY_ITEMS.map((item) => {
@@ -1597,15 +1604,15 @@ export default function AdminInspectionsPage() {
                         className="flex items-center justify-between p-2.5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-800/30 text-xs"
                       >
                         <span className="font-medium text-slate-700 dark:text-slate-300">
-                          {ui(item.titleAr)}
+                          {isRTL ? item.titleAr : item.titleEn}
                         </span>
                         {val ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-[11px]">
-                            <CheckCircle2 className="w-4 h-4" />
+                          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+                            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                             {ui("متوفر")}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-rose-500 font-bold text-[11px]">
-                            <XCircle className="w-4 h-4" />
+                          <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-bold text-xs">
+                            <XCircle className="w-4 h-4" aria-hidden="true" />
                             {ui("غير متوفر")}</span>
                         )}
                       </div>
@@ -1628,8 +1635,8 @@ export default function AdminInspectionsPage() {
 
             {/* Modal Footer */}
             <div className="p-4 border-t theme-border flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
-              <span className="text-xs text-slate-400 flex items-center gap-1.5 font-bold">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span className="text-xs text-[var(--text-muted)] flex items-center gap-1.5 font-bold">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
                 {ui("معتمد رسمياً في نظام ميقات الخليج")}</span>
               <div className="flex items-center gap-2 self-stretch sm:self-auto">
                 <button
@@ -1642,16 +1649,16 @@ export default function AdminInspectionsPage() {
                       pdfPath: selectedInspectionForView.pdfPath,
                     });
                   }}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs hover:shadow-md transition"
+                  className="flex-1 sm:flex-initial min-h-11 flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs hover:shadow-md transition"
                   title={ui("معاينة وتحميل ملف PDF الرسمي")}
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-4 h-4" aria-hidden="true" />
                   <span>{ui("معاينة وتحميل PDF")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedInspectionForView(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                  className="min-h-11 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
                 >
                   {ui("إغلاق")}</button>
               </div>
@@ -1669,22 +1676,24 @@ export default function AdminInspectionsPage() {
             {/* Modal Header */}
             <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                     {ui("تسجيل فحص تشغيلي مخصص للمركبة")}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-[var(--text-muted)] dark:text-slate-400">
                     {ui("فحص يدوي تفصيلي لـ 16 نقطة سلامة وتشغيل")}</p>
                 </div>
               </div>
 
               <button
+                type="button"
+                aria-label={ui("إغلاق")}
                 onClick={() => setIsCustomModalOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -1694,10 +1703,11 @@ export default function AdminInspectionsPage() {
                 {/* Captain & Vehicle Selection */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                      {ui("اختيار الكابتن")}<span className="text-rose-500">*</span>
+                    <label htmlFor={`${formId}-captain`} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      {ui("اختيار الكابتن")}<span className="text-rose-700">*</span>
                     </label>
                     <select
+                      id={`${formId}-captain`}
                       value={customCaptainId}
                       onChange={(e) => {
                         const capId = e.target.value;
@@ -1708,7 +1718,7 @@ export default function AdminInspectionsPage() {
                         }
                       }}
                       required
-                      className="theme-input w-full p-2.5 text-xs rounded-xl"
+                      className="theme-input w-full min-h-11 sm:min-h-10 p-2.5 text-sm sm:text-xs rounded-xl"
                     >
                       <option value="">{ui("-- اختر الكابتن المراد فحصه --")}</option>
                       {safeCaptains.map((c) => (
@@ -1721,35 +1731,37 @@ export default function AdminInspectionsPage() {
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {ui("لوحة المركبة")}<span className="text-rose-500">*</span>
+                      <label htmlFor={`${formId}-plate`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {ui("لوحة المركبة")}<span className="text-rose-700">*</span>
                       </label>
                       {safeVehicles.length > 0 && (
-                        <span className="text-[10px] text-slate-400">
-                          {ui(safeVehicles.length)} {ui("مركبة بالأسطول")}</span>
+                        <span className="text-xs text-[var(--text-muted)]">
+                          {safeVehicles.length} {ui("مركبة بالأسطول")}</span>
                       )}
                     </div>
                     <input
+                      id={`${formId}-plate`}
                       type="text"
                       value={customVehiclePlate}
                       onChange={(e) => setCustomVehiclePlate(e.target.value)}
                       placeholder={ui("مثال: ا ص ل 7223")}
                       required
-                      className="theme-input w-full p-2.5 text-xs rounded-xl font-mono"
+                      className="theme-input w-full min-h-11 sm:min-h-10 p-2.5 text-sm sm:text-xs rounded-xl font-mono"
                     />
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       {safeVehicles.length > 0 && (
                         <select
+                          aria-label={ui("اختيار سريع من مركبات الأسطول...")}
                           onChange={(e) => {
                             if (e.target.value) setCustomVehiclePlate(e.target.value);
                           }}
                           value=""
-                          className="text-[11px] py-1 px-2 rounded-lg border theme-border bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer hover:border-amber-500/40"
+                          className="min-h-9 text-xs py-1 px-2 rounded-lg border theme-border bg-slate-100/70 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 cursor-pointer hover:border-amber-500/40"
                         >
                           <option value="">{ui("اختيار سريع من مركبات الأسطول...")}</option>
                           {safeVehicles.map((v) => (
                             <option key={v.id} value={v.plateNumberAr}>
-                              {v.plateNumberAr} - {ui(v.make)} {ui(v.model)}
+                              {v.plateNumberAr} - {v.make} {v.model}
                             </option>
                           ))}
                         </select>
@@ -1761,9 +1773,9 @@ export default function AdminInspectionsPage() {
                             <button
                               type="button"
                               onClick={() => setCustomVehiclePlate(cap.assignedVehiclePlate || "")}
-                              className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer"
+                              className="min-h-9 text-xs px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer"
                             >
-                              {ui("مركبة الكابتن (")}{ui(cap.assignedVehiclePlate)})
+                              {ui("مركبة الكابتن (")}{cap.assignedVehiclePlate})
                             </button>
                           );
                         }
@@ -1777,46 +1789,48 @@ export default function AdminInspectionsPage() {
                 <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border theme-border space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div>
-                      <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                        {ui("تاريخ الفحص التشغيلي")}</label>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                        {ui("تاريخ الفحص التشغيلي")}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
                         {ui("يمكن اعتماد تاريخ اليوم الفعلي تلقائياً أو اختيار تاريخ يدوي مخصص")}</p>
                     </div>
 
                     <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-1 rounded-xl border theme-border self-start sm:self-auto shadow-2xs">
                       <button
                         type="button"
+                        aria-pressed={customInspectionDateMode === "AUTO"}
                         onClick={() => setCustomInspectionDateMode("AUTO")}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                           customInspectionDateMode === "AUTO"
-                            ? "gold-gradient-btn text-white shadow-xs"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            ? "gold-gradient-btn shadow-xs"
+                            : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                         }`}
                       >
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                         {ui("اليوم (تلقائي)")}</button>
                       <button
                         type="button"
+                        aria-pressed={customInspectionDateMode === "MANUAL"}
                         onClick={() => setCustomInspectionDateMode("MANUAL")}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                           customInspectionDateMode === "MANUAL"
-                            ? "gold-gradient-btn text-white shadow-xs"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            ? "gold-gradient-btn shadow-xs"
+                            : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                         }`}
                       >
-                        <Edit3 className="w-3.5 h-3.5" />
+                        <Edit3 className="w-3.5 h-3.5" aria-hidden="true" />
                         {ui("يدوي (تاريخ مخصص)")}</button>
                     </div>
                   </div>
 
                   {customInspectionDateMode === "AUTO" ? (
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
-                      <span className="text-slate-500 dark:text-slate-400">
+                      <span className="text-[var(--text-muted)] dark:text-slate-400">
                         {ui("تاريخ الفحص المعتمد في السجلات والوثيقة:")}</span>
                       <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {ui(formatOfficialDate(getSaudiTodayDateStr()))} {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
+                        <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span dir="ltr">{formatOfficialDate(getSaudiTodayDateStr())}</span> {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
@@ -1828,8 +1842,8 @@ export default function AdminInspectionsPage() {
                           onChange={setCustomInspectionDate}
                         />
                       </div>
-                      <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                      <div className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end min-h-11">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
                         <span>
                           {ui("سيتم توثيق الفحص واعتماده بهذا التاريخ المخصص في السجلات وتقارير الفحص ووثيقة الـ PDF الرسمية.")}</span>
                       </div>
@@ -1838,9 +1852,9 @@ export default function AdminInspectionsPage() {
                 </div>
 
                 {/* Quick Toggle All Button */}
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
                   <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <Sparkles className="w-4 h-4 text-amber-500" aria-hidden="true" />
                     {ui("تحديد جميع نقاط الفحص (16/16) كسليمة ومجتازة")}</span>
                   <div className="flex items-center gap-2">
                     <button
@@ -1850,7 +1864,7 @@ export default function AdminInspectionsPage() {
                         ALL_CHECK_ITEMS.forEach((i) => (allPass[i.key] = true));
                         setCustomChecks(allPass);
                       }}
-                      className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition"
+                      className="min-h-10 sm:min-h-8 px-3 py-1 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition"
                     >
                       {ui("تحديد الكل سليم")}</button>
                     <button
@@ -1860,111 +1874,26 @@ export default function AdminInspectionsPage() {
                         ALL_CHECK_ITEMS.forEach((i) => (allFail[i.key] = false));
                         setCustomChecks(allFail);
                       }}
-                      className="px-3 py-1 rounded-lg border theme-border text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition"
+                      className="min-h-10 sm:min-h-8 px-3 py-1 rounded-lg border theme-border text-xs text-[var(--text-muted)] dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
                     >
                       {ui("إلغاء التحديد")}</button>
                   </div>
                 </div>
 
                 {/* Checklist Sections */}
-                <div className="space-y-4">
-                  {/* Dashboard */}
-                  <div>
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                      <Gauge className="w-3.5 h-3.5 text-amber-500" />
-                      {ui("مؤشرات لوحة القيادة")}</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {DASHBOARD_ITEMS.map((item) => (
-                        <label
-                          key={item.key}
-                          className="flex items-center justify-between p-2.5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/60 transition"
-                        >
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                            {ui(item.titleAr)}
-                          </span>
-                          <input
-                            type="checkbox"
-                            checked={Boolean(customChecks[item.key])}
-                            onChange={(e) =>
-                              setCustomChecks((prev) => ({
-                                ...prev,
-                                [item.key]: e.target.checked,
-                              }))
-                            }
-                            className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 accent-amber-500"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* External */}
-                  <div>
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                      <Car className="w-3.5 h-3.5 text-blue-500" />
-                      {ui("الفحص الخارجي والهيكل")}</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {EXTERNAL_ITEMS.map((item) => (
-                        <label
-                          key={item.key}
-                          className="flex items-center justify-between p-2.5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/60 transition"
-                        >
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                            {ui(item.titleAr)}
-                          </span>
-                          <input
-                            type="checkbox"
-                            checked={Boolean(customChecks[item.key])}
-                            onChange={(e) =>
-                              setCustomChecks((prev) => ({
-                                ...prev,
-                                [item.key]: e.target.checked,
-                              }))
-                            }
-                            className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 accent-amber-500"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Safety */}
-                  <div>
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                      <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
-                      {ui("تجهيزات السلامة والطوارئ")}</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {SAFETY_ITEMS.map((item) => (
-                        <label
-                          key={item.key}
-                          className="flex items-center justify-between p-2.5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/60 transition"
-                        >
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                            {ui(item.titleAr)}
-                          </span>
-                          <input
-                            type="checkbox"
-                            checked={Boolean(customChecks[item.key])}
-                            onChange={(e) =>
-                              setCustomChecks((prev) => ({
-                                ...prev,
-                                [item.key]: e.target.checked,
-                              }))
-                            }
-                            className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 accent-amber-500"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <InspectionChecklist
+                  checks={customChecks}
+                  onChange={(key, value) =>
+                    setCustomChecks((prev) => ({ ...prev, [key]: value }))
+                  }
+                />
 
                 {/* Notes */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <label htmlFor={`${formId}-notes`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                       {ui("ملاحظات الفحص التشغيلي (اختياري)")}</label>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {ui("اقتراحات سريعة")}</span>
                   </div>
                   <div className="flex items-center gap-1.5 mb-2 flex-wrap">
@@ -1977,26 +1906,27 @@ export default function AdminInspectionsPage() {
                         key={idx}
                         type="button"
                         onClick={() => setCustomNotes(preset)}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border theme-border text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
+                        className="min-h-9 text-xs px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border theme-border text-[var(--text-muted)] dark:text-slate-400 hover:text-amber-700 dark:hover:text-amber-400 transition cursor-pointer"
                       >
                         {ui(preset)}
                       </button>
                     ))}
                   </div>
                   <textarea
+                    id={`${formId}-notes`}
                     value={customNotes}
                     onChange={(e) => setCustomNotes(e.target.value)}
                     rows={2}
                     placeholder={ui("اكتب أي ملاحظات فنية أو تفاصيل إضافية عن حالة المركبة...")}
-                    className="theme-input w-full p-2.5 text-xs rounded-xl"
+                    className="theme-input w-full p-2.5 text-sm sm:text-xs rounded-xl"
                   />
                 </div>
               </div>
 
               {/* Modal Footer */}
               <div className="p-4 border-t theme-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
-                <div className="flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400">
-                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+                  <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{ui("يتم حفظ البيانات وتوليد وتخزين وثيقة PDF فورياً في النظام")}</span>
                 </div>
 
@@ -2004,22 +1934,22 @@ export default function AdminInspectionsPage() {
                   <button
                     type="button"
                     onClick={() => setIsCustomModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                    className="min-h-11 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition"
                   >
                     {ui("إلغاء")}</button>
 
                   <button
                     type="submit"
                     disabled={isSubmittingCustom}
-                    className="flex items-center gap-1.5 px-6 py-2 rounded-xl gold-gradient-btn text-xs font-black shadow-md transition disabled:opacity-50 cursor-pointer"
+                    className="min-h-11 flex items-center gap-1.5 px-6 py-2 rounded-xl gold-gradient-btn text-xs font-semibold shadow-md transition disabled:opacity-50 cursor-pointer"
                   >
                     {isSubmittingCustom ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
                         {ui("جاري حفظ وتخزين الفحص...")}</>
                     ) : (
                       <>
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4" aria-hidden="true" />
                         {ui("اعتماد وتوثيق الفحص التشغيلي")}</>
                     )}
                   </button>
@@ -2036,14 +1966,14 @@ export default function AdminInspectionsPage() {
       {deleteConfirmId && (
         <Modal label={ui("حذف الفحص")} onClose={() => setDeleteConfirmId(null)} isBusy={isDeleting}>
           <div className="mobile-dialog-panel overflow-y-auto theme-card w-full max-w-md rounded-3xl border border-rose-500/30 p-6 space-y-4 shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
-              <Trash2 className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" aria-hidden="true" />
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                {ui("تأكيد حذف سجل الفحص التشغيلي")}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                {ui("تأكيد حذف سجل الفحص التشغيلي")}</h2>
+              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400">
                 {ui("هل أنت متأكد من رغبتك في حذف هذا السجل بشكل نهائي؟ سيتم فك ارتباط أي عقد مرتبط به.")}</p>
             </div>
 
@@ -2052,7 +1982,7 @@ export default function AdminInspectionsPage() {
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 rounded-xl border theme-border text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="flex-1 min-h-11 py-2.5 rounded-xl border theme-border text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 {ui("تراجع")}</button>
 
@@ -2060,11 +1990,11 @@ export default function AdminInspectionsPage() {
                 type="button"
                 onClick={handleDeleteInspection}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="flex-1 min-h-11 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
                 {isDeleting ? (
                   <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
                     {ui("جاري الحذف...")}</>
                 ) : (
                   <>{ui("حذف نهائي")}</>

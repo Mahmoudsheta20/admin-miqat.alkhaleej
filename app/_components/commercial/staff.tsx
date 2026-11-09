@@ -1,14 +1,94 @@
 "use client";
-import { useEffect, useState, useMemo, type FormEvent } from "react";
+import { useUrlState } from "@/lib/use-url-state";
+import { useEffect, useId, useRef, useState, useMemo, type FormEvent } from "react";
 import Link from "next/link";
 import { useUiText } from "@/lib/ui-text";
-import { commercialRequest, csvDownload, type Member, type StaffStatement, type Payroll } from "@/lib/commercial";
+import { commercialRequest, csvDownload, type Member, type StaffStatement, type StaffOperation, type Payroll } from "@/lib/commercial";
+import { formatSignedMinor, signedMoneyMinor } from "@/lib/money";
 import { getCaptains } from "@/app/_actions/captain";
 import { currentSaudiPeriod } from "@/lib/accounting";
 import { useAuth } from "@/lib/authContext";
-import { PageHeader, StatCard, StatRow } from "@/app/_components/ui";
-import { UserCheck, Users, UserPlus, Download, Wallet, Coins, HandCoins } from "lucide-react";
+import {
+  PageHeader,
+  StatCard,
+  StatRow,
+  Table,
+  TableCaption,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  Checkbox,
+  formatMoneyValue,
+} from "@/app/_components/ui";
+import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
+import Modal from "@/app/_components/Modal";
+import {
+  UserCheck,
+  Users,
+  UserPlus,
+  Download,
+  Wallet,
+  Coins,
+  HandCoins,
+  Copy,
+  Check,
+  RotateCcw,
+  Plus,
+  Phone,
+  Banknote,
+  Search,
+  CreditCard,
+  ArrowDownLeft,
+  FileText,
+  Clock,
+  Sparkles,
+  ExternalLink,
+  CheckCircle2,
+  Edit2,
+  X,
+} from "lucide-react";
 import { BUTTON, INPUT, SECONDARY, Field, Notice, Panel, LoadingRows, useCommercialData, useMutation } from "./shared";
+
+const MEMBER_FILTERS = ["ALL", "DRIVER", "EMPLOYEE", "EXTERNAL", "ACTIVE", "INACTIVE"] as const;
+type MemberFilter = (typeof MEMBER_FILTERS)[number];
+
+const OPERATION_FILTERS = ["ALL", "PAYOUT", "SALARY", "CUSTODY", "ADVANCE", "COMMISSION"] as const;
+type OperationFilter = (typeof OPERATION_FILTERS)[number];
+
+function formatIbanDisplay(iban: string): string {
+  return iban.replace(/\s+/g, "").toUpperCase().replace(/(.{4})/g, "$1 ").trim();
+}
+
+function isNonZeroMoney(value?: string | null): boolean {
+  return signedMoneyMinor(value) !== BigInt(0);
+}
+
+function formatSignedDelta(value: string): {
+  minor: bigint;
+  display: string;
+  negative: boolean;
+  positive: boolean;
+} {
+  const minor = signedMoneyMinor(value);
+  const negative = minor < BigInt(0);
+  const positive = minor > BigInt(0);
+  const formatted = formatMoneyValue(formatSignedMinor(minor));
+  return {
+    minor,
+    display: positive ? `+${formatted}` : formatted,
+    negative,
+    positive,
+  };
+}
 
 const KIND_LABELS: Record<Member["kind"], string> = {
   DRIVER: "سائق",
@@ -144,31 +224,40 @@ export function MemberEditor({ member, onSaved, onClose }: { member?: Member; on
               ["accountHolder", "اسم صاحب الحساب"],
               ["iban", "آيبان / IBAN"],
             ] as [keyof typeof f, string][]
-          ).map(([k, label]) => (
-            <Field label={label} key={k}>
-              <input className={INPUT} value={String(f[k])} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
-            </Field>
-          ))}
-          <Field label="يستحق عمولات إحالة">
-            <input
-              className="ms-2 accent-amber-600"
-              type="checkbox"
-              checked={f.isRepresentative}
-              onChange={(e) => setF({ ...f, isRepresentative: e.target.checked })}
-            />
-          </Field>
-          <Field label="نشط">
-            <input
-              className="ms-2 accent-amber-600"
-              type="checkbox"
-              checked={f.active}
-              onChange={(e) => setF({ ...f, active: e.target.checked })}
-            />
-          </Field>
+          ).map(([k, label]) => {
+            const isLtr = k === "phone" || k === "vatNumber" || k === "iban";
+            return (
+              <Field label={label} key={k}>
+                <input
+                  type={k === "phone" ? "tel" : "text"}
+                  dir={isLtr ? "ltr" : undefined}
+                  className={`${INPUT}${isLtr ? " text-start font-mono" : ""}`}
+                  value={String(f[k])}
+                  onChange={(e) => setF({ ...f, [k]: e.target.value })}
+                />
+              </Field>
+            );
+          })}
+          <div className="flex flex-wrap items-center gap-4 sm:col-span-2 pt-1">
+            <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={f.isRepresentative}
+                onChange={(e) => setF({ ...f, isRepresentative: e.target.checked })}
+              />
+              <span>{ui("يستحق عمولات إحالة")}</span>
+            </label>
+            <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={f.active}
+                onChange={(e) => setF({ ...f, active: e.target.checked })}
+              />
+              <span>{ui("نشط")}</span>
+            </label>
+          </div>
         </div>
         <Notice message={lookupError || m.error} error />
         <div className="flex gap-2">
-          <button disabled={m.busy} className={BUTTON}>
+          <button type="submit" disabled={m.busy} className={BUTTON}>
             {ui("حفظ الحساب")}
           </button>
           <button type="button" className={SECONDARY} onClick={onClose}>
@@ -184,7 +273,19 @@ export function MembersPage({ representatives = false }: { representatives?: boo
   const ui = useUiText();
   const list = useCommercialData<{ items: Member[] }>(`/members?representatives=${representatives}`);
   const [editing, setEditing] = useState<Member | "NEW" | null>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useUrlState<string>("q", "");
+  const [kindFilter, setKindFilter] = useUrlState<MemberFilter>("kind", "ALL", MEMBER_FILTERS);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
+  const membersHeadingId = useId();
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
 
   const membersHelpGuide = useMemo(
     () => ({
@@ -221,40 +322,163 @@ export function MembersPage({ representatives = false }: { representatives?: boo
     [ui],
   );
 
-  const activeCount = list.data?.items.filter((r) => r.active).length ?? 0;
+  const items = list.data?.items ?? [];
+  const activeCount = items.filter((r) => r.active).length;
+  const repCount = items.filter((r) => r.isRepresentative).length;
+  const bankReadyCount = items.filter((r) => Boolean(r.bankDetails?.iban?.trim())).length;
+
+  const filterCounts: Record<MemberFilter, number> = {
+    ALL: items.length,
+    DRIVER: items.filter((r) => r.kind === "DRIVER").length,
+    EMPLOYEE: items.filter((r) => r.kind === "EMPLOYEE").length,
+    EXTERNAL: items.filter((r) => r.kind.startsWith("EXTERNAL")).length,
+    ACTIVE: activeCount,
+    INACTIVE: items.length - activeCount,
+  };
+
+  const hasActiveFilter = kindFilter !== "ALL" || search.trim().length > 0;
+
+  const filteredItems = items.filter((r) => {
+    if (kindFilter === "DRIVER" && r.kind !== "DRIVER") return false;
+    if (kindFilter === "EMPLOYEE" && r.kind !== "EMPLOYEE") return false;
+    if (kindFilter === "EXTERNAL" && !r.kind.startsWith("EXTERNAL")) return false;
+    if (kindFilter === "ACTIVE" && !r.active) return false;
+    if (kindFilter === "INACTIVE" && r.active) return false;
+
+    const rawQ = search.trim().toLowerCase();
+    if (!rawQ) return true;
+    const normalizedIbanQuery = rawQ.replace(/\s+/g, "");
+    const name = r.name.toLowerCase();
+    const phone = (r.phone || "").toLowerCase();
+    const vat = (r.vatNumber || "").toLowerCase();
+    const bankName = (r.bankDetails?.bankName || "").toLowerCase();
+    const holder = (r.bankDetails?.accountHolder || "").toLowerCase();
+    const iban = (r.bankDetails?.iban || "").replace(/\s+/g, "").toLowerCase();
+    return (
+      name.includes(rawQ) ||
+      phone.includes(rawQ) ||
+      vat.includes(rawQ) ||
+      bankName.includes(rawQ) ||
+      holder.includes(rawQ) ||
+      iban.includes(normalizedIbanQuery)
+    );
+  });
+
+  const handleCopyIban = async (id: string, iban: string) => {
+    try {
+      await navigator.clipboard?.writeText(iban.replace(/\s+/g, ""));
+      setCopiedId(id);
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+      copyTimerRef.current = window.setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // Clipboard API may be unavailable in non-HTTPS contexts
+    }
+  };
+
+  const resetFilters = () => {
+    setKindFilter("ALL");
+    setSearch("");
+  };
+
+  const filterTabs: { id: MemberFilter; label: string }[] = [
+    { id: "ALL", label: "جميع الحسابات" },
+    { id: "DRIVER", label: "سائقين" },
+    { id: "EMPLOYEE", label: "موظفين" },
+    { id: "EXTERNAL", label: "وسطاء ومناديب" },
+    { id: "ACTIVE", label: "نشط" },
+    { id: "INACTIVE", label: "موقوف" },
+  ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={ui(representatives ? "المناديب وعمولات الإحالة" : "حسابات السائقين والعاملين")}
-        subtitle={ui("المستحقات والعهد والسلف منفصلة، وكل حركة جديدة مرتبطة بدفتر الأستاذ.")}
-        badge={representatives ? ui("الوسطاء والمناديب") : ui("إدارة العاملين والسائقين")}
+        title={representatives ? "المناديب وعمولات الإحالة" : "حسابات السائقين والعاملين"}
+        subtitle="المستحقات والعهد والسلف منفصلة، وكل حركة جديدة مرتبطة بدفتر الأستاذ."
+        badge={representatives ? "الوسطاء والمناديب" : "إدارة العاملين والسائقين"}
         icon={representatives ? Users : UserCheck}
         primaryAction={{
-          label: `+ ${ui("إضافة مندوب أو موظف")}`,
+          label: "إضافة مندوب أو موظف",
           onClick: () => setEditing("NEW"),
           icon: UserPlus,
           variant: "primary",
         }}
+        secondaryActions={[
+          {
+            label: "تصدير التقرير",
+            icon: Download,
+            onClick: () => {
+              csvDownload(`staff-report-${currentSaudiPeriod().day}.csv`, [
+                [representatives ? "المناديب وعمولات الإحالة" : "تقرير العاملين", `إجمالي: ${filteredItems.length}`],
+                [
+                  "الاسم",
+                  "صفة الحساب",
+                  "رقم التواصل",
+                  "الهوية / الرقم الضريبي",
+                  "اسم البنك",
+                  "صاحب الحساب",
+                  "الآيبان",
+                  "عمولات الإحالة",
+                  "الحالة",
+                ],
+                ...filteredItems.map((r) => [
+                  r.name,
+                  ui(KIND_LABELS[r.kind] || r.kind),
+                  r.phone || "—",
+                  r.vatNumber || "—",
+                  r.bankDetails?.bankName || "—",
+                  r.bankDetails?.accountHolder || "—",
+                  r.bankDetails?.iban || "—",
+                  r.isRepresentative ? "مؤهل للعمولة" : "غير مؤهل",
+                  r.active ? "نشط" : "موقوف",
+                ]),
+              ]);
+            },
+            variant: "secondary",
+          },
+        ]}
         helpGuide={membersHelpGuide}
         onRefresh={list.reload}
         isRefreshing={list.loading}
       />
 
       {/* KPI Stats Ribbon */}
-      <StatRow columns={2}>
+      <StatRow columns={4}>
         <StatCard
           label={ui(representatives ? "المناديب وعمولات الإحالة" : "حسابات السائقين والعاملين")}
-          value={list.data?.items.length ?? 0}
+          value={items.length}
           unit={ui("حساب مالي")}
           icon={representatives ? Users : UserCheck}
+          isActive={kindFilter === "ALL"}
+          onClick={() => setKindFilter("ALL")}
+          isLoading={list.loading && !list.data}
         />
         <StatCard
           label={ui("نشط")}
           value={activeCount}
           unit={ui("حساب مالي")}
-          icon={UserCheck}
+          icon={CheckCircle2}
           variant="emerald"
+          isActive={kindFilter === "ACTIVE"}
+          onClick={() => setKindFilter(kindFilter === "ACTIVE" ? "ALL" : "ACTIVE")}
+          isLoading={list.loading && !list.data}
+        />
+        <StatCard
+          label={ui("مؤهلون للعمولة")}
+          value={repCount}
+          unit={ui("حساب مالي")}
+          icon={Sparkles}
+          variant="amber"
+          isLoading={list.loading && !list.data}
+        />
+        <StatCard
+          label={ui("بيانات بنكية مسجلة")}
+          value={bankReadyCount}
+          unit={ui("حساب بنكي")}
+          icon={CreditCard}
+          variant="blue"
+          isLoading={list.loading && !list.data}
         />
       </StatRow>
 
@@ -270,84 +494,855 @@ export function MembersPage({ representatives = false }: { representatives?: boo
         />
       )}
 
-      <input
-        className={`${INPUT} sm:max-w-md`}
-        aria-label={ui("بحث بالاسم")}
-        placeholder={ui("بحث بالاسم")}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
       <Notice message={list.error} error />
 
-      {list.loading ? (
-        <LoadingRows />
-      ) : (
-        <div className="theme-card divide-y theme-border rounded-2xl shadow-xs overflow-hidden">
-          {list.data?.items
-            .filter((r) => r.name.includes(search))
-            .map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
-                <div>
-                  <Link className="font-bold underline text-slate-900 dark:text-white" href={`/admin/staff/${r.id}`}>
-                    {r.name}
-                  </Link>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                    {ui(KIND_LABELS[r.kind])} · {ui(r.active ? "نشط" : "موقوف")}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Link className={SECONDARY} href={`/admin/staff/${r.id}`}>
-                    {ui("كشف الحساب والمستحقات")}
-                  </Link>
-                  <button className={SECONDARY} onClick={() => setEditing(r)}>
-                    {ui("تعديل")}
-                  </button>
+      {/* Directory Table & Mobile Cards inside a single shadcn Card */}
+      <Card className="theme-card border theme-border overflow-hidden shadow-xs">
+        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                {representatives ? (
+                  <Users className="w-4 h-4" aria-hidden="true" />
+                ) : (
+                  <UserCheck className="w-4 h-4" aria-hidden="true" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2
+                    id={membersHeadingId}
+                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                  >
+                    {ui(representatives ? "سجل المناديب" : "سجل الحسابات")}
+                  </h2>
+                  <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                    {filteredItems.length} / {items.length}
+                  </Badge>
                 </div>
               </div>
-            ))}
-          {!list.data?.items.length && <p className="p-6 text-center text-sm text-slate-400">{ui("افتح حساب السائق من صفحة الكباتن، أو أضف مندوبًا جديدًا.")}</p>}
-        </div>
-      )}
+            </div>
+
+            {hasActiveFilter && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={resetFilters}
+                className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 gap-1.5"
+              >
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{ui("مسح عوامل التصفية")}</span>
+              </Button>
+            )}
+          </div>
+
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label={ui("تصفية")}>
+              {filterTabs.map((tab) => {
+                const active = kindFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setKindFilter(tab.id)}
+                    className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition cursor-pointer ${
+                      active
+                        ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-2xs"
+                        : "bg-white dark:bg-slate-900/70 theme-border text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white hover:border-amber-500/40"
+                    }`}
+                  >
+                    <span>{ui(tab.label)}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono tabular-nums ${
+                        active
+                          ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      {filterCounts[tab.id]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="relative w-full lg:w-80 shrink-0">
+              <Search
+                className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border theme-border bg-white dark:bg-slate-900 text-base sm:text-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                aria-label={ui("بحث بالاسم، الجوال، الضريبي أو الآيبان...")}
+                placeholder={ui("بحث بالاسم، الجوال، الضريبي أو الآيبان...")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label={ui("مسح البحث")}
+                  className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {list.loading ? (
+            <>
+              <div className="hidden lg:block">
+                <Table
+                  regionLabelledBy={membersHeadingId}
+                  wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                  className="border-separate border-spacing-0"
+                >
+                  <TableCaption className="sr-only">
+                    {ui(representatives ? "سجل المناديب" : "سجل الحسابات")}
+                  </TableCaption>
+                  <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("الحساب والصفة")}</TableHead>
+                      <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("التواصل والهوية")}</TableHead>
+                      <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("البيانات البنكية")}</TableHead>
+                      <TableHead className="py-3 px-3 border-b theme-border leading-snug">{ui("عمولات الإحالة")}</TableHead>
+                      <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                        {ui("الإجراءات")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="[&_tr:last-child_td]:border-b-0 [&_tr:last-child_th]:border-b-0">
+                    {[1, 2, 3, 4].map((idx) => (
+                      <TableRow key={`member-skel-${idx}`} className="animate-pulse motion-reduce:animate-none">
+                        <th scope="row" className="py-3.5 px-3 border-b theme-border text-start">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700/60 shrink-0" />
+                            <div className="space-y-1.5">
+                              <div className="h-3.5 w-28 rounded bg-slate-200 dark:bg-slate-700/60" />
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-4 w-16 rounded-lg bg-slate-100 dark:bg-slate-800" />
+                                <div className="h-4 w-12 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                              </div>
+                            </div>
+                          </div>
+                        </th>
+                        <TableCell className="py-3.5 px-3 border-b theme-border">
+                          <div className="space-y-1.5">
+                            <div className="h-3.5 w-24 rounded bg-slate-200 dark:bg-slate-700/60" />
+                            <div className="h-3 w-20 rounded bg-slate-100 dark:bg-slate-800" />
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5 px-3 border-b theme-border">
+                          <div className="space-y-1.5">
+                            <div className="h-3 w-24 rounded bg-slate-100 dark:bg-slate-800" />
+                            <div className="h-5 w-44 rounded bg-slate-200 dark:bg-slate-700/60" />
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5 px-3 border-b theme-border">
+                          <div className="h-5 w-24 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                        </TableCell>
+                        <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] py-3.5 px-3 border-b theme-border border-s border-slate-200 dark:border-slate-800 text-end">
+                          <div className="inline-flex items-center gap-1.5">
+                            <div className="h-9 w-24 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                            <div className="h-9 w-16 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="lg:hidden p-3.5 space-y-3" aria-busy="true">
+                {[1, 2, 3].map((idx) => (
+                  <div
+                    key={`member-mob-skel-${idx}`}
+                    className="rounded-2xl border theme-border bg-[var(--bg-card)] p-4 space-y-3 animate-pulse motion-reduce:animate-none"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700/60" />
+                        <div className="space-y-1.5">
+                          <div className="h-4 w-28 rounded bg-slate-200 dark:bg-slate-700/60" />
+                          <div className="h-4 w-20 rounded-full bg-slate-100 dark:bg-slate-800" />
+                        </div>
+                      </div>
+                      <div className="h-5 w-14 rounded-full bg-slate-200 dark:bg-slate-700/60" />
+                    </div>
+                    <div className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/70" />
+                    <div className="flex gap-2">
+                      <div className="h-11 flex-1 rounded-xl bg-slate-200 dark:bg-slate-700/60" />
+                      <div className="h-11 w-20 rounded-xl bg-slate-200 dark:bg-slate-700/60" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : !filteredItems.length ? (
+            <div className="p-10 sm:p-14 text-center space-y-3">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                {representatives ? (
+                  <Users className="w-6 h-6" aria-hidden="true" />
+                ) : (
+                  <UserCheck className="w-6 h-6" aria-hidden="true" />
+                )}
+              </div>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {ui(hasActiveFilter ? "لا توجد نتائج مطابقة للبحث" : "لا توجد حسابات مسجلة")}
+              </p>
+              <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
+                {ui(
+                  hasActiveFilter
+                    ? "لا توجد حسابات تطابق معايير التصفية الحالية."
+                    : "افتح حساب السائق من صفحة الكباتن، أو أضف مندوبًا جديدًا."
+                )}
+              </p>
+              <div className="pt-1">
+                {hasActiveFilter ? (
+                  <Button type="button" variant="outline" size="sm" onClick={resetFilters} className="min-h-11 sm:min-h-9">
+                    {ui("مسح عوامل التصفية")}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="gold"
+                    size="sm"
+                    onClick={() => setEditing("NEW")}
+                    className="min-h-11 sm:min-h-9 gap-1.5"
+                  >
+                    <UserPlus className="w-4 h-4" aria-hidden="true" />
+                    <span>{ui("إضافة مندوب أو موظف")}</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View (lg and up) */}
+              <div className="hidden lg:block">
+                <Table
+                  regionLabelledBy={membersHeadingId}
+                  wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                  className="border-separate border-spacing-0"
+                >
+                  <TableCaption className="sr-only">
+                    {ui(representatives ? "سجل المناديب" : "سجل الحسابات")}
+                  </TableCaption>
+                  <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("الحساب والصفة")}</TableHead>
+                      <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("التواصل والهوية")}</TableHead>
+                      <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("البيانات البنكية")}</TableHead>
+                      <TableHead className="py-3.5 px-3 border-b theme-border leading-snug">{ui("عمولات الإحالة")}</TableHead>
+                      <TableHead className="sticky end-0 z-20 py-3.5 px-3 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                        {ui("الإجراءات")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="text-xs [&_tr:last-child_td]:border-b-0 [&_tr:last-child_th]:border-b-0">
+                    {filteredItems.map((r) => {
+                      const hasAnyBank = Boolean(
+                        r.bankDetails?.iban?.trim() ||
+                          r.bankDetails?.bankName?.trim() ||
+                          r.bankDetails?.accountHolder?.trim()
+                      );
+
+                      return (
+                        <TableRow
+                          key={r.id}
+                          className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                        >
+                          {/* Account, Role & Status (Semantic Row Header) */}
+                          <th scope="row" className="py-3.5 px-3 text-start align-middle border-b theme-border font-normal">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 border ${
+                                  r.active
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                    : "bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] theme-border"
+                                }`}
+                                aria-hidden="true"
+                              >
+                                {r.name.trim().charAt(0) || "•"}
+                              </div>
+                              <div className="min-w-0 space-y-1.5">
+                                <Link
+                                  className="block font-bold text-sm text-slate-900 dark:text-white hover:text-amber-700 dark:hover:text-amber-400 hover:underline truncate max-w-[220px] transition"
+                                  href={`/admin/staff/${r.id}`}
+                                >
+                                  {r.name}
+                                </Link>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <Badge
+                                    variant="outline"
+                                    className="rounded-lg text-[11px] font-semibold px-2 py-0.5 whitespace-nowrap"
+                                  >
+                                    {ui(KIND_LABELS[r.kind] || r.kind)}
+                                  </Badge>
+                                  <Badge
+                                    variant={r.active ? "success" : "secondary"}
+                                    className="rounded-lg text-[11px] font-semibold px-2 py-0.5 whitespace-nowrap"
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-emerald-600 dark:bg-emerald-400" : "bg-slate-400"}`}
+                                      aria-hidden="true"
+                                    />
+                                    <span>{ui(r.active ? "نشط" : "موقوف")}</span>
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </th>
+
+                          {/* Contact & VAT / ID */}
+                          <TableCell className="py-3.5 px-3 align-middle border-b theme-border">
+                            {r.phone || r.vatNumber ? (
+                              <div className="space-y-1">
+                                {r.phone && (
+                                  <div>
+                                    <a
+                                      href={`tel:${r.phone}`}
+                                      dir="ltr"
+                                      className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-amber-700 dark:hover:text-amber-400 whitespace-nowrap transition"
+                                    >
+                                      <Phone className="w-3 h-3 text-[var(--text-muted)]" aria-hidden="true" />
+                                      <span>{r.phone}</span>
+                                      <span className="sr-only"> — {r.name}</span>
+                                    </a>
+                                  </div>
+                                )}
+                                {r.vatNumber && (
+                                  <div className="text-[11px] text-[var(--text-muted)] flex flex-wrap items-center gap-x-1 gap-y-0.5">
+                                    <span>{ui("الرقم الضريبي")}:</span>
+                                    <bdi dir="ltr" className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                      {r.vatNumber}
+                                    </bdi>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[var(--text-muted)]">—</span>
+                            )}
+                          </TableCell>
+
+                          {/* Bank & IBAN */}
+                          <TableCell className="py-3.5 px-3 align-middle border-b theme-border">
+                            {hasAnyBank ? (
+                              <div className="space-y-1">
+                                {(r.bankDetails?.bankName || r.bankDetails?.accountHolder) && (
+                                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                                    {r.bankDetails?.bankName && (
+                                      <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]" title={r.bankDetails.bankName}>
+                                        {r.bankDetails.bankName}
+                                      </span>
+                                    )}
+                                    {r.bankDetails?.accountHolder && r.bankDetails.accountHolder !== r.name && (
+                                      <span className="text-[11px] text-[var(--text-muted)] truncate max-w-[140px]" title={r.bankDetails.accountHolder}>
+                                        · {r.bankDetails.accountHolder}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                                {r.bankDetails?.iban && (
+                                  <div className="inline-flex items-center gap-1 rounded-lg border theme-border bg-slate-50/80 dark:bg-slate-900/60 px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums whitespace-nowrap" dir="ltr">
+                                    <span className="whitespace-nowrap">{formatIbanDisplay(r.bankDetails.iban)}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleCopyIban(r.id, r.bankDetails?.iban || "")}
+                                      className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 transition cursor-pointer shrink-0"
+                                      aria-label={`${ui("نسخ الآيبان")} ${r.name}`}
+                                      title={ui(copiedId === r.id ? "تم نسخ الآيبان" : "نسخ الآيبان")}
+                                    >
+                                      {copiedId === r.id ? (
+                                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                                      ) : (
+                                        <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-[var(--text-muted)]">
+                                {ui("لا توجد بيانات بنكية مسجلة")}
+                              </span>
+                            )}
+                          </TableCell>
+
+                          {/* Referral Eligibility */}
+                          <TableCell className="py-3.5 px-3 align-middle border-b theme-border whitespace-nowrap">
+                            {r.isRepresentative ? (
+                              <Badge variant="gold" className="rounded-lg text-[11px] px-2 py-0.5 whitespace-nowrap">
+                                {ui("مؤهل للعمولة")}
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="rounded-lg text-[11px] text-[var(--text-muted)] px-2 py-0.5 whitespace-nowrap">
+                                {ui("غير مؤهل")}
+                              </Badge>
+                            )}
+                          </TableCell>
+
+                          {/* Actions (Sticky end) */}
+                          <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors py-3.5 px-3 align-middle text-end whitespace-nowrap border-b theme-border border-s border-slate-200 dark:border-slate-800">
+                            <div className="inline-flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="h-8 px-2.5 gap-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 hover:border-amber-500/60 hover:bg-amber-500/5"
+                              >
+                                <Link href={`/admin/staff/${r.id}`}>
+                                  <FileText className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+                                  <span>{ui("كشف الحساب")}</span>
+                                  <span className="sr-only"> — {r.name}</span>
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                type="button"
+                                aria-label={`${ui("تعديل")} — ${r.name}`}
+                                onClick={() => setEditing(r)}
+                                className="h-8 px-2.5 gap-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 hover:border-amber-500/60"
+                              >
+                                <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                                <span>{ui("تعديل")}</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile & Tablet Cards View (< lg) */}
+              <div className="lg:hidden p-3.5 sm:p-4 space-y-3">
+                {filteredItems.map((r) => (
+                  <MobileRecordCard
+                    key={r.id}
+                    titleAs="h3"
+                    muted={!r.active}
+                    title={
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-500/20"
+                          aria-hidden="true"
+                        >
+                          {r.name.trim().charAt(0) || "•"}
+                        </span>
+                        <Link
+                          className="font-bold text-slate-900 dark:text-white hover:underline text-sm truncate"
+                          href={`/admin/staff/${r.id}`}
+                        >
+                          {r.name}
+                        </Link>
+                      </span>
+                    }
+                    subtitle={
+                      <span className="inline-flex flex-wrap items-center gap-1.5 mt-0.5">
+                        <Badge variant="outline" className="text-[11px]">
+                          {ui(KIND_LABELS[r.kind] || r.kind)}
+                        </Badge>
+                        {r.isRepresentative && (
+                          <Badge variant="gold" className="text-[11px]">
+                            {ui("مؤهل للعمولة")}
+                          </Badge>
+                        )}
+                      </span>
+                    }
+                    badge={
+                      <Badge variant={r.active ? "success" : "secondary"} className="text-xs">
+                        {ui(r.active ? "نشط" : "موقوف")}
+                      </Badge>
+                    }
+                    footer={
+                      <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="flex-1 min-h-11 gap-1.5 text-xs font-bold bg-[var(--bg-card-subtle)] hover:border-amber-500/40"
+                        >
+                          <Link href={`/admin/staff/${r.id}`}>
+                            <FileText className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+                            <span>{ui("كشف الحساب")}</span>
+                            <span className="sr-only"> — {r.name}</span>
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          aria-label={`${ui("تعديل")} — ${r.name}`}
+                          className="min-h-11 px-4 gap-1.5 text-xs font-bold shrink-0"
+                          onClick={() => setEditing(r)}
+                        >
+                          <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>{ui("تعديل")}</span>
+                        </Button>
+                      </div>
+                    }
+                  >
+                    {(r.phone || r.vatNumber) && (
+                      <MobileCardMetaGrid columns={2}>
+                        {r.phone && (
+                          <MobileCardField
+                            label={ui("رقم التواصل")}
+                            value={
+                              <a href={`tel:${r.phone}`} className="font-mono text-amber-700 dark:text-amber-400 font-bold" dir="ltr">
+                                {r.phone}
+                              </a>
+                            }
+                          />
+                        )}
+                        {r.vatNumber && (
+                          <MobileCardField
+                            label={ui("الهوية / الرقم الضريبي")}
+                            value={r.vatNumber}
+                            mono
+                            alignEnd={Boolean(r.phone)}
+                          />
+                        )}
+                      </MobileCardMetaGrid>
+                    )}
+                    {(r.bankDetails?.iban || r.bankDetails?.bankName || r.bankDetails?.accountHolder) && (
+                      <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3 flex items-center justify-between gap-2">
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[11px] font-medium text-[var(--text-muted)] block">
+                            {ui("البيانات البنكية")}
+                            {r.bankDetails?.bankName ? ` · ${r.bankDetails.bankName}` : ""}
+                          </span>
+                          {r.bankDetails?.iban ? (
+                            <span className="font-mono font-bold text-xs break-all tabular-nums block" dir="ltr">
+                              {formatIbanDisplay(r.bankDetails.iban)}
+                            </span>
+                          ) : r.bankDetails?.accountHolder ? (
+                            <span className="text-xs font-semibold text-slate-900 dark:text-white block">
+                              {r.bankDetails.accountHolder}
+                            </span>
+                          ) : null}
+                        </div>
+                        {r.bankDetails?.iban && (
+                          <button
+                            type="button"
+                            onClick={() => void handleCopyIban(r.id, r.bankDetails?.iban || "")}
+                            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-lg border theme-border bg-[var(--bg-card)] hover:border-amber-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 transition cursor-pointer shrink-0"
+                            title={ui(copiedId === r.id ? "تم نسخ الآيبان" : "نسخ الآيبان")}
+                            aria-label={`${ui("نسخ الآيبان")} ${r.name}`}
+                          >
+                            {copiedId === r.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </MobileRecordCard>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+
+        {!list.loading && filteredItems.length > 0 && (
+          <CardFooter className="mt-0 px-4 sm:px-5 py-3 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+            <span>
+              {ui("عرض")}{" "}
+              <strong className="font-mono tabular-nums text-slate-900 dark:text-white">
+                {filteredItems.length}
+              </strong>{" "}
+              {ui("من إجمالي")}{" "}
+              <strong className="font-mono tabular-nums text-amber-700 dark:text-amber-400">
+                {items.length}
+              </strong>{" "}
+              {ui("حساب مالي")}
+            </span>
+            <span className="font-mono text-[11px] tabular-nums">
+              {ui("نشط")}: {activeCount} · {ui("بيانات بنكية مسجلة")}: {bankReadyCount}
+            </span>
+          </CardFooter>
+        )}
+      </Card>
     </div>
   );
 }
 
-export function StaffPage({ memberId, captainId, readOnly = false }: { memberId?: string; captainId?: string; readOnly?: boolean }) {
+function matchesOperationFilter(op: StaffOperation, filter: OperationFilter): boolean {
+  if (filter === "PAYOUT") return op.kind === "PAYOUT";
+  if (filter === "SALARY") return ["SALARY", "PAYOUT", "REVERSAL"].includes(op.kind);
+  if (filter === "CUSTODY") return isNonZeroMoney(op.custodyDelta) || op.kind.startsWith("CUSTODY");
+  if (filter === "ADVANCE") return isNonZeroMoney(op.advanceDelta) || op.kind.startsWith("ADVANCE");
+  if (filter === "COMMISSION") return op.kind === "COMMISSION" || op.kind === "COMMISSION_BILL";
+  return true;
+}
+
+export function StaffPage({
+  memberId,
+  captainId,
+  readOnly = false,
+}: {
+  memberId?: string;
+  captainId?: string;
+  readOnly?: boolean;
+}) {
   const { user } = useAuth();
-  const path = memberId ? `/members/${memberId}` : `/captains/${captainId || user?.id || ""}`;
-  const result = useCommercialData<StaffStatement>(path),
-    ui = useUiText(),
-    [tab, setTab] = useState("SALARY");
+  const path = memberId
+    ? `/members/${memberId}`
+    : `/captains/${captainId || user?.id || ""}`;
+  const result = useCommercialData<StaffStatement>(path);
+  const ui = useUiText();
+
+  // Navigation tabs & URL-persisted ledger filters
+  const [mainTab, setMainTab] = useState<
+    "OPERATIONS" | "SALARY" | "COMMISSIONS" | "LEGACY"
+  >("OPERATIONS");
+  const [operationFilter, setOperationFilter] = useUrlState<OperationFilter>(
+    "op",
+    "ALL",
+    OPERATION_FILTERS
+  );
+  const [searchQuery, setSearchQuery] = useUrlState<string>("q", "");
+  const [copiedIban, setCopiedIban] = useState(false);
+  const ibanTimerRef = useRef<number | null>(null);
+  const approvePayrollMutation = useMutation();
+  const [approvingPayrollId, setApprovingPayrollId] = useState<string | null>(null);
+
+  const tabIdPrefix = useId();
+  const opsHeadingId = useId();
+  const payrollHeadingId = useId();
+  const commissionsHeadingId = useId();
+  const legacyHeadingId = useId();
+
+  useEffect(() => {
+    return () => {
+      if (ibanTimerRef.current !== null) {
+        window.clearTimeout(ibanTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Modals
+  const [movementModal, setMovementModal] = useState<{
+    open: boolean;
+    defaultKind?: string;
+    defaultAmount?: string;
+  }>({ open: false });
+  const [salaryModalOpen, setSalaryModalOpen] = useState(false);
+  const [payrollModalOpen, setPayrollModalOpen] = useState(false);
+  const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
+  const [reverseModalOp, setReverseModalOp] = useState<StaffOperation | null>(null);
 
   if (result.loading) return <LoadingRows />;
   if (!result.data) return <Notice message={result.error} error />;
   const d = result.data;
 
-  const ops = d.operations.filter((o) =>
-    tab === "SALARY"
-      ? ["SALARY", "PAYOUT", "REVERSAL"].includes(o.kind)
-      : tab === "CUSTODY"
-        ? o.custodyDelta !== "0"
-        : tab === "ADVANCE"
-          ? o.advanceDelta !== "0"
-          : o.kind === "COMMISSION" || o.kind === "COMMISSION_BILL",
+  const reversedOpIds = new Set(
+    d.operations
+      .map((op) => op.reversalOfId)
+      .filter((id): id is string => Boolean(id))
+  );
+
+  const operationFilterCounts: Record<OperationFilter, number> = {
+    ALL: d.operations.length,
+    PAYOUT: d.operations.filter((o) => matchesOperationFilter(o, "PAYOUT")).length,
+    SALARY: d.operations.filter((o) => matchesOperationFilter(o, "SALARY")).length,
+    CUSTODY: d.operations.filter((o) => matchesOperationFilter(o, "CUSTODY")).length,
+    ADVANCE: d.operations.filter((o) => matchesOperationFilter(o, "ADVANCE")).length,
+    COMMISSION: d.operations.filter((o) => matchesOperationFilter(o, "COMMISSION")).length,
+  };
+
+  const hasOpsFilter = operationFilter !== "ALL" || searchQuery.trim().length > 0;
+
+  // Filter operations for table & mobile cards
+  const filteredOps = d.operations.filter((o) => {
+    if (!matchesOperationFilter(o, operationFilter)) return false;
+
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      const desc = (o.description || "").toLowerCase();
+      const amount = o.amount || "";
+      const date = o.effectiveDate.slice(0, 10).toLowerCase();
+      const label = (OPERATION_LABELS[o.kind] || o.kind).toLowerCase();
+      const translatedLabel = ui(OPERATION_LABELS[o.kind] || o.kind).toLowerCase();
+      if (
+        !desc.includes(q) &&
+        !amount.includes(q) &&
+        !date.includes(q) &&
+        !label.includes(q) &&
+        !translatedLabel.includes(q)
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Exact minor-unit totals for filtered operations
+  const opsAmountTotalMinor = filteredOps.reduce(
+    (sum, o) => sum + signedMoneyMinor(o.amount),
+    BigInt(0)
+  );
+  const opsEntitlementNetMinor = filteredOps.reduce(
+    (sum, o) => sum + signedMoneyMinor(o.entitlementDelta),
+    BigInt(0)
+  );
+  const opsCustodyNetMinor = filteredOps.reduce(
+    (sum, o) => sum + signedMoneyMinor(o.custodyDelta),
+    BigInt(0)
+  );
+  const opsAdvanceNetMinor = filteredOps.reduce(
+    (sum, o) => sum + signedMoneyMinor(o.advanceDelta),
+    BigInt(0)
+  );
+  const opsEntitlementNetFormatted = formatSignedDelta(
+    formatSignedMinor(opsEntitlementNetMinor)
+  );
+  const opsCustodyNetFormatted = formatSignedDelta(
+    formatSignedMinor(opsCustodyNetMinor)
+  );
+  const opsAdvanceNetFormatted = formatSignedDelta(
+    formatSignedMinor(opsAdvanceNetMinor)
+  );
+
+  // Exact minor-unit totals for trip commissions
+  const commTotalMinor = d.commissions.reduce(
+    (sum, c) => sum + signedMoneyMinor(c.amount),
+    BigInt(0)
+  );
+  const commPaidMinor = d.commissions.reduce(
+    (sum, c) => sum + signedMoneyMinor(c.paidAmount),
+    BigInt(0)
+  );
+  const commRemainingMinor = d.commissions.reduce(
+    (sum, c) => sum + signedMoneyMinor(c.remainingAmount),
+    BigInt(0)
+  );
+
+  const handleCopyIban = async () => {
+    const iban = d.member.bankDetails?.iban;
+    if (!iban) return;
+    try {
+      await navigator.clipboard?.writeText(iban.replace(/\s+/g, ""));
+      setCopiedIban(true);
+      if (ibanTimerRef.current !== null) {
+        window.clearTimeout(ibanTimerRef.current);
+      }
+      ibanTimerRef.current = window.setTimeout(() => setCopiedIban(false), 2000);
+    } catch {
+      setCopiedIban(false);
+    }
+  };
+
+  const resetOpsFilters = () => {
+    setOperationFilter("ALL");
+    setSearchQuery("");
+  };
+
+  const handleApprovePayroll = async (p: Payroll) => {
+    setApprovingPayrollId(p.id);
+    try {
+      await approvePayrollMutation.run(
+        () =>
+          commercialRequest(`/payroll/${p.id}/approve`, "POST", {
+            version: p.version,
+          }),
+        result.reload
+      );
+    } finally {
+      setApprovingPayrollId(null);
+    }
+  };
+
+  const activeTab = mainTab === "LEGACY" && d.legacy.length === 0 ? "OPERATIONS" : mainTab;
+
+  const tabOrder = (
+    d.legacy.length > 0
+      ? ["OPERATIONS", "SALARY", "COMMISSIONS", "LEGACY"]
+      : ["OPERATIONS", "SALARY", "COMMISSIONS"]
+  ) as Array<"OPERATIONS" | "SALARY" | "COMMISSIONS" | "LEGACY">;
+
+  const handleTabKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    currentTab: "OPERATIONS" | "SALARY" | "COMMISSIONS" | "LEGACY"
+  ) => {
+    const currentIndex = tabOrder.indexOf(currentTab);
+    if (currentIndex === -1) return;
+    const isRtl = ui.dir === "rtl";
+    let nextTab: "OPERATIONS" | "SALARY" | "COMMISSIONS" | "LEGACY" | undefined;
+    if (e.key === "ArrowRight") {
+      nextTab = tabOrder[(currentIndex + (isRtl ? -1 : 1) + tabOrder.length) % tabOrder.length];
+    } else if (e.key === "ArrowLeft") {
+      nextTab = tabOrder[(currentIndex + (isRtl ? 1 : -1) + tabOrder.length) % tabOrder.length];
+    } else if (e.key === "Home") {
+      nextTab = tabOrder[0];
+    } else if (e.key === "End") {
+      nextTab = tabOrder[tabOrder.length - 1];
+    }
+    if (!nextTab) return;
+    e.preventDefault();
+    setMainTab(nextTab);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`${tabIdPrefix}-tab-${nextTab}`)?.focus();
+    });
+  };
+
+  const opFilterTabs: { id: OperationFilter; label: string }[] = [
+    { id: "ALL", label: "كافة الحركات" },
+    { id: "PAYOUT", label: "صرف مستحق" },
+    { id: "SALARY", label: "الرواتب" },
+    { id: "CUSTODY", label: "العهد" },
+    { id: "ADVANCE", label: "السلف" },
+    { id: "COMMISSION", label: "عمولات الرحلات" },
+  ];
+
+  const entitlementPositive = signedMoneyMinor(d.balances.entitlement) > BigInt(0);
+  const hasAnyBank = Boolean(
+    d.member.bankDetails?.iban?.trim() ||
+      d.member.bankDetails?.bankName?.trim() ||
+      d.member.bankDetails?.accountHolder?.trim()
   );
 
   return (
     <div className="space-y-6">
+      {/* Header with Title and Download / Refresh Actions */}
       <PageHeader
         title={d.member.name}
-        subtitle={ui("حساب السائق والمستحقات")}
+        subtitle="حساب السائق والمستحقات"
         badge={ui(KIND_LABELS[d.member.kind] || "حساب مالي")}
         icon={UserCheck}
         primaryAction={{
-          label: ui("تنزيل كشف الحساب"),
+          label: "تنزيل كشف الحساب",
           onClick: () =>
             csvDownload(`staff-${d.member.id}.csv`, [
               ["كشف المستحقات", d.member.name],
-              ["المستحق", d.balances.entitlement, "العهد", d.balances.custody, "السلف", d.balances.advance],
-              ["التاريخ", "النوع", "البيان", "المبلغ", "تغير المستحق", "تغير العهدة", "تغير السلفة"],
+              [
+                "المستحق",
+                d.balances.entitlement,
+                "العهد",
+                d.balances.custody,
+                "السلف",
+                d.balances.advance,
+              ],
+              [
+                "التاريخ",
+                "النوع",
+                "البيان",
+                "المبلغ",
+                "تغير المستحق",
+                "تغير العهدة",
+                "تغير السلفة",
+              ],
               ...d.operations.map((o) => [
                 o.effectiveDate.slice(0, 10),
                 ui(OPERATION_LABELS[o.kind] || o.kind),
@@ -367,262 +1362,1708 @@ export function StaffPage({ memberId, captainId, readOnly = false }: { memberId?
 
       <Notice message={result.error} error />
 
-      {/* KPI Stats Ribbon */}
-      <StatRow columns={3}>
-        <StatCard
-          label={ui("مستحقات متاحة للصرف")}
-          value={d.balances.entitlement}
-          unit="SAR"
-          icon={Wallet}
-          variant="emerald"
-        />
-        <StatCard
-          label={ui("عهدة لم تُسوَّ")}
-          value={d.balances.custody}
-          unit="SAR"
-          icon={Coins}
-          variant="amber"
-        />
-        <StatCard
-          label={ui("سلف متبقية")}
-          value={d.balances.advance}
-          unit="SAR"
-          icon={HandCoins}
-          variant="rose"
-        />
-      </StatRow>
-
-      <div role="tablist" aria-label={ui("أقسام حساب السائق")} className="flex flex-wrap gap-2">
-        {(
-          [
-            ["SALARY", "الرواتب"],
-            ["CUSTODY", "العهد"],
-            ["ADVANCE", "السلف"],
-            ["COMMISSION", "عمولات الرحلات"],
-          ] as const
-        ).map(([k, label]) => (
-          <button
-            key={k}
-            role="tab"
-            aria-selected={tab === k}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
-              tab === k
-                ? "bg-amber-500 text-white shadow-xs"
-                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500"
-            }`}
-            onClick={() => setTab(k)}
-          >
-            {ui(label)}
-          </button>
-        ))}
-      </div>
-
-      {tab === "SALARY" && (
-        <Panel title="الرواتب الشهرية">
-          {!readOnly && <SalaryForms memberId={d.member.id} reload={result.reload} />}
-          <div className="mt-4 space-y-2">
-            {d.salaryTerms.map((t) => (
-              <p key={t.id} className="text-sm font-medium">
-                {ui("راتب ساري من")}: {t.effectiveFrom.slice(0, 10)} · <b dir="ltr" className="font-mono text-amber-700 dark:text-amber-400">{t.amount} SAR</b>
-              </p>
-            ))}
-            {d.payroll.map((p) => (
-              <PayrollRow key={`${p.id}:${p.version}`} row={p} readOnly={readOnly} reload={result.reload} />
-            ))}
-            {!d.payroll.length && <p className="text-sm text-slate-400 p-2">{ui("لا توجد مسيرات رواتب")}</p>}
-          </div>
-        </Panel>
-      )}
-
-      {tab === "COMMISSION" && (
-        <Panel title="عمولات الرحلات">
-          {d.commissions.map((c) => (
-            <div key={c.contractId} className="flex flex-wrap justify-between gap-2 border-b theme-border py-3">
-              <Link href={readOnly ? "/captain" : `/admin/contracts/${c.contractId}`} className="font-mono text-sm underline text-amber-700 dark:text-amber-400">
-                {c.contract?.referenceNumber || c.contractId}
-              </Link>
-              <span className="text-sm">
-                {ui(c.status === "COMPLETED" ? "تم التنفيذ" : c.status === "CANCELLED" ? "أُلغيت" : "لم تُنفذ")} ·{" "}
-                <b className="font-mono">{c.amount} SAR</b> · {ui(c.paymentStatus === "PAID" ? "مصروف" : c.paymentStatus === "DUE" ? "مستحق" : "متوقع")}
-                <small className="block text-xs text-slate-400">
-                  {ui("المدفوع من العمولة")}: {c.paidAmount} · {ui("المتبقي من العمولة")}: {c.remainingAmount}
-                </small>
-              </span>
+      {/* Member Profile and Bank Summary Card */}
+      <Card className="theme-card p-4 sm:p-5 border theme-border shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div
+              className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-lg flex items-center justify-center shrink-0 border border-amber-500/20"
+              aria-hidden="true"
+            >
+              {d.member.name.trim().charAt(0) || "•"}
             </div>
-          ))}
-          {!d.commissions.length && <p className="text-sm text-slate-400 p-2">{ui("لا توجد عمولات رحلات")}</p>}
-        </Panel>
-      )}
-
-      {!readOnly && <MovementForm key={d.member.id} statement={d} reload={result.reload} />}
-
-      <Panel title="الحركات المسجلة">
-        <div className="space-y-2">
-          {ops.map((o) => (
-            <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 border-b theme-border py-3">
-              <div>
-                <strong className="text-sm block">{ui(OPERATION_LABELS[o.kind] || o.kind)}</strong>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {o.effectiveDate.slice(0, 10)} · {o.description}
-                </p>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                  {d.member.name}
+                </h2>
+                <Badge variant="outline" className="text-xs font-semibold">
+                  {ui(KIND_LABELS[d.member.kind] || "حساب مالي")}
+                </Badge>
+                <Badge
+                  variant={d.member.active ? "success" : "secondary"}
+                  className="text-xs font-semibold"
+                >
+                  {ui(d.member.active ? "نشط" : "موقوف")}
+                </Badge>
               </div>
-              <div className="flex items-center gap-3">
-                <b dir="ltr" className="font-mono text-sm">
-                  {o.amount} SAR
-                </b>
-                {!readOnly && o.kind !== "REVERSAL" && !d.operations.some((r) => r.reversalOfId === o.id) && (
-                  <ReverseButton id={o.id} reload={result.reload} />
+              <div className="flex items-center gap-4 mt-1 text-xs text-[var(--text-muted)] flex-wrap">
+                {d.member.phone && (
+                  <a
+                    href={`tel:${d.member.phone}`}
+                    className="inline-flex items-center gap-1 hover:text-amber-700 dark:hover:text-amber-400 font-mono transition"
+                    dir="ltr"
+                  >
+                    <Phone className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
+                    <span>{d.member.phone}</span>
+                  </a>
+                )}
+                {d.member.vatNumber && (
+                  <span>
+                    {ui("الرقم الضريبي")}:{" "}
+                    <bdi dir="ltr" className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                      {d.member.vatNumber}
+                    </bdi>
+                  </span>
                 )}
               </div>
             </div>
-          ))}
-          {!ops.length && <p className="text-sm text-slate-400 p-2">{ui("لا توجد حركات في هذا القسم")}</p>}
-        </div>
-      </Panel>
-
-      {d.legacy.length > 0 && (
-        <Panel title="حركات سابقة غير مصنفة">
-          <p className="mb-3 text-xs text-slate-400">
-            {ui("هذه الحركات محفوظة كما هي، ولم تُرحَّل مرة أخرى أو تُعتبر رواتب أو سلفًا تلقائيًا.")}
-          </p>
-          {d.legacy.map((l) => (
-            <div key={l.id} className="flex flex-wrap justify-between gap-2 border-b theme-border py-2 text-sm">
-              <span>
-                {l.effectiveDate.slice(0, 10)} · {l.description}
-              </span>
-              <b dir="ltr" className="font-mono">
-                {l.direction} {l.amount} SAR
-              </b>
-            </div>
-          ))}
-        </Panel>
-      )}
-    </div>
-  );
-}
-
-function SalaryForms({ memberId, reload }: { memberId: string; reload: () => void }) {
-  const ui = useUiText(),
-    m = useMutation(),
-    [amount, setAmount] = useState(""),
-    [from, setFrom] = useState(currentSaudiPeriod().day),
-    [month, setMonth] = useState(currentSaudiPeriod().day.slice(0, 7)),
-    [override, setOverride] = useState(""),
-    [reason, setReason] = useState("");
-
-  return (
-    <div className="space-y-5">
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void m.run(() => commercialRequest(`/members/${memberId}/salary-terms`, "POST", { amount, effectiveFrom: from }), reload);
-        }}
-      >
-        <Field label="الراتب الشهري">
-          <input required className={INPUT} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        </Field>
-        <Field label="يسري من">
-          <input required type="date" className={INPUT} value={from} onChange={(e) => setFrom(e.target.value)} />
-        </Field>
-        <button disabled={m.busy} className={SECONDARY}>
-          {ui("حفظ الراتب")}
-        </button>
-      </form>
-      <form
-        className="grid items-end gap-3 sm:grid-cols-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void m.run(
-            () => commercialRequest(`/members/${memberId}/payroll`, "POST", { month, ...(override ? { amount: override } : {}), adjustmentReason: reason }),
-            reload,
-          );
-        }}
-      >
-        <Field label="شهر المسير">
-          <input required className={INPUT} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
-        </Field>
-        <Field label="المبلغ المعدل اختياريًا">
-          <input className={INPUT} inputMode="decimal" value={override} onChange={(e) => setOverride(e.target.value)} />
-        </Field>
-        <Field label="سبب تعديل الشهر الجزئي">
-          <input className={INPUT} value={reason} onChange={(e) => setReason(e.target.value)} />
-        </Field>
-        <button disabled={m.busy} className={SECONDARY}>
-          {ui("إنشاء مسودة المسير")}
-        </button>
-      </form>
-      <Notice message={m.error} error />
-      <Notice message={m.message} />
-    </div>
-  );
-}
-
-function PayrollRow({ row, readOnly, reload }: { row: Payroll; readOnly: boolean; reload: () => void }) {
-  const ui = useUiText(),
-    m = useMutation(),
-    [editing, setEditing] = useState(false),
-    [amount, setAmount] = useState(row.amount),
-    [reason, setReason] = useState(row.adjustmentReason);
-
-  return (
-    <div className="rounded-xl border theme-border p-3.5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold">
-          {row.month} · <b className="font-mono">{row.amount} SAR</b> · {ui(row.status === "APPROVED" ? "معتمد" : "مسودة")}
-        </span>
-        {!readOnly && row.status === "DRAFT" && (
-          <div className="flex gap-2">
-            <button className={SECONDARY} onClick={() => setEditing(!editing)}>
-              {ui("تعديل")}
-            </button>
-            <button
-              disabled={m.busy}
-              className={BUTTON}
-              onClick={() => void m.run(() => commercialRequest(`/payroll/${row.id}/approve`, "POST", { version: row.version }), reload)}
-            >
-              {ui("اعتماد الاستحقاق")}
-            </button>
           </div>
+
+          {/* Bank Account Info Box */}
+          <div className="rounded-xl border theme-border bg-slate-50/70 dark:bg-slate-900/40 p-3 sm:px-4 sm:py-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <CreditCard className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <span>{ui("البيانات المصرفية والبنكية")}</span>
+            </div>
+            {hasAnyBank ? (
+              <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                {(d.member.bankDetails?.bankName || d.member.bankDetails?.accountHolder) && (
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {[d.member.bankDetails?.bankName, d.member.bankDetails?.accountHolder]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                )}
+                {d.member.bankDetails?.iban && (
+                  <div
+                    className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border theme-border tabular-nums"
+                    dir="ltr"
+                  >
+                    <span>{formatIbanDisplay(d.member.bankDetails.iban)}</span>
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyIban()}
+                      className="min-h-8 min-w-8 inline-flex items-center justify-center rounded-md hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 transition cursor-pointer"
+                      title={ui(copiedIban ? "تم نسخ الآيبان" : "نسخ الآيبان")}
+                      aria-label={`${ui("نسخ الآيبان")} ${d.member.name}`}
+                    >
+                      {copiedIban ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                {ui("لا توجد بيانات بنكية مسجلة")}
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* 3 Executive Financial Balance Cards with Direct Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Entitlement */}
+        <Card className="theme-card p-5 border theme-border shadow-xs space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--text-muted)]">
+              {ui("مستحقات متاحة للصرف")}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+              <Wallet className="w-4 h-4" aria-hidden="true" />
+            </div>
+          </div>
+          <div>
+            <div
+              className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+              dir="ltr"
+            >
+              {formatMoneyValue(d.balances.entitlement)}{" "}
+              <span className="text-xs font-sans font-bold text-[var(--text-muted)]">
+                SAR
+              </span>
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {ui("الرصيد المستحق")}
+            </p>
+          </div>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() =>
+                setMovementModal({
+                  open: true,
+                  defaultKind: "PAYOUT",
+                  defaultAmount: entitlementPositive ? d.balances.entitlement : "",
+                })
+              }
+              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs cursor-pointer"
+            >
+              <ArrowDownLeft className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{ui("صرف المستحقات")}</span>
+            </button>
+          )}
+        </Card>
+
+        {/* Custody */}
+        <Card className="theme-card p-5 border theme-border shadow-xs space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--text-muted)]">
+              {ui("عهدة لم تُسوَّ")}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+              <Coins className="w-4 h-4" aria-hidden="true" />
+            </div>
+          </div>
+          <div>
+            <div
+              className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+              dir="ltr"
+            >
+              {formatMoneyValue(d.balances.custody)}{" "}
+              <span className="text-xs font-sans font-bold text-[var(--text-muted)]">
+                SAR
+              </span>
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {ui("العهد التشغيلية")}
+            </p>
+          </div>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() =>
+                setMovementModal({
+                  open: true,
+                  defaultKind: "CUSTODY_ISSUE",
+                })
+              }
+              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+            >
+              <Coins className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <span>{ui("حركة عهدة")}</span>
+            </button>
+          )}
+        </Card>
+
+        {/* Advance */}
+        <Card className="theme-card p-5 border theme-border shadow-xs space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--text-muted)]">
+              {ui("سلف متبقية")}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center">
+              <HandCoins className="w-4 h-4" aria-hidden="true" />
+            </div>
+          </div>
+          <div>
+            <div
+              className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+              dir="ltr"
+            >
+              {formatMoneyValue(d.balances.advance)}{" "}
+              <span className="text-xs font-sans font-bold text-[var(--text-muted)]">
+                SAR
+              </span>
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {ui("السلف القائمة")}
+            </p>
+          </div>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() =>
+                setMovementModal({
+                  open: true,
+                  defaultKind: "ADVANCE_ISSUE",
+                })
+              }
+              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+            >
+              <HandCoins className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+              <span>{ui("حركة سلفة")}</span>
+            </button>
+          )}
+        </Card>
+      </div>
+
+      {/* Navigation Tabs Bar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap border-b theme-border pb-3">
+        <div
+          role="tablist"
+          aria-label={ui("أقسام حساب السائق")}
+          className="flex flex-wrap gap-2"
+        >
+          <button
+            id={`${tabIdPrefix}-tab-OPERATIONS`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "OPERATIONS"}
+            aria-controls={activeTab === "OPERATIONS" ? `${tabIdPrefix}-panel-OPERATIONS` : undefined}
+            onClick={() => setMainTab("OPERATIONS")}
+            onKeyDown={(e) => handleTabKeyDown(e, "OPERATIONS")}
+            className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
+              activeTab === "OPERATIONS"
+                ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
+                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+            }`}
+          >
+            <Clock className="w-4 h-4" aria-hidden="true" />
+            <span>{ui("كشف العمليات والحركات")}</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
+                activeTab === "OPERATIONS"
+                  ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
+                  : "bg-black/10 dark:bg-white/10"
+              }`}
+            >
+              {d.operations.length}
+            </span>
+          </button>
+
+          <button
+            id={`${tabIdPrefix}-tab-SALARY`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "SALARY"}
+            aria-controls={activeTab === "SALARY" ? `${tabIdPrefix}-panel-SALARY` : undefined}
+            onClick={() => setMainTab("SALARY")}
+            onKeyDown={(e) => handleTabKeyDown(e, "SALARY")}
+            className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
+              activeTab === "SALARY"
+                ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
+                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+            }`}
+          >
+            <Banknote className="w-4 h-4" aria-hidden="true" />
+            <span>{ui("الرواتب والمسيرات")}</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
+                activeTab === "SALARY"
+                  ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
+                  : "bg-black/10 dark:bg-white/10"
+              }`}
+            >
+              {d.payroll.length}
+            </span>
+          </button>
+
+          <button
+            id={`${tabIdPrefix}-tab-COMMISSIONS`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "COMMISSIONS"}
+            aria-controls={activeTab === "COMMISSIONS" ? `${tabIdPrefix}-panel-COMMISSIONS` : undefined}
+            onClick={() => setMainTab("COMMISSIONS")}
+            onKeyDown={(e) => handleTabKeyDown(e, "COMMISSIONS")}
+            className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
+              activeTab === "COMMISSIONS"
+                ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
+                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+            }`}
+          >
+            <Sparkles className="w-4 h-4" aria-hidden="true" />
+            <span>{ui("عمولات الرحلات")}</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
+                activeTab === "COMMISSIONS"
+                  ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
+                  : "bg-black/10 dark:bg-white/10"
+              }`}
+            >
+              {d.commissions.length}
+            </span>
+          </button>
+
+          {d.legacy.length > 0 && (
+            <button
+              id={`${tabIdPrefix}-tab-LEGACY`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "LEGACY"}
+              aria-controls={activeTab === "LEGACY" ? `${tabIdPrefix}-panel-LEGACY` : undefined}
+              onClick={() => setMainTab("LEGACY")}
+              onKeyDown={(e) => handleTabKeyDown(e, "LEGACY")}
+              className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
+                activeTab === "LEGACY"
+                  ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
+                  : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+              }`}
+            >
+              <FileText className="w-4 h-4" aria-hidden="true" />
+              <span>{ui("أرشيف الحركات السابقة")}</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
+                  activeTab === "LEGACY"
+                    ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
+                    : "bg-black/10 dark:bg-white/10"
+                }`}
+              >
+                {d.legacy.length}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Global Action: New Movement Button */}
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => setMovementModal({ open: true })}
+            className="min-h-11 sm:min-h-10 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>{ui("تسجيل حركة مالية")}</span>
+          </button>
         )}
       </div>
-      {editing && (
-        <form
-          className="mt-3 flex flex-wrap gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void m.run(() => commercialRequest(`/payroll/${row.id}`, "PUT", { version: row.version, amount, adjustmentReason: reason }), reload);
-          }}
+
+      {/* TAB 1: OPERATIONS / TRANSACTIONS LEDGER */}
+      {activeTab === "OPERATIONS" && (
+        <div
+          id={`${tabIdPrefix}-panel-OPERATIONS`}
+          role="tabpanel"
+          aria-labelledby={`${tabIdPrefix}-tab-OPERATIONS`}
         >
-          <Field label="المبلغ">
-            <input required className={INPUT} value={amount} onChange={(e) => setAmount(e.target.value)} />
-          </Field>
-          <Field label="سبب التعديل">
-            <input required className={INPUT} value={reason} onChange={(e) => setReason(e.target.value)} />
-          </Field>
-          <button className={SECONDARY} disabled={m.busy}>
-            {ui("حفظ")}
-          </button>
-        </form>
+          <Card className="theme-card border theme-border overflow-hidden shadow-xs">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2
+                      id={opsHeadingId}
+                      className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                    >
+                      {ui("كشف العمليات والحركات")}
+                    </h2>
+                    <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                      {filteredOps.length} / {d.operations.length}
+                    </Badge>
+                  </div>
+                </div>
+
+                {hasOpsFilter && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetOpsFilters}
+                    className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 gap-1.5"
+                  >
+                    <X className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{ui("مسح عوامل التصفية")}</span>
+                  </Button>
+                )}
+              </div>
+
+              {/* Sub-filters & Search Bar */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label={ui("تصفية")}>
+                  {opFilterTabs.map((tab) => {
+                    const active = operationFilter === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setOperationFilter(tab.id)}
+                        className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition cursor-pointer ${
+                          active
+                            ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-2xs"
+                            : "bg-white dark:bg-slate-900/70 theme-border text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white hover:border-amber-500/40"
+                        }`}
+                      >
+                        <span>{ui(tab.label)}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono tabular-nums ${
+                            active
+                              ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          {operationFilterCounts[tab.id]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="relative w-full lg:w-72 shrink-0">
+                  <Search
+                    className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="search"
+                    aria-label={ui("بحث في الحركات...")}
+                    placeholder={ui("بحث في الحركات...")}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border theme-border bg-white dark:bg-slate-900 text-base sm:text-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      aria-label={ui("مسح البحث")}
+                      className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              {!filteredOps.length ? (
+                <div className="p-10 sm:p-14 text-center space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                    <Clock className="w-6 h-6" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {ui(hasOpsFilter ? "لا توجد نتائج مطابقة للبحث" : "لا توجد حركات مسجلة")}
+                  </p>
+                  {hasOpsFilter && (
+                    <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
+                      {ui("لا توجد حركات تطابق البحث أو التصفية الحالية.")}
+                    </p>
+                  )}
+                  <div className="pt-1">
+                    {hasOpsFilter ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={resetOpsFilters}
+                        className="min-h-11 sm:min-h-9"
+                      >
+                        {ui("مسح عوامل التصفية")}
+                      </Button>
+                    ) : !readOnly ? (
+                      <Button
+                        type="button"
+                        variant="gold"
+                        size="sm"
+                        onClick={() => setMovementModal({ open: true })}
+                        className="min-h-11 sm:min-h-9 gap-1.5"
+                      >
+                        <Plus className="w-4 h-4" aria-hidden="true" />
+                        <span>{ui("تسجيل حركة مالية")}</span>
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View (lg and up) */}
+                  <div className="hidden lg:block">
+                    <Table
+                      regionLabelledBy={opsHeadingId}
+                      wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                      className="border-separate border-spacing-0"
+                    >
+                      <TableCaption className="sr-only">
+                        {ui("كشف العمليات والحركات")}
+                      </TableCaption>
+                      <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">
+                            {ui("التاريخ")}
+                          </TableHead>
+                          <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">
+                            {ui("نوع العملية")}
+                          </TableHead>
+                          <TableHead className="py-3 px-3 border-b theme-border">
+                            {ui("البيان")}
+                          </TableHead>
+                          <TableHead className="py-3 px-3 border-b theme-border text-end whitespace-nowrap">
+                            {ui("المبلغ")}
+                          </TableHead>
+                          <TableHead className="py-3 px-3 border-b theme-border text-end leading-snug">
+                            {ui("أثر المستحق")}
+                          </TableHead>
+                          <TableHead className="py-3 px-3 border-b theme-border leading-snug">
+                            {ui("أثر العهدة / السلفة")}
+                          </TableHead>
+                          {!readOnly && (
+                            <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                              {ui("الإجراءات")}
+                            </TableHead>
+                          )}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="text-xs [&_tr:last-child_td]:border-b-0 [&_tr:last-child_th]:border-b-0">
+                        {filteredOps.map((o) => {
+                          const isReversal = o.kind === "REVERSAL";
+                          const isAlreadyReversed = reversedOpIds.has(o.id);
+                          const canReverse = !readOnly && !isReversal && !isAlreadyReversed;
+                          const entitlement = formatSignedDelta(o.entitlementDelta);
+                          const hasCustodyDelta = isNonZeroMoney(o.custodyDelta);
+                          const hasAdvanceDelta = isNonZeroMoney(o.advanceDelta);
+                          const custody = formatSignedDelta(o.custodyDelta);
+                          const advance = formatSignedDelta(o.advanceDelta);
+
+                          return (
+                            <TableRow
+                              key={o.id}
+                              className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                            >
+                              <th
+                                scope="row"
+                                className="py-3.5 px-3 text-start align-middle border-b theme-border font-mono font-semibold tabular-nums whitespace-nowrap text-slate-700 dark:text-slate-300"
+                              >
+                                <bdi dir="ltr">{o.effectiveDate.slice(0, 10)}</bdi>
+                              </th>
+                              <TableCell className="py-3.5 px-3 align-middle border-b theme-border whitespace-nowrap">
+                                <div className="flex flex-col items-start gap-1">
+                                  <OperationBadge kind={o.kind} />
+                                  {isAlreadyReversed && (
+                                    <Badge variant="secondary" className="rounded-md text-[11px] font-semibold px-2 py-0">
+                                      {ui("تم عكسها")}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3.5 px-3 align-middle border-b theme-border font-medium min-w-[140px] max-w-[230px] whitespace-normal break-words leading-relaxed text-slate-800 dark:text-slate-200">
+                                {o.description}
+                              </TableCell>
+                              <TableCell
+                                className="py-3.5 px-3 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap"
+                                dir="ltr"
+                              >
+                                {formatMoneyValue(o.amount)} SAR
+                              </TableCell>
+                              <TableCell
+                                className="py-3.5 px-3 align-middle border-b theme-border text-end font-mono tabular-nums whitespace-nowrap"
+                                dir="ltr"
+                              >
+                                {entitlement.minor !== BigInt(0) ? (
+                                  <span
+                                    className={
+                                      entitlement.negative
+                                        ? "text-rose-700 dark:text-rose-400 font-bold"
+                                        : "text-emerald-700 dark:text-emerald-400 font-bold"
+                                    }
+                                  >
+                                    {entitlement.display} SAR
+                                  </span>
+                                ) : (
+                                  <span className="text-[var(--text-muted)]">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="py-3.5 px-3 align-middle border-b theme-border font-mono text-[11px] tabular-nums">
+                                {hasCustodyDelta || hasAdvanceDelta ? (
+                                  <div className="flex flex-col items-start gap-1">
+                                    {hasCustodyDelta && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 font-semibold whitespace-nowrap">
+                                        <span>{ui("العهد")}:</span>
+                                        <bdi dir="ltr">{custody.display}</bdi>
+                                      </span>
+                                    )}
+                                    {hasAdvanceDelta && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20 font-semibold whitespace-nowrap">
+                                        <span>{ui("السلف")}:</span>
+                                        <bdi dir="ltr">{advance.display}</bdi>
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-[var(--text-muted)]">—</span>
+                                )}
+                              </TableCell>
+                              {!readOnly && (
+                                <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors py-3.5 px-3 align-middle border-b theme-border border-s border-slate-200 dark:border-slate-800 text-end whitespace-nowrap">
+                                  {canReverse ? (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setReverseModalOp(o)}
+                                      className="h-8 px-2.5 gap-1 text-xs font-bold text-rose-700 dark:text-rose-400 border-slate-200 dark:border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/5"
+                                      aria-label={`${ui("عكس موثق")}: ${o.description}`}
+                                    >
+                                      <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                                      <span>{ui("عكس موثق")}</span>
+                                    </Button>
+                                  ) : (
+                                    <span className="text-[var(--text-muted)]">—</span>
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                      <TableFooter className="bg-slate-50/90 dark:bg-slate-900/80 text-xs">
+                        <TableRow className="hover:bg-transparent">
+                          <th
+                            scope="row"
+                            colSpan={3}
+                            className="py-3.5 px-3 text-start font-bold text-slate-900 dark:text-white border-t theme-border"
+                          >
+                            {ui("ملخص الحركات المصفاة")} ({filteredOps.length})
+                          </th>
+                          <TableCell
+                            className="py-3.5 px-3 text-end font-mono font-bold tabular-nums text-slate-900 dark:text-white border-t theme-border whitespace-nowrap"
+                            dir="ltr"
+                          >
+                            {formatMoneyValue(formatSignedMinor(opsAmountTotalMinor))} SAR
+                          </TableCell>
+                          <TableCell
+                            className="py-3.5 px-3 text-end font-mono font-bold tabular-nums border-t theme-border whitespace-nowrap"
+                            dir="ltr"
+                          >
+                            {opsEntitlementNetMinor !== BigInt(0) ? (
+                              <span
+                                className={
+                                  opsEntitlementNetFormatted.negative
+                                    ? "text-rose-700 dark:text-rose-400"
+                                    : "text-emerald-700 dark:text-emerald-400"
+                                }
+                              >
+                                {opsEntitlementNetFormatted.display} SAR
+                              </span>
+                            ) : (
+                              <span className="text-[var(--text-muted)]">0.00 SAR</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-3.5 px-3 font-mono text-[11px] tabular-nums border-t theme-border">
+                            {opsCustodyNetMinor !== BigInt(0) || opsAdvanceNetMinor !== BigInt(0) ? (
+                              <div className="flex flex-col items-start gap-1">
+                                {opsCustodyNetMinor !== BigInt(0) && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 font-semibold whitespace-nowrap">
+                                    <span>{ui("العهد")}:</span>
+                                    <bdi dir="ltr">{opsCustodyNetFormatted.display}</bdi>
+                                  </span>
+                                )}
+                                {opsAdvanceNetMinor !== BigInt(0) && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20 font-semibold whitespace-nowrap">
+                                    <span>{ui("السلف")}:</span>
+                                    <bdi dir="ltr">{opsAdvanceNetFormatted.display}</bdi>
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[var(--text-muted)]">—</span>
+                            )}
+                          </TableCell>
+                          {!readOnly && (
+                            <TableCell className="sticky end-0 z-10 bg-slate-50 dark:bg-slate-900 py-3.5 px-3 border-t theme-border border-s border-slate-200 dark:border-slate-800" />
+                          )}
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+                  </div>
+
+                  {/* Mobile & Tablet Cards View (< lg) */}
+                  <div className="lg:hidden p-3.5 sm:p-4 space-y-3">
+                    {filteredOps.map((o) => {
+                      const isReversal = o.kind === "REVERSAL";
+                      const isAlreadyReversed = reversedOpIds.has(o.id);
+                      const canReverse = !readOnly && !isReversal && !isAlreadyReversed;
+                      const entitlement = formatSignedDelta(o.entitlementDelta);
+                      const hasCustodyDelta = isNonZeroMoney(o.custodyDelta);
+                      const hasAdvanceDelta = isNonZeroMoney(o.advanceDelta);
+                      const custody = formatSignedDelta(o.custodyDelta);
+                      const advance = formatSignedDelta(o.advanceDelta);
+
+                      return (
+                        <MobileRecordCard
+                          key={o.id}
+                          titleAs="h3"
+                          muted={isAlreadyReversed}
+                          title={
+                            <span className="inline-flex flex-wrap items-center gap-1.5">
+                              <OperationBadge kind={o.kind} />
+                              {isAlreadyReversed && (
+                                <Badge variant="secondary" className="text-[11px] font-semibold">
+                                  {ui("تم عكسها")}
+                                </Badge>
+                              )}
+                            </span>
+                          }
+                          subtitle={o.description}
+                          badge={
+                            <span className="text-xs font-mono tabular-nums text-[var(--text-muted)]" dir="ltr">
+                              {o.effectiveDate.slice(0, 10)}
+                            </span>
+                          }
+                          footer={
+                            canReverse ? (
+                              <div className="mobile-card-actions w-full flex items-center justify-end gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setReverseModalOp(o)}
+                                  aria-label={`${ui("عكس موثق")}: ${o.description}`}
+                                  className="flex-1 min-h-11 gap-1.5 px-3 bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-400 hover:border-rose-500/40 text-xs font-bold"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                                  <span>{ui("عكس موثق")}</span>
+                                </Button>
+                              </div>
+                            ) : undefined
+                          }
+                        >
+                          <MobileCardMetaGrid columns={2}>
+                            <MobileCardField
+                              label={ui("المبلغ")}
+                              value={<span dir="ltr">{formatMoneyValue(o.amount)} SAR</span>}
+                              mono
+                            />
+                            <MobileCardField
+                              label={ui("أثر المستحق")}
+                              alignEnd
+                              mono
+                              value={
+                                entitlement.minor !== BigInt(0) ? (
+                                  <span
+                                    className={
+                                      entitlement.negative
+                                        ? "text-rose-700 dark:text-rose-400"
+                                        : "text-emerald-700 dark:text-emerald-400"
+                                    }
+                                    dir="ltr"
+                                  >
+                                    {entitlement.display} SAR
+                                  </span>
+                                ) : (
+                                  <span className="text-[var(--text-muted)]">—</span>
+                                )
+                              }
+                            />
+                          </MobileCardMetaGrid>
+                          {(hasCustodyDelta || hasAdvanceDelta) && (
+                            <div className="flex flex-wrap items-center gap-1.5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-3 py-2">
+                              {hasCustodyDelta && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 text-xs font-mono tabular-nums font-semibold">
+                                  <span>{ui("العهد")}:</span>
+                                  <bdi dir="ltr">{custody.display}</bdi>
+                                </span>
+                              )}
+                              {hasAdvanceDelta && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20 text-xs font-mono tabular-nums font-semibold">
+                                  <span>{ui("السلف")}:</span>
+                                  <bdi dir="ltr">{advance.display}</bdi>
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </MobileRecordCard>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </CardContent>
+
+            {filteredOps.length > 0 && (
+              <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+                <span>
+                  {ui("عرض")}{" "}
+                  <strong className="font-mono tabular-nums text-slate-900 dark:text-white">
+                    {filteredOps.length}
+                  </strong>{" "}
+                  {ui("من إجمالي")}{" "}
+                  <strong className="font-mono tabular-nums text-amber-700 dark:text-amber-400">
+                    {d.operations.length}
+                  </strong>
+                </span>
+                <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tabular-nums">
+                  <span>
+                    {ui("إجمالي المبالغ")}:{" "}
+                    <bdi dir="ltr" className="font-bold text-slate-900 dark:text-white">
+                      {formatMoneyValue(formatSignedMinor(opsAmountTotalMinor))} SAR
+                    </bdi>
+                  </span>
+                  <span>
+                    {ui("صافي الأثر")}:{" "}
+                    <bdi
+                      dir="ltr"
+                      className={
+                        opsEntitlementNetFormatted.negative
+                          ? "font-bold text-rose-700 dark:text-rose-400"
+                          : opsEntitlementNetFormatted.positive
+                            ? "font-bold text-emerald-700 dark:text-emerald-400"
+                            : "font-bold text-slate-900 dark:text-white"
+                      }
+                    >
+                      {opsEntitlementNetFormatted.display} SAR
+                    </bdi>
+                  </span>
+                </div>
+              </CardFooter>
+            )}
+          </Card>
+        </div>
       )}
-      <Notice message={m.error} error />
+
+      {/* TAB 2: SALARY & PAYROLL */}
+      {activeTab === "SALARY" && (
+        <div
+          id={`${tabIdPrefix}-panel-SALARY`}
+          role="tabpanel"
+          aria-labelledby={`${tabIdPrefix}-tab-SALARY`}
+          className="space-y-6"
+        >
+          {/* Active Salary Term Card */}
+          <Card className="theme-card p-5 border theme-border shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                  <span>{ui("الراتب الساري")}</span>
+                </h2>
+                {d.salaryTerms.length > 0 ? (
+                  <p className="text-sm mt-1.5 text-slate-700 dark:text-slate-300">
+                    {ui("راتب ساري من")}:{" "}
+                    <span className="font-mono font-bold tabular-nums" dir="ltr">
+                      {d.salaryTerms[0].effectiveFrom.slice(0, 10)}
+                    </span>{" "}
+                    ·{" "}
+                    <b
+                      dir="ltr"
+                      className="font-mono text-base tabular-nums text-amber-700 dark:text-amber-400"
+                    >
+                      {formatMoneyValue(d.salaryTerms[0].amount)} SAR
+                    </b>
+                  </p>
+                ) : (
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    {ui("لا توجد مسيرات رواتب")}
+                  </p>
+                )}
+              </div>
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSalaryModalOpen(true)}
+                  className="min-h-11 sm:min-h-10 gap-2 text-xs font-bold"
+                >
+                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{ui("تحديد راتب شهري")}</span>
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          {/* Monthly Payroll Drafts Card */}
+          <Card className="theme-card border theme-border overflow-hidden shadow-xs">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 flex-row flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Banknote className="w-4 h-4" aria-hidden="true" />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2
+                    id={payrollHeadingId}
+                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                  >
+                    {ui("مسيرات الرواتب الشهرية")}
+                  </h2>
+                  <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                    {d.payroll.length}
+                  </Badge>
+                </div>
+              </div>
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="gold"
+                  size="sm"
+                  onClick={() => setPayrollModalOpen(true)}
+                  className="min-h-11 sm:min-h-9 gap-1.5 text-xs font-bold"
+                >
+                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{ui("إنشاء مسير شهر جديد")}</span>
+                </Button>
+              )}
+            </CardHeader>
+
+            <CardContent className="p-0">
+              {approvePayrollMutation.error && (
+                <div className="p-4 border-b theme-border">
+                  <Notice message={approvePayrollMutation.error} error />
+                </div>
+              )}
+
+              {!d.payroll.length ? (
+                <div className="p-10 sm:p-12 text-center space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center">
+                    <Banknote className="w-6 h-6" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {ui("لا توجد مسيرات رواتب مسجلة")}
+                  </p>
+                  {!readOnly && (
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        variant="gold"
+                        size="sm"
+                        onClick={() => setPayrollModalOpen(true)}
+                        className="min-h-11 sm:min-h-9 gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>{ui("إنشاء مسير شهر جديد")}</span>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table (md and up) */}
+                  <div className="hidden md:block">
+                    <Table
+                      regionLabelledBy={payrollHeadingId}
+                      wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                      className="border-separate border-spacing-0"
+                    >
+                      <TableCaption className="sr-only">
+                        {ui("مسيرات الرواتب الشهرية")}
+                      </TableCaption>
+                      <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
+                            {ui("شهر المسير")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
+                            {ui("الحالة")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border">
+                            {ui("سبب التعديل")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
+                            {ui("المبلغ")}
+                          </TableHead>
+                          {!readOnly && (
+                            <TableHead className="sticky end-0 z-20 py-3.5 px-4 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                              {ui("الإجراءات")}
+                            </TableHead>
+                          )}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="text-xs [&_tr:last-child_td]:border-b-0 [&_tr:last-child_th]:border-b-0">
+                        {d.payroll.map((p) => (
+                          <TableRow
+                            key={`${p.id}:${p.version}`}
+                            className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                          >
+                            <th
+                              scope="row"
+                              className="py-3.5 px-4 text-start align-middle border-b theme-border font-mono font-bold text-sm tabular-nums whitespace-nowrap text-slate-900 dark:text-white"
+                            >
+                              <bdi dir="ltr">{p.month}</bdi>
+                            </th>
+                            <TableCell className="py-3.5 px-4 align-middle border-b theme-border whitespace-nowrap">
+                              <Badge
+                                variant={p.status === "APPROVED" ? "success" : "warning"}
+                                className="text-xs font-semibold"
+                              >
+                                {ui(p.status === "APPROVED" ? "معتمد" : "مسودة")}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="py-3.5 px-4 align-middle border-b theme-border max-w-md whitespace-normal break-words">
+                              {p.adjustmentReason ? (
+                                <span className="text-slate-700 dark:text-slate-300">
+                                  {p.adjustmentReason}
+                                </span>
+                              ) : (
+                                <span className="text-[var(--text-muted)]">
+                                  {ui("بدون ملاحظات")}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums text-amber-700 dark:text-amber-400 whitespace-nowrap"
+                              dir="ltr"
+                            >
+                              {formatMoneyValue(p.amount)} SAR
+                            </TableCell>
+                            {!readOnly && (
+                              <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors py-3.5 px-4 align-middle border-b theme-border border-s border-slate-200 dark:border-slate-800 text-end whitespace-nowrap">
+                                {p.status === "DRAFT" ? (
+                                  <div className="inline-flex items-center justify-end gap-1.5">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      aria-label={`${ui("تعديل")} ${p.month}`}
+                                      onClick={() => setEditingPayroll(p)}
+                                      className="h-9 px-3 gap-1.5 text-xs font-bold"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                                      <span>{ui("تعديل")}</span>
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="gold"
+                                      size="sm"
+                                      disabled={approvePayrollMutation.busy}
+                                      aria-label={`${ui("اعتماد الاستحقاق")} ${p.month}`}
+                                      onClick={() => void handleApprovePayroll(p)}
+                                      className="h-9 px-3 text-xs font-bold"
+                                    >
+                                      <span>
+                                        {approvingPayrollId === p.id && approvePayrollMutation.busy
+                                          ? "..."
+                                          : ui("اعتماد الاستحقاق")}
+                                      </span>
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span className="text-[var(--text-muted)]">—</span>
+                                )}
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Cards (< md) */}
+                  <div className="md:hidden p-3.5 space-y-3">
+                    {d.payroll.map((p) => (
+                      <MobileRecordCard
+                        key={`${p.id}:${p.version}`}
+                        titleAs="h3"
+                        title={
+                          <span className="font-mono font-bold tabular-nums" dir="ltr">
+                            {p.month}
+                          </span>
+                        }
+                        badge={
+                          <Badge
+                            variant={p.status === "APPROVED" ? "success" : "warning"}
+                            className="text-xs font-semibold"
+                          >
+                            {ui(p.status === "APPROVED" ? "معتمد" : "مسودة")}
+                          </Badge>
+                        }
+                        subtitle={
+                          p.adjustmentReason
+                            ? `${ui("سبب التعديل")}: ${p.adjustmentReason}`
+                            : undefined
+                        }
+                        footer={
+                          !readOnly && p.status === "DRAFT" ? (
+                            <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                aria-label={`${ui("تعديل")} ${p.month}`}
+                                onClick={() => setEditingPayroll(p)}
+                                className="min-h-11 px-4 gap-1.5 text-xs font-bold shrink-0"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span>{ui("تعديل")}</span>
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="gold"
+                                size="sm"
+                                disabled={approvePayrollMutation.busy}
+                                aria-label={`${ui("اعتماد الاستحقاق")} ${p.month}`}
+                                onClick={() => void handleApprovePayroll(p)}
+                                className="flex-1 min-h-11 px-3 text-xs font-bold"
+                              >
+                                <span>
+                                  {approvingPayrollId === p.id && approvePayrollMutation.busy
+                                    ? "..."
+                                    : ui("اعتماد الاستحقاق")}
+                                </span>
+                              </Button>
+                            </div>
+                          ) : undefined
+                        }
+                      >
+                        <MobileCardMetaGrid columns={2}>
+                          <MobileCardField
+                            label={ui("المبلغ")}
+                            mono
+                            value={
+                              <span dir="ltr" className="text-amber-700 dark:text-amber-400 font-bold">
+                                {formatMoneyValue(p.amount)} SAR
+                              </span>
+                            }
+                          />
+                          <MobileCardField
+                            label={ui("الحالة")}
+                            alignEnd
+                            value={ui(p.status === "APPROVED" ? "معتمد" : "مسودة")}
+                          />
+                        </MobileCardMetaGrid>
+                      </MobileRecordCard>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* TAB 3: COMMISSIONS */}
+      {activeTab === "COMMISSIONS" && (
+        <div
+          id={`${tabIdPrefix}-panel-COMMISSIONS`}
+          role="tabpanel"
+          aria-labelledby={`${tabIdPrefix}-tab-COMMISSIONS`}
+        >
+          <Card className="theme-card border theme-border overflow-hidden shadow-xs">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 flex-row flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" aria-hidden="true" />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2
+                    id={commissionsHeadingId}
+                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                  >
+                    {ui("عمولات الرحلات")}
+                  </h2>
+                  <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                    {d.commissions.length}
+                  </Badge>
+                </div>
+              </div>
+
+              {d.commissions.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
+                  <Badge variant="outline" className="px-2.5 py-1">
+                    {ui("قيمة العمولة")}: {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
+                  </Badge>
+                  <Badge variant="warning" className="px-2.5 py-1">
+                    {ui("المتبقي")}: {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
+                  </Badge>
+                </div>
+              )}
+            </CardHeader>
+
+            <CardContent className="p-0">
+              {!d.commissions.length ? (
+                <div className="p-10 sm:p-12 text-center space-y-2">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                    <Sparkles className="w-6 h-6" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {ui("لا توجد عمولات رحلات مسجلة")}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table (lg and up) */}
+                  <div className="hidden lg:block">
+                    <Table
+                      regionLabelledBy={commissionsHeadingId}
+                      wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                      className="border-separate border-spacing-0"
+                    >
+                      <TableCaption className="sr-only">
+                        {ui("عمولات الرحلات")}
+                      </TableCaption>
+                      <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
+                            {ui("رقم العقد")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
+                            {ui("حالة التنفيذ")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
+                            {ui("حالة الصرف")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
+                            {ui("قيمة العمولة")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
+                            {ui("المدفوع من العمولة")}
+                          </TableHead>
+                          <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
+                            {ui("المتبقي من العمولة")}
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="text-xs [&_tr:last-child_td]:border-b-0 [&_tr:last-child_th]:border-b-0">
+                        {d.commissions.map((c) => {
+                          const ref = c.contract?.referenceNumber || c.contractId;
+                          const href = readOnly ? "/captain" : `/admin/contracts/${c.contractId}`;
+                          return (
+                            <TableRow
+                              key={c.contractId}
+                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                            >
+                              <th
+                                scope="row"
+                                className="py-3.5 px-4 text-start align-middle border-b theme-border font-normal"
+                              >
+                                <div className="space-y-1">
+                                  <Link
+                                    href={href}
+                                    className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1.5"
+                                  >
+                                    <span>{ref}</span>
+                                    <ExternalLink className="w-3 h-3 opacity-70" aria-hidden="true" />
+                                  </Link>
+                                  {c.contract?.tripDate && (
+                                    <div className="text-[11px] text-[var(--text-muted)] font-mono tabular-nums">
+                                      {ui("تاريخ الرحلة")}:{" "}
+                                      <bdi dir="ltr">{c.contract.tripDate.slice(0, 10)}</bdi>
+                                    </div>
+                                  )}
+                                </div>
+                              </th>
+                              <TableCell className="py-3.5 px-4 align-middle border-b theme-border whitespace-nowrap">
+                                <Badge
+                                  variant={
+                                    c.status === "COMPLETED"
+                                      ? "success"
+                                      : c.status === "CANCELLED"
+                                        ? "secondary"
+                                        : "outline"
+                                  }
+                                  className="text-xs font-semibold"
+                                >
+                                  {ui(
+                                    c.status === "COMPLETED"
+                                      ? "تم التنفيذ"
+                                      : c.status === "CANCELLED"
+                                        ? "أُلغيت"
+                                        : "لم تُنفذ"
+                                  )}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="py-3.5 px-4 align-middle border-b theme-border whitespace-nowrap">
+                                <Badge
+                                  variant={c.paymentStatus === "PAID" ? "success" : "warning"}
+                                  className="text-xs font-semibold"
+                                >
+                                  {ui(
+                                    c.paymentStatus === "PAID"
+                                      ? "مصروف"
+                                      : c.paymentStatus === "DUE"
+                                        ? "مستحق"
+                                        : "متوقع"
+                                  )}
+                                </Badge>
+                              </TableCell>
+                              <TableCell
+                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap"
+                                dir="ltr"
+                              >
+                                {formatMoneyValue(c.amount)} SAR
+                              </TableCell>
+                              <TableCell
+                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-semibold tabular-nums text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
+                                dir="ltr"
+                              >
+                                {formatMoneyValue(c.paidAmount)} SAR
+                              </TableCell>
+                              <TableCell
+                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums text-amber-700 dark:text-amber-400 whitespace-nowrap"
+                                dir="ltr"
+                              >
+                                {formatMoneyValue(c.remainingAmount)} SAR
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                      <TableFooter className="bg-slate-50/90 dark:bg-slate-900/80 text-xs">
+                        <TableRow className="hover:bg-transparent">
+                          <th
+                            scope="row"
+                            colSpan={3}
+                            className="py-3.5 px-4 text-start font-bold text-slate-900 dark:text-white border-t theme-border"
+                          >
+                            {ui("إجمالي العمولات")} ({d.commissions.length})
+                          </th>
+                          <TableCell
+                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-slate-900 dark:text-white border-t theme-border whitespace-nowrap"
+                            dir="ltr"
+                          >
+                            {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
+                          </TableCell>
+                          <TableCell
+                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-emerald-700 dark:text-emerald-400 border-t theme-border whitespace-nowrap"
+                            dir="ltr"
+                          >
+                            {formatMoneyValue(formatSignedMinor(commPaidMinor))} SAR
+                          </TableCell>
+                          <TableCell
+                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-amber-700 dark:text-amber-400 border-t theme-border whitespace-nowrap"
+                            dir="ltr"
+                          >
+                            {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+                  </div>
+
+                  {/* Mobile & Tablet Cards (< lg) */}
+                  <div className="lg:hidden p-3.5 sm:p-4 space-y-3">
+                    {d.commissions.map((c) => {
+                      const ref = c.contract?.referenceNumber || c.contractId;
+                      const href = readOnly ? "/captain" : `/admin/contracts/${c.contractId}`;
+                      return (
+                        <MobileRecordCard
+                          key={c.contractId}
+                          titleAs="h3"
+                          title={
+                            <Link
+                              href={href}
+                              className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1.5"
+                            >
+                              <span>{ref}</span>
+                              <ExternalLink className="w-3 h-3 opacity-70" aria-hidden="true" />
+                            </Link>
+                          }
+                          subtitle={
+                            c.contract?.tripDate ? (
+                              <span className="font-mono tabular-nums">
+                                {ui("تاريخ الرحلة")}:{" "}
+                                <bdi dir="ltr">{c.contract.tripDate.slice(0, 10)}</bdi>
+                              </span>
+                            ) : undefined
+                          }
+                          badge={
+                            <div className="flex flex-wrap items-center justify-end gap-1">
+                              <Badge
+                                variant={
+                                  c.status === "COMPLETED"
+                                    ? "success"
+                                    : c.status === "CANCELLED"
+                                      ? "secondary"
+                                      : "outline"
+                                }
+                                className="text-[11px] font-semibold"
+                              >
+                                {ui(
+                                  c.status === "COMPLETED"
+                                    ? "تم التنفيذ"
+                                    : c.status === "CANCELLED"
+                                      ? "أُلغيت"
+                                      : "لم تُنفذ"
+                                )}
+                              </Badge>
+                              <Badge
+                                variant={c.paymentStatus === "PAID" ? "success" : "warning"}
+                                className="text-[11px] font-semibold"
+                              >
+                                {ui(
+                                  c.paymentStatus === "PAID"
+                                    ? "مصروف"
+                                    : c.paymentStatus === "DUE"
+                                      ? "مستحق"
+                                      : "متوقع"
+                                )}
+                              </Badge>
+                            </div>
+                          }
+                        >
+                          <MobileCardMetaGrid columns={3}>
+                            <MobileCardField
+                              label={ui("قيمة العمولة")}
+                              mono
+                              value={<span dir="ltr">{formatMoneyValue(c.amount)} SAR</span>}
+                            />
+                            <MobileCardField
+                              label={ui("المدفوع من العمولة")}
+                              mono
+                              value={
+                                <span dir="ltr" className="text-emerald-700 dark:text-emerald-400">
+                                  {formatMoneyValue(c.paidAmount)} SAR
+                                </span>
+                              }
+                            />
+                            <MobileCardField
+                              label={ui("المتبقي من العمولة")}
+                              alignEnd
+                              mono
+                              value={
+                                <span dir="ltr" className="text-amber-700 dark:text-amber-400">
+                                  {formatMoneyValue(c.remainingAmount)} SAR
+                                </span>
+                              }
+                            />
+                          </MobileCardMetaGrid>
+                        </MobileRecordCard>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </CardContent>
+
+            {d.commissions.length > 0 && (
+              <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+                <span>{ui("إجمالي العمولات")}</span>
+                <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tabular-nums">
+                  <span>
+                    {ui("قيمة العمولة")}:{" "}
+                    <bdi dir="ltr" className="font-bold text-slate-900 dark:text-white">
+                      {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
+                    </bdi>
+                  </span>
+                  <span>
+                    {ui("المدفوع من العمولة")}:{" "}
+                    <bdi dir="ltr" className="font-bold text-emerald-700 dark:text-emerald-400">
+                      {formatMoneyValue(formatSignedMinor(commPaidMinor))} SAR
+                    </bdi>
+                  </span>
+                  <span>
+                    {ui("المتبقي من العمولة")}:{" "}
+                    <bdi dir="ltr" className="font-bold text-amber-700 dark:text-amber-400">
+                      {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
+                    </bdi>
+                  </span>
+                </div>
+              </CardFooter>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* TAB 4: LEGACY HISTORICAL RECORDS */}
+      {activeTab === "LEGACY" && d.legacy.length > 0 && (
+        <div
+          id={`${tabIdPrefix}-panel-LEGACY`}
+          role="tabpanel"
+          aria-labelledby={`${tabIdPrefix}-tab-LEGACY`}
+        >
+          <Card className="theme-card border theme-border overflow-hidden shadow-xs">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <h2
+                  id={legacyHeadingId}
+                  className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                >
+                  {ui("أرشيف الحركات السابقة")}
+                </h2>
+                <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                  {d.legacy.length}
+                </Badge>
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">
+                {ui(
+                  "هذه الحركات محفوظة كما هي، ولم تُرحَّل مرة أخرى أو تُعتبر رواتب أو سلفًا تلقائيًا."
+                )}
+              </p>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="hidden md:block">
+                <Table
+                  regionLabelledBy={legacyHeadingId}
+                  wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                  className="border-separate border-spacing-0"
+                >
+                  <TableCaption className="sr-only">
+                    {ui("أرشيف الحركات السابقة")}
+                  </TableCaption>
+                  <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
+                        {ui("التاريخ")}
+                      </TableHead>
+                      <TableHead className="py-3.5 px-4 border-b theme-border">
+                        {ui("البيان")}
+                      </TableHead>
+                      <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
+                        {ui("المبلغ")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="text-xs [&_tr:last-child_td]:border-b-0 [&_tr:last-child_th]:border-b-0">
+                    {d.legacy.map((l) => (
+                      <TableRow
+                        key={l.id}
+                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                      >
+                        <th
+                          scope="row"
+                          className="py-3.5 px-4 text-start align-middle border-b theme-border font-mono font-semibold tabular-nums whitespace-nowrap text-slate-700 dark:text-slate-300"
+                        >
+                          <bdi dir="ltr">{l.effectiveDate.slice(0, 10)}</bdi>
+                        </th>
+                        <TableCell className="py-3.5 px-4 align-middle border-b theme-border whitespace-normal break-words text-slate-800 dark:text-slate-200">
+                          {l.description}
+                        </TableCell>
+                        <TableCell
+                          className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap"
+                          dir="ltr"
+                        >
+                          {l.direction} {formatMoneyValue(l.amount)} SAR
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="md:hidden p-3.5 space-y-3">
+                {d.legacy.map((l) => (
+                  <MobileRecordCard
+                    key={l.id}
+                    titleAs="h3"
+                    title={
+                      <span className="font-mono text-xs tabular-nums" dir="ltr">
+                        {l.effectiveDate.slice(0, 10)}
+                      </span>
+                    }
+                    subtitle={l.description}
+                    badge={
+                      <span className="font-mono text-xs font-bold tabular-nums text-slate-900 dark:text-white" dir="ltr">
+                        {l.direction} {formatMoneyValue(l.amount)} SAR
+                      </span>
+                    }
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* MODALS */}
+      {movementModal.open && (
+        <MovementModal
+          statement={d}
+          defaultKind={movementModal.defaultKind}
+          defaultAmount={movementModal.defaultAmount}
+          onClose={() => setMovementModal({ open: false })}
+          reload={result.reload}
+        />
+      )}
+
+      {salaryModalOpen && (
+        <SalaryTermModal
+          memberId={d.member.id}
+          onClose={() => setSalaryModalOpen(false)}
+          reload={result.reload}
+        />
+      )}
+
+      {(payrollModalOpen || editingPayroll) && (
+        <PayrollModal
+          memberId={d.member.id}
+          editing={editingPayroll}
+          onClose={() => {
+            setPayrollModalOpen(false);
+            setEditingPayroll(null);
+          }}
+          reload={result.reload}
+        />
+      )}
+
+      {reverseModalOp && (
+        <ReverseModal
+          op={reverseModalOp}
+          onClose={() => setReverseModalOp(null)}
+          reload={result.reload}
+        />
+      )}
     </div>
   );
 }
 
-function MovementForm({ statement, reload }: { statement: StaffStatement; reload: () => void }) {
-  const ui = useUiText(),
-    m = useMutation(),
-    [kind, setKind] = useState("PAYOUT"),
-    [amount, setAmount] = useState(""),
-    [day, setDay] = useState(currentSaudiPeriod().day),
-    [description, setDescription] = useState(""),
-    [deduct, setDeduct] = useState("0"),
-    [cashAccount, setCashAccount] = useState("1102"),
-    [purchaseId, setPurchaseId] = useState(""),
-    [billSearch, setBillSearch] = useState(""),
-    [commissionId, setCommissionId] = useState(""),
-    [operationKey, setOperationKey] = useState<string | null>(null);
+// Semantic badge for operation kinds
+function OperationBadge({ kind }: { kind: string }) {
+  const ui = useUiText();
+  const label = ui(OPERATION_LABELS[kind] || kind);
+
+  if (kind === "PAYOUT") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+  if (kind === "SALARY") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
+        <Banknote className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+  if (kind === "COMMISSION" || kind === "COMMISSION_BILL") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+        <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+  if (kind.startsWith("CUSTODY")) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20">
+        <Coins className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+  if (kind.startsWith("ADVANCE")) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-500/20">
+        <HandCoins className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+  if (kind === "REVERSAL") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+        <RotateCcw className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border theme-border">
+      {label}
+    </span>
+  );
+}
+
+// Financial Movement Modal (Payout, Custody, Advance, Settle)
+function MovementModal({
+  statement,
+  defaultKind = "PAYOUT",
+  defaultAmount = "",
+  onClose,
+  reload,
+}: {
+  statement: StaffStatement;
+  defaultKind?: string;
+  defaultAmount?: string;
+  onClose: () => void;
+  reload: () => void;
+}) {
+  const ui = useUiText();
+  const m = useMutation();
+  const [kind, setKind] = useState(defaultKind);
+  const [amount, setAmount] = useState(defaultAmount);
+  const [day, setDay] = useState(currentSaudiPeriod().day);
+  const [description, setDescription] = useState(
+    defaultKind === "PAYOUT" ? "صرف مستحقات" : ""
+  );
+  const [deduct, setDeduct] = useState("0");
+  const [cashAccount, setCashAccount] = useState("1102");
+  const [purchaseId, setPurchaseId] = useState("");
+  const [billSearch, setBillSearch] = useState("");
+  const [commissionId, setCommissionId] = useState("");
+  const [operationKey, setOperationKey] = useState<string | null>(null);
 
   const bills = useCommercialData<{
     items: {
@@ -641,208 +3082,574 @@ function MovementForm({ statement, reload }: { statement: StaffStatement; reload
     setOperationKey(key);
     await m.run(
       () =>
-        commercialRequest(`/members/${statement.member.id}/operations`, "POST", {
-          operationKey: key,
-          kind,
-          amount,
-          effectiveDate: day,
-          description,
-          cashAccount,
-          deductAdvance: kind === "PAYOUT" ? deduct : "0",
-          ...(["CUSTODY_SETTLE", "COMMISSION_BILL"].includes(kind) ? { purchaseId } : {}),
-          ...(kind === "COMMISSION_BILL" ? { commissionId } : {}),
-        }),
+        commercialRequest(
+          `/members/${statement.member.id}/operations`,
+          "POST",
+          {
+            operationKey: key,
+            kind,
+            amount,
+            effectiveDate: day,
+            description,
+            cashAccount,
+            deductAdvance: kind === "PAYOUT" ? deduct : "0",
+            ...(["CUSTODY_SETTLE", "COMMISSION_BILL"].includes(kind)
+              ? { purchaseId }
+              : {}),
+            ...(kind === "COMMISSION_BILL" ? { commissionId } : {}),
+          }
+        ),
       () => {
-        setOperationKey(null);
-        setAmount("");
-        setDescription("");
         reload();
-      },
+        onClose();
+      }
     );
   }
 
   return (
-    <Panel title="تسجيل حركة مالية">
-      <form className="space-y-4" onSubmit={submit}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="نوع الحركة">
-            <select
-              className={INPUT}
-              value={kind}
-              onChange={(e) => {
-                setKind(e.target.value);
-                setOperationKey(null);
-              }}
-            >
-              {Object.entries(OPERATION_LABELS)
-                .filter(([k]) => !["SALARY", "COMMISSION", "REVERSAL"].includes(k) && (k !== "COMMISSION_BILL" || statement.member.kind.startsWith("EXTERNAL")))
-                .map(([k, label]) => (
-                  <option value={k} key={k}>
-                    {ui(label)}
-                  </option>
-                ))}
-            </select>
-          </Field>
-          <Field label={kind === "PAYOUT" ? "المبلغ النقدي المراد صرفه" : "المبلغ"}>
-            <input
-              className={INPUT}
-              required
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                setOperationKey(null);
-              }}
-            />
-          </Field>
-          <Field label="تاريخ الحركة">
-            <input
-              className={INPUT}
-              required
-              type="date"
-              max={currentSaudiPeriod().day}
-              value={day}
-              onChange={(e) => {
-                setDay(e.target.value);
-                setOperationKey(null);
-              }}
-            />
-          </Field>
-          <Field label="البيان">
-            <input
-              required
-              className={INPUT}
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setOperationKey(null);
-              }}
-            />
-          </Field>
-          {kind === "PAYOUT" && (
-            <Field label="خصم سلفة إضافي من المستحق">
-              <input
-                className={INPUT}
-                inputMode="decimal"
-                value={deduct}
-                onChange={(e) => {
-                  setDeduct(e.target.value);
-                  setOperationKey(null);
-                }}
-              />
-            </Field>
-          )}
-          {!["CUSTODY_SETTLE", "COMMISSION_BILL"].includes(kind) && (
-            <Field label="حساب الدفع">
+    <Modal label="تسجيل حركة مالية" onClose={onClose} isBusy={m.busy}>
+      <section className="mobile-dialog-panel theme-card w-full max-w-lg rounded-2xl p-5 sm:p-7 space-y-4">
+        <div className="flex items-center justify-between border-b theme-border pb-3">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-amber-500" aria-hidden="true" />
+            <span>{ui("تسجيل حركة مالية")}</span>
+          </h2>
+          <button
+            type="button"
+            aria-label={ui("إغلاق")}
+            onClick={onClose}
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        <form className="space-y-4" onSubmit={submit}>
+          <div className="space-y-3">
+            <Field label="نوع الحركة">
               <select
                 className={INPUT}
-                value={cashAccount}
+                value={kind}
                 onChange={(e) => {
-                  setCashAccount(e.target.value);
+                  setKind(e.target.value);
                   setOperationKey(null);
+                  if (e.target.value === "PAYOUT") {
+                    setDescription("صرف مستحقات");
+                  }
                 }}
               >
-                <option value="1102">{ui("البنك")}</option>
-                <option value="1101">{ui("الصندوق")}</option>
-              </select>
-            </Field>
-          )}
-          {["CUSTODY_SETTLE", "COMMISSION_BILL"].includes(kind) && (
-            <>
-              <Field label="بحث عن فاتورة مورد">
-                <input className={INPUT} value={billSearch} onChange={(e) => setBillSearch(e.target.value)} />
-              </Field>
-              <Field label="فاتورة المورد الآجلة">
-                <select
-                  required
-                  className={INPUT}
-                  value={purchaseId}
-                  onChange={(e) => {
-                    setOperationKey(null);
-                    setPurchaseId(e.target.value);
-                    setAmount(bills.data?.items.find((b) => b.id === e.target.value)?.totalAmount || "");
-                  }}
-                >
-                  <option value="">{ui("اختر الفاتورة")}</option>
-                  {bills.data?.items
-                    .filter((b) => b.postingStatus === "POSTED" && b.paymentAccountCode === "2101")
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.supplierName} · {b.invoiceNumber} · {b.totalAmount}
-                      </option>
-                    ))}
-                </select>
-              </Field>
-              <Link className="self-end underline text-sm font-bold text-amber-700 dark:text-amber-400" href="/admin/purchases">
-                {ui("تسجيل فاتورة مورد أولًا")}
-              </Link>
-            </>
-          )}
-          {kind === "COMMISSION_BILL" && (
-            <Field label="العمولة المرتبطة">
-              <select
-                className={INPUT}
-                required
-                value={commissionId}
-                onChange={(e) => {
-                  setCommissionId(e.target.value);
-                  setOperationKey(null);
-                }}
-              >
-                <option value="">{ui("اختر العمولة")}</option>
-                {statement.operations
-                  .filter((o) => o.kind === "COMMISSION")
-                  .map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.description} · {o.amount}
+                {Object.entries(OPERATION_LABELS)
+                  .filter(
+                    ([k]) =>
+                      !["SALARY", "COMMISSION", "REVERSAL"].includes(k) &&
+                      (k !== "COMMISSION_BILL" ||
+                        statement.member.kind.startsWith("EXTERNAL"))
+                  )
+                  .map(([k, label]) => (
+                    <option value={k} key={k}>
+                      {ui(label)}
                     </option>
                   ))}
               </select>
             </Field>
-          )}
-        </div>
-        <Notice message={bills.error} error />
-        <Notice message={m.error} error />
-        <Notice message={m.message} />
-        <p className="text-xs text-slate-400">
-          {ui("صرف المستحقات يخفض الرصيد المستحق؛ العهدة والسلفة تظلان منفصلتين.")}
-        </p>
-        <button disabled={m.busy} className={BUTTON}>
-          {ui("حفظ الحركة وترحيل القيد")}
-        </button>
-      </form>
-    </Panel>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field
+                label={
+                  kind === "PAYOUT"
+                    ? "المبلغ النقدي المراد صرفه"
+                    : "المبلغ"
+                }
+              >
+                <input
+                  className={`${INPUT} text-start font-mono`}
+                  dir="ltr"
+                  required
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setOperationKey(null);
+                  }}
+                  placeholder="0.00"
+                />
+              </Field>
+
+              <Field label="تاريخ الحركة">
+                <input
+                  className={`${INPUT} text-start font-mono`}
+                  dir="ltr"
+                  required
+                  type="date"
+                  max={currentSaudiPeriod().day}
+                  value={day}
+                  onChange={(e) => {
+                    setDay(e.target.value);
+                    setOperationKey(null);
+                  }}
+                />
+              </Field>
+            </div>
+
+            <Field label="البيان">
+              <input
+                required
+                className={INPUT}
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setOperationKey(null);
+                }}
+                placeholder={ui("البيان")}
+              />
+            </Field>
+
+            {!["CUSTODY_SETTLE", "COMMISSION_BILL"].includes(kind) && (
+              <Field label="حساب الدفع">
+                <select
+                  className={INPUT}
+                  value={cashAccount}
+                  onChange={(e) => {
+                    setCashAccount(e.target.value);
+                    setOperationKey(null);
+                  }}
+                >
+                  <option value="1102">{ui("البنك")}</option>
+                  <option value="1101">{ui("الصندوق")}</option>
+                </select>
+              </Field>
+            )}
+
+            {kind === "PAYOUT" && (
+              <Field label="خصم سلفة إضافي من المستحق">
+                <input
+                  className={`${INPUT} text-start font-mono`}
+                  dir="ltr"
+                  inputMode="decimal"
+                  value={deduct}
+                  onChange={(e) => {
+                    setDeduct(e.target.value);
+                    setOperationKey(null);
+                  }}
+                  placeholder="0"
+                />
+              </Field>
+            )}
+
+            {["CUSTODY_SETTLE", "COMMISSION_BILL"].includes(kind) && (
+              <>
+                <Field label="بحث عن فاتورة مورد">
+                  <input
+                    className={INPUT}
+                    value={billSearch}
+                    onChange={(e) => setBillSearch(e.target.value)}
+                  />
+                </Field>
+                <Field label="فاتورة المورد الآجلة">
+                  <select
+                    required
+                    className={INPUT}
+                    value={purchaseId}
+                    onChange={(e) => {
+                      setOperationKey(null);
+                      setPurchaseId(e.target.value);
+                      setAmount(
+                        bills.data?.items.find((b) => b.id === e.target.value)
+                          ?.totalAmount || ""
+                      );
+                    }}
+                  >
+                    <option value="">{ui("اختر الفاتورة")}</option>
+                    {bills.data?.items
+                      .filter(
+                        (b) =>
+                          b.postingStatus === "POSTED" &&
+                          b.paymentAccountCode === "2101"
+                      )
+                      .map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.supplierName} · {b.invoiceNumber} · {b.totalAmount}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+                <Link
+                  className="block underline text-xs font-bold text-amber-700 dark:text-amber-400"
+                  href="/admin/purchases"
+                >
+                  {ui("تسجيل فاتورة مورد أولًا")}
+                </Link>
+              </>
+            )}
+
+            {kind === "COMMISSION_BILL" && (
+              <Field label="العمولة المرتبطة">
+                <select
+                  className={INPUT}
+                  required
+                  value={commissionId}
+                  onChange={(e) => {
+                    setCommissionId(e.target.value);
+                    setOperationKey(null);
+                  }}
+                >
+                  <option value="">{ui("اختر العمولة")}</option>
+                  {statement.operations
+                    .filter((o) => o.kind === "COMMISSION")
+                    .map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.description} · {o.amount}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+            )}
+          </div>
+
+          <Notice message={bills.error} error />
+          <Notice message={m.error} error />
+
+          <p className="text-xs text-[var(--text-muted)]">
+            {ui(
+              "صرف المستحقات يخفض الرصيد المستحق؛ العهدة والسلفة تظلان منفصلتين."
+            )}
+          </p>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t theme-border">
+            <button
+              type="button"
+              className={SECONDARY}
+              onClick={onClose}
+              disabled={m.busy}
+            >
+              {ui("إلغاء")}
+            </button>
+            <button type="submit" disabled={m.busy} className={BUTTON}>
+              {ui("حفظ الحركة وترحيل القيد")}
+            </button>
+          </div>
+        </form>
+      </section>
+    </Modal>
   );
 }
 
-function ReverseButton({ id, reload }: { id: string; reload: () => void }) {
-  const ui = useUiText(),
-    m = useMutation(),
-    [open, setOpen] = useState(false),
-    [reason, setReason] = useState("");
+// Salary Term Definition Modal
+function SalaryTermModal({
+  memberId,
+  onClose,
+  reload,
+}: {
+  memberId: string;
+  onClose: () => void;
+  reload: () => void;
+}) {
+  const ui = useUiText();
+  const m = useMutation();
+  const [amount, setAmount] = useState("");
+  const [from, setFrom] = useState(currentSaudiPeriod().day);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    await m.run(
+      () =>
+        commercialRequest(`/members/${memberId}/salary-terms`, "POST", {
+          amount,
+          effectiveFrom: from,
+        }),
+      () => {
+        reload();
+        onClose();
+      }
+    );
+  }
 
   return (
-    <div>
-      <button className={SECONDARY} onClick={() => setOpen(!open)}>
-        {ui("عكس موثق")}
-      </button>
-      {open && (
-        <form
-          className="mt-2 space-y-2 p-3 rounded-xl border theme-border"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void m.run(() => commercialRequest(`/operations/${id}/reverse`, "POST", { day: currentSaudiPeriod().day, reason }), reload);
-          }}
-        >
-          <Field label="سبب العكس">
-            <input required className={INPUT} value={reason} onChange={(e) => setReason(e.target.value)} />
-          </Field>
-          <button disabled={m.busy} className={SECONDARY}>
-            {ui("تأكيد العكس")}
+    <Modal label="الراتب الشهري" onClose={onClose} isBusy={m.busy}>
+      <section className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between border-b theme-border pb-3">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-amber-500" aria-hidden="true" />
+            <span>{ui("الراتب الشهري")}</span>
+          </h2>
+          <button
+            type="button"
+            aria-label={ui("إغلاق")}
+            onClick={onClose}
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
+        </div>
+
+        <form className="space-y-4" onSubmit={submit}>
+          <Field label="الراتب الشهري">
+            <input
+              required
+              className={`${INPUT} text-start font-mono`}
+              dir="ltr"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+          </Field>
+          <Field label="يسري من">
+            <input
+              required
+              type="date"
+              dir="ltr"
+              className={`${INPUT} text-start font-mono`}
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </Field>
+
+          <Notice message={m.error} error />
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t theme-border">
+            <button
+              type="button"
+              className={SECONDARY}
+              onClick={onClose}
+              disabled={m.busy}
+            >
+              {ui("إلغاء")}
+            </button>
+            <button type="submit" disabled={m.busy} className={BUTTON}>
+              {ui("حفظ الراتب")}
+            </button>
+          </div>
         </form>
-      )}
-      <Notice message={m.error} error />
-    </div>
+      </section>
+    </Modal>
+  );
+}
+
+// Monthly Payroll Draft Creation & Editing Modal
+function PayrollModal({
+  memberId,
+  editing,
+  onClose,
+  reload,
+}: {
+  memberId: string;
+  editing: Payroll | null;
+  onClose: () => void;
+  reload: () => void;
+}) {
+  const ui = useUiText();
+  const m = useMutation();
+  const [month, setMonth] = useState(
+    editing?.month || currentSaudiPeriod().day.slice(0, 7)
+  );
+  const [amount, setAmount] = useState(editing?.amount || "");
+  const [reason, setReason] = useState(editing?.adjustmentReason || "");
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (editing) {
+      await m.run(
+        () =>
+          commercialRequest(`/payroll/${editing.id}`, "PUT", {
+            version: editing.version,
+            amount,
+            adjustmentReason: reason,
+          }),
+        () => {
+          reload();
+          onClose();
+        }
+      );
+    } else {
+      await m.run(
+        () =>
+          commercialRequest(`/members/${memberId}/payroll`, "POST", {
+            month,
+            ...(amount ? { amount } : {}),
+            adjustmentReason: reason,
+          }),
+        () => {
+          reload();
+          onClose();
+        }
+      );
+    }
+  }
+
+  return (
+    <Modal
+      label={editing ? "تعديل" : "إنشاء مسودة المسير"}
+      onClose={onClose}
+      isBusy={m.busy}
+    >
+      <section className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between border-b theme-border pb-3">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Clock className="w-5 h-5 text-blue-500" aria-hidden="true" />
+            <span>{editing ? ui("تعديل") : ui("إنشاء مسودة المسير")}</span>
+          </h2>
+          <button
+            type="button"
+            aria-label={ui("إغلاق")}
+            onClick={onClose}
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        <form className="space-y-4" onSubmit={submit}>
+          {!editing && (
+            <Field label="شهر المسير">
+              <input
+                required
+                className={`${INPUT} text-start font-mono`}
+                dir="ltr"
+                type="month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              />
+            </Field>
+          )}
+
+          <Field
+            label={
+              editing ? "المبلغ" : "المبلغ المعدل اختياريًا"
+            }
+          >
+            <input
+              className={`${INPUT} text-start font-mono`}
+              dir="ltr"
+              required={Boolean(editing)}
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+          </Field>
+
+          <Field
+            label={
+              editing ? "سبب التعديل" : "سبب تعديل الشهر الجزئي"
+            }
+          >
+            <input
+              className={INPUT}
+              required={Boolean(editing)}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </Field>
+
+          <Notice message={m.error} error />
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t theme-border">
+            <button
+              type="button"
+              className={SECONDARY}
+              onClick={onClose}
+              disabled={m.busy}
+            >
+              {ui("إلغاء")}
+            </button>
+            <button type="submit" disabled={m.busy} className={BUTTON}>
+              {editing ? ui("حفظ") : ui("إنشاء مسودة المسير")}
+            </button>
+          </div>
+        </form>
+      </section>
+    </Modal>
+  );
+}
+
+// Reverse Operation Confirmation Modal
+function ReverseModal({
+  op,
+  onClose,
+  reload,
+}: {
+  op: StaffOperation;
+  onClose: () => void;
+  reload: () => void;
+}) {
+  const ui = useUiText();
+  const m = useMutation();
+  const [reason, setReason] = useState("");
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    await m.run(
+      () =>
+        commercialRequest(`/operations/${op.id}/reverse`, "POST", {
+          day: currentSaudiPeriod().day,
+          reason,
+        }),
+      () => {
+        reload();
+        onClose();
+      }
+    );
+  }
+
+  return (
+    <Modal label="عكس موثق" onClose={onClose} isBusy={m.busy}>
+      <section className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between border-b theme-border pb-3">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 text-rose-500" aria-hidden="true" />
+            <span>{ui("عكس موثق")}</span>
+          </h2>
+          <button
+            type="button"
+            aria-label={ui("إغلاق")}
+            onClick={onClose}
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border text-xs space-y-1 font-mono">
+          <div>
+            <span className="text-[var(--text-muted)]">{ui("البيان")}:</span>{" "}
+            {op.description}
+          </div>
+          <div>
+            <span className="text-[var(--text-muted)]">{ui("المبلغ")}:</span>{" "}
+            <b>{op.amount} SAR</b>
+          </div>
+        </div>
+
+        <form className="space-y-4" onSubmit={submit}>
+          <Field label="سبب العكس">
+            <input
+              required
+              className={INPUT}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={ui("سبب العكس")}
+              autoFocus
+            />
+          </Field>
+
+          <Notice message={m.error} error />
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t theme-border">
+            <button
+              type="button"
+              className={SECONDARY}
+              onClick={onClose}
+              disabled={m.busy}
+            >
+              {ui("إلغاء")}
+            </button>
+            <button type="submit" disabled={m.busy} className={BUTTON}>
+              {ui("تأكيد العكس")}
+            </button>
+          </div>
+        </form>
+      </section>
+    </Modal>
   );
 }

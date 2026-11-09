@@ -71,9 +71,9 @@ export default function InvoiceTypeSelector({
       <legend className="sr-only">{ui("نوع المستند المطلوب إنشاؤه")}</legend>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div>
-          <h2 className="text-base font-black text-slate-900 dark:text-white">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
             {ui("نوع المستند المطلوب")}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5">
             {ui("اختر طبيعة الفاتورة؛ يحدد هذا الاختيار كيفية معالجة المستند ضريبياً ومحاسبياً.")}</p>
         </div>
       </div>
@@ -103,24 +103,24 @@ export default function InvoiceTypeSelector({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Icon className={`size-4 ${isSelected ? "text-amber-600 dark:text-amber-400" : "text-slate-400"}`} />
-                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                    <Icon className={`size-4 ${isSelected ? "text-amber-700 dark:text-amber-400" : "text-[var(--text-muted)]"}`} />
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">
                       {ui(choice.title)}
                     </span>
                   </div>
                   {choice.badge && (
                     <span
-                      className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                      className={`rounded-md px-2 py-0.5 text-xs font-bold ${
                         isSelected
                           ? "bg-amber-500/20 text-amber-800 dark:text-amber-300"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                          : "bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-400"
                       }`}
                     >
                       {ui(choice.badge)}
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)] dark:text-slate-400">
                   {ui(choice.description)}
                 </p>
               </div>

@@ -5,18 +5,25 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/themeContext";
 import { AuthProvider } from "@/lib/authContext";
 import { LanguageProvider } from "@/lib/languageContext";
-import { Zain, Outfit } from "next/font/google";
+import localFont from "next/font/local";
 
-const zain = Zain({
-  weight: ["200", "300", "400", "700", "800", "900"],
-  subsets: ["arabic", "latin"],
-  variable: "--font-zain",
-  display: "swap",
+const arabicFont = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2", weight: "400" },
+    { path: "./fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2", weight: "500" },
+    { path: "./fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2", weight: "600" },
+    { path: "./fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2", weight: "700" },
+  ],
+  variable: "--font-arabic-face", display: "swap", preload: true,
 });
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-  display: "swap",
+const latinFont = localFont({
+  src: [
+    { path: "./fonts/inter-latin-400-normal.woff2", weight: "400" },
+    { path: "./fonts/inter-latin-500-normal.woff2", weight: "500" },
+    { path: "./fonts/inter-latin-600-normal.woff2", weight: "600" },
+    { path: "./fonts/inter-latin-700-normal.woff2", weight: "700" },
+  ],
+  variable: "--font-latin-face", display: "swap", preload: true,
 });
 
 export const viewport: Viewport = {
@@ -52,7 +59,7 @@ export default async function RootLayout({
       lang={initialLanguage}
       dir={initialLanguage === "ar" ? "rtl" : "ltr"}
       suppressHydrationWarning
-      className={`h-full antialiased ${zain.variable} ${outfit.variable}`}
+      className={`h-full antialiased ${arabicFont.variable} ${latinFont.variable}`}
     >
       <head>
         <script

@@ -1,7 +1,7 @@
 import { backendRequest, backendFields } from "@/lib/backend";
 import type { SystemUser } from "@/lib/types";
 
-interface LoginResult { user: SystemUser; mustChangePassword?: boolean; token?: string }
+interface LoginResult { user: SystemUser; mustChangePassword?: boolean }
 interface PasswordChange { newPassword: string; confirmPassword: string; rememberMe?: boolean; userId?: string }
 
 export function loginAction(email: string, password?: string, rememberMe = true) {

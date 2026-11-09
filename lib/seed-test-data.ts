@@ -1,10 +1,4 @@
-import {
-  accountingRequest,
-  currentSaudiPeriod,
-  type Account,
-  type PurchaseRow,
-  type VatReport,
-} from "./accounting";
+import { accountingRequest, currentSaudiPeriod, type Account, type PurchaseRow, type VatReport } from "./accounting";
 import { backendRequest } from "./backend";
 import type { TransportDetails } from "./invoice-transport";
 import { invoiceRequest, type InvoiceSettings } from "./invoices";
@@ -537,7 +531,7 @@ export async function seedAllSectionsTestData(): Promise<SeedResult> {
     const secondCaptain = allCaptains[1] || allCaptains[0];
     if (secondCaptain) {
       await backendRequest<Contract>("/contracts", "POST", {
-        operationType: "VIP_TRANSFER",
+        operationType: "INTERCITY",
         origin: "مكة المكرمة - أبراج البيت",
         destination: "المدينة المنورة - المنطقة المركزية الشمالية",
         tripDate: today,

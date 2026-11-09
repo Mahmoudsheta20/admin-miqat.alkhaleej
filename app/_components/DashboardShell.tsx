@@ -1,137 +1,104 @@
 "use client";
-import { useUiText } from "@/lib/ui-text";
-
-
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  FileText,
-  FilePlus2,
-  ClipboardCheck,
-  ReceiptText,
-  Car,
-  ShoppingBag,
-  Landmark,
-  Calculator,
-  Plus,
-  type LucideIcon,
-} from "lucide-react";
+import { Menu, Plus, FileText, ReceiptText, Wallet, ClipboardCheck, X } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
-import { useWorkspaceMode } from "@/lib/workspaceModeContext";
 import { useLanguage } from "@/lib/languageContext";
+import { navigationFor, routeInfo, routeLabel } from "@/lib/navigation";
 import type { UserRole } from "@/lib/types";
+import { Card } from "@/components/ui/card";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import NavigationIcon from "./NavigationIcon";
 
 interface DashboardShellProps {
   children: ReactNode;
   role: UserRole;
 }
 
-interface MobileNavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-const ADMIN_OPERATIONS_LINKS: MobileNavItem[] = [
-  { href: "/admin", label: "الرئيسية", icon: LayoutDashboard },
-  { href: "/admin/contracts", label: "العقود", icon: FileText },
-  { href: "/admin/contracts/new", label: "عقد جديد", icon: FilePlus2 },
-  { href: "/admin/inspections", label: "الفحوصات", icon: ClipboardCheck },
-  { href: "/admin/fleet", label: "المركبات", icon: Car },
-];
-
-const ADMIN_FINANCE_LINKS: MobileNavItem[] = [
-  { href: "/admin/invoices", label: "الفواتير", icon: ReceiptText },
-  { href: "/admin/invoices/new", label: "+ فاتورة", icon: Plus },
-  { href: "/admin/purchases", label: "المصروفات", icon: ShoppingBag },
-  { href: "/admin/accounting", label: "المحاسبة", icon: Landmark },
-  { href: "/admin/vat-returns", label: "الإقرار", icon: Calculator },
-];
-
-const CAPTAIN_LINKS: MobileNavItem[] = [
-  { href: "/captain", label: "الرئيسية", icon: LayoutDashboard },
-  { href: "/captain/inspection", label: "فحص اليوم", icon: ClipboardCheck },
-  { href: "/captain/contract", label: "عقد جديد", icon: FilePlus2 },
-];
-
-const MOBILE_NAV_TRANSLATION_KEYS: Record<string, string> = {
-  "/admin": "nav.dashboard",
-  "/admin/contracts": "nav.contracts",
-  "/admin/contracts/new": "nav.newContract",
-  "/admin/inspections": "nav.inspections",
-  "/admin/fleet": "nav.fleet",
-  "/admin/invoices": "nav.invoices",
-  "/admin/invoices/new": "nav.newInvoice",
-  "/admin/purchases": "nav.purchases",
-  "/admin/accounting": "nav.accounting",
-  "/admin/vat-returns": "nav.vatReturnsShort",
-  "/captain": "nav.dashboard",
-  "/captain/inspection": "nav.todayInspection",
-  "/captain/contract": "nav.captainContract",
-};
-
-export default function DashboardShell({
-  children,
-  role,
-}: DashboardShellProps) {
-  const ui = useUiText();
-
+export default function DashboardShell({ children, role }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading } = useAuth();
-  const { isFinance } = useWorkspaceMode();
-  const { t } = useLanguage();
+  const { language, dir } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const [quickCreatePath, setQuickCreatePath] = useState<string | null>(null);
+  const quickCreateDialog = useRef<HTMLDialogElement>(null);
+
   const isMenuOpen = drawerPath === pathname;
-
-  const rawLinks =
-    role === "ADMIN"
-      ? isFinance
-        ? ADMIN_FINANCE_LINKS
-        : ADMIN_OPERATIONS_LINKS
-      : CAPTAIN_LINKS;
-
-  const links = rawLinks.map((item) => ({
-    ...item,
-    label: t(MOBILE_NAV_TRANSLATION_KEYS[item.href] || "", item.label),
-  }));
-
-  const activeHref = [...links]
-    .sort((a, b) => b.href.length - a.href.length)
-    .find(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-    )?.href;
+  const isQuickCreateOpen = quickCreatePath === pathname;
+  const links = navigationFor(role).filter((item) => item.mobile);
+  const active = routeInfo(pathname)?.href;
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
   useEffect(() => {
     if (isLoading) return;
     if (!user) router.replace("/login");
-    else if (user.role !== role)
-      router.replace(user.role === "ADMIN" ? "/admin" : "/captain");
+    else if (user.role !== role) router.replace(user.role === "ADMIN" ? "/admin" : "/captain");
   }, [isLoading, user, role, router]);
+
+  useEffect(() => {
+    document.title = `${routeLabel(pathname, language)} | ${language === "ar" ? "ميقات الخليج" : "Miqat Al Khaleej"}`;
+  }, [pathname, language]);
+
+  useEffect(() => {
+    const dialog = quickCreateDialog.current;
+    if (!dialog) return;
+    if (isQuickCreateOpen && !dialog.open) dialog.showModal();
+    if (!isQuickCreateOpen && dialog.open) dialog.close();
+  }, [isQuickCreateOpen]);
 
   if (isLoading) {
     return (
-      <div
-        role="status"
-        className="grid min-h-dvh place-content-center gap-3 text-center theme-card-subtle"
-      >
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-3 border-amber-500/20 border-t-amber-500" />
-        <p>{ui("جاري تهيئة مساحة العمل...")}</p>
+      <div role="status" className="session-loading">
+        <span className="loading-spinner" />
+        <p>{text("جاري تهيئة مساحة العمل…", "Preparing your workspace…")}</p>
       </div>
     );
   }
-
   if (!user || user.role !== role) return null;
 
+  const adminBeforeCenter = role === "ADMIN" ? links.slice(0, 2) : links;
+  const adminAfterCenter = role === "ADMIN" ? links.slice(2) : [];
+
+  const quickActions = [
+    {
+      href: "/admin/contracts/new",
+      title: text("عقد نقل جديد", "New contract"),
+      subtitle: text("إصدار وتوثيق رحلة جديدة", "Issue & assign trip contract"),
+      icon: FileText,
+      accent: "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-amber-500/30",
+    },
+    {
+      href: "/admin/invoices/new",
+      title: text("فاتورة عميل جديدة", "New invoice"),
+      subtitle: text("ضريبية، مبدئية، أو إشعار", "Tax, proforma, or credit note"),
+      icon: ReceiptText,
+      accent: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
+    },
+    {
+      href: "/admin/purchases",
+      title: text("مصروفات ومشتريات", "Purchases & expenses"),
+      subtitle: text("تسجيل فواتير الموردين", "Log supplier bills & VAT"),
+      icon: Wallet,
+      accent: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25",
+    },
+    {
+      href: "/admin/inspections",
+      title: text("فحوصات المركبات", "Fleet inspections"),
+      subtitle: text("اعتماد ومتابعة الفحص اليومي", "Daily safety readiness"),
+      icon: ClipboardCheck,
+      accent: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25",
+    },
+  ];
+
   return (
-    <div className="app-shell flex h-dvh overflow-hidden bg-slate-50 dark:bg-[#080c14]">
+    <div className="app-shell flex h-dvh overflow-hidden">
       <a href="#main-content" className="skip-link">
-        {ui("الانتقال إلى المحتوى")}</a>
+        {text("الانتقال إلى المحتوى", "Skip to content")}
+      </a>
       <Sidebar
         collapsed={isCollapsed}
         onToggle={() => setIsCollapsed((value) => !value)}
@@ -146,39 +113,145 @@ export default function DashboardShell({
         <main
           id="main-content"
           tabIndex={-1}
-          className="app-main min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-3 sm:p-6 lg:p-8 touch-scroll"
+          className="app-main min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-scroll"
         >
           <div
-            className={`app-content mx-auto w-full min-w-0 ${
-              role === "ADMIN" ? "max-w-7xl" : "max-w-5xl"
-            }`}
+            className={`app-content mx-auto w-full min-w-0 ${role === "ADMIN" ? "max-w-[1440px]" : "max-w-5xl"}`}
           >
-            {ui(children)}
+            {children}
           </div>
         </main>
+
         <nav
-          aria-label={ui("التنقل السريع للجوال")}
-          className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t theme-border bg-white px-2 py-1.5 shadow-lg lg:hidden dark:bg-[#090e17]"
+          aria-label={text("التنقل السريع للجوال", "Mobile navigation")}
+          className="mobile-bottom-nav lg:hidden"
         >
-          {links.map(({ href, label, icon: Icon }) => (
+          {adminBeforeCenter.map((item) => (
             <Link
-              key={href}
-              href={href}
-              aria-current={activeHref === href ? "page" : undefined}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-bold transition ${
-                activeHref === href
-                  ? isFinance
-                    ? "text-emerald-700 dark:text-emerald-400 font-black"
-                    : "text-amber-700 dark:text-amber-400 font-black"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-              }`}
+              key={item.href}
+              href={item.href}
+              aria-current={active === item.href ? "page" : undefined}
+              className={active === item.href ? "is-active" : ""}
             >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="truncate max-w-full text-center leading-tight">{ui(label)}</span>
+              <NavigationIcon name={item.icon} />
+              <span className="truncate max-w-full px-1">{item[language]}</span>
             </Link>
           ))}
+
+          {role === "ADMIN" && (
+            <button
+              type="button"
+              className="mobile-quick-create-btn cursor-pointer"
+              aria-expanded={isQuickCreateOpen}
+              aria-controls="mobile-quick-create"
+              aria-label={text("إنشاء إجراء سريع", "Quick create")}
+              onClick={() => setQuickCreatePath(isQuickCreateOpen ? null : pathname)}
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl button-primary shadow-xs">
+                <Plus size={16} aria-hidden="true" />
+              </span>
+              <span>{text("جديد", "New")}</span>
+            </button>
+          )}
+
+          {adminAfterCenter.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active === item.href ? "page" : undefined}
+              className={active === item.href ? "is-active" : ""}
+            >
+              <NavigationIcon name={item.icon} />
+              <span className="truncate max-w-full px-1">{item[language]}</span>
+            </Link>
+          ))}
+
+          {role === "ADMIN" && (
+            <button
+              type="button"
+              className="cursor-pointer"
+              onClick={() => setDrawerPath(pathname)}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-navigation"
+            >
+              <Menu size={19} aria-hidden="true" />
+              <span>{text("المزيد", "More")}</span>
+            </button>
+          )}
         </nav>
       </div>
+
+      {role === "ADMIN" && (
+        <dialog
+          ref={quickCreateDialog}
+          id="mobile-quick-create"
+          dir={dir}
+          aria-labelledby="mobile-quick-create-title"
+          className="mobile-quick-create-dialog"
+          onCancel={(event) => {
+            event.preventDefault();
+            setQuickCreatePath(null);
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setQuickCreatePath(null);
+          }}
+        >
+          <div className="mobile-sheet-panel p-4 sm:p-5 space-y-4">
+            <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2
+                  id="mobile-quick-create-title"
+                  className="text-base font-semibold text-slate-900 dark:text-white"
+                >
+                  {text("إنشاء سريع", "Quick create")}
+                </h2>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {text("اختر العملية للبدء مباشرة", "Jump directly into a workflow")}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => setQuickCreatePath(null)}
+                aria-label={text("إغلاق", "Close")}
+              >
+                <X size={20} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {quickActions.map((act) => {
+                const Icon = act.icon;
+                return (
+                  <Link
+                    key={act.href}
+                    href={act.href}
+                    onClick={() => setQuickCreatePath(null)}
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] rounded-2xl"
+                  >
+                    <Card className="theme-card border theme-border p-3.5 shadow-none hover:border-amber-500/50 transition-colors flex items-center gap-3 min-h-16">
+                      <span
+                        className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${act.accent}`}
+                      >
+                        <Icon className="w-5 h-5" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <strong className="block text-sm font-semibold text-slate-900 dark:text-white">
+                          {act.title}
+                        </strong>
+                        <span className="block text-xs text-[var(--text-muted)] truncate">
+                          {act.subtitle}
+                        </span>
+                      </span>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }

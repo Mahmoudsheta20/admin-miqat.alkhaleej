@@ -16,7 +16,7 @@ export function normalizeArabicNumerals(str?: string | null): string {
  */
 export const adminContractSchema = z.object({
   operationType: z
-    .string({ required_error: "نوع العملية التشغيلية مطلوب" })
+    .string({ error: "نوع العملية التشغيلية مطلوب" })
     .trim()
     .min(1, "نوع العملية التشغيلية مطلوب"),
   customerName: z

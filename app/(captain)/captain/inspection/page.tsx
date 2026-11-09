@@ -1,35 +1,21 @@
 "use client";
+import { DASHBOARD_ITEMS, EXTERNAL_ITEMS, SAFETY_ITEMS, inspectionMatchesDay } from "@/lib/inspection";
+import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
+import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
+import { Badge } from "@/app/_components/ui";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUiText } from "@/lib/ui-text";
+import { useLanguage } from "@/lib/languageContext";
 
 import dynamic from "next/dynamic";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import InspectionDownloadButton from "@/app/_components/InspectionDownloadButton";
 import type { VehicleInspection, Vehicle } from "@/lib/types";
-import {
-  ClipboardCheck,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  FilePlus2,
-  Check,
-  ArrowRight,
-  Sparkles,
-  Edit3,
-  Calendar,
-  Clock,
-  Eye,
-  RotateCw,
-} from "lucide-react";
+import { ClipboardCheck, CheckCircle2, AlertCircle, FilePlus2, Check, ArrowRight, Sparkles, Edit3, Calendar, Clock, Eye, RotateCw } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
-import {
-  submitInspection,
-  getTodayInspection,
-  getAllInspectionsList,
-  InspectionInput,
-  InspectionWithMeta,
-} from "@/app/_actions/inspection";
+import { submitInspection, getTodayInspection, getAllInspectionsList, InspectionInput, InspectionWithMeta } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
@@ -40,51 +26,19 @@ const InspectionPdfPreviewModal = dynamic(
   { ssr: false }
 );
 
-interface CheckItemConfig {
-  key: keyof Omit<
-    InspectionInput,
-    "captainId" | "vehiclePlate" | "driverDeclared" | "notes" | "inspectionDate"
-  >;
-  titleAr: string;
-  titleEn: string;
-  description: string;
-}
-
-const DASHBOARD_ITEMS: CheckItemConfig[] = [
-  { key: "fuelGauge", titleAr: "مؤشر الوقود", titleEn: "Fuel Gauge", description: "كفاية الوقود للمسار المخطط" },
-  { key: "tempGauge", titleAr: "مؤشر الحرارة", titleEn: "Temp Gauge", description: "حرارة المحرك في النطاق الطبيعي" },
-  { key: "oilPressure", titleAr: "مؤشر ضغط الزيت", titleEn: "Oil Pressure", description: "ضغط دورة زيت المحرك سليم" },
-  { key: "checkEngine", titleAr: "لمبة فحص المحرك", titleEn: "Check Engine", description: "عدم إضاءة لمبة العطل" },
-  { key: "absLight", titleAr: "لمبة نظام الفرامل ABS", titleEn: "ABS Light", description: "نظام منع انغلاق المكابح سليم" },
-  { key: "warningLights", titleAr: "لمبات التحذير العامة", titleEn: "Warning Lights", description: "خلو اللوحة من أي تنبيهات حرجة" },
-];
-
-const EXTERNAL_ITEMS: CheckItemConfig[] = [
-  { key: "tires", titleAr: "الإطارات وضغط الهواء", titleEn: "Tires & Pressure", description: "عمق المداس وسلامة الإطار وضغط الهواء" },
-  { key: "headlights", titleAr: "الأنوار الأمامية والخلفية", titleEn: "Headlights & Taillights", description: "الإضاءة العالية والمنخفضة وأنوار الفرامل" },
-  { key: "signals", titleAr: "إشارات الانعطاف والتحذير", titleEn: "Turn & Hazard Signals", description: "عمل إشارات الغمازات وفلاشر الطوارئ" },
-  { key: "mirrors", titleAr: "الزجاج والمرايا الجانبية", titleEn: "Mirrors & Windshield", description: "نظافة الزجاج وخلو المرايا من الكسور" },
-  { key: "noLeaks", titleAr: "عدم وجود تسريبات أسفل الحافلة", titleEn: "No Fluid Leaks", description: "خلو أسفل المركبة من تسريب زيت أو ماء رديتر" },
-];
-
-const SAFETY_ITEMS: CheckItemConfig[] = [
-  { key: "fireExtinguisher", titleAr: "طفاية حريق سارية الصلاحية", titleEn: "Fire Extinguisher", description: "مؤشر الضغط في الأخضر وتاريخ الصلاحية سارٍ" },
-  { key: "warningTriangle", titleAr: "المثلث العاكس للتحذير", titleEn: "Warning Triangle", description: "جاهز للطوارئ على الطرق السريعة" },
-  { key: "firstAidKit", titleAr: "حقيبة الإسعافات الأولية", titleEn: "First Aid Kit", description: "مكتملة الضمادات والمطهرات الأساسية" },
-  { key: "glassHammer", titleAr: "مطرقة كسر الزجاج", titleEn: "Glass Break Hammer", description: "مثبتة في مكانها المخصص للركاب" },
-  { key: "seatBelts", titleAr: "أحزمة الأمان لجميع المقاعد", titleEn: "Seat Belts", description: "سلامة وأداء أقفال أحزمة الأمان" },
-];
-
 export default function CaptainInspectionPage() {
   const ui = useUiText();
+  const { isRTL } = useLanguage();
+  const fieldId = useId();
+  const plateInputRef = useRef<HTMLInputElement>(null);
+  const declarationRef = useRef<HTMLInputElement>(null);
 
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"form" | "history">("form");
 
-  const [vehiclePlate, setVehiclePlate] = useState(
-    user?.assignedVehiclePlate || ""
-  );
+  const [vehiclePlateOverride, setVehiclePlateOverride] = useState<string | null>(null);
+  const vehiclePlate = vehiclePlateOverride ?? user?.assignedVehiclePlate ?? "";
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     const cached = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
     if (cached && typeof cached === "object" && Array.isArray(cached.vehicles)) {
@@ -97,7 +51,7 @@ export default function CaptainInspectionPage() {
   const [inspectionDateMode, setInspectionDateMode] = useState<"AUTO" | "MANUAL">("AUTO");
   const [inspectionDate, setInspectionDate] = useState(() => getSaudiTodayDateStr());
 
-  const [driverDeclared, setDriverDeclared] = useState(true);
+  const [driverDeclared, setDriverDeclared] = useState(false);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
@@ -113,7 +67,9 @@ export default function CaptainInspectionPage() {
     }
     return [];
   });
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(() => {
+    return !user || !getCachedData<Awaited<ReturnType<typeof getAllInspectionsList>>>(`captain_inspections_history_${user.id}`);
+  });
 
   // PDF Preview Modal
   const [previewInspection, setPreviewInspection] = useState<{
@@ -122,7 +78,11 @@ export default function CaptainInspectionPage() {
     pdfPath?: string | null;
   } | null>(null);
 
-  const alreadyInspected = Boolean(inspection);
+  const alreadyInspected = inspectionMatchesDay(
+    inspection,
+    getSaudiTodayDateStr(),
+    user?.assignedVehiclePlate || undefined
+  );
 
   // 16 boolean flags
   const [checks, setChecks] = useState<Record<string, boolean>>({
@@ -145,34 +105,56 @@ export default function CaptainInspectionPage() {
   });
 
   useEffect(() => {
-    if (user?.id) {
-      // 1. Fetch Today's Inspection
-      fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then((res) => {
-        if (res.success && res.inspection) {
+    if (!user?.id) return;
+
+    // 1. Fetch Today's Inspection (with history fallback matching contract builder)
+    fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), { ttlMs: 60_000 }).then(
+      async (res) => {
+        const todayStr = getSaudiTodayDateStr();
+        if (
+          res.success &&
+          res.inspection &&
+          inspectionMatchesDay(res.inspection, todayStr, user.assignedVehiclePlate || undefined)
+        ) {
           setInspection(res.inspection);
+          return;
         }
-      });
+        try {
+          const listRes = await getAllInspectionsList({ captainId: user.id, limit: 1 });
+          if (
+            listRes.success &&
+            listRes.inspections?.[0] &&
+            inspectionMatchesDay(listRes.inspections[0], todayStr, user.assignedVehiclePlate || undefined)
+          ) {
+            setInspection(listRes.inspections[0]);
+          }
+        } catch (err) {
+          console.error("Failed to load fallback inspection:", err);
+        }
+      }
+    );
 
-      // 2. Fetch Captain's Inspection History
-      fetchCached(`captain_inspections_history_${user.id}`, () => getAllInspectionsList({ captainId: user.id, limit: 30 }), { ttlMs: 60_000 }).then((res) => {
-        if (res.success && res.inspections) {
-          setHistoryList(res.inspections);
-        }
-        setIsLoadingHistory(false);
-      });
+    // 2. Fetch Captain's Inspection History
+    fetchCached(
+      `captain_inspections_history_${user.id}`,
+      () => getAllInspectionsList({ captainId: user.id, limit: 30 }),
+      { ttlMs: 60_000 }
+    ).then((res) => {
+      if (res.success && res.inspections) {
+        setHistoryList(res.inspections);
+      }
+      setIsLoadingHistory(false);
+    });
 
-      // 3. Fetch Fleet Vehicles for quick selector
-      fetchCached("fleet_vehicles", getVehicles, { ttlMs: 120_000 }).then((res) => {
-        if (res.success && res.vehicles) {
-          setVehicles(res.vehicles);
-        }
-      });
-    }
+    // 3. Fetch Fleet Vehicles for quick selector
+    fetchCached("fleet_vehicles", getVehicles, { ttlMs: 120_000 }).then((res) => {
+      if (res.success && res.vehicles) {
+        setVehicles(res.vehicles);
+      }
+    });
   }, [user]);
 
-  const toggleCheck = (key: string) => {
-    setChecks((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+
 
   const setAllSound = (sound: boolean) => {
     const updated: Record<string, boolean> = {};
@@ -185,12 +167,16 @@ export default function CaptainInspectionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!driverDeclared) {
-      setErrorMessage("يجب الموافقة على التعهد والإقرار قبل إرسال الفحص");
-      return;
-    }
     if (!vehiclePlate.trim()) {
       setErrorMessage("يرجى إدخال أو اختيار رقم لوحة المركبة");
+      plateInputRef.current?.focus();
+      plateInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!driverDeclared) {
+      setErrorMessage("يجب الموافقة على التعهد والإقرار قبل إرسال الفحص");
+      declarationRef.current?.focus();
+      declarationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -218,7 +204,10 @@ export default function CaptainInspectionPage() {
       seatBelts: checks.seatBelts,
       driverDeclared,
       notes,
-      inspectionDate: inspectionDateMode === "MANUAL" && inspectionDate ? inspectionDate : undefined,
+      inspectionDate:
+        inspectionDateMode === "MANUAL" && inspectionDate
+          ? inspectionDate.replace(/\//g, "-")
+          : undefined,
     };
 
     const res = await submitInspection(payload);
@@ -254,14 +243,15 @@ export default function CaptainInspectionPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/captain"
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              aria-label={ui("العودة للرئيسية")}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-slate-700 dark:hover:text-white transition"
             >
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 ltr:rotate-180" aria-hidden="true" />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
               {ui("سجل الفحص التشغيلي للمركبة")}</h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 ms-7">
+          <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 mt-1 ms-13">
             {ui("الفحص الإلزامي قبل التشغيل (16 بنداً معتمداً في الصفحة 3 من العقد الرسمي) • يدوي وتلقائي")}</p>
         </div>
 
@@ -270,43 +260,47 @@ export default function CaptainInspectionPage() {
             <button
               type="button"
               onClick={() => setAllSound(true)}
-              className="w-full sm:w-auto justify-center px-3.5 py-2 sm:py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto min-h-11 justify-center px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <Check className="w-3.5 h-3.5" />
-              {ui("تحديد الكل سليم ✓")}</button>
+              <Check className="w-3.5 h-3.5" aria-hidden="true" />
+              {ui("تحديد الكل سليم")}</button>
           </div>
         )}
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b theme-border pb-2">
+      <div className="flex flex-wrap sm:flex-nowrap items-stretch gap-2 border-b theme-border pb-2.5">
         <button
           type="button"
+          aria-pressed={activeTab === "form"}
           onClick={() => setActiveTab("form")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+          className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === "form"
-              ? "gold-gradient-btn text-white shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              ? "gold-gradient-btn shadow-xs"
+              : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <ClipboardCheck className="w-4 h-4" />
-          <span>{ui("تسجيل فحص جديد (تلقائي / يدوي)")}</span>
+          <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>
+            {ui("تسجيل فحص جديد")} <span className="hidden sm:inline">{ui("(تلقائي / يدوي)")}</span>
+          </span>
         </button>
 
         <button
           type="button"
+          aria-pressed={activeTab === "history"}
           onClick={() => setActiveTab("history")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+          className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === "history"
-              ? "gold-gradient-btn text-white shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              ? "gold-gradient-btn shadow-xs"
+              : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span>{ui("سجل الفحوصات السابقة")}</span>
           {historyList.length > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300">
-              {ui(historyList.length)}
+            <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-800 dark:text-amber-900 shrink-0">
+              {historyList.length}
             </span>
           )}
         </button>
@@ -322,21 +316,21 @@ export default function CaptainInspectionPage() {
           {alreadyInspected && !submittedSuccess && (
             <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-blue-900 dark:text-blue-200 text-xs">
               <div className="flex items-center gap-2.5 font-bold">
-                <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
                 <span>
-                  {ui("لقد قمت بالفعل بتسجيل فحص اليوم بنجاح. يمكنك تحديث الفحص أو اختيار نمط &quot;يدوي&quot; لتسجيل فحص بتاريخ مخصص.")}</span>
+                  {ui("لقد قمت بالفعل بتسجيل فحص اليوم بنجاح. يمكنك تحديث الفحص أو اختيار نمط «يدوي» لتسجيل فحص بتاريخ مخصص.")}</span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setInspectionDateMode("MANUAL")}
-                  className="px-3 py-1.5 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  className="min-h-11 px-3 py-2 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+                  <Edit3 className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
                   {ui("تحديد تاريخ يدوي")}</button>
                 <Link
                   href="/captain/contract"
-                  className="px-3 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold"
+                  className="min-h-11 px-3.5 py-2 rounded-lg gold-gradient-btn text-xs font-bold inline-flex items-center"
                 >
                   {ui("الانتقال للعقد ←")}</Link>
               </div>
@@ -344,14 +338,17 @@ export default function CaptainInspectionPage() {
           )}
 
           {submittedSuccess ? (
-            <div className="theme-card rounded-3xl p-6 sm:p-8 border theme-border text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
-                <CheckCircle2 className="w-8 h-8" />
+            <div className="theme-card rounded-2xl p-6 sm:p-8 border theme-border text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
               </div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 {ui("تم توثيق فحص المركبة بنجاح!")}</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                {ui("تم اعتماد جاهزية الحافلة (")}{vehiclePlate}) {ui(inspectionDateMode === "MANUAL" ? `بتاريخ (${formatOfficialDate(inspectionDate)})` : "ليومنا هذا")}{ui(". تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.")}</p>
+              <p className="text-sm text-[var(--text-muted)] dark:text-slate-400 max-w-md mx-auto">
+                {isRTL
+                  ? `تم اعتماد جاهزية الحافلة (${vehiclePlate}) ${inspectionDateMode === "MANUAL" ? `بتاريخ (${formatOfficialDate(inspectionDate)})` : "ليومنا هذا"}. تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.`
+                  : `Vehicle (${vehiclePlate}) has been cleared ${inspectionDateMode === "MANUAL" ? `for (${formatOfficialDate(inspectionDate)})` : "for today"}. You can now issue transport contracts and passenger manifests.`}
+              </p>
               <div className="pt-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3">
                 {inspection && <InspectionDownloadButton key={inspection.id} inspectionId={inspection.id} />}
                 <button
@@ -360,69 +357,80 @@ export default function CaptainInspectionPage() {
                     setSubmittedSuccess(false);
                     setInspectionDateMode("AUTO");
                   }}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-center cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto min-h-11 px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-center cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <RotateCw className="w-3.5 h-3.5" />
+                  <RotateCw className="w-3.5 h-3.5" aria-hidden="true" />
                   {ui("إجراء فحص جديد")}</button>
                 <Link
                   href="/captain/contract"
-                  className="w-full sm:w-auto justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
+                  className="w-full sm:w-auto min-h-11 justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
                 >
-                  <FilePlus2 className="w-4 h-4" />
+                  <FilePlus2 className="w-4 h-4" aria-hidden="true" />
                   {ui("إنشاء عقد رحلة الآن")}</Link>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form noValidate onSubmit={handleSubmit} className="space-y-6">
               {errorMessage && (
-                <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div role="alert" className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {ui(errorMessage)}
                 </div>
               )}
 
               {/* Vehicle & Captain Info Card */}
-              <div className="theme-card p-5 rounded-2xl border theme-border grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-slate-400 font-bold block mb-1">
-                    {ui("اسم الكابتن الفاحص")}</label>
+                  <span className="text-xs text-[var(--text-muted)] font-bold block mb-1">
+                    {ui("اسم الكابتن الفاحص")}</span>
                   <div className="font-bold text-slate-900 dark:text-white text-sm">
-                    {ui(user?.name)}
+                    {user?.name || "—"}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-400 font-bold block mb-1">
-                    {ui("رقم الهوية الوطنية")}</label>
+                  <span className="text-xs text-[var(--text-muted)] font-bold block mb-1">
+                    {ui("رقم الهوية الوطنية")}</span>
                   <div className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm" dir="ltr">
-                    {user?.nationalId || "2553660073"}
+                    <bdi>{user?.nationalId || "—"}</bdi>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-700 dark:text-slate-300 font-bold block mb-1">
+                  <label htmlFor={`${fieldId}-plate`} className="text-xs text-slate-700 dark:text-slate-300 font-bold block mb-1">
                     {ui("رقم لوحة المركبة *")}</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
+                      id={`${fieldId}-plate`}
+                      ref={plateInputRef}
                       type="text"
                       required
+                      aria-invalid={!vehiclePlate.trim() && Boolean(errorMessage) ? true : undefined}
                       value={vehiclePlate}
-                      onChange={(e) => setVehiclePlate(e.target.value)}
+                      onChange={(e) => {
+                        setVehiclePlateOverride(e.target.value);
+                        if (errorMessage) setErrorMessage("");
+                      }}
                       placeholder={ui("ا ص ل 7223")}
-                      className="flex-1 px-3 py-1.5 text-xs font-mono font-bold rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                      className="flex-1 min-h-11 px-3 py-2 text-xs font-mono font-bold rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
                     />
                     {vehicles.length > 0 && (
                       <select
+                        id={`${fieldId}-fleet`}
+                        aria-label={ui("اختيار مركبة من الأسطول")}
                         onChange={(e) => {
-                          if (e.target.value) setVehiclePlate(e.target.value);
+                          if (e.target.value) {
+                            setVehiclePlateOverride(e.target.value);
+                            if (errorMessage) setErrorMessage("");
+                          }
                         }}
                         value=""
-                        className="px-2 py-1.5 text-xs rounded-xl border theme-card font-mono text-slate-500 dark:text-slate-400 focus:border-amber-500 focus:outline-hidden"
+                        className="min-h-11 px-2.5 py-2 text-xs rounded-xl border theme-card font-mono text-[var(--text-muted)] dark:text-slate-400 focus:border-amber-500 focus:outline-hidden"
                       >
                         <option value="">{ui("من الأسطول...")}</option>
                         {vehicles.map((v) => (
                           <option key={v.id} value={v.plateNumberAr}>
-                            {v.plateNumberAr} ({ui(v.make)} {ui(v.model)})
+                            {v.plateNumberAr} ({v.make} {v.model})
                           </option>
                         ))}
                       </select>
@@ -435,46 +443,48 @@ export default function CaptainInspectionPage() {
               <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                      {ui("تاريخ الفحص التشغيلي المعتمد (يدوي / مانيوال)")}</label>
-                    <p className="text-[11px] text-slate-400">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                      {ui("تاريخ الفحص التشغيلي المعتمد (يدوي / مانيوال)")}</span>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
                       {ui("يمكن اعتماد تاريخ اليوم الفعلي تلقائياً أو اختيار تاريخ يدوي مخصص في السجلات")}</p>
                   </div>
 
-                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border theme-border self-start sm:self-auto shadow-2xs">
+                  <div className="grid grid-cols-2 sm:flex w-full sm:w-auto items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border theme-border shadow-2xs">
                     <button
                       type="button"
+                      aria-pressed={inspectionDateMode === "AUTO"}
                       onClick={() => setInspectionDateMode("AUTO")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                      className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
                         inspectionDateMode === "AUTO"
-                          ? "gold-gradient-btn text-white shadow-xs"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                          ? "gold-gradient-btn shadow-xs"
+                          : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       {ui("اليوم (تلقائي)")}</button>
                     <button
                       type="button"
+                      aria-pressed={inspectionDateMode === "MANUAL"}
                       onClick={() => setInspectionDateMode("MANUAL")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                      className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
                         inspectionDateMode === "MANUAL"
-                          ? "gold-gradient-btn text-white shadow-xs"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                          ? "gold-gradient-btn shadow-xs"
+                          : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       {ui("يدوي (تاريخ مخصص)")}</button>
                   </div>
                 </div>
 
                 {inspectionDateMode === "AUTO" ? (
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">
+                    <span className="text-[var(--text-muted)] dark:text-slate-400">
                       {ui("تاريخ الفحص المعتمد في السجلات والوثيقة:")}</span>
                     <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {ui(formatOfficialDate(getSaudiTodayDateStr()))} {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
+                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      <bdi dir="ltr">{formatOfficialDate(getSaudiTodayDateStr())}</bdi> {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t theme-border">
@@ -486,8 +496,8 @@ export default function CaptainInspectionPage() {
                         onChange={setInspectionDate}
                       />
                     </div>
-                    <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end h-11">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                    <div className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end min-h-11">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
                       <span>
                         {ui("سيتم توثيق الفحص واعتماده بهذا التاريخ المخصص في السجلات وتقارير الفحص ووثيقة الـ PDF الرسمية.")}</span>
                     </div>
@@ -495,263 +505,62 @@ export default function CaptainInspectionPage() {
                 )}
               </div>
 
-              {/* Section 1: Dashboard */}
-              <div className="theme-card rounded-2xl border theme-border overflow-hidden">
-                <div className="p-4 border-b theme-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      {ui("أولاً: فحص مؤشرات لوحة القيادة")}</h3>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      First Check the dashboard indicator
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                    {ui("6 بنود")}</span>
-                </div>
-
-                <div className="divide-y theme-border">
-                  {DASHBOARD_ITEMS.map((item) => {
-                    const isSound = checks[item.key];
-                    return (
-                      <div
-                        key={item.key}
-                        onClick={() => toggleCheck(item.key)}
-                        className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
-                      >
-                        <div>
-                          <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {ui(item.titleAr)}
-                            <span className="text-xs text-slate-400 font-normal font-mono" dir="ltr">
-                              ({ui(item.titleEn)})
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{ui(item.description)}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChecks((prev) => ({ ...prev, [item.key]: true }));
-                            }}
-                            className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                              isSound
-                                ? "bg-emerald-600 text-white shadow-xs"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                            }`}
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            {ui("سليم")}</button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChecks((prev) => ({ ...prev, [item.key]: false }));
-                            }}
-                            className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                              !isSound
-                                ? "bg-rose-600 text-white shadow-xs"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                            }`}
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            {ui("غير سليم")}</button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Section 2: External */}
-              <div className="theme-card rounded-2xl border theme-border overflow-hidden">
-                <div className="p-4 border-b theme-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      {ui("ثانياً: الفحص الخارجي للحافلة")}</h3>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      Second External inspection
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-                    {ui("5 بنود")}</span>
-                </div>
-
-                <div className="divide-y theme-border">
-                  {EXTERNAL_ITEMS.map((item) => {
-                    const isSound = checks[item.key];
-                    return (
-                      <div
-                        key={item.key}
-                        onClick={() => toggleCheck(item.key)}
-                        className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
-                      >
-                        <div>
-                          <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {ui(item.titleAr)}
-                            <span className="text-xs text-slate-400 font-normal font-mono" dir="ltr">
-                              ({ui(item.titleEn)})
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{ui(item.description)}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChecks((prev) => ({ ...prev, [item.key]: true }));
-                            }}
-                            className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                              isSound
-                                ? "bg-emerald-600 text-white shadow-xs"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                            }`}
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            {ui("سليم")}</button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChecks((prev) => ({ ...prev, [item.key]: false }));
-                            }}
-                            className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                              !isSound
-                                ? "bg-rose-600 text-white shadow-xs"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                            }`}
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            {ui("غير سليم")}</button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Section 3: Safety Tools */}
-              <div className="theme-card rounded-2xl border theme-border overflow-hidden">
-                <div className="p-4 border-b theme-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      {ui("ثالثاً: أدوات ومتطلبات الأمن والسلامة")}</h3>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      Third Safety and security tools
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    {ui("5 بنود")}</span>
-                </div>
-
-                <div className="divide-y theme-border">
-                  {SAFETY_ITEMS.map((item) => {
-                    const isSound = checks[item.key];
-                    return (
-                      <div
-                        key={item.key}
-                        onClick={() => toggleCheck(item.key)}
-                        className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition select-none"
-                      >
-                        <div>
-                          <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {ui(item.titleAr)}
-                            <span className="text-xs text-slate-400 font-normal font-mono" dir="ltr">
-                              ({ui(item.titleEn)})
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{ui(item.description)}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChecks((prev) => ({ ...prev, [item.key]: true }));
-                            }}
-                            className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                              isSound
-                                ? "bg-emerald-600 text-white shadow-xs"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                            }`}
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            {ui("سليم")}</button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChecks((prev) => ({ ...prev, [item.key]: false }));
-                            }}
-                            className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                              !isSound
-                                ? "bg-rose-600 text-white shadow-xs"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                            }`}
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            {ui("غير سليم")}</button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <section className="theme-card rounded-2xl p-4 sm:p-6"><InspectionChecklist checks={checks} onChange={(key, value) => setChecks(previous => ({ ...previous, [key]: value }))} /></section>
 
               {/* Notes & Declaration */}
-              <div className="theme-card p-6 rounded-2xl border theme-border space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="theme-card p-4 sm:p-6 rounded-2xl border theme-border space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor={`${fieldId}-notes`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     {ui("ملاحظات الفحص الإضافية (اختياري)")}</label>
                   <textarea
+                    id={`${fieldId}-notes`}
                     rows={2}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder={ui("أية ملاحظات ميدانية عن حالة المركبة...")}
-                    className="w-full px-3 py-2 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden resize-none"
+                    className="w-full px-3 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden resize-y"
                   />
                 </div>
 
                 {/* Official Legal Declaration Checkbox */}
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
+                  <label htmlFor={`${fieldId}-declaration`} className="flex min-h-11 items-start gap-3 cursor-pointer select-none">
+                    <Checkbox
+                      id={`${fieldId}-declaration`}
+                      ref={declarationRef}
+                      required
                       checked={driverDeclared}
-                      onChange={(e) => setDriverDeclared(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded-sm text-amber-600 focus:ring-amber-500 cursor-pointer"
+                      aria-invalid={!driverDeclared && Boolean(errorMessage) ? true : undefined}
+                      onChange={(e) => {
+                        setDriverDeclared(e.target.checked);
+                        if (errorMessage) setErrorMessage("");
+                      }}
+                      className="mt-0.5 shrink-0"
                     />
                     <div className="text-xs">
                       <span className="font-bold text-slate-900 dark:text-white block mb-0.5">
                         {ui("إقرار وتعهد الكابتن (مدرج رسمياً في نموذج هيئة النقل)")}</span>
-                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                        {ui("&quot;أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها التامة قبل التشغيل والانطلاق على الطرق البرية.&quot;")}</p>
+                      <p className="text-[var(--text-muted)] dark:text-slate-300 leading-relaxed">
+                        {ui("«أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها التامة قبل التشغيل والانطلاق على الطرق البرية.»")}</p>
                     </div>
                   </label>
                 </div>
               </div>
 
-              {/* Submit Action */}
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
+              {/* Submit Action (DOM & visual order match: Cancel first, primary Submit second) */}
+              <div className="contract-submit-bar justify-end">
                 <Link
                   href="/captain"
-                  className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  className="min-h-11 px-4 sm:px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
                 >
                   {ui("إلغاء")}</Link>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !driverDeclared}
-                  className="w-full sm:w-auto justify-center px-7 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                  disabled={isSubmitting}
+                  className="flex-1 sm:flex-initial min-h-11 justify-center px-6 sm:px-7 rounded-xl gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
-                  <ClipboardCheck className="w-4 h-4" />
-                  {ui(isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص التشغيلي")}
+                  <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{ui(isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص التشغيلي")}</span>
                 </button>
               </div>
             </form>
@@ -763,94 +572,105 @@ export default function CaptainInspectionPage() {
       {activeTab === "history" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" />
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-500" aria-hidden="true" />
               {ui("سجل الفحوصات التشغيلية المعتمدة")}</h2>
-            <span className="text-xs text-slate-400">
-              {ui(historyList.length)} {ui("فحص موثق")}</span>
+            <span className="text-xs text-[var(--text-muted)]">
+              {historyList.length} {ui("فحص موثق")}</span>
           </div>
 
           {isLoadingHistory ? (
             <div className="p-8 text-center theme-card rounded-2xl border theme-border">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto" />
-              <p className="text-xs text-slate-400 mt-2">{ui("جاري تحميل سجل الفحوصات...")}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-2">{ui("جاري تحميل سجل الفحوصات...")}</p>
             </div>
           ) : historyList.length === 0 ? (
             <div className="p-8 text-center theme-card rounded-2xl border theme-border space-y-3">
-              <ClipboardCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+              <ClipboardCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" aria-hidden="true" />
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                 {ui("لا توجد فحوصات تشغيلية مسجلة حتى الآن")}</p>
               <button
                 type="button"
                 onClick={() => setActiveTab("form")}
-                className="px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+                className="min-h-11 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
               >
-                <ClipboardCheck className="w-3.5 h-3.5" />
+                <ClipboardCheck className="w-3.5 h-3.5" aria-hidden="true" />
                 {ui("تسجيل أول فحص تشغيلي الآن")}</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {historyList.map((item) => {
                 const shortCode = item.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+                const allChecklistItems = [...DASHBOARD_ITEMS, ...EXTERNAL_ITEMS, ...SAFETY_ITEMS];
+                const passedCount = allChecklistItems.filter((def) =>
+                  Boolean(item[def.key as keyof InspectionWithMeta])
+                ).length;
+                const totalChecks = allChecklistItems.length;
                 return (
-                  <div
+                  <MobileRecordCard
                     key={item.id}
-                    className="theme-card p-4 rounded-2xl border theme-border space-y-3 hover:border-amber-500/50 transition flex flex-col justify-between"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <CheckCircle2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm">
-                              {ui("حافلة")}{item.vehiclePlate}
-                            </span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border theme-border font-bold">
-                              #{ui(shortCode)}
-                            </span>
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
-                            <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                            <span>{ui("تاريخ الفحص:")}</span>
-                            <strong className="font-mono font-bold text-slate-700 dark:text-slate-200" dir="ltr">
-                              {ui(formatOfficialDate(item.inspectionDate))}
-                            </strong>
-                          </div>
+                    title={
+                      <span className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                          <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                        </span>
+                        <span>{ui("حافلة")}: {item.vehiclePlate}</span>
+                      </span>
+                    }
+                    subtitle={
+                      <span className="font-mono font-bold text-[11px]" dir="ltr">
+                        #<bdi>{shortCode}</bdi>
+                      </span>
+                    }
+                    badge={
+                      <Badge variant={passedCount === totalChecks ? "success" : "warning"} className="text-xs">
+                        <bdi dir="ltr">{passedCount}/{totalChecks}</bdi>{" "}
+                        {passedCount === totalChecks ? ui("سليم") : isRTL ? "يحتاج مراجعة" : "Needs review"}
+                      </Badge>
+                    }
+                    footer={
+                      <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewInspection({
+                              id: item.id,
+                              vehiclePlate: item.vehiclePlate,
+                              pdfPath: item.pdfPath,
+                            })
+                          }
+                          aria-label={`${ui("معاينة الوثيقة")} #${shortCode}`}
+                          className="flex-1 min-h-11 px-3 rounded-xl border theme-border bg-[var(--bg-card-subtle)] hover:border-amber-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                          <span>{ui("معاينة الوثيقة")}</span>
+                        </button>
+                        <div className="shrink-0">
+                          <InspectionDownloadButton inspectionId={item.id} />
                         </div>
                       </div>
-
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                        {ui("16/16 سليم")}</span>
-                    </div>
+                    }
+                  >
+                    <MobileCardMetaGrid columns={2}>
+                      <MobileCardField
+                        label={ui("تاريخ الفحص")}
+                        value={<bdi dir="ltr">{formatOfficialDate(item.inspectionDate)}</bdi>}
+                        mono
+                      />
+                      <MobileCardField
+                        label={ui("لوحة المركبة")}
+                        value={item.vehiclePlate}
+                        mono
+                        alignEnd
+                      />
+                    </MobileCardMetaGrid>
 
                     {item.notes && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border theme-border line-clamp-2">
+                      <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border theme-border line-clamp-2">
                         {item.notes}
                       </p>
                     )}
-
-                    <div className="pt-2 border-t theme-border flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPreviewInspection({
-                            id: item.id,
-                            vehiclePlate: item.vehiclePlate,
-                            pdfPath: item.pdfPath,
-                          })
-                        }
-                        className="flex-1 px-3 py-1.5 rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-amber-500" />
-                        {ui("معاينة الوثيقة")}</button>
-
-                      <div className="shrink-0">
-                        <InspectionDownloadButton inspectionId={item.id} />
-                      </div>
-                    </div>
-                  </div>
+                  </MobileRecordCard>
                 );
               })}
             </div>

@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 
-import React from "react";
+
 
 type StatusType = "vehicle" | "operation" | "captain" | "inspection";
 
@@ -48,13 +48,13 @@ export default function StatusBadge({ type, status, size = "sm" }: StatusBadgePr
   const config = STATUS_MAP[type]?.[status];
   if (!config) {
     return (
-      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600">
+      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 dark:bg-slate-700 text-[var(--text-muted)] dark:text-slate-300 border border-slate-300 dark:border-slate-600">
         {ui(status)}
       </span>
     );
   }
 
-  const sizeClass = size === "md" ? "px-3 py-1 text-xs" : "px-2 py-0.5 text-[10px]";
+  const sizeClass = size === "md" ? "px-3 py-1 text-xs" : "px-2 py-0.5 text-xs";
 
   return (
     <span className={`${sizeClass} rounded-full font-bold border inline-flex items-center gap-1 ${config.className}`}>

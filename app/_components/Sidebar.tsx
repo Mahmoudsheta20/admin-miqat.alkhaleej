@@ -1,501 +1,15 @@
 "use client";
-import { useUiText } from "@/lib/ui-text";
-
-
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Car,
-  UserCheck,
-  FileText,
-  ClipboardCheck,
-  FilePlus2,
-  Home,
-  ChevronRight,
-  ChevronLeft,
-  X,
-  Shield,
-  ShieldCheck,
-  ReceiptText,
-  ShoppingBag,
-  BookOpen,
-  Landmark,
-  Calculator,
-  Building2,
-} from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Plus, X } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
-import { UserRole, SystemUser } from "@/lib/types";
-import { isSuperAdmin } from "@/lib/adminConstants";
-import { useWorkspaceMode } from "@/lib/workspaceModeContext";
 import { useLanguage } from "@/lib/languageContext";
-import WorkspaceModeSwitcher from "./WorkspaceModeSwitcher";
-import LanguageSwitcher from "./LanguageSwitcher";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  badge?: string;
-  badgeColor?: string;
-  roles: UserRole[];
-  superAdminOnly?: boolean;
-  section?: "OPERATIONS" | "DAILY" | "REVIEW" | "CAPTAIN";
-}
-
-const NAV_ITEMS: NavItem[] = [
-  {href:"/admin/customers",label:"العملاء وفواتيرهم",icon:<Building2 className="w-4 h-4"/>,roles:["ADMIN"],section:"DAILY"},
-  {href:"/admin/staff",label:"حسابات السائقين والعاملين",icon:<UserCheck className="w-4 h-4"/>,roles:["ADMIN"],section:"DAILY"},
-  {href:"/admin/representatives",label:"المناديب وعمولات الإحالة",icon:<UserCheck className="w-4 h-4"/>,roles:["ADMIN"],section:"DAILY"},
-  {href:"/captain/account",label:"حسابي ومستحقاتي",icon:<Landmark className="w-4 h-4"/>,roles:["CAPTAIN"],section:"CAPTAIN"},
-  // 1. Operations & Fleet (العمليات والأسطول)
-  {
-    href: "/admin",
-    label: "لوحة التحكم",
-    icon: <LayoutDashboard className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "OPERATIONS",
-  },
-  {
-    href: "/admin/contracts",
-    label: "سجل العقود الرسمية",
-    icon: <FileText className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "OPERATIONS",
-  },
-  {
-    href: "/admin/contracts/new",
-    label: "إنشاء عقد رسمي",
-    icon: <FilePlus2 className="w-4 h-4" />,
-    badge: "جديد",
-    badgeColor:
-      "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
-    roles: ["ADMIN"],
-    section: "OPERATIONS",
-  },
-  {
-    href: "/admin/captains",
-    label: "إدارة الكباتن",
-    icon: <UserCheck className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "OPERATIONS",
-  },
-  {
-    href: "/admin/inspections",
-    label: "فحص الكباتن والمركبات",
-    icon: <ClipboardCheck className="w-4 h-4" />,
-    badge: "يومي",
-    badgeColor:
-      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
-    roles: ["ADMIN"],
-    section: "OPERATIONS",
-  },
-  {
-    href: "/admin/fleet",
-    label: "أسطول المركبات",
-    icon: <Car className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "OPERATIONS",
-  },
-
-  // 2. Daily Work (العمل اليومي والمالية)
-  {
-    href: "/admin/invoices",
-    label: "الفواتير",
-    icon: <ReceiptText className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "DAILY",
-  },
-  {
-    href: "/admin/purchases",
-    label: "المصروفات والمشتريات",
-    icon: <ShoppingBag className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "DAILY",
-  },
-  {
-    href: "/admin/accounting",
-    label: "القيود والقبض والدفع",
-    icon: <Landmark className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "DAILY",
-  },
-
-  // 3. Review & Settings (المراجعة والإعدادات)
-  {
-    href: "/admin/vat-returns",
-    label: "الإقرار الضريبي",
-    icon: <Calculator className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "REVIEW",
-  },
-  {
-    href: "/admin/accounts",
-    label: "دليل الحسابات",
-    icon: <BookOpen className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "REVIEW",
-  },
-  {
-    href: "/admin/invoices/settings",
-    label: "بيانات الشركة والبنك",
-    icon: <Building2 className="w-4 h-4" />,
-    roles: ["ADMIN"],
-    section: "REVIEW",
-  },
-  {
-    href: "/admin/zatca",
-    label: "الفوترة الضريبية ZATCA",
-    icon: <ShieldCheck className="w-4 h-4" />,
-    badge: "متقدم",
-    badgeColor:
-      "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
-    roles: ["ADMIN"],
-    section: "REVIEW",
-  },
-  {
-    href: "/admin/admins",
-    label: "إدارة المسؤولين",
-    icon: <ShieldCheck className="w-4 h-4" />,
-    badge: "خاص",
-    badgeColor:
-      "bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30",
-    roles: ["ADMIN"],
-    superAdminOnly: true,
-    section: "REVIEW",
-  },
-
-  // Captain Navigation
-  {
-    href: "/captain",
-    label: "الرئيسية",
-    icon: <Home className="w-4 h-4" />,
-    roles: ["CAPTAIN"],
-    section: "CAPTAIN",
-  },
-  {
-    href: "/captain/contract",
-    label: "إنشاء عقد رحلة",
-    icon: <FilePlus2 className="w-4 h-4" />,
-    badge: "جديد",
-    badgeColor:
-      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
-    roles: ["CAPTAIN"],
-    section: "CAPTAIN",
-  },
-  {
-    href: "/captain/inspection",
-    label: "فحص المركبة اليومي",
-    icon: <ClipboardCheck className="w-4 h-4" />,
-    badge: "إلزامي",
-    badgeColor:
-      "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
-    roles: ["CAPTAIN"],
-    section: "CAPTAIN",
-  },
-];
-
-interface SidebarHeaderProps {
-  collapsed: boolean;
-  homePath: string;
-  onNavigate: () => void;
-}
-
-function SidebarHeader({
-  collapsed,
-  homePath,
-  onNavigate,
-}: SidebarHeaderProps) {
-  const ui = useUiText();
-
-  return (
-    <div
-      className={`shrink-0 flex items-center justify-center py-4 px-14 lg:px-3 border-b border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
-        collapsed ? "h-[70px]" : "h-[76px]"
-      }`}
-    >
-      <Link
-        href={homePath}
-        onClick={onNavigate}
-        className="group flex items-center justify-center transition-transform duration-200 active:scale-95"
-        title={ui("الرئيسية")}
-      >
-        {collapsed ? (
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center p-1.5 shadow-2xs group-hover:border-amber-500 transition">
-            <Image
-              src="/logo.svg"
-              alt={ui("ميقات الخليج")}
-              width={36}
-              height={36}
-              className="object-contain w-full h-full"
-              priority
-            />
-          </div>
-        ) : (
-          <div className="w-full max-w-[175px] h-12 flex items-center justify-center px-2 py-1">
-            <Image
-              src="/logo.svg"
-              alt={ui("ميقات الخليج")}
-              width={160}
-              height={50}
-              className="object-contain w-auto h-full max-h-12 transition-transform duration-200 group-hover:scale-[1.03]"
-              priority
-            />
-          </div>
-        )}
-      </Link>
-    </div>
-  );
-}
-
-const SECTION_TITLES: Record<string, string> = {
-  OPERATIONS: "العمليات والأسطول",
-  DAILY: "العمل المالي اليومي",
-  REVIEW: "المراجعة والإقرار والأنظمة",
-  CAPTAIN: "بوابة الكابتن",
-};
-
-const SECTION_TITLE_KEYS: Record<string, string> = {
-  OPERATIONS: "section.operations",
-  DAILY: "section.financeDaily",
-  REVIEW: "section.financeReview",
-  CAPTAIN: "section.captain",
-};
-
-const NAV_ITEM_TRANSLATION_KEYS: Record<string, string> = {
-  "/admin": "nav.dashboard",
-  "/admin/contracts": "nav.contracts",
-  "/admin/contracts/new": "nav.newContract",
-  "/admin/captains": "nav.captains",
-  "/admin/inspections": "nav.inspections",
-  "/admin/fleet": "nav.fleet",
-  "/admin/admins": "nav.admins",
-  "/admin/invoices": "nav.invoices",
-  "/admin/invoices/new": "nav.newInvoice",
-  "/admin/purchases": "nav.purchases",
-  "/admin/accounting": "nav.accounting",
-  "/admin/vat-returns": "nav.vatReturns",
-  "/admin/accounts": "nav.accounts",
-  "/admin/zatca": "nav.zatca",
-  "/captain": "nav.captainPortal",
-  "/captain/inspection": "nav.todayInspection",
-  "/captain/contract": "nav.captainContract",
-};
-
-interface SidebarNavLinksProps {
-  collapsed: boolean;
-  pathname: string;
-  filteredItems: NavItem[];
-  onMobileClose: () => void;
-}
-
-function SidebarNavLinks({
-  collapsed,
-  pathname,
-  filteredItems,
-  onMobileClose,
-}: SidebarNavLinksProps) {
-  const ui = useUiText();
-
-  const { t, isRTL } = useLanguage();
-  const isActive = (href: string) => {
-    if (href === "/admin") return pathname === "/admin";
-    if (href === "/captain") return pathname === "/captain";
-    if (href === "/admin/contracts")
-      return (
-        pathname === href ||
-        (pathname.startsWith(`${href}/`) && pathname !== `${href}/new`)
-      );
-    return pathname === href || pathname.startsWith(href + "/");
-  };
-
-  return (
-    <nav
-      aria-label={ui("القائمة الرئيسية")}
-      className="min-h-0 flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overscroll-contain"
-    >
-      {filteredItems.map((item, index) => {
-        const active = isActive(item.href);
-        const prevSection =
-          index > 0 ? filteredItems[index - 1]?.section : undefined;
-        const sectionChanged = Boolean(
-          item.section && item.section !== prevSection,
-        );
-        const itemLabel = t(NAV_ITEM_TRANSLATION_KEYS[item.href] || "", item.label);
-        const sectionTitle = item.section
-          ? t(SECTION_TITLE_KEYS[item.section] || "", SECTION_TITLES[item.section])
-          : "";
-
-        return (
-          <React.Fragment key={item.href}>
-            {sectionChanged && (
-              <div
-                className={`${index > 0 ? "pt-3.5 mt-2 border-t border-slate-200/70 dark:border-slate-800/70" : ""}`}
-              >
-                {!collapsed && item.section && sectionTitle && (
-                  <p className="px-3 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                    {ui(sectionTitle)}
-                  </p>
-                )}
-              </div>
-            )}
-            <Link
-              href={item.href}
-              onClick={onMobileClose}
-              aria-current={active ? "page" : undefined}
-              className={`group relative min-h-12 lg:min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
-                active
-                  ? "bg-amber-500/12 text-amber-700 dark:text-amber-400 font-black border border-amber-500/25 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-950 dark:hover:text-white border border-transparent"
-              } ${collapsed ? "justify-center px-2 py-3" : ""}`}
-              title={ui(collapsed ? itemLabel : undefined)}
-            >
-              {/* Active bar: right-0 in RTL, left-0 in LTR */}
-              {active && (
-                <span
-                  className={`absolute top-2 bottom-2 w-1 bg-amber-500 ${
-                    isRTL ? "right-0 rounded-e-full" : "left-0 rounded-s-full"
-                  }`}
-                />
-              )}
-              <span
-                className={`shrink-0 transition-colors ${
-                  active
-                    ? "text-amber-600 dark:text-amber-400"
-                    : "text-slate-400 dark:text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200"
-                }`}
-              >
-                {ui(item.icon)}
-              </span>
-              {!collapsed && (
-                <>
-                  <span className="truncate text-sm lg:text-xs font-bold tracking-normal">
-                    {ui(itemLabel)}
-                  </span>
-                  {item.badge && (
-                    <span
-                      className={`ms-auto px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${item.badgeColor}`}
-                    >
-                      {ui(item.badge)}
-                    </span>
-                  )}
-                </>
-              )}
-            </Link>
-          </React.Fragment>
-        );
-      })}
-    </nav>
-  );
-}
-
-interface SidebarFooterProps {
-  collapsed: boolean;
-  user: SystemUser | null;
-  onToggle: () => void;
-}
-
-function SidebarFooter({ collapsed, user, onToggle }: SidebarFooterProps) {
-  const ui = useUiText();
-
-  const { t } = useLanguage();
-  const isSuper = user?.role === "ADMIN" && isSuperAdmin(user?.email);
-
-  const roleTitle =
-    user?.role === "ADMIN"
-      ? isSuper
-        ? t("header.superAdmin", "المدير العام الأساسي")
-        : t("header.admin", "مسؤول إداري")
-      : t("header.captain", "كابتن معتمد");
-
-  return (
-    <div className="shrink-0 p-3 border-t border-slate-200/80 dark:border-slate-800/80 space-y-2">
-      {user && (
-        <>
-          {!collapsed ? (
-            <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70 flex items-center gap-2.5 shadow-2xs">
-              <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
-                  isSuper
-                    ? "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20"
-                    : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                }`}
-              >
-                {user.role === "ADMIN" ? (
-                  isSuper ? (
-                    <ShieldCheck className="w-4 h-4" />
-                  ) : (
-                    <Shield className="w-4 h-4" />
-                  )
-                ) : (
-                  <Car className="w-4 h-4" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-black text-slate-900 dark:text-white truncate">
-                  {user.name}
-                </p>
-                <span
-                  className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
-                    isSuper
-                      ? "text-purple-700 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20"
-                      : "text-amber-700 dark:text-amber-400 bg-amber-500/10"
-                  }`}
-                >
-                  {ui(roleTitle)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div
-              className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
-                isSuper
-                  ? "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20"
-                  : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
-              }`}
-              title={`${user.name} (${roleTitle})`}
-            >
-              {user.role === "ADMIN" ? (
-                isSuper ? (
-                  <ShieldCheck className="w-4 h-4" />
-                ) : (
-                  <Shield className="w-4 h-4" />
-                )
-              ) : (
-                <Car className="w-4 h-4" />
-              )}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Language Switcher in Sidebar */}
-      <LanguageSwitcher variant="sidebar" collapsed={collapsed} />
-
-      {/* Collapse button (desktop only) */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`hidden lg:flex items-center justify-center py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-800 cursor-pointer ${
-          collapsed ? "w-10 h-10 mx-auto" : "w-full px-3"
-        }`}
-        title={ui(collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة"))}
-        aria-label={ui(collapsed ? t("sidebar.expand", "توسيع القائمة") : t("sidebar.collapse", "طي القائمة"))}
-      >
-        {collapsed ? (
-          <ChevronLeft className="w-4 h-4" />
-        ) : (
-          <>
-            <ChevronRight className="w-4 h-4 me-1.5" />
-            <span className="text-xs">{ui(t("sidebar.collapse", "طي القائمة الجانبية"))}</span>
-          </>
-        )}
-      </button>
-    </div>
-  );
-}
+import { isSuperAdmin } from "@/lib/adminConstants";
+import { NAVIGATION_GROUPS, navigationFor, routeInfo } from "@/lib/navigation";
+import { Card } from "@/components/ui/card";
+import NavigationIcon from "./NavigationIcon";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -510,110 +24,213 @@ export default function Sidebar({
   mobileOpen,
   onMobileClose,
 }: SidebarProps) {
-  const ui = useUiText();
-
-  const pathname = usePathname();
   const { user } = useAuth();
-  const { mode } = useWorkspaceMode();
-  const drawerRef = useRef<HTMLDialogElement>(null);
+  const { language, dir } = useLanguage();
+  const pathname = usePathname();
+  const drawer = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const drawer = drawerRef.current;
-    if (!drawer) return;
-    if (mobileOpen && !drawer.open) drawer.showModal();
-    if (!mobileOpen && drawer.open) drawer.close();
+    const dialog = drawer.current;
+    if (mobileOpen && dialog && !dialog.open) dialog.showModal();
+    if (!mobileOpen && dialog?.open) dialog.close();
   }, [mobileOpen]);
 
-  useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1024px)");
-    const closeOnDesktop = () => {
-      if (desktop.matches) onMobileClose();
-    };
-    desktop.addEventListener("change", closeOnDesktop);
-    return () => desktop.removeEventListener("change", closeOnDesktop);
-  }, [onMobileClose]);
+  if (!user) return null;
 
-  const isSuper = isSuperAdmin(user?.email);
+  const items = navigationFor(user.role, isSuperAdmin(user.email));
+  const active = routeInfo(pathname)?.href;
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
-  const filteredItems = NAV_ITEMS.filter((item) => {
-    if (!user) return false;
-    if (!item.roles.includes(user.role)) return false;
-    if (item.superAdminOnly && !isSuper) return false;
-
-    // Filter by active workspace mode for ADMIN
-    if (user.role === "ADMIN") {
-      if (mode === "OPERATIONS") {
-        return item.section === "OPERATIONS";
-      }
-      if (mode === "FINANCE") {
-        return item.section === "DAILY" || item.section === "REVIEW";
-      }
-    }
-
-    return true;
-  });
-
-  const homePath =
-    user?.role === "ADMIN"
-      ? mode === "FINANCE"
-        ? "/admin/invoices"
-        : "/admin"
-      : "/captain";
-
-  const sidebarContent = (isCollapsed: boolean) => (
-    <div className="flex min-h-0 flex-1 flex-col h-full bg-white dark:bg-[#090e17] text-slate-800 dark:text-slate-200 select-none">
-      <SidebarHeader
-        collapsed={isCollapsed}
-        homePath={homePath}
-        onNavigate={onMobileClose}
-      />
-      {user?.role === "ADMIN" && (
-        <WorkspaceModeSwitcher variant="sidebar" collapsed={isCollapsed} />
-      )}
-      <SidebarNavLinks
-        collapsed={isCollapsed}
-        pathname={pathname}
-        filteredItems={filteredItems}
-        onMobileClose={onMobileClose}
-      />
-      <SidebarFooter collapsed={isCollapsed} user={user} onToggle={onToggle} />
-    </div>
-  );
+  function desktopContent(isCollapsed: boolean) {
+    return (
+      <>
+        <div className="sidebar-brand">
+          <Link
+            href={user?.role === "ADMIN" ? "/admin" : "/captain"}
+            onClick={onMobileClose}
+            aria-label={text("ميقات الخليج — الرئيسية", "Miqat Al Khaleej — Home")}
+          >
+            <Image
+              src="/logo.svg"
+              alt="ميقات الخليج"
+              width={144}
+              height={54}
+              loading="eager"
+              className={isCollapsed ? "h-auto w-11 object-contain" : "h-auto w-36 object-contain"}
+            />
+          </Link>
+        </div>
+        <nav aria-label={text("القائمة الرئيسية", "Main navigation")} className="sidebar-navigation">
+          {Object.entries(NAVIGATION_GROUPS).map(([group, label]) => {
+            const entries = items.filter((item) => item.group === group);
+            if (!entries.length) return null;
+            return (
+              <section key={group} className="sidebar-group">
+                {!isCollapsed && <h2 className="sidebar-group-label">{label[language]}</h2>}
+                {entries.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`sidebar-link ${active === item.href ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""}`}
+                    aria-current={active === item.href ? "page" : undefined}
+                    title={isCollapsed ? item[language] : undefined}
+                    onClick={onMobileClose}
+                  >
+                    <NavigationIcon name={item.icon} />
+                    {!isCollapsed && <span>{item[language]}</span>}
+                  </Link>
+                ))}
+              </section>
+            );
+          })}
+        </nav>
+        <footer className="sidebar-footer">
+          <span className={isCollapsed ? "sr-only" : "truncate"}>{user?.name}</span>
+          <button
+            type="button"
+            className="icon-button hidden lg:inline-flex"
+            onClick={onToggle}
+            aria-label={text("تبديل حجم القائمة", "Toggle sidebar")}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen size={18} aria-hidden="true" />
+            ) : (
+              <PanelLeftClose size={18} aria-hidden="true" />
+            )}
+          </button>
+        </footer>
+      </>
+    );
+  }
 
   return (
     <>
-      {/* Mobile overlay drawer */}
+      <aside className={`workspace-sidebar hidden lg:flex ${collapsed ? "is-collapsed" : ""}`}>
+        {desktopContent(collapsed)}
+      </aside>
+
       <dialog
+        ref={drawer}
         id="mobile-navigation"
-        ref={drawerRef}
-        aria-label={ui("القائمة الجانبية")}
-        onCancel={onMobileClose}
-        onClose={onMobileClose}
+        dir={dir}
+        className="navigation-drawer"
+        aria-labelledby="mobile-hub-title"
+        onCancel={(event) => {
+          event.preventDefault();
+          onMobileClose();
+        }}
         onClick={(event) => {
           if (event.target === event.currentTarget) onMobileClose();
         }}
-        className="mobile-drawer fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 lg:hidden"
       >
-        <aside className="absolute inset-y-0 start-0 w-[min(21rem,calc(100vw-3rem))] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] bg-white dark:bg-[#090e17] border-e border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
-          <button
-            onClick={onMobileClose}
-            className="absolute top-[calc(1rem+env(safe-area-inset-top,0px))] end-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
-            aria-label={ui("إغلاق القائمة")}
-          >
-            <X className="w-4 h-4" />
-          </button>
-          {ui(sidebarContent(false))}
-        </aside>
-      </dialog>
+        <div className="mobile-hub-panel">
+          <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+          <header className="flex items-center justify-between gap-3 px-4 py-3 border-b theme-border shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Image
+                src="/logo.svg"
+                alt="ميقات الخليج"
+                width={38}
+                height={38}
+                loading="eager"
+                className="h-9 w-9 object-contain shrink-0"
+              />
+              <div className="min-w-0">
+                <h2
+                  id="mobile-hub-title"
+                  className="text-sm font-semibold text-slate-900 dark:text-white truncate"
+                >
+                  {text("أقسام المنظومة", "All Sections")}
+                </h2>
+                <p className="text-xs text-[var(--text-muted)] truncate">{user.name}</p>
+              </div>
+            </div>
 
-      {/* Desktop sidebar */}
-      <aside
-        className={`hidden lg:flex flex-col shrink-0 h-full sticky top-0 bg-white dark:bg-[#090e17] border-e border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 ${
-          collapsed ? "w-[72px]" : "w-64"
-        }`}
-      >
-        {ui(sidebarContent(collapsed))}
-      </aside>
+            <button
+              type="button"
+              className="icon-button drawer-close"
+              onClick={onMobileClose}
+              aria-label={text("إغلاق القائمة", "Close navigation")}
+            >
+              <X size={20} aria-hidden="true" />
+            </button>
+          </header>
+
+          <div className="flex-1 overflow-y-auto overscroll-y-contain p-4 space-y-5">
+            {user.role === "ADMIN" && (
+              <section aria-label={text("اختصارات الإنشاء", "Quick create actions")} className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/admin/contracts/new"
+                    onClick={onMobileClose}
+                    className="min-h-11 rounded-xl button-primary px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
+                  >
+                    <Plus size={15} aria-hidden="true" />
+                    <span>{text("عقد نقل جديد", "New contract")}</span>
+                  </Link>
+                  <Link
+                    href="/admin/invoices/new"
+                    onClick={onMobileClose}
+                    className="min-h-11 rounded-xl secondary-btn px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
+                  >
+                    <Plus size={15} aria-hidden="true" />
+                    <span>{text("فاتورة جديدة", "New invoice")}</span>
+                  </Link>
+                </div>
+              </section>
+            )}
+
+            <nav aria-label={text("القائمة الرئيسية", "Main navigation")} className="space-y-4">
+              {Object.entries(NAVIGATION_GROUPS).map(([group, label]) => {
+                const entries = items.filter((item) => item.group === group);
+                if (!entries.length) return null;
+                return (
+                  <section key={group} className="space-y-2">
+                    <h3 className="text-xs font-semibold text-[var(--text-muted)] px-1">
+                      {label[language]}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {entries.map((item) => {
+                        const isActive = active === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={onMobileClose}
+                            aria-current={isActive ? "page" : undefined}
+                            className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] rounded-xl"
+                          >
+                            <Card
+                              className={`p-3 min-h-12 shadow-none flex items-center gap-2.5 transition-colors ${
+                                isActive
+                                  ? "border-amber-500/50 bg-[var(--accent-surface)] text-[var(--accent-gold)] font-semibold"
+                                  : "theme-card border theme-border text-slate-800 dark:text-slate-200 hover:border-amber-500/40"
+                              }`}
+                            >
+                              <span
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  isActive
+                                    ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-amber-500/30"
+                                    : "bg-[var(--bg-card-subtle)] text-[var(--text-muted)]"
+                                }`}
+                              >
+                                <NavigationIcon name={item.icon} />
+                              </span>
+                              <span className="text-xs font-medium leading-tight break-words">
+                                {item[language]}
+                              </span>
+                            </Card>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      </dialog>
     </>
   );
 }

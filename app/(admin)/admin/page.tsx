@@ -1,647 +1,1417 @@
 "use client";
-import { useUiText } from "@/lib/ui-text";
 
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-
-import React, { useEffect, useState, useTransition, useMemo } from "react";
 import Link from "next/link";
 import {
+  Plus,
+  ReceiptText,
+  ClipboardCheck,
+  ArrowUpLeft,
+  ArrowUpRight,
+  Eye,
+  FileText,
+  UserCheck,
   Users,
   Car,
-  FileCheck2,
-  ClipboardCheck,
-  ArrowUpRight,
-  FileText,
-  ChevronLeft,
-  ChevronRight,
+  Wallet,
+  ShieldCheck,
+  Search,
+  X,
+  Download,
+  MapPin,
   FilePlus2,
-  ReceiptText,
-  Eye,
 } from "lucide-react";
-import { getDashboardStats, DashboardStats } from "@/app/_actions/dashboard";
-import StatusBadge from "@/app/_components/StatusBadge";
-import { PageHeader } from "@/app/_components/ui";
-const PdfPreviewModal = dynamic(
-  () => import("@/app/_components/PdfPreviewModal"),
-  { ssr: false },
-);
-import { fetchCached, getCachedData } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
+import { useApiQuery } from "@/lib/use-api-query";
+import { currentSaudiPeriod, type FinancialReport, type PurchaseList } from "@/lib/accounting";
+import {
+  buildContractTrend,
+  buildFleetAnalytics,
+  buildOperationBreakdown,
+  normalizeIsoDay,
+  summarizeProfit,
+  toDashboardContracts,
+  diffCalendarDays,
+} from "@/lib/dashboard-analytics";
+import { dateLabel, downloadInvoice, invoiceTitle, type InvoiceRow } from "@/lib/invoices";
+import type { Contract, Vehicle } from "@/lib/types";
+import type { DashboardStats } from "@/app/_actions/dashboard";
+import type { CaptainInspectionItem } from "@/app/_actions/inspection";
+import {
+  PageHeader,
+  StatCard,
+  Card,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  Badge,
+  Button,
+  Money,
+  formatMoneyValue,
+} from "@/app/_components/ui";
+import {
+  MobileCardField,
+  MobileCardMetaGrid,
+  MobileHorizontalStrip,
+  MobileRecordCard,
+} from "@/app/_components/mobile";
+import LoadError from "@/app/_components/LoadError";
+import StatusBadge from "@/app/_components/StatusBadge";
+import FinanceSummary from "./_components/finance-summary";
+import ActionCenter from "./_components/action-center";
+import { ContractsActivityChart, OperationsMixCard } from "./_components/dashboard-charts";
+
+const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
+
+interface ReadinessOverview {
+  captains: CaptainInspectionItem[];
+  stats: {
+    totalCaptains: number;
+    inspectedToday: number;
+    pendingToday: number;
+    totalInspections: number;
+  };
+}
+
+interface InvoiceListResponse {
+  items: InvoiceRow[];
+  total: number;
+  page: number;
+}
+
+interface CustomerListResponse {
+  items: { id: string }[];
+  total: number;
+}
+
+type FeedTab = "contracts" | "upcoming" | "invoices" | "readiness";
 
 export default function AdminDashboardPage() {
-  const ui = useUiText();
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const Arrow = language === "ar" ? ArrowUpLeft : ArrowUpRight;
 
-  const { t, isRTL } = useLanguage();
-  const [stats, setStats] = useState<DashboardStats | null>(() =>
-    getCachedData("dashboard_stats"),
-  );
-  const [isLoading, setIsLoading] = useState(
-    () => !getCachedData("dashboard_stats"),
-  );
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(
-    null,
-  );
-  const [selectedRefNum, setSelectedRefNum] = useState<string>("");
-  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string | null>(null);
-  const [isPdfOpen, setIsPdfOpen] = useState(false);
-  const [seedMessage, setSeedMessage] = useState("");
-  const [seedError, setSeedError] = useState("");
-  const [, startTransition] = useTransition();
+  const period = currentSaudiPeriod();
+  const todayIso = period.day;
 
-  const loadStats = (forceRefresh = false) => {
-    startTransition(async () => {
-      try {
-        const res = await fetchCached("dashboard_stats", getDashboardStats, {
-          ttlMs: 60_000,
-          forceRefresh,
-        });
-        if (res.success && res.stats) {
-          setStats(res.stats);
-        }
-      } catch (err) {
-        console.error("Dashboard stats error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    });
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [activeTab, setActiveTab] = useState<FeedTab>("contracts");
+  const [feedSearch, setFeedSearch] = useState("");
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [invoiceDownloadError, setInvoiceDownloadError] = useState("");
+  const [preview, setPreview] = useState<{ id: string; referenceNumber: string } | null>(null);
+
+  const stats = useApiQuery<DashboardStats>("/dashboard/stats", refreshTick);
+  const readiness = useApiQuery<ReadinessOverview>("/inspections/overview", refreshTick);
+  const contractsQuery = useApiQuery<Contract[]>("/contracts", refreshTick);
+  const fleetQuery = useApiQuery<Vehicle[]>("/fleet", refreshTick);
+  const invoicesQuery = useApiQuery<InvoiceListResponse>("/invoices?page=1", refreshTick);
+  const customersQuery = useApiQuery<CustomerListResponse>("/workforce/customers?page=1", refreshTick);
+  const purchasesQuery = useApiQuery<PurchaseList>("/accounting/purchases?page=1", refreshTick);
+  const reportQuery = useApiQuery<FinancialReport>(
+    `/accounting/financial-report?mode=QUARTER&year=${period.year}&quarter=${period.quarter}`,
+    refreshTick
+  );
+
+  const operationLabels: Record<string, string> = {
+    AIRPORT_TRANSFER: text("نقل مطار", "Airport transfer"),
+    CITY_TOUR: text("جولة داخل المدينة", "City tour"),
+    INTERCITY: text("نقل بين المدن", "Intercity"),
+    HAJJ_UMRAH: text("حج وعمرة", "Hajj & Umrah"),
   };
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const openPdf = (id: string, ref: string, pdfPath?: string | null) => {
-    setSelectedContractId(id);
-    setSelectedRefNum(ref);
-    setSelectedPdfUrl(pdfPath || null);
-    setIsPdfOpen(true);
+  const contractStatusLabels: Record<string, string> = {
+    PENDING_REVIEW: text("قيد المراجعة", "Pending review"),
+    APPROVED: text("معتمد", "Approved"),
+    REJECTED: text("مرفوض", "Rejected"),
+    ACTIVE: text("ساري", "Active"),
+    EXPIRED: text("منتهي", "Expired"),
+    CANCELLED: text("ملغي", "Cancelled"),
   };
 
-  const dashboardHelpGuide = useMemo(
-    () => ({
-      title: isRTL
-        ? "كيف تعمل لوحة الإشراف العام ومنظومة التشغيل والمالية؟"
-        : "How the Operations & Financial Dashboard Works",
-      summary: isRTL
-        ? "مركز القيادة الموحد لشركة ميقات الخليج للنقل البري: يربط دورة التشغيل الميداني (المركبات ← الكباتن ← الفحص اليومي ← العقود الرسمية) بالدورة المحاسبية والضريبية (الفواتير ← المشتريات ← القيود ← الإقرار الضريبي)."
-        : "Unified command center for Miqat Al-Khaleej: connects field operations (fleet → captains → pre-trip inspection → contracts) with accounting and tax cycles (invoices → purchases → journal entries → VAT return).",
-      cards: [
-        {
-          title: isRTL ? "١. دورة التشغيل الميداني" : "1. Field Operations Cycle",
-          badge: isRTL ? "العمليات" : "Operations",
-          items: [
-            {
-              label: isRTL ? "أسطول المركبات والكباتن" : "Fleet & Captains",
-              description: isRTL
-                ? "تسجيل الحافلات وسيارات VIP وتعيين مركبة مخصصة لكل كابتن مع متابعة صلاحية الاستمارة والتأمين."
-                : "Register buses and VIP vehicles, assign dedicated vehicles to captains, and track registration & insurance.",
-            },
-            {
-              label: isRTL ? "الفحص اليومي الإلزامي" : "Mandatory Pre-Trip Inspection",
-              description: isRTL
-                ? "يُشترط اجتياز فحص السلامة اليومي (15 بنداً ميكانيكياً وأمنياً) قبل إصدار عقود التشغيل اليومية."
-                : "Pass the daily 15-point safety inspection before issuing daily operation contracts.",
-            },
-            {
-              label: isRTL ? "العقود وكشوف الركاب" : "Contracts & Passenger Manifests",
-              description: isRTL
-                ? "إصدار عقود النقل الرسمية متضمنة بيانات الرحلة، الناقل الجوي، وكشف أسماء وجنسيات وهويات الركاب."
-                : "Issue official passenger contracts with trip details, airline info, and manifest details.",
-            },
-          ],
-        },
-        {
-          title: isRTL ? "٢. الدورة المالية والفوترة ZATCA" : "2. Financial & ZATCA Invoicing",
-          badge: isRTL ? "المبيعات والضريبة" : "Sales & Tax",
-          items: [
-            {
-              label: isRTL ? "فواتير الحجوزات والضريبة" : "Trip Invoices & VAT",
-              code: "15% / 0% / معفى",
-              description: isRTL
-                ? "إصدار فواتير ضريبية ومبسطة وإشعارات دائنة ومدينة متوافقة مع المرحلة الأولى لهيئة الزكاة والضريبة والجمارك (TLV Base64 QR)."
-                : "Issue tax/simplified invoices and debit/credit notes compliant with ZATCA Phase 1 QR codes.",
-            },
-            {
-              label: isRTL ? "الترحيل المحاسبي التلقائي" : "Automated Journal Entries",
-              code: "1102 / 1103 / 4101 / 210201",
-              description: isRTL
-                ? "كل فاتورة معتمدة تُنشئ قيد يومية متوازناً يربط حساب الإيراد وحساب ضريبة المخرجات بحساب البنك أو ذمم العملاء."
-                : "Every confirmed invoice posts a balanced journal entry linking revenues, output VAT, and cash/receivables.",
-            },
-          ],
-        },
-        {
-          title: isRTL ? "٣. المصروفات والإقرار الضريبي" : "3. Expenses & VAT Return",
-          badge: "ZATCA VAT",
-          items: [
-            {
-              label: isRTL ? "مشتريات ومصروفات الأسطول" : "Fleet Purchases & Expenses",
-              code: "5101–5203",
-              description: isRTL
-                ? "تسجيل فواتير الوقود والصيانة والإيجارات مع احتساب ضريبة المدخلات القابلة للاسترداد (210202) وعزل الرسوم الحكومية والرواتب."
-                : "Log fuel, maintenance, and fleet expenses with recoverable input VAT separated from fees.",
-            },
-            {
-              label: isRTL ? "الإقرار الضريبي الربع سنوي" : "Quarterly VAT Return",
-              code: "خانات 1–16",
-              description: isRTL
-                ? "تجميع آلي لصافي الضريبة المستحقة (ضريبة المخرجات ناقص ضريبة المدخلات) مع نسخ فوري للأرقام لبوابة هيئة الزكاة."
-                : "Automated net tax calculation (output VAT minus input VAT) with one-click copy for the ZATCA portal.",
-            },
-          ],
-        },
-      ],
-      tip: isRTL
-        ? "اضغط على زر «بيانات تجريبية شاملة» في الأعلى لتعبئة جميع الأقسام تلقائياً وتجربة دورة العمل المتكاملة."
-        : "Click 'Seed Full Test Data' in the header to populate all sections and experience the integrated workflow.",
-      formula: "Net VAT = Output VAT (Sales 15% ± Notes) − Input VAT (Purchases 15% − Returns)",
-    }),
-    [isRTL]
+  const allContracts = useMemo(
+    () => toDashboardContracts(contractsQuery.data, stats.data?.recentContracts),
+    [contractsQuery.data, stats.data?.recentContracts]
   );
+
+  const rawContractsForTrend = useMemo(
+    () =>
+      contractsQuery.data && contractsQuery.data.length > 0
+        ? contractsQuery.data
+        : (stats.data?.recentContracts ?? []).map((c) => ({
+            ...c,
+            createdAt: c.tripDate,
+          })),
+    [contractsQuery.data, stats.data?.recentContracts]
+  );
+
+  const trend7 = useMemo(
+    () => buildContractTrend(rawContractsForTrend, todayIso, 7, language),
+    [rawContractsForTrend, todayIso, language]
+  );
+  const trend14 = useMemo(
+    () => buildContractTrend(rawContractsForTrend, todayIso, 14, language),
+    [rawContractsForTrend, todayIso, language]
+  );
+  const operationsBreakdown = useMemo(
+    () => buildOperationBreakdown(allContracts),
+    [allContracts]
+  );
+
+  const fleetAnalytics = useMemo(
+    () => buildFleetAnalytics(fleetQuery.data ?? [], todayIso, 30),
+    [fleetQuery.data, todayIso]
+  );
+
+  const pendingCaptains = useMemo(
+    () =>
+      (readiness.data?.captains ?? []).filter(
+        (cap) => cap.active && !cap.hasTodayInspection
+      ),
+    [readiness.data?.captains]
+  );
+
+  const todayAndUpcomingTrips = useMemo(() => {
+    return allContracts
+      .filter((c) => {
+        const day = normalizeIsoDay(c.tripDate);
+        return day !== null && day >= todayIso;
+      })
+      .sort((a, b) => {
+        const dayA = normalizeIsoDay(a.tripDate) ?? "";
+        const dayB = normalizeIsoDay(b.tripDate) ?? "";
+        if (dayA !== dayB) return dayA.localeCompare(dayB);
+        return (a.tripTime || "").localeCompare(b.tripTime || "");
+      });
+  }, [allContracts, todayIso]);
+
+  const todayStats = useMemo(() => {
+    const todayRows = allContracts.filter((c) => normalizeIsoDay(c.tripDate) === todayIso);
+    const todayPassengers = todayRows.reduce((sum, c) => sum + c.passengersCount, 0);
+    const pendingReview = allContracts.filter((c) => c.status === "PENDING_REVIEW");
+    return {
+      todayContracts: todayRows.length,
+      todayPassengers,
+      pendingReview,
+    };
+  }, [allContracts, todayIso]);
+
+  const profitSummary = useMemo(
+    () => (reportQuery.data ? summarizeProfit(reportQuery.data.profit) : null),
+    [reportQuery.data]
+  );
+
+  const qSearch = feedSearch.trim().toLowerCase();
+
+  const visibleRecentContracts = useMemo(() => {
+    const base = allContracts.slice(0, qSearch ? 50 : 8);
+    if (!qSearch) return base;
+    return base
+      .filter((c) =>
+        [c.referenceNumber, c.customerName, c.captainName, c.vehiclePlate, c.origin, c.destination]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(qSearch))
+      )
+      .slice(0, 12);
+  }, [allContracts, qSearch]);
+
+  const visibleUpcomingTrips = useMemo(() => {
+    if (!qSearch) return todayAndUpcomingTrips.slice(0, 10);
+    return todayAndUpcomingTrips
+      .filter((c) =>
+        [c.referenceNumber, c.customerName, c.captainName, c.vehiclePlate, c.origin, c.destination]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(qSearch))
+      )
+      .slice(0, 12);
+  }, [todayAndUpcomingTrips, qSearch]);
+
+  const visibleInvoices = useMemo(() => {
+    const items = invoicesQuery.data?.items ?? [];
+    if (!qSearch) return items.slice(0, 8);
+    return items
+      .filter(
+        (inv) =>
+          inv.invoiceNumber.toLowerCase().includes(qSearch) ||
+          inv.customerName.toLowerCase().includes(qSearch)
+      )
+      .slice(0, 12);
+  }, [invoicesQuery.data?.items, qSearch]);
+
+  const visibleCaptains = useMemo(() => {
+    const caps = readiness.data?.captains ?? [];
+    if (!qSearch) return caps;
+    return caps.filter(
+      (c) =>
+        c.name.toLowerCase().includes(qSearch) ||
+        (c.assignedVehiclePlate || "").toLowerCase().includes(qSearch) ||
+        (c.phone || "").includes(qSearch)
+    );
+  }, [readiness.data?.captains, qSearch]);
+
+  const visibleVehicles = useMemo(() => {
+    const vehs = fleetQuery.data ?? [];
+    if (!qSearch) return vehs;
+    return vehs.filter(
+      (v) =>
+        v.plateNumberAr.toLowerCase().includes(qSearch) ||
+        v.plateNumberEn.toLowerCase().includes(qSearch) ||
+        v.make.toLowerCase().includes(qSearch) ||
+        v.model.toLowerCase().includes(qSearch)
+    );
+  }, [fleetQuery.data, qSearch]);
+
+  const totalCaptainsCount =
+    readiness.data?.stats.totalCaptains ?? stats.data?.totalCaptains ?? 0;
+  const inspectedTodayCount = readiness.data?.stats.inspectedToday ?? 0;
+  const pendingTodayCount = readiness.data?.stats.pendingToday ?? 0;
+  const availableVehiclesCount =
+    fleetQuery.data ? fleetAnalytics.available : (stats.data?.activeVehicles ?? 0);
+  const totalVehiclesCount =
+    fleetQuery.data ? fleetAnalytics.total : (stats.data?.totalVehicles ?? 0);
+
+  const shortcuts = [
+    {
+      title: text("عقود النقل", "Contracts"),
+      meta: text("إصدار ومتابعة", "Issue & track"),
+      href: "/admin/contracts",
+      icon: FileText,
+      pill: stats.data ? String(stats.data.totalContracts) : "—",
+      pillVariant: "gold" as const,
+    },
+    {
+      title: text("الفواتير", "Invoices"),
+      meta: text("ضريبية وحجوزات", "Tax & booking"),
+      href: "/admin/invoices",
+      icon: ReceiptText,
+      pill: invoicesQuery.data ? String(invoicesQuery.data.total) : "—",
+      pillVariant: "secondary" as const,
+    },
+    {
+      title: text("الفحوصات", "Inspections"),
+      meta: pendingTodayCount > 0 ? text("بانتظار الفحص", "Needs check") : text("مكتمل اليوم", "Ready today"),
+      href: "/admin/inspections",
+      icon: ClipboardCheck,
+      pill: readiness.data ? (pendingTodayCount > 0 ? `${pendingTodayCount}` : "✓") : "—",
+      pillVariant: pendingTodayCount > 0 ? ("warning" as const) : ("success" as const),
+    },
+    {
+      title: text("الأسطول", "Fleet"),
+      meta: text("الحافلات والوثائق", "Vehicles & docs"),
+      href: "/admin/fleet",
+      icon: Car,
+      pill: `${availableVehiclesCount}/${totalVehiclesCount}`,
+      pillVariant: fleetAnalytics.alerts.length > 0 ? ("destructive" as const) : ("outline" as const),
+    },
+    {
+      title: text("الكباتن", "Captains"),
+      meta: text("السائقون النشطون", "Active drivers"),
+      href: "/admin/captains",
+      icon: UserCheck,
+      pill: String(totalCaptainsCount),
+      pillVariant: "secondary" as const,
+    },
+    {
+      title: text("العملاء", "Customers"),
+      meta: text("جهات وشركات", "Clients ledger"),
+      href: "/admin/customers",
+      icon: Users,
+      pill: customersQuery.data ? String(customersQuery.data.total) : "—",
+      pillVariant: "outline" as const,
+    },
+    {
+      title: text("العاملون", "Staff"),
+      meta: text("عهد، سلف، عمولات", "Salaries & dues"),
+      href: "/admin/staff",
+      icon: Wallet,
+      pill: text("إدارة", "Open"),
+      pillVariant: "outline" as const,
+    },
+    {
+      title: text("الضريبة", "VAT & tax"),
+      meta: text("إقرارات القيمة المضافة", "Returns & ZATCA"),
+      href: "/admin/vat-returns",
+      icon: ShieldCheck,
+      pill:
+        reportQuery.data && reportQuery.data.unpostedInvoices.length > 0
+          ? `${reportQuery.data.unpostedInvoices.length} !`
+          : `Q${period.quarter}`,
+      pillVariant:
+        reportQuery.data && reportQuery.data.unpostedInvoices.length > 0
+          ? ("warning" as const)
+          : ("outline" as const),
+    },
+  ];
+
+  async function handleInvoicePdf(id: string) {
+    setDownloadingInvoiceId(id);
+    setInvoiceDownloadError("");
+    try {
+      await downloadInvoice(id);
+    } catch (error: unknown) {
+      setInvoiceDownloadError(
+        error instanceof Error ? error.message : text("تعذر تنزيل الفاتورة", "Unable to download invoice")
+      );
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Top Header Section with On-Demand Slide-Over Guide */}
-      <PageHeader
-        title={ui(t("dashboard.title"))}
-        subtitle={ui(t("dashboard.subtitle"))}
-        badge={isRTL ? "مركز العمليات والإشراف المالي" : "Operations & Financial Dashboard"}
-        icon={ReceiptText}
-        onRefresh={() => loadStats(true)}
-        isRefreshing={isLoading}
-        helpGuide={dashboardHelpGuide}
-        onSeeded={(msg) => {
-          setSeedError("");
-          setSeedMessage(msg);
-          loadStats(true);
-        }}
-        onSeedError={(err) => {
-          setSeedMessage("");
-          setSeedError(err);
-        }}
-        primaryAction={{
-          label: `+ ${t("contracts.newContract")}`,
-          href: "/admin/contracts/new",
-          icon: FilePlus2,
-          variant: "primary",
-        }}
-        secondaryActions={[
-          {
-            label: `+ ${t("nav.invoices")}`,
-            href: "/admin/invoices/new",
-            icon: ReceiptText,
-            variant: "subtle",
-          },
-        ]}
-      />
+    <div className="flex flex-col gap-5 sm:gap-6">
+      <div className="space-y-4">
+        <PageHeader
+          title={text("نظرة عامة على العمل", "Workspace overview")}
+          subtitle={text(
+            "متابعة العقود، جاهزية الكباتن والأسطول، الفواتير، والأداء المالي من مكان واحد.",
+            "Follow operational readiness, fleet compliance, contracts, invoices, and financial performance in one workspace."
+          )}
+          primaryAction={{
+            label: text("عقد جديد", "New contract"),
+            href: "/admin/contracts/new",
+            icon: Plus,
+          }}
+          secondaryActions={[
+            {
+              label: text("فاتورة", "New invoice"),
+              href: "/admin/invoices/new",
+              icon: ReceiptText,
+            },
+            {
+              label: text("مصروف", "Expense"),
+              href: "/admin/purchases",
+              icon: Wallet,
+            },
+          ]}
+          onRefresh={() => setRefreshTick((v) => v + 1)}
+          isRefreshing={stats.isLoading || readiness.isLoading || contractsQuery.isLoading}
+        />
 
-      {seedMessage && (
-        <p
-          role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
-        >
-          {ui(seedMessage)}
-        </p>
-      )}
-      {seedError && (
-        <p role="alert" className="text-xs sm:text-sm font-bold text-rose-600">
-          {ui(seedError)}
-        </p>
-      )}
-
-      {/* Quick Daily Operations Shortcuts */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Link
-          href="/admin/contracts/new"
-          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <FilePlus2 className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {ui(t("contracts.newContract"))}
-              </p>
-              <p className="text-[10px] text-slate-400 truncate">
-                {ui(t("contracts.subtitle"))}
-              </p>
-            </div>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
-        </Link>
-
-        <Link
-          href="/admin/invoices/new"
-          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <ReceiptText className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {ui(t("invoice.newInvoice"))}
-              </p>
-              <p className="text-[10px] text-slate-400 truncate">
-                {ui(t("invoice.subtitle"))}
-              </p>
-            </div>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
-        </Link>
-
-        <Link
-          href="/admin/inspections"
-          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-              <ClipboardCheck className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {ui(t("nav.inspections"))}
-              </p>
-              <p className="text-[10px] text-slate-400 truncate">
-                {ui(t("inspections.subtitle"))}
-              </p>
-            </div>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
-        </Link>
-
-        <Link
-          href="/admin/invoices"
-          className="theme-card p-3.5 rounded-2xl border theme-border hover:border-amber-500/60 transition flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
-              <FileText className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                {ui(t("nav.invoices"))}
-              </p>
-              <p className="text-[10px] text-slate-400 truncate">
-                {ui(t("invoice.title"))}
-              </p>
-            </div>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0 transition" />
-        </Link>
+        <LoadError message={stats.error} onRetry={stats.refetch} />
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        {/* Total Captains */}
-        <div className="theme-card p-3.5 sm:p-5 rounded-2xl relative overflow-hidden transition-all duration-200 hover:shadow-md flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {ui(t("captains.title"))}
-              </span>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-            </div>
-            <div className="mt-2.5 sm:mt-3">
-              <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {ui(isLoading ? "—" : (stats?.totalCaptains ?? 0))}
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 ms-1.5 font-bold">
-                {ui(isRTL ? "كابتن" : "Captains")}
-              </span>
-            </div>
-          </div>
-          <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{ui(t("captains.title"))}</span>
-            <Link
-              href="/admin/captains"
-              className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
-            >
-              {ui(t("common.view"))}
-              <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
+      {/* Practical Compact Quick-Workflows Strip (Horizontal snap rail on mobile, 4-col grid on tablet/desktop) */}
+      <section aria-labelledby="quick-workflows-heading" className="space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="quick-workflows-heading" className="text-sm font-semibold text-slate-900 dark:text-white">
+            {text("الوصول السريع للأقسام", "Quick navigation")}
+          </h2>
+          <span className="text-xs text-[var(--text-muted)]">
+            {text("مع إحصاء مباشر لكل قسم", "With live section counts")}
+          </span>
         </div>
 
-        {/* Vehicles */}
-        <div className="theme-card p-3.5 sm:p-5 rounded-2xl relative overflow-hidden transition-all duration-200 hover:shadow-md flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {ui(t("fleet.title"))}
-              </span>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <Car className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-            </div>
-            <div className="mt-2.5 sm:mt-3">
-              <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {ui(isLoading ? "—" : (stats?.totalVehicles ?? 0))}
-              </span>
-              <span className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 ms-1.5 font-bold">
-                ({ui(stats?.activeVehicles ?? 0)} {ui(isRTL ? "جاهزة" : "Ready")})
-              </span>
-            </div>
-          </div>
-          <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{ui(t("fleet.title"))}</span>
-            <Link
-              href="/admin/fleet"
-              className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
-            >
-              {ui(t("common.view"))}
-              <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Contracts */}
-        <div className="theme-card p-3.5 sm:p-5 rounded-2xl relative overflow-hidden transition-all duration-200 hover:shadow-md flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {ui(t("contracts.title"))}
-              </span>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-            </div>
-            <div className="mt-2.5 sm:mt-3">
-              <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {ui(isLoading ? "—" : (stats?.totalContracts ?? 0))}
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 ms-1.5 font-bold">
-                {ui(isRTL ? "عقد رسمي" : "Contracts")}
-              </span>
-            </div>
-          </div>
-          <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{ui(t("contracts.title"))}</span>
-            <Link
-              href="/admin/contracts"
-              className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
-            >
-              {ui(t("common.view"))}
-              <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Today's Inspections */}
-        <div className="theme-card p-3.5 sm:p-5 rounded-2xl relative overflow-hidden transition-all duration-200 hover:shadow-md flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {ui(t("inspections.title"))}
-              </span>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-            </div>
-            <div className="mt-2.5 sm:mt-3">
-              <span className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-                {ui(isLoading ? "—" : (stats?.todayInspections ?? 0))}
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 ms-1.5 font-bold">
-                {ui(isRTL ? "فحص مسجل" : "Inspections")}
-              </span>
-            </div>
-          </div>
-          <div className="mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t theme-border flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-            <span>{ui(t("inspections.title"))}</span>
-            <Link
-              href="/admin/inspections"
-              className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-0.5 hover:underline"
-            >
-              {ui(t("common.view"))}
-              <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Contracts Section */}
-      <div className="theme-card rounded-2xl overflow-hidden border theme-border">
-        <div className="p-4 sm:p-5 border-b theme-border flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-              {ui(t("dashboard.recentContracts"))}
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {ui(t("contracts.subtitle"))}
-            </p>
-          </div>
-          <Link
-            href="/admin/contracts"
-            className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
-          >
-            {ui(t("common.all"))} ({ui(stats?.totalContracts ?? 0)})
-            {isRTL ? (
-              <ChevronLeft className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </Link>
-        </div>
-
-        {isLoading ? (
-          <div className="p-10 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-slate-400">{ui(t("common.loading"))}</p>
-          </div>
-        ) : !stats?.recentContracts?.length ? (
-          <div className="p-10 text-center text-slate-400 text-sm">
-            {ui(isRTL ? "لا توجد عقود مسجلة حتى الآن." : "No contracts found yet.")}
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table (Visible on md and larger) */}
-            <div className="hidden md:block overflow-x-auto">
-              <table
-                className={`w-full ${"text-start"} text-xs`}
-              >
-                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-slate-500 dark:text-slate-400 font-bold">
-                  <tr>
-                    <th className="px-5 py-3">{ui(t("contracts.refNumber"))}</th>
-                    <th className="px-5 py-3">{ui(t("contracts.customer"))}</th>
-                    <th className="px-5 py-3">{ui(t("contracts.captain"))}</th>
-                    <th className="px-5 py-3">{ui(t("fleet.plateAr"))}</th>
-                    <th className="px-5 py-3">{ui(t("common.details"))}</th>
-                    <th className="px-5 py-3">{ui(t("common.date"))}</th>
-                    <th className="px-5 py-3">{ui(t("contracts.passengers"))}</th>
-                    <th
-                      className={`px-5 py-3 ${"text-end"}`}
-                    >
-                      {ui(t("common.actions"))}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
-                  {stats.recentContracts.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition"
-                    >
-                      <td className="px-5 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
-                        {c.referenceNumber}
-                      </td>
-                      <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white">
-                        {c.customerName}
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">
-                        {ui(c.captainName)}
-                      </td>
-                      <td className="px-5 py-3.5 font-mono font-semibold">
-                        {c.vehiclePlate}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <StatusBadge
-                          type="operation"
-                          status={c.operationType}
-                          size="sm"
-                        />
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono">
-                        {ui(c.tripDate)} {ui(c.tripTime)}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                          {ui(c.passengersCount)} {ui(isRTL ? "ركاب" : "pax")}
-                        </span>
-                      </td>
-                      <td
-                        className={`px-5 py-3.5 ${"text-end"} whitespace-nowrap`}
-                      >
-                        <div className="inline-flex items-center gap-1.5">
-                          <Link
-                            href={`/admin/contracts/${encodeURIComponent(c.id)}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-amber-500" />
-                            <span>{ui(t("common.details"))}</span>
-                          </Link>
-                          <Link
-                            href={`/admin/invoices/new?contractId=${encodeURIComponent(c.id)}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold transition text-xs"
-                          >
-                            <ReceiptText className="w-3.5 h-3.5" />
-                            <span>{ui(t("invoice.title"))}</span>
-                          </Link>
-                          <button
-                            onClick={() =>
-                              openPdf(c.id, c.referenceNumber, c.pdfPath)
-                            }
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg gold-gradient-btn font-bold transition text-xs cursor-pointer"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>PDF</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards (Visible on screens smaller than md) */}
-            <div className="md:hidden divide-y theme-border">
-              {stats.recentContracts.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
+        <div className="sm:hidden">
+          <MobileHorizontalStrip label={text("الوصول السريع للأقسام", "Quick navigation")}>
+            {shortcuts.map((sc) => {
+              const Icon = sc.icon;
+              return (
+                <Link
+                  key={sc.href}
+                  href={sc.href}
+                  className="snap-start shrink-0 min-w-[144px] focus-visible:outline-2 focus-visible:outline-[var(--accent-gold)] rounded-xl"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="min-w-0 break-all font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
-                      {c.referenceNumber}
+                  <Card className="theme-card border theme-border shadow-none h-full min-h-[72px] p-3 flex flex-col justify-between gap-2 hover:border-amber-500/50 transition-colors">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
+                        <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                      </div>
+                      <Badge variant={sc.pillVariant} className="font-mono text-[11px] px-1.5 py-0.5 shrink-0">
+                        <bdi>{sc.pill}</bdi>
+                      </Badge>
+                    </div>
+                    <span className="block truncate text-xs font-semibold text-slate-900 dark:text-white">
+                      {sc.title}
                     </span>
-                    <StatusBadge
-                      type="operation"
-                      status={c.operationType}
-                      size="sm"
-                    />
-                  </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </MobileHorizontalStrip>
+        </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">
-                        {ui(t("contracts.customer"))}:
-                      </span>
-                      <span className="font-bold text-slate-900 dark:text-white">
-                        {c.customerName}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">
-                        {ui(t("contracts.captain"))}:
-                      </span>
-                      <span className="text-slate-700 dark:text-slate-300 font-semibold">
-                        {ui(c.captainName)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">
-                        {ui(t("fleet.plateAr"))}:
-                      </span>
-                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {c.vehiclePlate}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">
-                        {ui(t("common.date"))}:
-                      </span>
-                      <span className="font-mono text-slate-500 dark:text-slate-400">
-                        {ui(c.tripDate)} {ui(c.tripTime)}
-                      </span>
-                    </div>
+        <div className="hidden sm:grid sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
+          {shortcuts.map((sc) => {
+            const Icon = sc.icon;
+            return (
+              <Link
+                key={sc.href}
+                href={sc.href}
+                className="group min-w-0 min-h-[60px] flex items-center justify-between gap-2 rounded-xl border theme-border bg-[var(--bg-card)] px-3.5 py-2.5 hover:border-amber-500/50 hover:bg-[var(--bg-card-subtle)] transition focus-visible:outline-2 focus-visible:outline-[var(--accent-gold)]"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4" aria-hidden="true" />
                   </div>
-
-                  <div className="flex items-center justify-between pt-2.5 border-t theme-border gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px]">
-                      {ui(c.passengersCount)} {ui(isRTL ? "ركاب" : "pax")}
+                  <div className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[var(--accent-gold)] transition-colors">
+                      {sc.title}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <Link
-                        href={`/admin/contracts/${c.id}`}
-                        className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition text-xs shadow-2xs"
-                      >
-                        {ui(t("common.details"))}
-                      </Link>
-                      <button
-                        onClick={() =>
-                          openPdf(c.id, c.referenceNumber, c.pdfPath)
-                        }
-                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition text-xs shadow-2xs"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>PDF</span>
-                      </button>
-                    </div>
+                    <span className="block truncate text-[11px] text-[var(--text-muted)]">
+                      {sc.meta}
+                    </span>
                   </div>
                 </div>
-              ))}
+                <Badge variant={sc.pillVariant} className="font-mono text-[11px] px-2 py-0.5 shrink-0">
+                  <bdi>{sc.pill}</bdi>
+                </Badge>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Executive KPI Strip */}
+      <section aria-labelledby="kpi-strip-heading">
+        <h2 id="kpi-strip-heading" className="sr-only">
+          {text("المؤشرات الرئيسية", "Key performance indicators")}
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <StatCard
+            label={text("إجمالي العقود", "Total contracts")}
+            value={stats.data?.totalContracts ?? "—"}
+            icon={FileText}
+            variant="amber"
+            subtext={`${todayStats.todayContracts} ${text("اليوم", "today")} · ${todayAndUpcomingTrips.length} ${text("قادم", "upcoming")}`}
+            isLoading={stats.isLoading}
+          />
+          <StatCard
+            label={text("الأسطول المتاح", "Available fleet")}
+            value={
+              stats.data || fleetQuery.data
+                ? `${availableVehiclesCount}/${totalVehiclesCount}`
+                : "—"
+            }
+            icon={Car}
+            variant="blue"
+            subtext={`${fleetAnalytics.totalSeats} ${text("مقعد إجمالاً", "seats capacity")}`}
+            isLoading={stats.isLoading && fleetQuery.isLoading}
+          />
+          <StatCard
+            label={text("جاهزية الكباتن اليوم", "Daily checks")}
+            value={
+              readiness.data
+                ? `${inspectedTodayCount}/${totalCaptainsCount}`
+                : stats.data?.totalCaptains ?? "—"
+            }
+            icon={ClipboardCheck}
+            variant={pendingTodayCount > 0 ? "amber" : "emerald"}
+            subtext={
+              pendingTodayCount > 0
+                ? `${pendingTodayCount} ${text("بانتظار الفحص", "pending today")}`
+                : text("جاهزية مكتملة", "All inspected")
+            }
+            isLoading={readiness.isLoading && stats.isLoading}
+          />
+          <StatCard
+            label={text("إيرادات الربع", "Quarter revenue")}
+            value={
+              reportQuery.data ? formatMoneyValue(reportQuery.data.profit.revenue) : "—"
+            }
+            unit={text("ر.س", "SAR")}
+            icon={Wallet}
+            variant="emerald"
+            subtext={
+              profitSummary
+                ? `${text("صافي", "Net")}: ${formatMoneyValue(reportQuery.data?.profit.afterTax)} (${profitSummary.marginPercent}%)`
+                : text("الحركات المرحّلة", "Posted entries")
+            }
+            isLoading={reportQuery.isLoading}
+          />
+          <div className="col-span-2 sm:col-span-1">
+            <StatCard
+              label={text("الفواتير والعملاء", "Invoices & clients")}
+              value={invoicesQuery.data?.total ?? "—"}
+              unit={text("فاتورة", "inv")}
+              icon={ReceiptText}
+              variant="default"
+              subtext={`${customersQuery.data?.total ?? "—"} ${text("عميل مسجل", "registered clients")}`}
+              isLoading={invoicesQuery.isLoading && customersQuery.isLoading}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Actionable Daily Control Center */}
+      <ActionCenter
+        pendingCaptains={pendingCaptains}
+        expiryAlerts={fleetAnalytics.alerts}
+        unpostedInvoicesCount={reportQuery.data?.unpostedInvoices.length ?? 0}
+        pendingContracts={todayStats.pendingReview}
+        isLoading={
+          readiness.isLoading && fleetQuery.isLoading && reportQuery.isLoading && contractsQuery.isLoading
+        }
+        hasLoadError={Boolean(readiness.error || fleetQuery.error || reportQuery.error || contractsQuery.error)}
+      />
+
+      {/* Operational Charts Row */}
+      <section aria-labelledby="charts-section-heading" className="space-y-2.5">
+        <h2 id="charts-section-heading" className="sr-only">
+          {text("الرسوم البيانية التحليلية", "Operational analytics charts")}
+        </h2>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div className="xl:col-span-7">
+            <ContractsActivityChart
+              points7={trend7}
+              points14={trend14}
+              todayContracts={todayStats.todayContracts}
+              todayPassengers={todayStats.todayPassengers}
+              isLoading={contractsQuery.isLoading && stats.isLoading}
+            />
+          </div>
+          <div className="xl:col-span-5">
+            <OperationsMixCard
+              inspectedToday={inspectedTodayCount}
+              totalCaptains={totalCaptainsCount}
+              pendingToday={pendingTodayCount}
+              totalInspections={readiness.data?.stats.totalInspections ?? stats.data?.todayInspections ?? 0}
+              fleet={fleetAnalytics}
+              operations={operationsBreakdown}
+              isLoading={readiness.isLoading && fleetQuery.isLoading && contractsQuery.isLoading}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Upgraded Financial Pulse & Vehicle P&L */}
+      <FinanceSummary
+        purchasesTotal={purchasesQuery.data?.totals.totalAmount}
+        purchasesCount={purchasesQuery.data?.total}
+        invoicesCount={invoicesQuery.data?.total}
+        revision={refreshTick}
+      />
+
+      {/* Multi-View Live Operational Records Desk */}
+      <section
+        aria-labelledby="operational-feed-title"
+        className="theme-card overflow-hidden rounded-2xl border theme-border"
+      >
+        <header className="border-b theme-border p-4 sm:p-5 space-y-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 id="operational-feed-title" className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                {text("سجل العمليات والمتابعة اليومية", "Live operations & records desk")}
+              </h2>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                {text(
+                  "تصفح العقود والرحلات القادمة والفواتير وحالة الكباتن والأسطول مع إجراءات سريعة.",
+                  "Switch between recent contracts, upcoming trips, invoices, and captain/fleet readiness."
+                )}
+              </p>
             </div>
+
+            <Link
+              href={
+                activeTab === "invoices"
+                  ? "/admin/invoices"
+                  : activeTab === "readiness"
+                    ? "/admin/fleet"
+                    : "/admin/contracts"
+              }
+              className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg text-sm font-semibold text-[var(--accent-gold)] hover:underline"
+            >
+              <span>
+                {activeTab === "invoices"
+                  ? text("جميع الفواتير", "All invoices")
+                  : activeTab === "readiness"
+                    ? text("إدارة الأسطول", "Manage fleet")
+                    : text("جميع العقود", "All contracts")}
+              </span>
+              <Arrow className="w-4 h-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            {/* Accessible Segmented Filter Tabs */}
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x touch-pan-x touch-pan-y pb-1 md:pb-0"
+              role="group"
+              aria-label={text("أقسام المتابعة", "Workspace record views")}
+            >
+              {(
+                [
+                  {
+                    id: "contracts" as const,
+                    label: text("أحدث العقود", "Recent contracts"),
+                    count: allContracts.length,
+                  },
+                  {
+                    id: "upcoming" as const,
+                    label: text("الرحلات القادمة", "Today & upcoming"),
+                    count: todayAndUpcomingTrips.length,
+                  },
+                  {
+                    id: "invoices" as const,
+                    label: text("أحدث الفواتير", "Recent invoices"),
+                    count: invoicesQuery.data?.items.length ?? 0,
+                  },
+                  {
+                    id: "readiness" as const,
+                    label: text("الكباتن والأسطول", "Captains & fleet"),
+                    count: totalCaptainsCount + totalVehiclesCount,
+                  },
+                ]
+              ).map((tab) => {
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`min-h-11 px-3.5 rounded-lg border text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center gap-2 transition cursor-pointer ${
+                      isSelected
+                        ? "bg-[var(--accent-surface)] border-amber-500/40 text-amber-800 dark:text-amber-300"
+                        : "bg-[var(--bg-card-subtle)] theme-border text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className="font-mono text-xs tabular-nums opacity-85">
+                      <bdi>{tab.count}</bdi>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Instant Search */}
+            <div className="relative w-full md:w-72 shrink-0">
+              <Search
+                className="w-4 h-4 text-[var(--text-muted)] pointer-events-none absolute top-1/2 -translate-y-1/2 start-3"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={feedSearch}
+                onChange={(e) => setFeedSearch(e.target.value)}
+                placeholder={text("بحث سريع بالمرجع، العميل، اللوحة...", "Filter by ref, customer, plate...")}
+                aria-label={text("بحث سريع في السجل", "Quick filter dashboard records")}
+                className="w-full min-h-11 rounded-lg border theme-border bg-[var(--input-bg)] ps-9 pe-9 text-sm text-slate-900 dark:text-white placeholder:text-[var(--text-muted)] focus:border-amber-500 focus:outline-hidden"
+              />
+              {feedSearch && (
+                <button
+                  type="button"
+                  onClick={() => setFeedSearch("")}
+                  aria-label={text("مسح البحث", "Clear search")}
+                  className="absolute top-1/2 -translate-y-1/2 end-1.5 w-8 h-8 inline-flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {invoiceDownloadError && (
+          <p role="alert" className="mx-4 mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-xs font-semibold text-rose-700 dark:text-rose-300">
+            {invoiceDownloadError}
+          </p>
+        )}
+
+        {(activeTab === "contracts" || activeTab === "upcoming") && (
+          <>
+            {stats.isLoading && !allContracts.length ? (
+              <div className="space-y-3 p-5 sm:p-6" aria-busy="true">
+                {[0, 1, 2].map((row) => (
+                  <div key={row} className="h-14 animate-pulse rounded-lg theme-card-subtle" />
+                ))}
+              </div>
+            ) : (activeTab === "contracts" ? visibleRecentContracts : visibleUpcomingTrips).length === 0 ? (
+              <p className="p-8 text-center text-sm text-[var(--text-muted)]">
+                {qSearch
+                  ? text("لا توجد عقود مطابقة لعبارة البحث", "No matching contracts found")
+                  : activeTab === "upcoming"
+                    ? text("لا توجد رحلات مجدولة اليوم أو خلال الأيام القادمة", "No trips scheduled for today or upcoming dates")
+                    : text("لا توجد عقود مسجلة بعد", "No recorded contracts yet")}
+              </p>
+            ) : (
+              <>
+                <div className="md:hidden space-y-3 p-3.5">
+                  {(activeTab === "contracts"
+                    ? visibleRecentContracts
+                    : visibleUpcomingTrips
+                  ).map((contract) => (
+                    <MobileRecordCard
+                      key={contract.id}
+                      titleAs="h3"
+                      title={
+                        <>
+                          <Link
+                            href={`/admin/contracts/${contract.id}`}
+                            className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                          >
+                            <bdi>{contract.referenceNumber}</bdi>
+                          </Link>
+                          <Badge variant="outline" className="text-[11px] font-normal px-1.5 py-0">
+                            {operationLabels[contract.operationType] || contract.operationType}
+                          </Badge>
+                        </>
+                      }
+                      subtitle={
+                        <div className="space-y-1">
+                          <span className="block font-medium text-slate-900 dark:text-slate-100">
+                            {contract.customerName}
+                          </span>
+                          {(contract.origin || contract.destination) && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                              <MapPin className="w-3 h-3 shrink-0 text-emerald-500" aria-hidden="true" />
+                              <span className="break-words">
+                                {contract.origin} {language === "ar" ? "←" : "→"} {contract.destination}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      }
+                      badge={
+                        contract.status ? (
+                          <Badge
+                            variant={
+                              contract.status === "APPROVED" || contract.status === "ACTIVE"
+                                ? "success"
+                                : contract.status === "REJECTED" || contract.status === "CANCELLED"
+                                  ? "destructive"
+                                  : contract.status === "PENDING_REVIEW"
+                                    ? "warning"
+                                    : "secondary"
+                            }
+                            className="text-[11px]"
+                          >
+                            {contractStatusLabels[contract.status] || contract.status}
+                          </Badge>
+                        ) : undefined
+                      }
+                      footer={
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 min-h-11 gap-1.5 text-xs"
+                            aria-label={`${text("معاينة العقد", "Preview contract")} ${contract.referenceNumber}`}
+                            onClick={() =>
+                              setPreview({
+                                id: contract.id,
+                                referenceNumber: contract.referenceNumber,
+                              })
+                            }
+                          >
+                            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>{text("معاينة", "PDF")}</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="flex-1 min-h-11 gap-1.5 text-xs font-semibold"
+                          >
+                            <Link
+                              href={`/admin/contracts/${contract.id}`}
+                              aria-label={`${text("عرض العقد", "View contract")} ${contract.referenceNumber}`}
+                            >
+                              <span>{text("التفاصيل", "Details")}</span>
+                              <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="min-h-11 px-3 gap-1.5 text-xs"
+                          >
+                            <Link
+                              href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
+                              aria-label={`${text("إصدار فاتورة للعقد", "Create invoice for")} ${contract.referenceNumber}`}
+                              title={text("إصدار فاتورة من العقد", "Create invoice from contract")}
+                            >
+                              <FilePlus2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Link>
+                          </Button>
+                        </>
+                      }
+                    >
+                      <MobileCardMetaGrid>
+                        <MobileCardField
+                          label={text("الكابتن", "Captain")}
+                          value={contract.captainName}
+                        />
+                        <MobileCardField
+                          label={text("المركبة", "Vehicle")}
+                          mono
+                          value={<bdi>{contract.vehiclePlate}</bdi>}
+                        />
+                        <MobileCardField
+                          label={text("موعد الرحلة", "Trip schedule")}
+                          mono
+                          value={
+                            <bdi dir="ltr">
+                              {contract.tripDate.slice(0, 10)}
+                              {contract.tripTime ? ` · ${contract.tripTime}` : ""}
+                            </bdi>
+                          }
+                        />
+                        <MobileCardField
+                          label={text("الركاب", "Passengers")}
+                          mono
+                          value={`${contract.passengersCount} ${text("ركاب", "pax")}`}
+                        />
+                      </MobileCardMetaGrid>
+                    </MobileRecordCard>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto w-full">
+                  <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-start">
+                        {text("العقد والعملية", "Contract & type")}
+                      </TableHead>
+                      <TableHead className="text-start">
+                        {text("العميل والوجهة", "Customer & route")}
+                      </TableHead>
+                      <TableHead className="text-start">
+                        {text("الكابتن والمركبة", "Captain & vehicle")}
+                      </TableHead>
+                      <TableHead className="text-start">
+                        {text("الموعد والركاب", "Schedule & pax")}
+                      </TableHead>
+                      <TableHead className="text-end">
+                        {text("الإجراءات", "Actions")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(activeTab === "contracts"
+                      ? visibleRecentContracts
+                      : visibleUpcomingTrips
+                    ).map((contract) => (
+                      <TableRow key={contract.id} className="hover:bg-muted/40 transition-colors">
+                        <TableCell className="py-3.5 font-medium">
+                          <div className="flex flex-col gap-1 items-start">
+                            <Link
+                              href={`/admin/contracts/${contract.id}`}
+                              className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-[var(--accent-gold)] transition-colors"
+                            >
+                              <bdi>{contract.referenceNumber}</bdi>
+                            </Link>
+                            <div className="flex flex-wrap items-center gap-1">
+                              <Badge variant="outline" className="text-[11px] font-normal px-1.5 py-0">
+                                {operationLabels[contract.operationType] || contract.operationType}
+                              </Badge>
+                              {contract.status && (
+                                <Badge
+                                  variant={
+                                    contract.status === "APPROVED" || contract.status === "ACTIVE"
+                                      ? "success"
+                                      : contract.status === "REJECTED" || contract.status === "CANCELLED"
+                                        ? "destructive"
+                                        : contract.status === "PENDING_REVIEW"
+                                          ? "warning"
+                                          : "secondary"
+                                  }
+                                  className="text-[11px] px-1.5 py-0"
+                                >
+                                  {contractStatusLabels[contract.status] || contract.status}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <div className="space-y-0.5 max-w-[230px]">
+                            <span className="block text-xs sm:text-sm font-semibold text-slate-900 dark:text-white break-words">
+                              {contract.customerName}
+                            </span>
+                            {(contract.origin || contract.destination) && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                                <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" />
+                                <span className="truncate">
+                                  {contract.origin} {language === "ar" ? "←" : "→"} {contract.destination}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <div className="flex flex-col gap-1 text-xs">
+                            <span className="text-slate-900 dark:text-white font-medium">
+                              {contract.captainName}
+                            </span>
+                            <div>
+                              <Badge variant="secondary" className="font-mono text-[11px] px-1.5 py-0">
+                                <bdi>{contract.vehiclePlate}</bdi>
+                              </Badge>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <div className="flex flex-col gap-1 text-xs">
+                            <span className="font-mono font-medium text-slate-900 dark:text-white" dir="ltr">
+                              <bdi>
+                                {contract.tripDate.slice(0, 10)}
+                                {contract.tripTime ? ` · ${contract.tripTime}` : ""}
+                              </bdi>
+                            </span>
+                            <div>
+                              <Badge variant="secondary" className="font-mono text-[11px] gap-1 px-2 py-0">
+                                <Users className="w-3 h-3 text-[var(--text-muted)]" aria-hidden="true" />
+                                <span>{contract.passengersCount}</span>
+                                <span className="text-[10px] text-[var(--text-muted)] font-sans">
+                                  {text("ركاب", "pax")}
+                                </span>
+                              </Badge>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-end py-3.5">
+                          <div className="flex items-center justify-end gap-1.5 flex-nowrap">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs"
+                              aria-label={`${text("معاينة العقد", "Preview contract")} ${contract.referenceNumber}`}
+                              onClick={() =>
+                                setPreview({
+                                  id: contract.id,
+                                  referenceNumber: contract.referenceNumber,
+                                })
+                              }
+                            >
+                              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span className="hidden sm:inline">
+                                {text("معاينة PDF", "Preview PDF")}
+                              </span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs"
+                            >
+                              <Link
+                                href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
+                                aria-label={`${text("إصدار فاتورة للعقد", "Create invoice for")} ${contract.referenceNumber}`}
+                                title={text("إصدار فاتورة من العقد", "Create invoice from contract")}
+                              >
+                                <FilePlus2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span className="hidden lg:inline">{text("فاتورة", "Invoice")}</span>
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs font-semibold"
+                            >
+                              <Link
+                                href={`/admin/contracts/${contract.id}`}
+                                aria-label={`${text("عرض العقد", "View contract")} ${contract.referenceNumber}`}
+                              >
+                                <span>{text("التفاصيل", "Details")}</span>
+                                <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </>
         )}
-      </div>
 
-      {/* PDF Modal */}
-      {selectedContractId && (
-        <PdfPreviewModal
-          isOpen={isPdfOpen}
-          onClose={() => {
-            setIsPdfOpen(false);
-            setSelectedPdfUrl(null);
-          }}
-          contractId={selectedContractId}
-          referenceNumber={selectedRefNum}
-          pdfUrl={selectedPdfUrl}
-        />
-      )}
+        {activeTab === "invoices" && (
+          <>
+            {invoicesQuery.isLoading ? (
+              <div className="space-y-3 p-5 sm:p-6" aria-busy="true">
+                {[0, 1, 2].map((row) => (
+                  <div key={row} className="h-14 animate-pulse rounded-lg theme-card-subtle" />
+                ))}
+              </div>
+            ) : visibleInvoices.length === 0 ? (
+              <p className="p-8 text-center text-sm text-[var(--text-muted)]">
+                {text("لا توجد فواتير مطابقة للعرض", "No matching invoices found")}
+              </p>
+            ) : (
+              <>
+                <div className="md:hidden space-y-3 p-3.5">
+                  {visibleInvoices.map((inv) => (
+                    <MobileRecordCard
+                      key={inv.id}
+                      title={
+                        <Link
+                          href={`/admin/invoices/${inv.id}`}
+                          className="font-mono text-sm font-bold text-slate-900 dark:text-white hover:text-[var(--accent-gold)]"
+                        >
+                          <bdi>{inv.invoiceNumber}</bdi>
+                        </Link>
+                      }
+                      subtitle={
+                        <span>
+                          {inv.customerName} ·{" "}
+                          <span className="font-mono">
+                            <bdi>{dateLabel(inv.invoiceDate, language)}</bdi>
+                          </span>
+                        </span>
+                      }
+                      badge={
+                        <Badge variant={inv.documentType === "TAX" ? "gold" : "outline"} className="text-[11px]">
+                          {invoiceTitle(inv)}
+                        </Badge>
+                      }
+                      footer={
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={downloadingInvoiceId === inv.id}
+                            aria-label={`${text("تنزيل فاتورة PDF", "Download invoice PDF")} ${inv.invoiceNumber}`}
+                            onClick={() => void handleInvoicePdf(inv.id)}
+                            className="flex-1 min-h-11 gap-1.5 text-xs"
+                          >
+                            <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>{text("PDF", "PDF")}</span>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild className="flex-1 min-h-11 gap-1.5 text-xs">
+                            <Link
+                              href={`/admin/invoices/${inv.id}`}
+                              aria-label={`${text("عرض الفاتورة", "Open invoice")} ${inv.invoiceNumber}`}
+                            >
+                              <span>{text("عرض", "Open")}</span>
+                              <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Link>
+                          </Button>
+                        </>
+                      }
+                    >
+                      <MobileCardMetaGrid columns={3}>
+                        <MobileCardField
+                          label={text("الصافي", "Net")}
+                          value={<Money amount={inv.netAmount} size="xs" />}
+                        />
+                        <MobileCardField
+                          label={text("الضريبة", "VAT")}
+                          value={<Money amount={inv.vatAmount} size="xs" color="muted" />}
+                        />
+                        <MobileCardField
+                          label={text("الإجمالي", "Total")}
+                          value={<Money amount={inv.totalAmount} size="xs" color="emerald" />}
+                        />
+                      </MobileCardMetaGrid>
+                    </MobileRecordCard>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto w-full">
+                  <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-start">{text("رقم الفاتورة", "Invoice #")}</TableHead>
+                      <TableHead className="text-start">{text("النوع", "Type")}</TableHead>
+                      <TableHead className="text-start">{text("العميل", "Customer")}</TableHead>
+                      <TableHead className="text-start">{text("التاريخ", "Date")}</TableHead>
+                      <TableHead className="text-start">{text("الصافي والضريبة", "Net & VAT")}</TableHead>
+                      <TableHead className="text-start">{text("الإجمالي", "Total")}</TableHead>
+                      <TableHead className="text-end">{text("الإجراءات", "Actions")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {visibleInvoices.map((inv) => (
+                      <TableRow key={inv.id} className="hover:bg-muted/40 transition-colors">
+                        <TableCell className="py-3.5 font-mono text-xs sm:text-sm font-bold">
+                          <Link
+                            href={`/admin/invoices/${inv.id}`}
+                            className="text-slate-900 dark:text-white hover:text-[var(--accent-gold)]"
+                          >
+                            <bdi>{inv.invoiceNumber}</bdi>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <Badge variant={inv.documentType === "TAX" ? "gold" : "outline"} className="text-[11px]">
+                            {invoiceTitle(inv)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white">
+                          {inv.customerName}
+                        </TableCell>
+                        <TableCell className="py-3.5 text-xs text-[var(--text-muted)] font-mono">
+                          <bdi>{dateLabel(inv.invoiceDate, language)}</bdi>
+                        </TableCell>
+                        <TableCell className="py-3.5 text-xs">
+                          <div className="flex flex-col gap-0.5">
+                            <Money amount={inv.netAmount} size="xs" />
+                            <span className="text-[11px] text-[var(--text-muted)]">
+                              {text("ضريبة", "VAT")}: <Money amount={inv.vatAmount} size="xs" color="muted" />
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <Money amount={inv.totalAmount} size="sm" color="emerald" />
+                        </TableCell>
+                        <TableCell className="py-3.5 text-end">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={downloadingInvoiceId === inv.id}
+                              aria-label={`${text("تنزيل فاتورة PDF", "Download invoice PDF")} ${inv.invoiceNumber}`}
+                              onClick={() => void handleInvoicePdf(inv.id)}
+                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs"
+                            >
+                              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>{text("PDF", "PDF")}</span>
+                            </Button>
+                            <Button variant="outline" size="sm" asChild className="min-h-11 lg:min-h-9 gap-1.5 text-xs">
+                              <Link
+                                href={`/admin/invoices/${inv.id}`}
+                                aria-label={`${text("عرض الفاتورة", "Open invoice")} ${inv.invoiceNumber}`}
+                              >
+                                <span>{text("عرض", "Open")}</span>
+                                <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {activeTab === "readiness" && (
+          <div className="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Captains Today Table */}
+            <div className="space-y-3 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {text("حالة فحص الكباتن اليوم", "Captain readiness today")}
+                </h3>
+                <Link
+                  href="/admin/inspections"
+                  className="inline-flex items-center min-h-11 sm:min-h-0 px-1 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline"
+                >
+                  {text("فتح شاشة الفحوصات", "Open inspections")}
+                </Link>
+              </div>
+              <div className="md:hidden space-y-2.5">
+                {visibleCaptains.length === 0 ? (
+                  <p className="rounded-xl border theme-border p-5 text-center text-xs text-[var(--text-muted)]">
+                    {text("لا يوجد كباتن مطابقون", "No matching captains")}
+                  </p>
+                ) : (
+                  visibleCaptains.slice(0, 8).map((cap) => (
+                    <MobileRecordCard
+                      key={cap.id}
+                      title={cap.name}
+                      subtitle={
+                        cap.assignedVehiclePlate ? (
+                          <Badge variant="secondary" className="font-mono text-[11px] mt-0.5">
+                            <bdi>{cap.assignedVehiclePlate}</bdi>
+                          </Badge>
+                        ) : (
+                          <span>{text("بدون مركبة معينة", "No assigned vehicle")}</span>
+                        )
+                      }
+                      badge={
+                        <Badge variant={cap.hasTodayInspection ? "success" : "warning"}>
+                          {cap.hasTodayInspection
+                            ? text("مكتمل", "Inspected")
+                            : text("بانتظار الفحص", "Pending")}
+                        </Badge>
+                      }
+                    />
+                  ))
+                )}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto rounded-xl border theme-border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-start">{text("الكابتن", "Captain")}</TableHead>
+                      <TableHead className="text-start">{text("المركبة", "Vehicle")}</TableHead>
+                      <TableHead className="text-end">{text("الفحص اليومي", "Daily check")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {visibleCaptains.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-xs text-[var(--text-muted)] py-6">
+                          {text("لا يوجد كباتن مطابقون", "No matching captains")}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      visibleCaptains.slice(0, 8).map((cap) => (
+                        <TableRow key={cap.id}>
+                          <TableCell className="py-2.5 text-xs font-semibold text-slate-900 dark:text-white">
+                            {cap.name}
+                          </TableCell>
+                          <TableCell className="py-2.5">
+                            {cap.assignedVehiclePlate ? (
+                              <Badge variant="secondary" className="font-mono text-[11px]">
+                                <bdi>{cap.assignedVehiclePlate}</bdi>
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-[var(--text-muted)]">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-2.5 text-end">
+                            <Badge variant={cap.hasTodayInspection ? "success" : "warning"}>
+                              {cap.hasTodayInspection
+                                ? text("مكتمل", "Inspected")
+                                : text("بانتظار الفحص", "Pending")}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            {/* Fleet Status & Expiry Table */}
+            <div className="space-y-3 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {text("حالة الأسطول والوثائق", "Fleet status & expiries")}
+                </h3>
+                <Link
+                  href="/admin/fleet"
+                  className="inline-flex items-center min-h-11 sm:min-h-0 px-1 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline"
+                >
+                  {text("إدارة المركبات", "Open fleet")}
+                </Link>
+              </div>
+
+              <div className="md:hidden space-y-2.5">
+                {visibleVehicles.length === 0 ? (
+                  <p className="rounded-xl border theme-border p-5 text-center text-xs text-[var(--text-muted)]">
+                    {text("لا توجد مركبات مطابقة", "No matching vehicles")}
+                  </p>
+                ) : (
+                  visibleVehicles.slice(0, 8).map((veh) => {
+                    const regDays = diffCalendarDays(veh.registrationExpiry, todayIso);
+                    const insDays = diffCalendarDays(veh.insuranceExpiry, todayIso);
+                    const minDays =
+                      regDays !== null && insDays !== null
+                        ? Math.min(regDays, insDays)
+                        : (regDays ?? insDays);
+
+                    return (
+                      <MobileRecordCard
+                        key={veh.id}
+                        title={
+                          <span className="font-mono">
+                            <bdi>{veh.plateNumberAr || veh.plateNumberEn}</bdi>
+                          </span>
+                        }
+                        subtitle={`${veh.make} ${veh.model} (${veh.capacity})`}
+                        badge={<StatusBadge type="vehicle" status={veh.status} />}
+                      >
+                        <div className="flex items-center justify-between text-xs pt-0.5">
+                          <span className="text-[var(--text-muted)]">
+                            {text("الاستمارة / التأمين", "Reg. / Insurance")}
+                          </span>
+                          {minDays !== null && minDays <= 30 ? (
+                            <Badge variant={minDays < 0 ? "destructive" : "warning"} className="font-mono text-[11px]">
+                              {minDays < 0
+                                ? text("منتهٍ", "Expired")
+                                : text(`خلال ${minDays}ي`, `${minDays}d left`)}
+                            </Badge>
+                          ) : (
+                            <Badge variant="success" className="text-[11px]">
+                              {text("ساري", "Valid")}
+                            </Badge>
+                          )}
+                        </div>
+                      </MobileRecordCard>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto rounded-xl border theme-border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-start">{text("المركبة", "Vehicle")}</TableHead>
+                      <TableHead className="text-start">{text("الحالة", "Status")}</TableHead>
+                      <TableHead className="text-end">{text("الاستمارة / التأمين", "Reg. / Insurance")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {visibleVehicles.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-xs text-[var(--text-muted)] py-6">
+                          {text("لا توجد مركبات مطابقة", "No matching vehicles")}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      visibleVehicles.slice(0, 8).map((veh) => {
+                        const regDays = diffCalendarDays(veh.registrationExpiry, todayIso);
+                        const insDays = diffCalendarDays(veh.insuranceExpiry, todayIso);
+                        const minDays =
+                          regDays !== null && insDays !== null
+                            ? Math.min(regDays, insDays)
+                            : (regDays ?? insDays);
+
+                        return (
+                          <TableRow key={veh.id}>
+                            <TableCell className="py-2.5">
+                              <div className="text-xs">
+                                <span className="font-mono font-bold text-slate-900 dark:text-white block">
+                                  <bdi>{veh.plateNumberAr || veh.plateNumberEn}</bdi>
+                                </span>
+                                <span className="text-[11px] text-[var(--text-muted)]">
+                                  {veh.make} {veh.model} ({veh.capacity})
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-2.5">
+                              <StatusBadge type="vehicle" status={veh.status} />
+                            </TableCell>
+                            <TableCell className="py-2.5 text-end">
+                              {minDays !== null && minDays <= 30 ? (
+                                <Badge variant={minDays < 0 ? "destructive" : "warning"} className="font-mono text-[11px]">
+                                  {minDays < 0
+                                    ? text("منتهٍ", "Expired")
+                                    : text(`خلال ${minDays}ي`, `${minDays}d left`)}
+                                </Badge>
+                              ) : (
+                                <Badge variant="success" className="text-[11px]">
+                                  {text("ساري", "Valid")}
+                                </Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <PdfPreviewModal
+        isOpen={Boolean(preview)}
+        onClose={() => setPreview(null)}
+        contractId={preview?.id}
+        referenceNumber={preview?.referenceNumber}
+      />
     </div>
   );
 }

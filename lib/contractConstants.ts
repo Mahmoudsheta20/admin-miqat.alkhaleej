@@ -240,4 +240,3 @@ export function formatOfficialDate(val?: string | Date | null): string {
     year: "numeric",
   }).format(d);
 }
-

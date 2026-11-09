@@ -1,40 +1,37 @@
 "use client";
+import { useApiQuery } from "@/lib/use-api-query";
+import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ReceiptText,
-  Plus,
-  Building2,
-  FileSpreadsheet,
-  Download,
-  Eye,
-  Copy,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  AlertCircle,
-  Loader2,
-  Calendar,
-  CreditCard,
-  TrendingUp,
-  FileMinus,
-  FilePlus,
-  ShieldCheck,
-} from "lucide-react";
-import {
-  invoiceTitle,
-  dateLabel,
-  downloadInvoice,
-  invoiceRequest,
-  type InvoiceRow,
-} from "@/lib/invoices";
+import { ReceiptText, Plus, Building2, FileSpreadsheet, Download, Eye, Copy, Check, ChevronRight, ChevronLeft, AlertCircle, Loader2, CreditCard, TrendingUp, FileMinus, FilePlus, ShieldCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { invoiceTitle, dateLabel, downloadInvoice, type InvoiceRow } from "@/lib/invoices";
 import InvoiceVisibilityAction from "./invoice-visibility-action";
 import RecordPaymentModal from "./record-payment-modal";
 import { useLanguage } from "@/lib/languageContext";
-import { PageHeader, StatCard, StatRow, FilterBar, Money } from "@/app/_components/ui";
+import {
+  PageHeader,
+  StatCard,
+  StatRow,
+  FilterBar,
+  Money,
+  Badge,
+  Button,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/app/_components/ui";
+import {
+  MobileCardField,
+  MobileCardMetaGrid,
+  MobileRecordCard,
+} from "@/app/_components/mobile";
 
 interface InvoiceList {
   items: InvoiceRow[];
@@ -42,31 +39,23 @@ interface InvoiceList {
   page: number;
 }
 
-function formatMoney(value: string): string {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return value;
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+function formatDecimalCommas(value: string): string {
+  const [whole, decimals] = value.split(".");
+  return decimals === undefined ? value : `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${decimals}`;
 }
 
 export default function InvoicesPage() {
   const ui = useUiText();
 
   const { t, dir, isRTL } = useLanguage();
-  const [data, setData] = useState<InvoiceList | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
-  const [isArchived,setIsArchived]=useState(false);
+  const [page, setPage] = useUrlState<number>("page", 1);
+  const [isArchived,setIsArchived]=useUrlState<boolean>("archived", false);
 
   // Client-side instant filters
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<
+  const [search, setSearch] = useUrlState<string>("q", "");
+  const [typeFilter, setTypeFilter] = useUrlState<
     "ALL" | "BOOKING" | "PROFORMA" | "TAX" | "NOTES"
-  >("ALL");
+  >("type", "ALL", ["ALL","BOOKING","PROFORMA","TAX","NOTES"]);
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [seedMessage, setSeedMessage] = useState("");
@@ -75,34 +64,11 @@ export default function InvoicesPage() {
   const [paymentModalInvoice, setPaymentModalInvoice] =
     useState<InvoiceRow | null>(null);
 
-  const load = useCallback(
-    async (showRefresh = false) => {
-      if (showRefresh) setIsRefreshing(true);
-      else setIsLoading(true);
-      try {
-        const result = await invoiceRequest<InvoiceList>(`?page=${page}&archived=${isArchived}`);
-        setError(result.error || "");
-        if (result.data) setData(result.data);
-      } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
-      }
-    },
-    [page, isArchived],
-  );
-
-  useEffect(() => {
-    let active = true;
-    void invoiceRequest<InvoiceList>(`?page=${page}&archived=${isArchived}`).then((result) => {
-      if (!active) return;
-      setError(result.error || "");
-      if (result.data) setData(result.data);
-      setIsLoading(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, [page, isArchived]);
+  const [actionError, setError] = useState("");
+  const { data, error: queryError, isLoading, refetch } = useApiQuery<InvoiceList>(`/invoices?page=${page}&archived=${isArchived}`);
+  const error = actionError || queryError;
+  const isRefreshing = isLoading;
+  const load = (showRefresh = false) => { if (showRefresh) setError(""); refetch(); };
 
   const items = useMemo(() => data?.items ?? [], [data]);
 
@@ -333,13 +299,13 @@ export default function InvoicesPage() {
           className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-300 flex items-center justify-between gap-3 text-xs sm:text-sm font-bold"
         >
           <div className="flex items-center gap-2.5">
-            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+            <AlertCircle className="w-5 h-5 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
             <span>{ui(error)}</span>
           </div>
           <button
             type="button"
             onClick={() => void load(true)}
-            className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition shrink-0 cursor-pointer"
+            className="min-h-11 sm:min-h-9 px-3.5 py-2 rounded-xl bg-rose-700 text-white text-xs font-bold hover:bg-rose-800 transition shrink-0 cursor-pointer"
           >
             {ui(t("common.retry"))}
           </button>
@@ -379,9 +345,9 @@ export default function InvoicesPage() {
         />
         <StatCard
           label={ui(t("invoice.netSales"))}
-          value={formatMoney(stats.pageGrossSum)}
+          value={formatDecimalCommas(stats.pageGrossSum)}
           unit={t("common.sar")}
-          subtext={`${t("invoice.salesTax")}: ${formatMoney(stats.pageVatSum)} ${t("common.sar")}`}
+          subtext={`${t("invoice.salesTax")}: ${formatDecimalCommas(stats.pageVatSum)} ${t("common.sar")}`}
           icon={TrendingUp}
           variant="amber"
           isLoading={isLoading && !data}
@@ -403,17 +369,38 @@ export default function InvoicesPage() {
         onTabChange={(tabId) => setTypeFilter(tabId as typeof typeFilter)}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3"><label className="inline-flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={isArchived} onChange={event=>{setIsArchived(event.target.checked);setPage(1);}}/>{ui(isRTL?"عرض الفواتير المحذوفة":"Show removed invoices")}</label><p className="text-xs text-[var(--text-muted)]">{ui(isRTL?"البحث والتصفية والإجماليات تخص الصفحة الحالية.":"Search, filters and sales totals apply to the current page.")}</p></div>
-      {isArchived&&<p className="rounded-xl border border-amber-300 bg-amber-500/5 p-4 text-sm">{ui(isRTL?"هذه الفواتير مخفية من القائمة فقط. مستنداتها ودفعاتها وحساب الضريبة محفوظة.":"These invoices are hidden from the list only. Their documents, payments and VAT records are retained.")}</p>}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="inline-flex min-h-11 items-center gap-2.5 text-sm font-bold cursor-pointer">
+          <Checkbox
+            checked={isArchived}
+            onChange={(event) => {
+              setIsArchived(event.target.checked);
+              setPage(1);
+            }}
+          />
+          <span>{isRTL ? "عرض الفواتير المحذوفة" : "Show removed invoices"}</span>
+        </label>
+        <p className="text-xs text-[var(--text-muted)]">
+          {isRTL
+            ? "البحث والتصفية والإجماليات تخص الصفحة الحالية."
+            : "Search, filters and sales totals apply to the current page."}
+        </p>
+      </div>
+      {isArchived && (
+        <p className="rounded-xl border border-amber-300 bg-amber-500/5 p-4 text-sm">
+          {isRTL
+            ? "هذه الفواتير مخفية من القائمة فقط. مستنداتها ودفعاتها وحساب الضريبة محفوظة."
+            : "These invoices are hidden from the list only. Their documents, payments and VAT records are retained."}
+        </p>
+      )}
       {/* Invoices List Container */}
       <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
         <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
           <span className="font-bold text-slate-700 dark:text-slate-300">
-            {ui(t("invoice.title"))} ({ui(filteredItems.length)} {ui(t("common.of"))}{ui(" ")}
-            {ui(data?.total || 0)})
+            {ui(t("invoice.title"))} ({filteredItems.length} {ui(t("common.of"))} {data?.total || 0})
           </span>
-          <span className="text-slate-400 font-mono">
-            {ui(t("common.page"))} {ui(page)} {ui(t("common.of"))} {ui(totalPages)}
+          <span className="text-[var(--text-muted)] font-mono">
+            {ui(t("common.page"))} {page} {ui(t("common.of"))} {totalPages}
           </span>
         </div>
 
@@ -423,21 +410,21 @@ export default function InvoicesPage() {
             className="p-12 flex flex-col items-center justify-center gap-3"
           >
             <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+            <p className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
               {ui(t("common.loading"))}
             </p>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-14 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center mx-auto">
               <ReceiptText className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
               {ui(items.length === 0
                 ? "لا توجد فواتير حتى الآن."
                 : "لا توجد فواتير مطابقة للبحث")}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 max-w-sm mx-auto">
               {ui(items.length === 0
                 ? "ابدأ بإنشاء فاتورة جديدة أو فاتورة مبدئية وسيتم حفظها مع رمز الفاتورة الضريبية ZATCA QR ونسخة PDF للعميل."
                 : "جرب تعديل كلمات البحث أو تغيير تصفية نوع الفاتورة.")}
@@ -457,7 +444,7 @@ export default function InvoicesPage() {
                   setSearch("");
                   setTypeFilter("ALL");
                 }}
-                className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition"
+                className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition"
               >
                 {ui(t("common.cancel"))}
               </button>
@@ -465,30 +452,28 @@ export default function InvoicesPage() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table
-                className={`w-full ${"text-start"} text-xs border-collapse`}
-              >
-                <thead>
-                  <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">
-                    <th className="py-3.5 px-4">{ui(t("invoice.number"))}</th>
-                    <th className="py-3.5 px-4">
+            {/* Desktop Table (shadcn Table) */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-[var(--text-muted)] dark:text-slate-400 font-bold whitespace-nowrap">
+                    <TableHead className="py-3.5 px-4">{ui(t("invoice.number"))}</TableHead>
+                    <TableHead className="py-3.5 px-4">
                       {ui(t("invoice.typeAndStatus"))}
-                    </th>
-                    <th className="py-3.5 px-4">{ui(t("invoice.customer"))}</th>
-                    <th className="py-3.5 px-4">{ui(t("invoice.subtotal"))}</th>
-                    <th className="py-3.5 px-4">{ui(t("invoice.vat"))}</th>
-                    <th className="py-3.5 px-4">{ui(t("invoice.total"))}</th>
-                    <th className="py-3.5 px-4">{ui(t("invoice.date"))}</th>
-                    <th
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4">{ui(t("invoice.customer"))}</TableHead>
+                    <TableHead className="py-3.5 px-4">{ui(t("invoice.subtotal"))}</TableHead>
+                    <TableHead className="py-3.5 px-4">{ui(t("invoice.vat"))}</TableHead>
+                    <TableHead className="py-3.5 px-4">{ui(t("invoice.total"))}</TableHead>
+                    <TableHead className="py-3.5 px-4">{ui(t("invoice.date"))}</TableHead>
+                    <TableHead
                       className={`py-3.5 px-4 ${"text-end"}`}
                     >
                       {ui(t("common.actions"))}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y theme-border">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y theme-border">
                   {filteredItems.map((row) => {
                     const docType = row.documentType || "BOOKING";
                     const isProforma = docType === "PROFORMA";
@@ -497,39 +482,41 @@ export default function InvoicesPage() {
                     const isDownloadingThis = downloadingId === row.id;
 
                     return (
-                      <tr
+                      <TableRow
                         key={row.id}
                         className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition duration-150"
                       >
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
-                              className="text-amber-700 dark:text-amber-400 font-black font-mono text-sm hover:underline"
+                              className="text-amber-700 dark:text-amber-400 font-semibold font-mono text-sm hover:underline"
+                              dir="ltr"
                             >
-                              {ui(row.invoiceNumber)}
+                              {row.invoiceNumber}
                             </Link>
                             <button
                               type="button"
                               onClick={() =>
                                 handleCopyNumber(row.invoiceNumber)
                               }
-                              className="p-1 rounded-md text-slate-400 hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
+                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
+                              aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                               title={ui("نسخ رقم الفاتورة")}
                             >
                               {copiedNumber === row.invoiceNumber ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                <Check className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
                               ) : (
-                                <Copy className="w-3.5 h-3.5" />
+                                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                               )}
                             </button>
                           </div>
-                        </td>
+                        </TableCell>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1 items-start">
                             <span
-                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                                 isCredit
                                   ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
                                   : isDebit
@@ -541,28 +528,28 @@ export default function InvoicesPage() {
                             >
                               {isCredit ? (
                                 <>
-                                  <FileMinus className="w-3 h-3" />
+                                  <FileMinus className="w-3 h-3" aria-hidden="true" />
                                   <span>{ui("إشعار دائن (خفض)")}</span>
                                 </>
                               ) : isDebit ? (
                                 <>
-                                  <FilePlus className="w-3 h-3" />
+                                  <FilePlus className="w-3 h-3" aria-hidden="true" />
                                   <span>{ui("إشعار مدين (إضافة)")}</span>
                                 </>
                               ) : (
                                 ui(invoiceTitle(row))
                               )}
                             </span>
-                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
-                              <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                            <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                              <ShieldCheck className="w-3 h-3 text-emerald-500" aria-hidden="true" />
                               <span>{ui("محفوظة في النظام")}</span>
                             </span>
                           </div>
-                        </td>
+                        </TableCell>
 
-                        <td className="py-3.5 px-4">
+                        <TableCell className="py-3.5 px-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 border theme-border text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">
+                            <div className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 border theme-border text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0" aria-hidden="true">
                               {row.customerName
                                 ? row.customerName.trim().charAt(0)
                                 : "ع"}
@@ -571,30 +558,31 @@ export default function InvoicesPage() {
                               {row.customerName}
                             </span>
                           </div>
-                        </td>
+                        </TableCell>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
                           <Money amount={row.netAmount} color="muted" size="xs" />
-                        </td>
+                        </TableCell>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
                           <Money amount={row.vatAmount} color="muted" size="xs" />
-                        </td>
+                        </TableCell>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap">
                           <Money
-                            amount={isCredit ? -Math.abs(Number(row.totalAmount)) : row.totalAmount}
+                            amount={row.totalAmount}
+                            negative={isCredit}
                             color={isCredit ? "rose" : "default"}
                             size="sm"
                           />
-                        </td>
+                        </TableCell>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                          {ui(dateLabel(row.invoiceDate, ui.language))}
-                        </td>
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap text-[var(--text-muted)] dark:text-slate-400 font-mono text-xs" dir="ltr">
+                          {dateLabel(row.invoiceDate, ui.language)}
+                        </TableCell>
 
-                        <td
-                          className={`py-3.5 px-4 whitespace-nowrap ${"text-end"}`}
+                        <TableCell
+                          className="py-3.5 px-4 whitespace-nowrap text-end"
                         >
                           <div className="inline-flex items-center gap-1.5">
                             <Link
@@ -602,7 +590,7 @@ export default function InvoicesPage() {
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition"
                               title={ui(t("common.view"))}
                             >
-                              <Eye className="w-3.5 h-3.5 text-amber-500" />
+                              <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
                               <span>{ui(t("common.view"))}</span>
                             </Link>
 
@@ -614,9 +602,9 @@ export default function InvoicesPage() {
                               title={ui(t("common.downloadPdf"))}
                             >
                               {isDownloadingThis ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
                               ) : (
-                                <Download className="w-3.5 h-3.5" />
+                                <Download className="w-3.5 h-3.5" aria-hidden="true" />
                               )}
                               <span>PDF</span>
                             </button>
@@ -628,22 +616,22 @@ export default function InvoicesPage() {
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 font-bold transition cursor-pointer"
                                 title={ui(t("invoice.recordPayment"))}
                               >
-                                <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
+                                <CreditCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                                 <span>{ui(t("invoice.recordPayment"))}</span>
                               </button>
                             )}
                             <InvoiceVisibilityAction id={row.id} number={row.invoiceNumber} isArchived={isArchived} onChanged={()=>{if(filteredItems.length===1&&page>1)setPage(v=>v-1);else void load(true);}}/>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             {/* Mobile Cards */}
-            <div className="md:hidden divide-y theme-border">
+            <div className="md:hidden p-3.5 space-y-3">
               {filteredItems.map((row) => {
                 const docType = row.documentType || "BOOKING";
                 const isProforma = docType === "PROFORMA";
@@ -652,116 +640,128 @@ export default function InvoicesPage() {
                 const isDownloadingThis = downloadingId === row.id;
 
                 return (
-                  <div key={row.id} className="p-4 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
+                  <MobileRecordCard
+                    key={row.id}
+                    title={
                       <div className="flex items-center gap-1.5">
                         <Link
                           href={`/admin/invoices/${row.id}`}
-                          className="font-mono font-black text-sm text-amber-700 dark:text-amber-400"
+                          className="font-mono font-semibold text-sm text-amber-700 dark:text-amber-400 hover:underline"
                         >
-                          {ui(row.invoiceNumber)}
+                          <bdi dir="ltr">{row.invoiceNumber}</bdi>
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleCopyNumber(row.invoiceNumber)}
-                          className="p-1 rounded-md text-slate-400 hover:text-amber-600"
-                          aria-label={ui("نسخ رقم الفاتورة")}
+                          className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg text-[var(--text-muted)] hover:text-amber-600 cursor-pointer"
+                          aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                         >
                           {copiedNumber === row.invoiceNumber ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <Check className="w-4 h-4 text-emerald-500" aria-hidden="true" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy className="w-4 h-4" aria-hidden="true" />
                           )}
                         </button>
                       </div>
-
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                    }
+                    subtitle={row.customerName}
+                    badge={
+                      <Badge
+                        variant={
                           isCredit
-                            ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                            ? "destructive"
                             : isDebit
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                              ? "warning"
                               : isProforma
-                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
-                                : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                        }`}
+                                ? "outline"
+                                : "success"
+                        }
+                        className="text-[11px]"
                       >
-                        {ui(isCredit
-                          ? "إشعار دائن"
-                          : isDebit
-                            ? "إشعار مدين"
-                            : ui(invoiceTitle(row)))}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <span className="text-[11px] text-slate-400 block">
-                          {ui(t("invoice.customer"))}:
-                        </span>
-                        <strong className="text-xs font-bold text-slate-900 dark:text-white">
-                          {row.customerName}
-                        </strong>
-                      </div>
-                      <div className="text-end">
-                        <span className="text-[11px] text-slate-400 block">
-                          {ui(t("invoice.total"))}:
-                        </span>
-                        <Money
-                          amount={isCredit ? -Math.abs(Number(row.totalAmount)) : row.totalAmount}
-                          color={isCredit ? "rose" : "default"}
-                          size="sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-[11px] text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1 font-mono">
-                        <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                        {ui(dateLabel(row.invoiceDate, ui.language))}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span>{ui(t("invoice.vat"))}:</span>
-                        <Money amount={row.vatAmount} size="xs" color="muted" />
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <Link
-                        href={`/admin/invoices/${row.id}`}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-card text-xs font-bold text-slate-700 dark:text-slate-200"
-                      >
-                        <Eye className="w-4 h-4 text-amber-500" />
-                        <span>{ui(t("common.view"))}</span>
-                      </Link>
-
-                      <button
-                        type="button"
-                        disabled={isDownloadingThis}
-                        onClick={() => void handleDownloadPdf(row)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold disabled:opacity-50"
-                      >
-                        {isDownloadingThis ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Download className="w-4 h-4" />
+                        {ui(
+                          isCredit
+                            ? "إشعار دائن"
+                            : isDebit
+                              ? "إشعار مدين"
+                              : invoiceTitle(row)
                         )}
-                        <span>PDF</span>
-                      </button>
+                      </Badge>
+                    }
+                    footer={
+                      <>
+                        <Button variant="outline" size="sm" asChild className="flex-1 min-h-11 gap-1.5 text-xs font-bold">
+                          <Link href={`/admin/invoices/${row.id}`}>
+                            <Eye className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                            <span>{ui(t("common.view"))}</span>
+                          </Link>
+                        </Button>
 
-                      {!isArchived && !isProforma && !isCredit && (
-                        <button
+                        <Button
                           type="button"
-                          onClick={() => setPaymentModalInvoice(row)}
-                          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 text-xs font-bold cursor-pointer"
+                          variant="outline"
+                          size="sm"
+                          disabled={isDownloadingThis}
+                          onClick={() => void handleDownloadPdf(row)}
+                          className="flex-1 min-h-11 gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold"
                         >
-                          <CreditCard className="w-4 h-4 text-emerald-500" />
-                          <span>{ui(t("invoice.recordPayment"))}</span>
-                        </button>
-                      )}
-                      <InvoiceVisibilityAction id={row.id} number={row.invoiceNumber} isArchived={isArchived} onChanged={()=>{if(filteredItems.length===1&&page>1)setPage(v=>v-1);else void load(true);}}/>
-                    </div>
-                  </div>
+                          {isDownloadingThis ? (
+                            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Download className="w-4 h-4" aria-hidden="true" />
+                          )}
+                          <span>PDF</span>
+                        </Button>
+
+                        {!isArchived && !isProforma && !isCredit && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPaymentModalInvoice(row)}
+                            className="w-full min-h-11 gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold"
+                          >
+                            <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                            <span>{ui(t("invoice.recordPayment"))}</span>
+                          </Button>
+                        )}
+
+                        <div className="w-full flex justify-end">
+                          <InvoiceVisibilityAction
+                            id={row.id}
+                            number={row.invoiceNumber}
+                            isArchived={isArchived}
+                            onChanged={() => {
+                              if (filteredItems.length === 1 && page > 1) setPage((v) => v - 1);
+                              else void load(true);
+                            }}
+                          />
+                        </div>
+                      </>
+                    }
+                  >
+                    <MobileCardMetaGrid columns={3}>
+                      <MobileCardField
+                        label={ui("التاريخ")}
+                        mono
+                        value={<bdi dir="ltr">{dateLabel(row.invoiceDate, ui.language)}</bdi>}
+                      />
+                      <MobileCardField
+                        label={ui(t("invoice.vat"))}
+                        value={<Money amount={row.vatAmount} size="xs" color="muted" />}
+                      />
+                      <MobileCardField
+                        label={ui(t("invoice.total"))}
+                        value={
+                          <Money
+                            amount={row.totalAmount}
+                            negative={isCredit}
+                            color={isCredit ? "rose" : "default"}
+                            size="sm"
+                          />
+                        }
+                      />
+                    </MobileCardMetaGrid>
+                  </MobileRecordCard>
                 );
               })}
             </div>
@@ -774,32 +774,32 @@ export default function InvoicesPage() {
             type="button"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
             {isRTL ? (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
             )}
             <span>{ui(t("common.back"))}</span>
           </button>
 
-          <span className="font-bold text-slate-600 dark:text-slate-300">
-            {ui(t("common.page"))} <span className="font-mono">{ui(page)}</span>{ui(" ")}
-            {ui(t("common.of"))} <span className="font-mono">{ui(totalPages)}</span>
+          <span className="font-bold text-[var(--text-muted)] dark:text-slate-300">
+            {ui(t("common.page"))} <span className="font-mono">{page}</span>{" "}
+            {ui(t("common.of"))} <span className="font-mono">{totalPages}</span>
           </span>
 
           <button
             type="button"
             disabled={!data || page * 30 >= data.total}
             onClick={() => setPage(page + 1)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
           >
             <span>{ui(t("common.next"))}</span>
             {isRTL ? (
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
         </div>

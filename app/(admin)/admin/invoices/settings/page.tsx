@@ -4,16 +4,8 @@ import { useUiText } from "@/lib/ui-text";
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import {
-  AlertCircle,
-  ArrowRight,
-  Building2,
-  CheckCircle2,
-  Loader2,
-  MapPin,
-  Plus,
-  Save,
-} from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, Loader2, MapPin, Plus, Save } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import InvoiceBankFields, { EMPTY_BANK } from "@/app/_components/InvoiceBankFields";
 import { invoiceRequest, type InvoiceSettings } from "@/lib/invoices";
 
@@ -145,29 +137,29 @@ export default function InvoiceSettingsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/invoices"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 transition"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-amber-700 dark:hover:text-amber-400 transition"
         >
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-4 h-4 ltr:rotate-180" aria-hidden="true" />
           <span>{ui("العودة للفواتير")}</span>
         </Link>
 
         <Link
           href="/admin/invoices/new"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{ui("إنشاء فاتورة")}</span>
         </Link>
       </div>
 
       <header className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-          <Building2 className="w-5 h-5" />
+        <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+          <Building2 className="w-5 h-5" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
             {ui("بيانات الشركة والحساب البنكي")}</h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400">
             {ui("تُدرج هذه البيانات تلقائياً في ترويسة الفواتير الرسمية والفواتير المبدئية الجديدة")}</p>
         </div>
       </header>
@@ -178,11 +170,11 @@ export default function InvoiceSettingsPage() {
           className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-bold flex items-center justify-between gap-3"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>{ui(error)}</span>
           </div>
           <button
-            className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-xl bg-rose-700 text-white text-xs font-bold hover:bg-rose-800 transition cursor-pointer"
             type="button"
             onClick={() => {
               setIsLoading(true);
@@ -198,7 +190,7 @@ export default function InvoiceSettingsPage() {
           role="status"
           className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
         >
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" />
           <span>{ui(message)}</span>
         </div>
       )}
@@ -206,7 +198,7 @@ export default function InvoiceSettingsPage() {
       {isLoading ? (
         <div role="status" className="theme-card rounded-2xl p-12 flex flex-col items-center justify-center gap-3">
           <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-500">{ui("جارٍ التحميل…")}</p>
+          <p className="text-xs font-bold text-[var(--text-muted)]">{ui("جارٍ التحميل…")}</p>
         </div>
       ) : (
         !hasLoadError && (
@@ -216,13 +208,13 @@ export default function InvoiceSettingsPage() {
               <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
                 <div className="flex items-center gap-2 border-b theme-border pb-3">
                   <Building2 className="w-4 h-4 text-amber-500" />
-                  <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                  <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
                     {ui("البيانات القانونية والضريبية للمنشأة")}</h2>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-xs sm:text-sm font-bold sm:col-span-2">
-                    {ui("اسم الشركة القانوني")}<span className="text-rose-500">*</span>
+                    {ui("اسم الشركة القانوني")}<span className="text-rose-700">*</span>
                     <input
                       required
                       maxLength={200}
@@ -276,10 +268,10 @@ export default function InvoiceSettingsPage() {
                 <div className="flex items-center justify-between border-b theme-border pb-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-amber-500" />
-                    <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
                       {ui("العنوان الوطني للمنشأة (اختياري)")}</h2>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-xs text-[var(--text-muted)]">
                     {ui("أكمل جميع الحقول معاً أو اتركها فارغة")}</span>
                 </div>
 
@@ -311,7 +303,47 @@ export default function InvoiceSettingsPage() {
                 </div>
               </section>
 
-              <section className="theme-card grid gap-5 rounded-2xl border theme-border p-5 sm:grid-cols-2 sm:p-6"><label className="text-sm font-bold">{ui("اسم الشركة بالإنجليزية")}<input required maxLength={200} dir="ltr" className={INPUT} value={presentation.englishName} onChange={event => { setPresentation(current => ({ ...current, englishName: event.target.value })); setMessage(""); }} /></label><label className="text-sm font-bold">{ui("الموقع الإلكتروني")}<input required type="url" maxLength={200} dir="ltr" className={INPUT} value={presentation.website} onChange={event => { setPresentation(current => ({ ...current, website: event.target.value })); setMessage(""); }} /></label><label className="flex items-center gap-3 text-sm sm:col-span-2"><input type="checkbox" className="accent-amber-600" checked={presentation.showSeal} onChange={event => { setPresentation(current => ({ ...current, showSeal: event.target.checked })); setMessage(""); }} />{ui("إظهار ختم الشركة على المستندات الضريبية")}</label></section>
+              <section className="theme-card grid gap-5 rounded-2xl border theme-border p-5 sm:grid-cols-2 sm:p-6">
+                <label className="text-sm font-bold">
+                  {ui("اسم الشركة بالإنجليزية")}
+                  <input
+                    required
+                    maxLength={200}
+                    dir="ltr"
+                    className={INPUT}
+                    value={presentation.englishName}
+                    onChange={(event) => {
+                      setPresentation((current) => ({ ...current, englishName: event.target.value }));
+                      setMessage("");
+                    }}
+                  />
+                </label>
+                <label className="text-sm font-bold">
+                  {ui("الموقع الإلكتروني")}
+                  <input
+                    required
+                    type="url"
+                    maxLength={200}
+                    dir="ltr"
+                    className={INPUT}
+                    value={presentation.website}
+                    onChange={(event) => {
+                      setPresentation((current) => ({ ...current, website: event.target.value }));
+                      setMessage("");
+                    }}
+                  />
+                </label>
+                <label className="flex min-h-11 items-center gap-3 text-sm font-bold sm:col-span-2 cursor-pointer">
+                  <Checkbox
+                    checked={presentation.showSeal}
+                    onChange={(event) => {
+                      setPresentation((current) => ({ ...current, showSeal: event.target.checked }));
+                      setMessage("");
+                    }}
+                  />
+                  <span>{ui("إظهار ختم الشركة على المستندات الضريبية")}</span>
+                </label>
+              </section>
 
               <InvoiceBankFields
                 isDefaultSettings
@@ -330,7 +362,7 @@ export default function InvoiceSettingsPage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="gold-gradient-btn w-full rounded-xl px-5 py-3.5 text-sm font-black flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
+                className="gold-gradient-btn w-full rounded-xl px-5 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
               >
                 {isSaving ? (
                   <>
