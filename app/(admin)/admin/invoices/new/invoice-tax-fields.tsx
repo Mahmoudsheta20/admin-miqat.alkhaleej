@@ -23,8 +23,7 @@ interface InvoiceTaxFieldsProps {
   onSelectOriginal: (id: string) => void;
 }
 
-const INLINE_INPUT =
-  "theme-input min-h-12 w-full rounded-xl px-3.5 py-2.5 text-base";
+const INLINE_INPUT = "theme-input min-h-12 w-full rounded-xl px-3.5 py-2.5 text-base";
 const INPUT = `mt-2 ${INLINE_INPUT}`;
 
 export default function InvoiceTaxFields({
@@ -134,9 +133,7 @@ export default function InvoiceTaxFields({
                 }
               />
               <span className="mt-1.5 block text-sm font-normal text-[var(--text-muted)]">
-                {ui(
-                  "يحدد فترة احتساب الزيادة للمدين؛ تخفيض الدائن يكون عند الإصدار أو الواقعة أيهما لاحق.",
-                )}
+                {ui("يحدد فترة احتساب الزيادة للمدين؛ تخفيض الدائن يكون عند الإصدار أو الواقعة أيهما لاحق.")}
               </span>
             </label>
 
@@ -209,18 +206,13 @@ export default function InvoiceTaxFields({
             </div>
 
             <p className="text-sm text-[var(--text-muted)] sm:col-span-2">
-              {ui(
-                "تُنسخ بيانات العميل والتصنيف من الفاتورة الأصلية، ويمكن تعديل قيم الخدمات للإشعار.",
-              )}
+              {ui("تُنسخ بيانات العميل والتصنيف من الفاتورة الأصلية، ويمكن تعديل قيم الخدمات للإشعار.")}
             </p>
           </>
         )}
       </div>
       {error && (
-        <p
-          role="alert"
-          className="mt-3 text-sm text-rose-700 dark:text-rose-400"
-        >
+        <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-400">
           {ui(error)}
         </p>
       )}

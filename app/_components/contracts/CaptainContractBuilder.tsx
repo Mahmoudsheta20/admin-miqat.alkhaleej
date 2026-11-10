@@ -730,7 +730,10 @@ export default function CaptainContractBuilder({
         >
           <div className="p-4 sm:p-6 space-y-5">
             <h2 className="hidden md:flex text-base sm:text-lg font-semibold text-slate-900 dark:text-white items-center gap-2 border-b theme-border pb-3">
-              <MapPin className="w-5 h-5 text-amber-500" aria-hidden="true" />
+              <MapPin
+                className="w-5 h-5 text-amber-500"
+                aria-hidden="true"
+              />
               <span>
                 {ui("بيانات الرحلة والعملية التشغيلية (الصفحة 1 من العقد)")}
               </span>

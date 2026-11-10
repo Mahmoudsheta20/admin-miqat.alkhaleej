@@ -44,7 +44,10 @@ export default function FormField({
             >
               <span>{displayLabel}</span>
               {required && (
-                <span aria-hidden="true" className="text-rose-700">
+                <span
+                  aria-hidden="true"
+                  className="text-rose-700"
+                >
                   *
                 </span>
               )}

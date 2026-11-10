@@ -1310,10 +1310,7 @@ export default function AdminContractBuilder({
               role="status"
               className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm font-bold flex items-center gap-2"
             >
-              <CheckCircle2
-                className="w-4 h-4 text-emerald-700 shrink-0"
-                aria-hidden="true"
-              />
+              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" aria-hidden="true" />
               <span>{adminInspectionSuccessMsg}</span>
             </div>
           )}

@@ -225,9 +225,7 @@ function CustomerModalBody({
             role="list"
             className={cn(
               "grid",
-              isFullscreen
-                ? "gap-3 grid-cols-1 md:grid-cols-2"
-                : "gap-1.5 grid-cols-1",
+              isFullscreen ? "gap-3 grid-cols-1 md:grid-cols-2" : "gap-1.5 grid-cols-1",
             )}
           >
             {activeItems.map((customer) => {
@@ -266,9 +264,7 @@ function CustomerModalBody({
                           <span
                             className={cn(
                               "font-bold",
-                              isFullscreen
-                                ? "text-lg sm:text-xl"
-                                : "text-sm sm:text-base",
+                              isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
                               isSelected
                                 ? "text-amber-700 dark:text-amber-400"
                                 : "text-slate-900 dark:text-white",
@@ -307,9 +303,7 @@ function CustomerModalBody({
                           : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-transparent",
                       )}
                     >
-                      <Check
-                        className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"}
-                      />
+                      <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
                     </span>
                   </button>
                 </li>
@@ -415,7 +409,8 @@ export function CustomerCombobox({
           onClick={toggleFromTrigger}
           className={cn(
             "flex min-h-12 w-full items-center justify-between gap-2.5 rounded-xl border theme-border bg-white dark:bg-slate-900/80 px-4 py-2.5 text-start text-base text-slate-900 dark:text-white transition-colors outline-none hover:border-amber-500/50 focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-55 cursor-pointer",
-            open && "border-amber-500 ring-2 ring-amber-500/20",
+            open &&
+              "border-amber-500 ring-2 ring-amber-500/20",
           )}
         >
           <span className="flex min-w-0 items-center gap-2.5">
@@ -451,7 +446,9 @@ export function CustomerCombobox({
                 {ui("العميل المحدد")}
               </span>
             ) : (
-              <span className="truncate text-slate-400">{ui(placeholder)}</span>
+              <span className="truncate text-slate-400">
+                {ui(placeholder)}
+              </span>
             )}
           </span>
 

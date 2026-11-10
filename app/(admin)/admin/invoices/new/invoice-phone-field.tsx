@@ -2,12 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 import { useMemo, useState } from "react";
-import {
-  phoneCountries,
-  PHONE_COUNTRIES,
-  updateInvoicePhone,
-  type InvoicePhone,
-} from "@/lib/invoice-phone";
+import { phoneCountries, PHONE_COUNTRIES, updateInvoicePhone, type InvoicePhone } from "@/lib/invoice-phone";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import { FullscreenFieldModal } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
@@ -19,10 +14,7 @@ interface InvoicePhoneFieldProps {
 
 const INPUT = "theme-input min-h-12 min-w-0 rounded-xl px-3.5 py-2.5 text-base";
 
-export default function InvoicePhoneField({
-  value,
-  onChange,
-}: InvoicePhoneFieldProps) {
+export default function InvoicePhoneField({ value, onChange }: InvoicePhoneFieldProps) {
   const ui = useUiText();
   const isMobile = useIsMobileViewport();
   const [expandOpen, setExpandOpen] = useState(false);
@@ -92,9 +84,7 @@ export default function InvoicePhoneField({
               openExpandModal();
             }
           }}
-          onChange={(event) =>
-            onChange(updateInvoicePhone(value, event.target.value))
-          }
+          onChange={(event) => onChange(updateInvoicePhone(value, event.target.value))}
         />
       </div>
       <p className="mt-1.5 text-sm font-normal text-[var(--text-muted)]">

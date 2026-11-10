@@ -117,7 +117,10 @@ function SelectModalBody({
   const searchInputId = useId();
 
   const selectableOptions = useMemo(
-    () => options.filter((opt) => !(opt.value === "" && opt.disabled)),
+    () =>
+      options.filter(
+        (opt) => !(opt.value === "" && opt.disabled),
+      ),
     [options],
   );
 
@@ -140,9 +143,7 @@ function SelectModalBody({
 
   const initialHighlight = Math.max(
     0,
-    filteredOptions.findIndex(
-      (opt) => opt.value === selectedValue && !opt.disabled,
-    ),
+    filteredOptions.findIndex((opt) => opt.value === selectedValue && !opt.disabled),
   );
   const [highlightedIndex, setHighlightedIndex] = useState(initialHighlight);
   const activeHighlight =
@@ -191,10 +192,7 @@ function SelectModalBody({
     setHighlightedIndex(0);
   };
 
-  const moveEnabledFocus = (
-    fromIndex: number,
-    direction: 1 | -1 | "start" | "end",
-  ) => {
+  const moveEnabledFocus = (fromIndex: number, direction: 1 | -1 | "start" | "end") => {
     if (filteredOptions.length === 0) return;
     let candidate = fromIndex;
     if (direction === "start") {
@@ -208,20 +206,12 @@ function SelectModalBody({
       }
     } else {
       let next = fromIndex + direction;
-      while (
-        next >= 0 &&
-        next < filteredOptions.length &&
-        filteredOptions[next]?.disabled
-      ) {
+      while (next >= 0 && next < filteredOptions.length && filteredOptions[next]?.disabled) {
         next += direction;
       }
       candidate = next;
     }
-    if (
-      candidate >= 0 &&
-      candidate < filteredOptions.length &&
-      !filteredOptions[candidate]?.disabled
-    ) {
+    if (candidate >= 0 && candidate < filteredOptions.length && !filteredOptions[candidate]?.disabled) {
       setHighlightedIndex(candidate);
       optionRefs.current[candidate]?.focus({ preventScroll: true });
       optionRefs.current[candidate]?.scrollIntoView({ block: "nearest" });
@@ -245,8 +235,7 @@ function SelectModalBody({
     } else if (event.key === "Enter" && enabledOptions.length > 0) {
       event.preventDefault();
       event.stopPropagation();
-      const candidate =
-        activeHighlight >= 0 ? filteredOptions[activeHighlight] : undefined;
+      const candidate = activeHighlight >= 0 ? filteredOptions[activeHighlight] : undefined;
       const target =
         candidate && !candidate.disabled ? candidate : enabledOptions[0];
       if (target) {
@@ -464,9 +453,7 @@ function SelectModalBody({
                           : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-transparent",
                       )}
                     >
-                      <Check
-                        className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"}
-                      />
+                      <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
                     </span>
                   </button>
                 </li>
@@ -476,9 +463,7 @@ function SelectModalBody({
         )}
       </div>
 
-      {(isFullscreen ||
-        footerAction ||
-        (clearable && selectedValue !== "")) && (
+      {(isFullscreen || footerAction || (clearable && selectedValue !== "")) && (
         <div
           className={cn(
             "shrink-0 flex flex-wrap items-center justify-between gap-2 border-t theme-border",
@@ -675,8 +660,7 @@ export function FullscreenSelect({
           error || ariaInvalid === true || ariaInvalid === "true"
             ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus-visible:border-rose-500 focus-visible:ring-2 focus-visible:ring-rose-500/20"
             : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20",
-          disabled &&
-            "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800",
+          disabled && "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800",
           triggerClassName,
         )}
       >
@@ -753,10 +737,7 @@ export function FullscreenSelect({
         onSearchChange={onSearchChange}
         searchPlaceholder={
           searchPlaceholder ||
-          text(
-            "ابحث بالاسم أو الكود أو التفاصيل…",
-            "Search by name, code, or details…",
-          )
+          text("ابحث بالاسم أو الكود أو التفاصيل…", "Search by name, code, or details…")
         }
         isLoading={isLoading}
         emptyMessage={

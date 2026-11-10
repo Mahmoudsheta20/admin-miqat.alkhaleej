@@ -1015,9 +1015,7 @@ function CommissionMethodFields({
 
   if (value.mode === "NONE") {
     return (
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        {ui("بدون عمولة")}
-      </p>
+      <p className="text-sm text-slate-600 dark:text-slate-400">{ui("بدون عمولة")}</p>
     );
   }
 

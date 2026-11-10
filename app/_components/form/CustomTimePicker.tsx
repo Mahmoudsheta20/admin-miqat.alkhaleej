@@ -46,8 +46,7 @@ function formatTimeDisplay12h(time24: string, lang: "ar" | "en"): string {
   const m = parseInt(mStr, 10);
   if (isNaN(h) || isNaN(m)) return time24;
 
-  const period =
-    lang === "en" ? (h >= 12 ? "PM" : "AM") : h >= 12 ? "مساءً" : "صباحاً";
+  const period = lang === "en" ? (h >= 12 ? "PM" : "AM") : h >= 12 ? "مساءً" : "صباحاً";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   const mm = String(m).padStart(2, "0");
   return `${h12}:${mm} ${period}`;
@@ -316,8 +315,7 @@ function TimePickerModalBody({
           )}
           dir="ltr"
         >
-          {value || "—"}{" "}
-          {value ? `(${formatTimeDisplay12h(value, ui.language)})` : ""}
+          {value || "—"} {value ? `(${formatTimeDisplay12h(value, ui.language)})` : ""}
         </span>
         <button
           type="button"
@@ -381,10 +379,7 @@ export function CustomTimePicker({
             )}
           </label>
           {value && (
-            <span
-              className="text-sm text-amber-700 dark:text-amber-400 font-medium font-mono shrink-0"
-              dir="ltr"
-            >
+            <span className="text-sm text-amber-700 dark:text-amber-400 font-medium font-mono shrink-0" dir="ltr">
               ({formatTimeDisplay12h(value, ui.language)})
             </span>
           )}
@@ -399,9 +394,7 @@ export function CustomTimePicker({
         aria-expanded={isOpen}
         aria-controls={!isMobile && isOpen ? overlayId : undefined}
         id={controlId}
-        aria-describedby={
-          error || hint ? `${controlId}-description` : undefined
-        }
+        aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
         onClick={toggleFromTrigger}
         onKeyDown={(event) => {
@@ -435,10 +428,7 @@ export function CustomTimePicker({
           </span>
         </div>
 
-        <div
-          aria-hidden="true"
-          className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2"
-        >
+        <div aria-hidden="true" className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-amber-500" : ""
@@ -484,10 +474,7 @@ export function CustomTimePicker({
       )}
 
       {hint && !error && (
-        <p
-          id={`${controlId}-description`}
-          className="text-sm text-[var(--text-muted)]"
-        >
+        <p id={`${controlId}-description`} className="text-sm text-[var(--text-muted)]">
           {ui(hint)}
         </p>
       )}

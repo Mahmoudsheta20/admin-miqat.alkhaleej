@@ -180,9 +180,7 @@ function ContractPickerModalBody({
             role="list"
             className={cn(
               "grid",
-              isFullscreen
-                ? "gap-3 grid-cols-1 md:grid-cols-2"
-                : "gap-1.5 grid-cols-1",
+              isFullscreen ? "gap-3 grid-cols-1 md:grid-cols-2" : "gap-1.5 grid-cols-1",
             )}
           >
             {items.map((item) => {
@@ -208,9 +206,7 @@ function ContractPickerModalBody({
                         <span
                           className={cn(
                             "font-bold",
-                            isFullscreen
-                              ? "text-lg sm:text-xl"
-                              : "text-sm sm:text-base",
+                            isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
                             isSelected
                               ? "text-amber-700 dark:text-amber-400"
                               : "text-slate-900 dark:text-white",
@@ -315,7 +311,9 @@ export default function ContractPicker({
           aria-controls={!isMobile && isOpen ? overlayId : undefined}
           onClick={toggleFromTrigger}
           className={`theme-input flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-start text-base font-medium cursor-pointer transition ${
-            isOpen ? "border-amber-500 ring-2 ring-amber-500/20" : ""
+            isOpen
+              ? "border-amber-500 ring-2 ring-amber-500/20"
+              : ""
           }`}
         >
           <span className="flex min-w-0 items-center gap-2.5">

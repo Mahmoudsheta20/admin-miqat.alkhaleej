@@ -45,9 +45,7 @@ const ARABIC_MONTHS = [
 
 const WEEK_DAYS = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
 
-function parseDateStr(
-  str: string,
-): { year: number; month: number; day: number } | null {
+function parseDateStr(str: string): { year: number; month: number; day: number } | null {
   if (!str) return null;
   const parts = str.replace(/-/g, "/").split("/");
   if (parts.length !== 3) return null;
@@ -95,7 +93,8 @@ function DatePickerModalBody({
   const isBeforeMinDate = (date: string) =>
     Boolean(normalizedMinDate && date < normalizedMinDate);
 
-  const parsed = parseDateStr(value) ||
+  const parsed =
+    parseDateStr(value) ||
     parseDateStr(minDate || "") || {
       year: new Date().getFullYear(),
       month: new Date().getMonth(),
@@ -255,15 +254,9 @@ function DatePickerModalBody({
           title={ui("الشهر السابق")}
         >
           {ui.dir === "rtl" ? (
-            <ChevronRight
-              className={isFullscreen ? "w-5 h-5" : "w-4 h-4"}
-              aria-hidden="true"
-            />
+            <ChevronRight className={isFullscreen ? "w-5 h-5" : "w-4 h-4"} aria-hidden="true" />
           ) : (
-            <ChevronLeft
-              className={isFullscreen ? "w-5 h-5" : "w-4 h-4"}
-              aria-hidden="true"
-            />
+            <ChevronLeft className={isFullscreen ? "w-5 h-5" : "w-4 h-4"} aria-hidden="true" />
           )}
         </button>
 
@@ -292,15 +285,9 @@ function DatePickerModalBody({
           title={ui("الشهر التالي")}
         >
           {ui.dir === "rtl" ? (
-            <ChevronLeft
-              className={isFullscreen ? "w-5 h-5" : "w-4 h-4"}
-              aria-hidden="true"
-            />
+            <ChevronLeft className={isFullscreen ? "w-5 h-5" : "w-4 h-4"} aria-hidden="true" />
           ) : (
-            <ChevronRight
-              className={isFullscreen ? "w-5 h-5" : "w-4 h-4"}
-              aria-hidden="true"
-            />
+            <ChevronRight className={isFullscreen ? "w-5 h-5" : "w-4 h-4"} aria-hidden="true" />
           )}
         </button>
       </div>
@@ -373,9 +360,7 @@ function DatePickerModalBody({
                     aria-hidden="true"
                     className={cn(
                       "rounded-full bg-[var(--accent-gold)] absolute",
-                      isFullscreen
-                        ? "w-1.5 h-1.5 bottom-1.5"
-                        : "w-1 h-1 bottom-1",
+                      isFullscreen ? "w-1.5 h-1.5 bottom-1.5" : "w-1 h-1 bottom-1",
                     )}
                   />
                 )}
@@ -501,9 +486,7 @@ export function CustomDatePicker({
       <button
         ref={triggerRef}
         id={controlId}
-        aria-describedby={
-          error || hint ? `${controlId}-description` : undefined
-        }
+        aria-describedby={error || hint ? `${controlId}-description` : undefined}
         type="button"
         aria-label={ui(label || "حدد التاريخ")}
         aria-haspopup={isMobile ? "dialog" : undefined}
@@ -541,10 +524,7 @@ export function CustomDatePicker({
           </span>
         </div>
 
-        <div
-          aria-hidden="true"
-          className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2"
-        >
+        <div aria-hidden="true" className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-amber-500" : ""
@@ -591,10 +571,7 @@ export function CustomDatePicker({
       )}
 
       {hint && !error && (
-        <p
-          id={`${controlId}-description`}
-          className="text-sm text-[var(--text-muted)]"
-        >
+        <p id={`${controlId}-description`} className="text-sm text-[var(--text-muted)]">
           {ui(hint)}
         </p>
       )}
