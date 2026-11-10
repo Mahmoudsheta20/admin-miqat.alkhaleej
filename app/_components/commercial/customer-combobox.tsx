@@ -7,25 +7,22 @@ import {
   Check,
   ChevronDown,
   ExternalLink,
+  Loader2,
   Search,
   User,
   X,
 } from "lucide-react";
 import type { Customer } from "@/lib/commercial";
+import { useLanguage } from "@/lib/languageContext";
 import { useUiText } from "@/lib/ui-text";
 import { cn } from "@/lib/utils";
-import { Badge, Input } from "@/app/_components/ui";
+import { Badge } from "@/app/_components/ui";
+import { useFullscreenDialogClose } from "@/app/_components/form/FullscreenDialog";
+import ResponsivePickerOverlay, {
+  useIsPickerFullscreen,
+  usePickerDisclosure,
+} from "@/app/_components/form/ResponsivePickerOverlay";
 import { useCommercialData } from "./shared";
-
-interface PopoverCapableElement extends HTMLDivElement {
-  showPopover(options?: { source?: HTMLElement }): void;
-  hidePopover(): void;
-}
-
-const emptySubscribe = () => () => {};
-const getClientPopoverSupport = () =>
-  typeof HTMLElement !== "undefined" && "popover" in HTMLElement.prototype;
-const getServerPopoverSupport = () => true;
 
 export interface CustomerComboboxProps {
   id?: string;
@@ -35,6 +32,327 @@ export interface CustomerComboboxProps {
   emptyLabel?: string;
   placeholder?: string;
   className?: string;
+}
+
+interface CustomerModalBodyProps {
+  value: string | null;
+  emptyLabel: string;
+  baseCustomers: Customer[];
+  onChoose: (customer: Customer | null) => void;
+}
+
+function CustomerModalBody({
+  value,
+  emptyLabel,
+  baseCustomers,
+  onChoose,
+}: CustomerModalBodyProps) {
+  const ui = useUiText();
+  const { language } = useLanguage();
+  const isFullscreen = useIsPickerFullscreen();
+  const requestDialogClose = useFullscreenDialogClose();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+
+  const [search, setSearch] = React.useState("");
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputId = React.useId();
+
+  const trimmedSearch = search.trim();
+  const searchedCustomers = useCommercialData<{ items: Customer[] }>(
+    `/customers?search=${encodeURIComponent(trimmedSearch)}`,
+  );
+
+  const activeItems = React.useMemo(() => {
+    const remoteItems = searchedCustomers.data?.items;
+    if (remoteItems) {
+      return remoteItems.filter((item) => item.active);
+    }
+    if (!trimmedSearch) {
+      return baseCustomers.filter((item) => item.active);
+    }
+    const q = trimmedSearch.toLowerCase();
+    return baseCustomers.filter(
+      (item) =>
+        item.active &&
+        (item.name.toLowerCase().includes(q) ||
+          (item.phone && item.phone.toLowerCase().includes(q))),
+    );
+  }, [searchedCustomers.data, baseCustomers, trimmedSearch]);
+
+  React.useEffect(() => {
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        searchInputRef.current?.focus({ preventScroll: true });
+      });
+    });
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
+    };
+  }, []);
+
+  const pickCustomer = (customer: Customer | null) => {
+    onChoose(customer);
+    void requestDialogClose?.();
+  };
+
+  return (
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col",
+        isFullscreen ? "h-full gap-5" : "gap-2.5",
+      )}
+    >
+      <search className="shrink-0">
+        <div className="relative">
+          <Search
+            className={cn(
+              "pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--text-muted)]",
+              isFullscreen ? "start-4 h-5 w-5" : "start-3 h-4 w-4",
+            )}
+            aria-hidden="true"
+          />
+          <input
+            ref={searchInputRef}
+            id={searchInputId}
+            type="search"
+            autoFocus
+            aria-label={ui("بحث عن عميل")}
+            placeholder={ui("بحث عن عميل...")}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            className={cn(
+              "theme-input w-full border theme-border bg-white dark:bg-slate-900/80 font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500/20 focus:outline-hidden",
+              isFullscreen
+                ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
+                : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
+            )}
+          />
+          {search && (
+            <button
+              type="button"
+              aria-label={ui("مسح البحث")}
+              onClick={() => {
+                setSearch("");
+                searchInputRef.current?.focus({ preventScroll: true });
+              }}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition",
+                isFullscreen
+                  ? "end-2 min-h-10 min-w-10 rounded-xl"
+                  : "end-1.5 min-h-8 min-w-8",
+              )}
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </search>
+
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain p-1",
+          isFullscreen ? "space-y-3" : "space-y-1.5",
+        )}
+      >
+        <button
+          type="button"
+          aria-pressed={!value}
+          onClick={() => pickCustomer(null)}
+          className={cn(
+            "fullscreen-select-option flex w-full items-center justify-between gap-3 text-start font-semibold transition cursor-pointer",
+            isFullscreen
+              ? "min-h-14 rounded-2xl border-2 px-5 py-3.5 text-base"
+              : "min-h-10 rounded-xl border px-3.5 py-2 text-sm sm:text-base",
+            !value
+              ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+              : "border theme-border bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-amber-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white",
+          )}
+        >
+          <span>{ui(emptyLabel)}</span>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex shrink-0 items-center justify-center rounded-full border transition-colors",
+              isFullscreen ? "h-7 w-7" : "h-6 w-6",
+              !value
+                ? "border-amber-600 bg-amber-600 text-white"
+                : "border-slate-300 dark:border-slate-600 text-transparent",
+            )}
+          >
+            <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
+          </span>
+        </button>
+
+        {searchedCustomers.error && (
+          <p
+            role="alert"
+            className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300"
+          >
+            {ui(searchedCustomers.error)}
+          </p>
+        )}
+
+        {searchedCustomers.loading && activeItems.length === 0 ? (
+          <div
+            role="status"
+            className={cn(
+              "flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed theme-border text-center text-[var(--text-muted)]",
+              isFullscreen ? "min-h-40 p-8 text-base" : "min-h-24 p-5 text-sm",
+            )}
+          >
+            <Loader2
+              className="h-6 w-6 animate-spin text-amber-500"
+              aria-hidden="true"
+            />
+            <span>{ui("جارٍ التحميل…")}</span>
+          </div>
+        ) : activeItems.length === 0 ? (
+          <div
+            className={cn(
+              "flex items-center justify-center rounded-2xl border border-dashed theme-border text-center text-[var(--text-muted)]",
+              isFullscreen ? "min-h-36 p-8 text-base" : "min-h-24 p-5 text-sm",
+            )}
+          >
+            {ui("لا توجد نتائج")}
+          </div>
+        ) : (
+          <ul
+            role="list"
+            className={cn(
+              "grid",
+              isFullscreen
+                ? "gap-3 grid-cols-1 md:grid-cols-2"
+                : "gap-1.5 grid-cols-1",
+            )}
+          >
+            {activeItems.map((customer) => {
+              const isSelected = customer.id === value;
+              return (
+                <li key={customer.id} className="min-w-0">
+                  <button
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => pickCustomer(customer)}
+                    className={cn(
+                      "fullscreen-select-option flex w-full items-start justify-between gap-3 text-start transition cursor-pointer",
+                      isFullscreen
+                        ? "min-h-18 rounded-2xl border-2 px-5 py-4 text-lg"
+                        : "min-h-11 rounded-xl border px-3.5 py-2.5 text-sm sm:text-base",
+                      isSelected
+                        ? "border-amber-500 bg-amber-500/10 text-slate-900 dark:text-white shadow-xs"
+                        : "border theme-border bg-white dark:bg-slate-900 text-slate-900 dark:text-white hover:border-amber-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80",
+                    )}
+                  >
+                    <span className="flex min-w-0 items-start gap-2.5">
+                      <span
+                        className={cn(
+                          "mt-0.5 flex shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400",
+                          isFullscreen ? "h-9 w-9" : "h-7 w-7 rounded-lg",
+                        )}
+                      >
+                        {customer.type === "COMPANY" ? (
+                          <Building2 className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <User className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </span>
+                      <span className="min-w-0 space-y-0.5">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={cn(
+                              "font-bold",
+                              isFullscreen
+                                ? "text-lg sm:text-xl"
+                                : "text-sm sm:text-base",
+                              isSelected
+                                ? "text-amber-700 dark:text-amber-400"
+                                : "text-slate-900 dark:text-white",
+                            )}
+                          >
+                            {customer.name}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-medium px-2 py-0.5"
+                          >
+                            {ui(customer.type === "COMPANY" ? "شركة" : "فرد")}
+                          </Badge>
+                        </span>
+                        {customer.phone && (
+                          <bdi
+                            dir="ltr"
+                            className={cn(
+                              "block font-mono text-[var(--text-muted)]",
+                              isFullscreen ? "text-base" : "text-xs sm:text-sm",
+                            )}
+                          >
+                            {customer.phone}
+                          </bdi>
+                        )}
+                      </span>
+                    </span>
+
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
+                        isFullscreen ? "h-8 w-8" : "h-6 w-6",
+                        isSelected
+                          ? "border-amber-600 bg-amber-600 text-white"
+                          : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-transparent",
+                      )}
+                    >
+                      <Check
+                        className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"}
+                      />
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          "shrink-0 flex flex-wrap items-center justify-between gap-2 border-t theme-border",
+          isFullscreen ? "pt-4" : "pt-2.5",
+        )}
+      >
+        <Link
+          href="/admin/customers"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => void requestDialogClose?.()}
+          className={cn(
+            "inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 font-semibold text-amber-700 dark:text-amber-400 hover:border-amber-500 transition",
+            isFullscreen
+              ? "min-h-12 px-4 py-2.5 text-sm sm:text-base"
+              : "min-h-9 px-3 py-1.5 text-xs sm:text-sm",
+          )}
+        >
+          <span>{ui("إضافة أو تعديل عميل")}</span>
+          <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+        </Link>
+
+        {isFullscreen && (
+          <button
+            type="button"
+            onClick={() => void requestDialogClose?.()}
+            className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-6 py-2.5 text-base font-semibold text-[var(--text-main)] hover:bg-[var(--bg-card)] cursor-pointer transition"
+          >
+            {text("إغلاق", "Close")}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function CustomerCombobox({
@@ -47,246 +365,100 @@ export function CustomerCombobox({
   className,
 }: CustomerComboboxProps) {
   const ui = useUiText();
-  const panelId = React.useId();
-  const searchInputId = React.useId();
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const panelRef = React.useRef<HTMLDivElement>(null);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
-  const keyboardOpenedRef = React.useRef(false);
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
-  const [open, setOpen] = React.useState(false);
-  const [search, setSearch] = React.useState("");
-  const [pickedCustomer, setPickedCustomer] = React.useState<Customer | null>(null);
-  const [coords, setCoords] = React.useState<{
-    top: number;
-    left: number;
-    width: number;
-  } | null>(null);
-
-  const hasPopoverApi = React.useSyncExternalStore(
-    emptySubscribe,
-    getClientPopoverSupport,
-    getServerPopoverSupport
+  const generatedId = React.useId();
+  const controlId = id || generatedId;
+  const overlayId = `${controlId}-customer-picker`;
+  const {
+    isMobile,
+    open,
+    sessionKey,
+    triggerRef,
+    overlayRef,
+    toggleFromTrigger,
+    closeOverlay,
+  } = usePickerDisclosure({ disabled });
+  const [pickedCustomer, setPickedCustomer] = React.useState<Customer | null>(
+    null,
   );
 
-  const trimmedSearch = search.trim();
-  const baseCustomers = useCommercialData<{ items: Customer[] }>("/customers?search=");
-  const searchedCustomers = useCommercialData<{ items: Customer[] }>(
-    `/customers?search=${encodeURIComponent(trimmedSearch)}`
+  const baseCustomers = useCommercialData<{ items: Customer[] }>(
+    "/customers?search=",
   );
-
-  const activeItems = React.useMemo(() => {
-    const remoteItems = searchedCustomers.data?.items;
-    if (remoteItems) {
-      return remoteItems.filter((item) => item.active);
-    }
-    const baseItems = baseCustomers.data?.items || [];
-    if (!trimmedSearch) {
-      return baseItems.filter((item) => item.active);
-    }
-    const q = trimmedSearch.toLowerCase();
-    return baseItems.filter(
-      (item) =>
-        item.active &&
-        (item.name.toLowerCase().includes(q) ||
-          (item.phone && item.phone.toLowerCase().includes(q)))
-    );
-  }, [searchedCustomers.data, baseCustomers.data, trimmedSearch]);
 
   const selectedCustomer = React.useMemo(() => {
     if (!value) return null;
     return (
-      searchedCustomers.data?.items.find((item) => item.id === value) ??
       baseCustomers.data?.items.find((item) => item.id === value) ??
       (pickedCustomer?.id === value ? pickedCustomer : null)
     );
-  }, [value, searchedCustomers.data, baseCustomers.data, pickedCustomer]);
+  }, [value, baseCustomers.data, pickedCustomer]);
 
-  const updatePosition = React.useCallback((panelEl: HTMLElement | null) => {
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-
-    const rect = trigger.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const edgePad = 8;
-    const width = Math.min(Math.max(rect.width, 280), vw - edgePad * 2);
-    const panelHeight = Math.min(panelEl?.offsetHeight || 300, 360);
-    const gap = 6;
-
-    const spaceBelow = vh - rect.bottom - edgePad;
-    const spaceAbove = rect.top - edgePad;
-    const placeAbove = spaceBelow < panelHeight && spaceAbove > spaceBelow;
-    const rawTop = placeAbove ? rect.top - panelHeight - gap : rect.bottom + gap;
-    const top = Math.max(edgePad, Math.min(rawTop, Math.max(edgePad, vh - panelHeight - edgePad)));
-
-    const isRtl = getComputedStyle(trigger).direction === "rtl";
-    const rawLeft = isRtl ? rect.right - width : rect.left;
-    const left = Math.max(edgePad, Math.min(rawLeft, Math.max(edgePad, vw - width - edgePad)));
-
-    setCoords({ top, left, width });
-  }, []);
-
-  const close = React.useCallback(
-    (restoreFocus = false) => {
-      const panel = panelRef.current as PopoverCapableElement | null;
-      if (hasPopoverApi && panel && typeof panel.hidePopover === "function") {
-        try {
-          if (panel.matches(":popover-open")) {
-            panel.hidePopover();
-          }
-        } catch {
-          // Already dismissed natively
-        }
-      }
-      setOpen(false);
-      if (restoreFocus || keyboardOpenedRef.current) {
-        triggerRef.current?.focus({ preventScroll: true });
-      }
-      keyboardOpenedRef.current = false;
-    },
-    [hasPopoverApi]
-  );
-
-  React.useEffect(() => {
-    if (!open) return;
-
-    const handleReposition = () => {
-      const trigger = triggerRef.current;
-      if (!trigger) return;
-      const rect = trigger.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > window.innerHeight) {
-        close(false);
-        return;
-      }
-      updatePosition(panelRef.current);
-    };
-
-    window.addEventListener("resize", handleReposition, { passive: true });
-    window.addEventListener("scroll", handleReposition, { passive: true, capture: true });
-    return () => {
-      window.removeEventListener("resize", handleReposition);
-      window.removeEventListener("scroll", handleReposition, true);
-    };
-  }, [open, close, updatePosition]);
-
-  React.useEffect(() => {
-    if (!open || hasPopoverApi) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-      close(false);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        close(true);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open, hasPopoverApi, close]);
-
-  function handleTriggerClick(event: React.MouseEvent<HTMLButtonElement>) {
-    keyboardOpenedRef.current = event.detail === 0;
-    const panel = panelRef.current as PopoverCapableElement | null;
-
-    if (open) {
-      close(event.detail === 0);
-      return;
-    }
-
-    updatePosition(panel);
-
-    if (hasPopoverApi && panel && typeof panel.showPopover === "function") {
-      try {
-        panel.showPopover({ source: event.currentTarget });
-      } catch {
-        panel.showPopover();
-      }
-      updatePosition(panel);
-      setOpen(true);
-      requestAnimationFrame(() => {
-        searchInputRef.current?.focus({ preventScroll: true });
-      });
-    } else {
-      setOpen(true);
-      requestAnimationFrame(() => {
-        updatePosition(panelRef.current);
-        searchInputRef.current?.focus({ preventScroll: true });
-      });
-    }
-  }
-
-  function handleChoose(customer: Customer | null, fromKeyboard: boolean) {
+  function handleChoose(customer: Customer | null) {
     setPickedCustomer(customer);
     onSelect(customer);
-    setSearch("");
-    close(fromKeyboard);
   }
-
-  const fetchError = searchedCustomers.error || baseCustomers.error;
 
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center gap-1.5">
         <button
           ref={triggerRef}
-          id={id}
+          id={controlId}
           type="button"
           disabled={disabled}
+          aria-haspopup={isMobile ? "dialog" : undefined}
           aria-expanded={open}
-          aria-controls={panelId}
-          onClick={handleTriggerClick}
+          aria-controls={!isMobile && open ? overlayId : undefined}
+          onClick={toggleFromTrigger}
           className={cn(
-            "flex min-h-11 sm:min-h-10 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 px-3.5 py-2 text-start text-sm text-slate-900 dark:text-slate-100 transition-colors outline-none hover:border-slate-300 dark:hover:border-slate-700 focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
-            open && "border-amber-500 ring-2 ring-amber-500/20"
+            "flex min-h-12 w-full items-center justify-between gap-2.5 rounded-xl border theme-border bg-white dark:bg-slate-900/80 px-4 py-2.5 text-start text-base text-slate-900 dark:text-white transition-colors outline-none hover:border-amber-500/50 focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-55 cursor-pointer",
+            open && "border-amber-500 ring-2 ring-amber-500/20",
           )}
         >
-          <span className="flex min-w-0 items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2.5">
             {selectedCustomer ? (
               <>
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400">
                   {selectedCustomer.type === "COMPANY" ? (
-                    <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Building2 className="h-4 w-4" aria-hidden="true" />
                   ) : (
-                    <User className="h-3.5 w-3.5" aria-hidden="true" />
+                    <User className="h-4 w-4" aria-hidden="true" />
                   )}
                 </span>
-                <span className="truncate font-semibold">{selectedCustomer.name}</span>
-                <Badge variant="secondary" className="shrink-0 text-[11px] font-medium px-2 py-0">
+                <span className="truncate font-semibold">
+                  {selectedCustomer.name}
+                </span>
+                <Badge
+                  variant="secondary"
+                  className="shrink-0 text-xs font-medium px-2 py-0.5"
+                >
                   {ui(selectedCustomer.type === "COMPANY" ? "شركة" : "فرد")}
                 </Badge>
                 {selectedCustomer.phone && (
                   <bdi
                     dir="ltr"
-                    className="hidden sm:inline shrink-0 font-mono text-xs text-slate-500 dark:text-slate-400"
+                    className="hidden sm:inline shrink-0 font-mono text-sm text-[var(--text-muted)]"
                   >
                     {selectedCustomer.phone}
                   </bdi>
                 )}
               </>
             ) : value ? (
-              <span className="truncate font-semibold">{ui("العميل المحدد")}</span>
-            ) : (
-              <span className="truncate text-slate-600 dark:text-slate-400">
-                {ui(placeholder)}
+              <span className="truncate font-semibold">
+                {ui("العميل المحدد")}
               </span>
+            ) : (
+              <span className="truncate text-slate-400">{ui(placeholder)}</span>
             )}
           </span>
 
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150",
-              open && "rotate-180 text-amber-600 dark:text-amber-400"
+              "h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform duration-150",
+              open && "rotate-180 text-amber-500",
             )}
             aria-hidden="true"
           />
@@ -295,180 +467,47 @@ export function CustomerCombobox({
         {value && !disabled && (
           <button
             type="button"
-            onClick={() => handleChoose(null, false)}
+            onClick={() => handleChoose(null)}
             aria-label={ui("مسح التحديد")}
             title={ui("مسح التحديد")}
-            className="inline-flex h-11 w-11 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors cursor-pointer"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border theme-border bg-white dark:bg-slate-900/80 text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:border-amber-500/40 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
 
-      {/* Popover panel wrapper keeps layout flex inside inner div */}
-      <div
-        ref={panelRef}
-        id={panelId}
-        popover="auto"
-        hidden={!hasPopoverApi && !open ? true : undefined}
-        onToggle={(event) => {
-          const nextOpen = event.newState === "open";
-          setOpen(nextOpen);
-          if (nextOpen) {
-            updatePosition(panelRef.current);
-          } else {
-            keyboardOpenedRef.current = false;
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.preventDefault();
-            event.stopPropagation();
-            close(true);
-          }
-        }}
-        style={
-          coords
-            ? {
-                top: `${coords.top}px`,
-                left: `${coords.left}px`,
-                width: `${coords.width}px`,
-              }
-            : undefined
-        }
-        className="action-popover fixed inset-auto m-0 z-50 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1322] shadow-xl text-slate-900 dark:text-slate-100 overflow-hidden"
+      <ResponsivePickerOverlay
+        open={open}
+        onClose={closeOverlay}
+        anchorRef={triggerRef}
+        overlayRef={overlayRef}
+        overlayId={overlayId}
+        title={text("اختيار ملف العميل", "Select customer profile")}
+        subtitle={text(
+          "ابحث باسم العميل أو رقم الجوال واختره بملء الشاشة",
+          "Search by customer name or phone number in full-screen view",
+        )}
+        icon={<User className="h-5 w-5" aria-hidden="true" />}
+        matchTriggerWidth
+        minPopoverWidth={340}
+        maxPopoverWidth={520}
       >
-        <div className="flex flex-col">
-          {/* Search Header */}
-          <div className="border-b border-slate-100 dark:border-slate-800 p-2.5 bg-slate-50/60 dark:bg-slate-900/40">
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-                aria-hidden="true"
-              />
-              <Input
-                ref={searchInputRef}
-                id={searchInputId}
-                type="search"
-                aria-label={ui("بحث عن عميل")}
-                placeholder={ui("بحث عن عميل...")}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                className="ps-9 pe-8 h-9 text-base sm:text-sm rounded-lg"
-              />
-              {search && (
-                <button
-                  type="button"
-                  aria-label={ui("مسح البحث")}
-                  onClick={() => {
-                    setSearch("");
-                    searchInputRef.current?.focus({ preventScroll: true });
-                  }}
-                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          </div>
+        <CustomerModalBody
+          key={sessionKey}
+          value={value}
+          emptyLabel={emptyLabel}
+          baseCustomers={baseCustomers.data?.items || []}
+          onChoose={handleChoose}
+        />
+      </ResponsivePickerOverlay>
 
-          {/* Options List */}
-          <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
-            <button
-              type="button"
-              onClick={(event) => handleChoose(null, event.detail === 0)}
-              className={cn(
-                "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-start transition-colors min-h-10 cursor-pointer",
-                !value
-                  ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 font-semibold"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80"
-              )}
-            >
-              <span>{ui(emptyLabel)}</span>
-              {!value && <Check className="h-3.5 w-3.5 text-amber-600 shrink-0" aria-hidden="true" />}
-            </button>
-
-            <hr className="my-1 border-0 border-t border-slate-100 dark:border-slate-800" />
-
-            {searchedCustomers.loading && activeItems.length === 0 ? (
-              <div className="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                {ui("جارٍ التحميل…")}
-              </div>
-            ) : activeItems.length === 0 ? (
-              <div className="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                {ui("لا توجد نتائج")}
-              </div>
-            ) : (
-              activeItems.map((customer) => {
-                const isSelected = customer.id === value;
-                return (
-                  <button
-                    key={customer.id}
-                    type="button"
-                    onClick={(event) => handleChoose(customer, event.detail === 0)}
-                    className={cn(
-                      "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs text-start transition-colors min-h-11 sm:min-h-9.5 cursor-pointer",
-                      isSelected
-                        ? "bg-amber-500/10 text-amber-900 dark:text-amber-200 font-semibold"
-                        : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
-                    )}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      {customer.type === "COMPANY" ? (
-                        <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                      ) : (
-                        <User className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                      )}
-                      <span className="truncate font-semibold">{customer.name}</span>
-                    </span>
-
-                    <span className="flex shrink-0 items-center gap-1.5">
-                      {customer.phone && (
-                        <bdi
-                          dir="ltr"
-                          className="font-mono text-[11px] text-slate-500 dark:text-slate-400"
-                        >
-                          {customer.phone}
-                        </bdi>
-                      )}
-                      <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0">
-                        {ui(customer.type === "COMPANY" ? "شركة" : "فرد")}
-                      </Badge>
-                      {isSelected && (
-                        <Check className="h-3.5 w-3.5 text-amber-600 shrink-0" aria-hidden="true" />
-                      )}
-                    </span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          {/* Footer link to Customers */}
-          <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-1.5">
-            <Link
-              href="/admin/customers"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => close(false)}
-              className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition-colors"
-            >
-              <span>{ui("إضافة أو تعديل عميل")}</span>
-              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {fetchError && (
+      {baseCustomers.error && (
         <p
           role="alert"
-          className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-700 dark:text-rose-300"
+          className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-700 dark:text-rose-300"
         >
-          {ui(fetchError)}
+          {ui(baseCustomers.error)}
         </p>
       )}
     </div>

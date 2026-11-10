@@ -32,6 +32,11 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
   const links = navigationFor(role).filter((item) => item.mobile);
   const active = routeInfo(pathname)?.href;
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const isWideCreationRoute =
+    pathname.startsWith("/admin/contracts/new") ||
+    pathname.startsWith("/admin/invoices/new") ||
+    pathname.startsWith("/admin/zatca/new") ||
+    pathname.startsWith("/captain/contract");
 
   useEffect(() => {
     if (isLoading) return;
@@ -116,7 +121,13 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
           className="app-main min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-scroll"
         >
           <div
-            className={`app-content mx-auto w-full min-w-0 ${role === "ADMIN" ? "max-w-[1440px]" : "max-w-5xl"}`}
+            className={`app-content mx-auto w-full min-w-0 ${
+              isWideCreationRoute
+                ? "max-w-[1680px]"
+                : role === "ADMIN"
+                  ? "max-w-[1440px]"
+                  : "max-w-5xl"
+            }`}
           >
             {children}
           </div>

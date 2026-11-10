@@ -9,12 +9,12 @@ export default function InspectionChecklist({ checks, onChange, isDisabled }: In
     <div className="grid gap-6 md:grid-cols-3">
       {INSPECTION_GROUPS.map((group) => (
         <fieldset key={group.id} disabled={isDisabled} className="min-w-0">
-          <legend className="mb-3 text-sm font-semibold">{group[language]}</legend>
-          <div className="space-y-1.5">
+          <legend className="mb-3 text-base font-semibold">{group[language]}</legend>
+          <div className="space-y-2">
             {group.items.map((item) => (
               <label
                 key={item.key}
-                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border theme-border px-3 py-2.5 text-sm transition-colors hover:bg-[var(--bg-card-subtle)] has-[:checked]:border-emerald-500/35 has-[:checked]:bg-emerald-500/[0.04]"
+                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border theme-border px-3.5 py-2.5 text-base font-medium transition-colors hover:bg-[var(--bg-card-subtle)] has-[:checked]:border-emerald-500/35 has-[:checked]:bg-emerald-500/[0.04]"
               >
                 <Checkbox
                   checked={checks[item.key] ?? false}

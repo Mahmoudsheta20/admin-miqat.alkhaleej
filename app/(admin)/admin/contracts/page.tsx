@@ -8,7 +8,29 @@ import LoadError from "@/app/_components/LoadError";
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
-import { FileText, Search, Users, X, Plane, MapPin, Calendar, Clock, Car, CheckCircle2, AlertCircle, ClipboardCheck, ChevronLeft, ChevronRight, User, Copy, Check, Phone, Trash2, ShieldCheck, ArrowLeftRight } from "lucide-react";
+import {
+  FileText,
+  Search,
+  Users,
+  X,
+  Plane,
+  MapPin,
+  Calendar,
+  Clock,
+  Car,
+  CheckCircle2,
+  AlertCircle,
+  ClipboardCheck,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Copy,
+  Check,
+  Phone,
+  Trash2,
+  ShieldCheck,
+  ArrowLeftRight,
+} from "lucide-react";
 import { getContracts, deleteContract } from "@/app/_actions/contract";
 import { getCaptains } from "@/app/_actions/captain";
 import { Contract, OperationType, SystemUser } from "@/lib/types";
@@ -34,7 +56,11 @@ import {
   TableCell,
 } from "@/app/_components/ui";
 import { formatOfficialDate } from "@/lib/contractConstants";
-import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import {
+  fetchCached,
+  getCachedData,
+  invalidateClientCache,
+} from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 
 export default function AdminContractsPage() {
@@ -84,15 +110,28 @@ export default function AdminContractsPage() {
   const [submittedSearch, setSubmittedSearch] = useUrlState<string>("q", "");
   const [searchDraft, setSearch] = useState<string | null>(null);
   const search = searchDraft ?? submittedSearch;
-  const [typeFilter, setTypeFilter] = useUrlState<string>("type", "ALL", ["ALL","AIRPORT_TRANSFER","CITY_TOUR","INTERCITY","HAJJ_UMRAH"]);
-  const [captainFilter, setCaptainFilter] = useUrlState<string>("captain", "ALL");
+  const [typeFilter, setTypeFilter] = useUrlState<string>("type", "ALL", [
+    "ALL",
+    "AIRPORT_TRANSFER",
+    "CITY_TOUR",
+    "INTERCITY",
+    "HAJJ_UMRAH",
+  ]);
+  const [captainFilter, setCaptainFilter] = useUrlState<string>(
+    "captain",
+    "ALL",
+  );
   const [inspectionFilter, setInspectionFilter] = useUrlState<
     "ALL" | "INSPECTED" | "PENDING"
   >("inspection", "ALL", ["ALL", "INSPECTED", "PENDING"]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useUrlState<number>("page", 1);
-  const [pageSize, setPageSize] = useUrlState<number>("size", 10, [10,25,50,100]);
+  const [pageSize, setPageSize] = useUrlState<number>(
+    "size",
+    10,
+    [10, 25, 50, 100],
+  );
 
   // Modal states
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
@@ -426,9 +465,15 @@ export default function AdminContractsPage() {
       />
       {/* Sync Status Alert Banner */}
       {syncStatus && (
-        <div role="status" className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-xs">
+        <div
+          role="status"
+          className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-xs"
+        >
           <div className="flex items-center gap-2 min-w-0">
-            <ClipboardCheck className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
+            <ClipboardCheck
+              className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0"
+              aria-hidden="true"
+            />
             <span className="truncate">{ui(syncStatus)}</span>
           </div>
           <button
@@ -446,7 +491,11 @@ export default function AdminContractsPage() {
       <PageHeader
         title={ui(t("contracts.title"))}
         subtitle={ui(t("contracts.subtitle"))}
-        badge={isRTL ? "عقود النقل البري المعتمدة" : "Licensed Land Transport Contracts"}
+        badge={
+          isRTL
+            ? "عقود النقل البري المعتمدة"
+            : "Licensed Land Transport Contracts"
+        }
         icon={FileText}
         onRefresh={() => void fetchContractsData(undefined, true)}
         isRefreshing={isLoading}
@@ -515,13 +564,20 @@ export default function AdminContractsPage() {
             onSubmit={handleSearchSubmit}
             className="md:col-span-6 lg:col-span-5 theme-card px-3.5 py-2.5 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-amber-500 transition shadow-xs"
           >
-            <Search className="w-4 h-4 text-[var(--text-muted)] shrink-0" aria-hidden="true" />
+            <Search
+              className="w-4 h-4 text-[var(--text-muted)] shrink-0"
+              aria-hidden="true"
+            />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={ui("ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...")}
-              aria-label={ui("ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...")}
+              placeholder={ui(
+                "ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...",
+              )}
+              aria-label={ui(
+                "ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...",
+              )}
               className="w-full min-h-9 bg-transparent border-none text-base sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-hidden"
             />
             {search && (
@@ -542,18 +598,23 @@ export default function AdminContractsPage() {
               type="submit"
               className="min-h-11 sm:min-h-8 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition shrink-0 cursor-pointer"
             >
-              {ui("بحث")}</button>
+              {ui("بحث")}
+            </button>
           </form>
 
           {/* Captain Selector Filter */}
           <div className="md:col-span-6 lg:col-span-4 theme-card px-3 py-2 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-amber-500 transition shadow-xs">
-            <User className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+            <User
+              className="w-4 h-4 text-amber-500 shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <label
                 htmlFor="captainFilterSelect"
                 className="block text-xs text-[var(--text-muted)] font-medium leading-none mb-1"
               >
-                {ui("تصفية حسب الكابتن:")}</label>
+                {ui("تصفية حسب الكابتن:")}
+              </label>
               {isLoadingCaptains ? (
                 <div className="h-5 w-32 bg-slate-200 dark:bg-slate-700/60 rounded-md animate-pulse my-0.5" />
               ) : (
@@ -564,7 +625,8 @@ export default function AdminContractsPage() {
                   className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
                 >
                   <option value="ALL" className="bg-white dark:bg-slate-900">
-                    {ui("جميع الكباتن (")}{Array.isArray(captains) ? captains.length : 0})
+                    {ui("جميع الكباتن (")}
+                    {Array.isArray(captains) ? captains.length : 0})
                   </option>
                   {(Array.isArray(captains) ? captains : []).map((cap) => (
                     <option
@@ -572,7 +634,10 @@ export default function AdminContractsPage() {
                       value={cap.id}
                       className="bg-white dark:bg-slate-900"
                     >
-                      {cap.name}{cap.assignedVehiclePlate ? ` (${cap.assignedVehiclePlate})` : ""}
+                      {cap.name}
+                      {cap.assignedVehiclePlate
+                        ? ` (${cap.assignedVehiclePlate})`
+                        : ""}
                     </option>
                   ))}
                 </select>
@@ -593,13 +658,17 @@ export default function AdminContractsPage() {
 
           {/* Inspection Filter Dropdown */}
           <div className="md:col-span-6 lg:col-span-3 theme-card px-3 py-2 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-amber-500 transition shadow-xs">
-            <ClipboardCheck className="w-4 h-4 text-emerald-500 shrink-0" aria-hidden="true" />
+            <ClipboardCheck
+              className="w-4 h-4 text-emerald-500 shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <label
                 htmlFor="inspectionFilterSelect"
                 className="block text-xs text-[var(--text-muted)] font-medium leading-none mb-1"
               >
-                {ui("الفحص التشغيلي:")}</label>
+                {ui("الفحص التشغيلي:")}
+              </label>
               <select
                 id="inspectionFilterSelect"
                 value={inspectionFilter}
@@ -612,15 +681,18 @@ export default function AdminContractsPage() {
                 className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
               >
                 <option value="ALL" className="bg-white dark:bg-slate-900">
-                  {ui("كافة الحالات")}</option>
+                  {ui("كافة الحالات")}
+                </option>
                 <option
                   value="INSPECTED"
                   className="bg-white dark:bg-slate-900"
                 >
-                  {ui("مفحوص ومعتمد فقط (")}{stats.inspected})
+                  {ui("مفحوص ومعتمد فقط (")}
+                  {stats.inspected})
                 </option>
                 <option value="PENDING" className="bg-white dark:bg-slate-900">
-                  {ui("بانتظار الفحص فقط (")}{stats.pending})
+                  {ui("بانتظار الفحص فقط (")}
+                  {stats.pending})
                 </option>
               </select>
             </div>
@@ -674,7 +746,8 @@ export default function AdminContractsPage() {
               className="inline-flex min-h-10 sm:min-h-8 items-center gap-1.5 text-xs text-rose-700 dark:text-rose-400 hover:underline font-bold self-start sm:self-auto shrink-0 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" />
-              {ui("إعادة ضبط جميع عوامل التصفية")}</button>
+              {ui("إعادة ضبط جميع عوامل التصفية")}
+            </button>
           )}
         </div>
       </div>
@@ -706,19 +779,26 @@ export default function AdminContractsPage() {
                 <TableHeader className="bg-slate-50/95 dark:bg-slate-900/90 border-b theme-border text-[var(--text-muted)] dark:text-slate-400 font-bold">
                   <TableRow>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("رقم العقد والعملية")}</TableHead>
+                      {ui("رقم العقد والعملية")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("العميل / الطرف الثاني")}</TableHead>
+                      {ui("العميل / الطرف الثاني")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("الكابتن واللوحة")}</TableHead>
+                      {ui("الكابتن واللوحة")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("مسار الرحلة والموعد")}</TableHead>
+                      {ui("مسار الرحلة والموعد")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("الفحص التشغيلي")}</TableHead>
+                      {ui("الفحص التشغيلي")}
+                    </TableHead>
                     <TableHead className="px-3 py-3.5 text-center whitespace-nowrap">
-                      {ui("الركاب")}</TableHead>
+                      {ui("الركاب")}
+                    </TableHead>
                     <TableHead className="sticky end-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap bg-slate-50/95 dark:bg-slate-900/95 border-s border-slate-200/80 dark:border-slate-800">
-                      {ui("الإجراءات")}</TableHead>
+                      {ui("الإجراءات")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="text-slate-800 dark:text-slate-200">
@@ -832,11 +912,14 @@ export default function AdminContractsPage() {
               <FileText className="w-7 h-7" />
             </div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-              {ui("لا توجد عقود مسجلة")}</h3>
+              {ui("لا توجد عقود مسجلة")}
+            </h3>
             <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 max-w-sm mx-auto">
-              {ui(hasActiveFilters
-                ? "لا توجد نتائج تطابق معايير البحث والتصفية المحددة. جرب تغيير المدخلات أو إعادة ضبط التصفية."
-                : "لم يتم إنشاء أي عقود بعد. ابدأ بإنشاء عقد جديد وتوثيقه في النظام.")}
+              {ui(
+                hasActiveFilters
+                  ? "لا توجد نتائج تطابق معايير البحث والتصفية المحددة. جرب تغيير المدخلات أو إعادة ضبط التصفية."
+                  : "لم يتم إنشاء أي عقود بعد. ابدأ بإنشاء عقد جديد وتوثيقه في النظام.",
+              )}
             </p>
             {hasActiveFilters ? (
               <button
@@ -844,13 +927,16 @@ export default function AdminContractsPage() {
                 onClick={handleResetFilters}
                 className="min-h-11 sm:min-h-9 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-amber-700 dark:text-amber-400 transition cursor-pointer"
               >
-                {ui("إلغاء عوامل التصفية")}</button>
+                {ui("إلغاء عوامل التصفية")}
+              </button>
             ) : (
               <Link
                 href="/admin/contracts/new"
                 className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs"
               >
-                <FileText className="w-4 h-4" aria-hidden="true" />{ui("+ إنشاء أول عقد")}</Link>
+                <FileText className="w-4 h-4" aria-hidden="true" />
+                {ui("+ إنشاء أول عقد")}
+              </Link>
             )}
           </div>
         ) : (
@@ -861,19 +947,26 @@ export default function AdminContractsPage() {
                 <TableHeader className="bg-slate-50/95 dark:bg-slate-900/90 border-b theme-border text-[var(--text-muted)] dark:text-slate-400 font-bold">
                   <TableRow>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("رقم العقد والعملية")}</TableHead>
+                      {ui("رقم العقد والعملية")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("العميل / الطرف الثاني")}</TableHead>
+                      {ui("العميل / الطرف الثاني")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("الكابتن واللوحة")}</TableHead>
+                      {ui("الكابتن واللوحة")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("مسار الرحلة والموعد")}</TableHead>
+                      {ui("مسار الرحلة والموعد")}
+                    </TableHead>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
-                      {ui("الفحص التشغيلي")}</TableHead>
+                      {ui("الفحص التشغيلي")}
+                    </TableHead>
                     <TableHead className="px-3 py-3.5 text-center whitespace-nowrap">
-                      {ui("الركاب")}</TableHead>
+                      {ui("الركاب")}
+                    </TableHead>
                     <TableHead className="sticky end-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap bg-slate-50/95 dark:bg-slate-900/95 border-s border-slate-200/80 dark:border-slate-800">
-                      {ui("الإجراءات")}</TableHead>
+                      {ui("الإجراءات")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="text-slate-800 dark:text-slate-200">
@@ -894,41 +987,50 @@ export default function AdminContractsPage() {
                             >
                               {c.referenceNumber}
                             </Link>
-                              <button
-                                type="button"
-                                onClick={(e) =>
-                                  handleCopyRef(c.referenceNumber, e)
-                                }
-                                aria-label={`${ui("نسخ رقم العقد")} ${c.referenceNumber}`}
-                                className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
-                                title={ui("نسخ رقم العقد")}
+                            <button
+                              type="button"
+                              onClick={(e) =>
+                                handleCopyRef(c.referenceNumber, e)
+                              }
+                              aria-label={`${ui("نسخ رقم العقد")} ${c.referenceNumber}`}
+                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
+                              title={ui("نسخ رقم العقد")}
+                            >
+                              {copiedRef === c.referenceNumber ? (
+                                <Check
+                                  className="w-3.5 h-3.5 text-emerald-500"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <Copy
+                                  className="w-3.5 h-3.5"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            <StatusBadge
+                              type="operation"
+                              status={c.operationType}
+                              size="sm"
+                            />
+                            {c.status && (
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold border ${
+                                  c.status === "APPROVED" ||
+                                  c.status === "ACTIVE"
+                                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                                    : c.status === "REJECTED" ||
+                                        c.status === "CANCELLED"
+                                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                                      : c.status === "EXPIRED"
+                                        ? "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
+                                        : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                }`}
                               >
-                                {copiedRef === c.referenceNumber ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" aria-hidden="true" />
-                                )}
-                              </button>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                              <StatusBadge
-                                type="operation"
-                                status={c.operationType}
-                                size="sm"
-                              />
-                              {c.status && (
-                                <span
-                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold border ${
-                                    c.status === "APPROVED" || c.status === "ACTIVE"
-                                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                                      : c.status === "REJECTED" || c.status === "CANCELLED"
-                                        ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
-                                        : c.status === "EXPIRED"
-                                          ? "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
-                                          : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                                  }`}
-                                >
-                                  {ui(c.status === "APPROVED"
+                                {ui(
+                                  c.status === "APPROVED"
                                     ? "معتمد"
                                     : c.status === "ACTIVE"
                                       ? "نشط"
@@ -938,145 +1040,188 @@ export default function AdminContractsPage() {
                                           ? "ملغي"
                                           : c.status === "EXPIRED"
                                             ? "منتهي"
-                                            : "قيد المراجعة")}
+                                            : "قيد المراجعة",
+                                )}
+                              </span>
+                            )}
+                            {c.flightNumber && (
+                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-mono text-xs font-bold">
+                                <Plane
+                                  className="w-2.5 h-2.5 text-blue-500"
+                                  aria-hidden="true"
+                                />
+                                <bdi>
+                                  {c.flightCarrier ? `${c.flightCarrier} ` : ""}
+                                  {c.flightNumber}
+                                </bdi>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        {/* Customer */}
+                        <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 border theme-border"
+                              aria-hidden="true"
+                            >
+                              {c.customerName
+                                ? c.customerName.trim().charAt(0)
+                                : "ع"}
+                            </div>
+                            <div className="min-w-0">
+                              <div
+                                className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[140px]"
+                                title={c.customerName}
+                              >
+                                {c.customerName}
+                              </div>
+                              {c.customerPhone ? (
+                                <a
+                                  href={`tel:${c.customerPhone}`}
+                                  className="text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 font-mono transition inline-flex items-center gap-1 mt-0.5"
+                                  dir="ltr"
+                                >
+                                  <Phone
+                                    className="w-2.5 h-2.5 opacity-60"
+                                    aria-hidden="true"
+                                  />
+                                  <span>{c.customerPhone}</span>
+                                </a>
+                              ) : (
+                                <span className="text-xs text-[var(--text-muted)]">
+                                  —
                                 </span>
                               )}
-                              {c.flightNumber && (
-                                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-mono text-xs font-bold">
-                                  <Plane className="w-2.5 h-2.5 text-blue-500" aria-hidden="true" />
-                                  <bdi>
-                                    {c.flightCarrier ? `${c.flightCarrier} ` : ""}
-                                    {c.flightNumber}
-                                  </bdi>
-                                </div>
-                              )}
                             </div>
-                          </TableCell>
+                          </div>
+                        </TableCell>
 
-                          {/* Customer */}
-                          <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 border theme-border" aria-hidden="true">
-                                {c.customerName
-                                  ? c.customerName.trim().charAt(0)
-                                  : "ع"}
-                              </div>
-                              <div className="min-w-0">
-                                <div
-                                  className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[140px]"
-                                  title={c.customerName}
-                                >
-                                  {c.customerName}
-                                </div>
-                                {c.customerPhone ? (
-                                  <a
-                                    href={`tel:${c.customerPhone}`}
-                                    className="text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 font-mono transition inline-flex items-center gap-1 mt-0.5"
-                                    dir="ltr"
-                                  >
-                                    <Phone className="w-2.5 h-2.5 opacity-60" aria-hidden="true" />
-                                    <span>{c.customerPhone}</span>
-                                  </a>
-                                ) : (
-                                  <span className="text-xs text-[var(--text-muted)]">
-                                    —
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
+                        {/* Captain & Vehicle */}
+                        <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
+                          <div className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                            <span
+                              className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"
+                              aria-hidden="true"
+                            />
+                            <span
+                              className="truncate max-w-[130px]"
+                              title={c.captain?.name || ui("الكابتن")}
+                            >
+                              {c.captain?.name || ui("الكابتن")}
+                            </span>
+                          </div>
+                          <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/90 font-mono text-xs font-bold text-slate-700 dark:text-slate-300 border theme-border">
+                            <Car
+                              className="w-3 h-3 text-amber-500"
+                              aria-hidden="true"
+                            />
+                            <bdi>{c.vehiclePlate}</bdi>
+                          </div>
+                        </TableCell>
 
-                          {/* Captain & Vehicle */}
-                          <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
-                            <div className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+                        {/* Route & Date */}
+                        <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-xs">
+                              <MapPin
+                                className="w-3 h-3 text-emerald-500 shrink-0"
+                                aria-hidden="true"
+                              />
                               <span
-                                className="truncate max-w-[130px]"
-                                title={c.captain?.name || ui("الكابتن")}
+                                className="truncate max-w-[140px]"
+                                title={c.origin}
                               >
-                                {c.captain?.name || ui("الكابتن")}
+                                {c.origin}
+                              </span>
+                              <span
+                                className="text-[var(--text-muted)] text-xs mx-0.5"
+                                aria-hidden="true"
+                              >
+                                {isRTL ? "←" : "→"}
+                              </span>
+                              <span
+                                className="truncate max-w-[140px]"
+                                title={c.destination}
+                              >
+                                {c.destination}
                               </span>
                             </div>
-                            <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/90 font-mono text-xs font-bold text-slate-700 dark:text-slate-300 border theme-border">
-                              <Car className="w-3 h-3 text-amber-500" aria-hidden="true" />
-                              <bdi>{c.vehiclePlate}</bdi>
+                            <div className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)]">
+                              <span className="flex items-center gap-1">
+                                <Calendar
+                                  className="w-2.5 h-2.5"
+                                  aria-hidden="true"
+                                />
+                                <bdi dir="ltr">{c.tripDate}</bdi>
+                              </span>
+                              <span aria-hidden="true">•</span>
+                              <span className="flex items-center gap-1">
+                                <Clock
+                                  className="w-2.5 h-2.5"
+                                  aria-hidden="true"
+                                />
+                                <bdi dir="ltr">{c.tripTime}</bdi>
+                              </span>
                             </div>
-                          </TableCell>
+                          </div>
+                        </TableCell>
 
-                          {/* Route & Date */}
-                          <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-xs">
-                                <MapPin className="w-3 h-3 text-emerald-500 shrink-0" aria-hidden="true" />
-                                <span
-                                  className="truncate max-w-[140px]"
-                                  title={c.origin}
-                                >
-                                  {c.origin}
-                                </span>
-                                <span className="text-[var(--text-muted)] text-xs mx-0.5" aria-hidden="true">
-                                  {isRTL ? "←" : "→"}
-                                </span>
-                                <span
-                                  className="truncate max-w-[140px]"
-                                  title={c.destination}
-                                >
-                                  {c.destination}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)]">
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="w-2.5 h-2.5" aria-hidden="true" />
-                                  <bdi dir="ltr">{c.tripDate}</bdi>
-                                </span>
-                                <span aria-hidden="true">•</span>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-2.5 h-2.5" aria-hidden="true" />
-                                  <bdi dir="ltr">{c.tripTime}</bdi>
-                                </span>
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          {/* Inspection Status Check */}
-                          <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
-                            {isInspected ? (
-                              <button
-                                type="button"
-                                onClick={() => openContractDetails(c, "inspection")}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 text-xs font-bold hover:bg-emerald-500/20 transition cursor-pointer"
-                                title={ui("فحص تشغيلي مكتمل - اضغط للتفاصيل")}
-                              >
-                                <ClipboardCheck className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
-                                <span>{ui("مفحوص ومعتمد")}</span>
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => openContractDetails(c, "inspection")}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
-                                title={ui("تنبيه: بانتظار الفحص التشغيلي قبل الرحلة")}
-                              >
-                                <AlertCircle className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
-                                <span>{ui("بانتظار الفحص")}</span>
-                              </button>
-                            )}
-                          </TableCell>
-
-                          {/* Passenger Count Button */}
-                          <TableCell className="px-3 py-3 align-middle text-center whitespace-nowrap border-b theme-border">
+                        {/* Inspection Status Check */}
+                        <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
+                          {isInspected ? (
                             <button
                               type="button"
-                              onClick={() => openContractDetails(c, "passengers")}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-100 hover:bg-amber-500/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition border theme-border hover:border-amber-500/30 cursor-pointer"
-                              title={ui("عرض كشف الركاب والمرافقين")}
+                              onClick={() =>
+                                openContractDetails(c, "inspection")
+                              }
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 text-xs font-bold hover:bg-emerald-500/20 transition cursor-pointer"
+                              title={ui("فحص تشغيلي مكتمل - اضغط للتفاصيل")}
                             >
-                              <Users className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
-                              <span className="font-mono">
-                                {c.passengers?.length || 0}
-                              </span>
+                              <ClipboardCheck
+                                className="w-3.5 h-3.5 text-emerald-500"
+                                aria-hidden="true"
+                              />
+                              <span>{ui("مفحوص ومعتمد")}</span>
                             </button>
-                          </TableCell>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openContractDetails(c, "inspection")
+                              }
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
+                              title={ui(
+                                "تنبيه: بانتظار الفحص التشغيلي قبل الرحلة",
+                              )}
+                            >
+                              <AlertCircle
+                                className="w-3.5 h-3.5 text-amber-500"
+                                aria-hidden="true"
+                              />
+                              <span>{ui("بانتظار الفحص")}</span>
+                            </button>
+                          )}
+                        </TableCell>
+
+                        {/* Passenger Count Button */}
+                        <TableCell className="px-3 py-3 align-middle text-center whitespace-nowrap border-b theme-border">
+                          <button
+                            type="button"
+                            onClick={() => openContractDetails(c, "passengers")}
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-100 hover:bg-amber-500/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition border theme-border hover:border-amber-500/30 cursor-pointer"
+                            title={ui("عرض كشف الركاب والمرافقين")}
+                          >
+                            <Users
+                              className="w-3.5 h-3.5 text-amber-500"
+                              aria-hidden="true"
+                            />
+                            <span className="font-mono">
+                              {c.passengers?.length || 0}
+                            </span>
+                          </button>
+                        </TableCell>
 
                         {/* Action Buttons (Sticky end) */}
                         <TableCell className="sticky end-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors px-3.5 py-3 align-middle text-end whitespace-nowrap border-b theme-border border-s border-slate-200/80 dark:border-slate-800">
@@ -1126,7 +1271,8 @@ export default function AdminContractsPage() {
                   <strong className="text-amber-700 dark:text-amber-400 font-mono">
                     {filteredContracts.length}
                   </strong>{" "}
-                  {ui("عقد")}</span>
+                  {ui("عقد")}
+                </span>
 
                 <div className="flex items-center gap-1.5">
                   <label
@@ -1243,11 +1389,16 @@ export default function AdminContractsPage() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white truncate">
-                    {ui("تفاصيل العقد:")} <bdi>{selectedContract.referenceNumber}</bdi>
+                    {ui("تفاصيل العقد:")}{" "}
+                    <bdi>{selectedContract.referenceNumber}</bdi>
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] break-words">
-                    {ui("العميل:")} <bdi>{selectedContract.customerName}</bdi> {ui("• تاريخ الإصدار:")}{" "}
-                    <span className="font-mono text-amber-700 dark:text-amber-400 font-bold" dir="ltr">
+                    {ui("العميل:")} <bdi>{selectedContract.customerName}</bdi>{" "}
+                    {ui("• تاريخ الإصدار:")}{" "}
+                    <span
+                      className="font-mono text-amber-700 dark:text-amber-400 font-bold"
+                      dir="ltr"
+                    >
                       {formatOfficialDate(
                         selectedContract.issueDate ||
                           selectedContract.createdAt,
@@ -1279,28 +1430,32 @@ export default function AdminContractsPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border text-xs">
                 <div>
                   <span className="text-[var(--text-muted)] text-xs block">
-                    {ui("الكابتن المعتمد")}</span>
+                    {ui("الكابتن المعتمد")}
+                  </span>
                   <span className="font-bold text-slate-900 dark:text-white">
                     {selectedContract.captain?.name || ui("كابتن ميقات")}
                   </span>
                 </div>
                 <div>
                   <span className="text-[var(--text-muted)] text-xs block">
-                    {ui("رقم اللوحة")}</span>
+                    {ui("رقم اللوحة")}
+                  </span>
                   <span className="font-mono font-bold text-slate-900 dark:text-white">
                     <bdi>{selectedContract.vehiclePlate}</bdi>
                   </span>
                 </div>
                 <div>
                   <span className="text-[var(--text-muted)] text-xs block">
-                    {ui("محطة الانطلاق")}</span>
+                    {ui("محطة الانطلاق")}
+                  </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedContract.origin}
                   </span>
                 </div>
                 <div>
                   <span className="text-[var(--text-muted)] text-xs block">
-                    {ui("الوجهة المقصودة")}</span>
+                    {ui("الوجهة المقصودة")}
+                  </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedContract.destination}
                   </span>
@@ -1318,17 +1473,29 @@ export default function AdminContractsPage() {
               >
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                    <ClipboardCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
-                    {ui("بيانات الفحص والإقرار التشغيلي")}</h3>
+                    <ClipboardCheck
+                      className="w-4 h-4 text-emerald-500"
+                      aria-hidden="true"
+                    />
+                    {ui("بيانات الفحص والإقرار التشغيلي")}
+                  </h3>
                   {selectedContract.inspectionId ||
                   selectedContract.inspection ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold inline-flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-500" aria-hidden="true" />
-                      {ui("معتمد ومكتمل")}</span>
+                      <CheckCircle2
+                        className="w-3 h-3 text-emerald-500"
+                        aria-hidden="true"
+                      />
+                      {ui("معتمد ومكتمل")}
+                    </span>
                   ) : (
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-bold inline-flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3 text-amber-500" aria-hidden="true" />
-                      {ui("بانتظار الفحص")}</span>
+                      <AlertCircle
+                        className="w-3 h-3 text-amber-500"
+                        aria-hidden="true"
+                      />
+                      {ui("بانتظار الفحص")}
+                    </span>
                   )}
                 </div>
 
@@ -1337,7 +1504,8 @@ export default function AdminContractsPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
                       <div>
                         <span className="text-[var(--text-muted)] text-xs block">
-                          {ui("تاريخ الفحص")}</span>
+                          {ui("تاريخ الفحص")}
+                        </span>
                         <span
                           className="font-mono font-bold text-slate-800 dark:text-slate-200"
                           dir="ltr"
@@ -1351,17 +1519,23 @@ export default function AdminContractsPage() {
                       </div>
                       <div>
                         <span className="text-[var(--text-muted)] text-xs block">
-                          {ui("لوحة المركبة المفحوصة")}</span>
+                          {ui("لوحة المركبة المفحوصة")}
+                        </span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                           <bdi>{selectedContract.inspection.vehiclePlate}</bdi>
                         </span>
                       </div>
                       <div>
                         <span className="text-[var(--text-muted)] text-xs block">
-                          {ui("إقرار الكابتن")}</span>
+                          {ui("إقرار الكابتن")}
+                        </span>
                         <span className="font-bold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          {ui("تم الإقرار والتعهد")}</span>
+                          <CheckCircle2
+                            className="w-3.5 h-3.5"
+                            aria-hidden="true"
+                          />
+                          {ui("تم الإقرار والتعهد")}
+                        </span>
                       </div>
                     </div>
 
@@ -1371,39 +1545,49 @@ export default function AdminContractsPage() {
                         className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.fireExtinguisher ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
                       >
                         {ui("طفاية الحريق:")}{" "}
-                        {ui(selectedContract.inspection.fireExtinguisher
-                          ? "جاهزة"
-                          : "غير متوفرة")}
+                        {ui(
+                          selectedContract.inspection.fireExtinguisher
+                            ? "جاهزة"
+                            : "غير متوفرة",
+                        )}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.firstAidKit ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
                       >
                         {ui("حقيبة الإسعافات:")}{" "}
-                        {ui(selectedContract.inspection.firstAidKit
-                          ? "جاهزة"
-                          : "غير متوفرة")}
+                        {ui(
+                          selectedContract.inspection.firstAidKit
+                            ? "جاهزة"
+                            : "غير متوفرة",
+                        )}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.seatBelts ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
                       >
                         {ui("أحزمة الأمان:")}{" "}
-                        {ui(selectedContract.inspection.seatBelts
-                          ? "سليمة"
-                          : "فحص مطلوب")}
+                        {ui(
+                          selectedContract.inspection.seatBelts
+                            ? "سليمة"
+                            : "فحص مطلوب",
+                        )}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.tires ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
                       >
                         {ui("سلامة الإطارات:")}{" "}
-                        {ui(selectedContract.inspection.tires
-                          ? "سليمة"
-                          : "فحص مطلوب")}
+                        {ui(
+                          selectedContract.inspection.tires
+                            ? "سليمة"
+                            : "فحص مطلوب",
+                        )}
                       </span>
                     </div>
                   </div>
                 ) : selectedContract.inspectionId ? (
                   <p className="text-xs text-emerald-700 dark:text-emerald-300 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                    {ui("تم ربط فحص تشغيلي وإقرار معتمد لهذا العقد برقم معرّف:")}{" "}
+                    {ui(
+                      "تم ربط فحص تشغيلي وإقرار معتمد لهذا العقد برقم معرّف:",
+                    )}{" "}
                     <code className="font-mono font-bold" dir="ltr">
                       {selectedContract.inspectionId.slice(0, 12)}...
                     </code>
@@ -1411,10 +1595,17 @@ export default function AdminContractsPage() {
                 ) : (
                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-300 space-y-1">
                     <p className="font-bold flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4 text-amber-500" aria-hidden="true" />
-                      {ui("تنبيه تشغيلي إلزامي:")}</p>
+                      <AlertCircle
+                        className="w-4 h-4 text-amber-500"
+                        aria-hidden="true"
+                      />
+                      {ui("تنبيه تشغيلي إلزامي:")}
+                    </p>
                     <p className="text-xs text-amber-700 dark:text-amber-400">
-                      {ui("لم يتم إرفاق الفحص اليومي والإقرار التشغيلي المسبق للمركبة قبل انطلاق هذه الرحلة. يُرجى توجيه الكابتن لإتمام الفحص التشغيلي اليومي عبر بوابته.")}</p>
+                      {ui(
+                        "لم يتم إرفاق الفحص اليومي والإقرار التشغيلي المسبق للمركبة قبل انطلاق هذه الرحلة. يُرجى توجيه الكابتن لإتمام الفحص التشغيلي اليومي عبر بوابته.",
+                      )}
+                    </p>
                   </div>
                 )}
               </div>
@@ -1430,25 +1621,42 @@ export default function AdminContractsPage() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                    <Users className="w-4 h-4 text-amber-500" aria-hidden="true" />
-                    {ui("كشف الركاب والمرافقين المعتمد (")}{selectedContract.passengers?.length || 0} {ui("راكباً)")}</h3>
+                    <Users
+                      className="w-4 h-4 text-amber-500"
+                      aria-hidden="true"
+                    />
+                    {ui("كشف الركاب والمرافقين المعتمد (")}
+                    {selectedContract.passengers?.length || 0} {ui("راكباً)")}
+                  </h3>
                   <span className="text-xs text-[var(--text-muted)] font-medium">
-                    {ui("الصفحة 2 من وثيقة العقد")}</span>
+                    {ui("الصفحة 2 من وثيقة العقد")}
+                  </span>
                 </div>
 
                 {!selectedContract.passengers?.length ? (
                   <p className="text-xs text-[var(--text-muted)] p-4 text-center rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
-                    {ui("لا يوجد ركاب مرافقين مضافين لهذا العقد (تم قيد الضيف الرئيسي فقط)")}</p>
+                    {ui(
+                      "لا يوجد ركاب مرافقين مضافين لهذا العقد (تم قيد الضيف الرئيسي فقط)",
+                    )}
+                  </p>
                 ) : (
                   <div className="rounded-xl border theme-border overflow-hidden">
                     <div className="hidden sm:block">
                       <Table>
                         <TableHeader className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-[var(--text-muted)] font-bold">
                           <TableRow>
-                            <TableHead className="px-3 py-2 text-center w-10">#</TableHead>
-                            <TableHead className="px-3 py-2">{ui("اسم الضيف / الراكب")}</TableHead>
-                            <TableHead className="px-3 py-2">{ui("الجنسية")}</TableHead>
-                            <TableHead className="px-3 py-2">{ui("الهوية / الجواز")}</TableHead>
+                            <TableHead className="px-3 py-2 text-center w-10">
+                              #
+                            </TableHead>
+                            <TableHead className="px-3 py-2">
+                              {ui("اسم الضيف / الراكب")}
+                            </TableHead>
+                            <TableHead className="px-3 py-2">
+                              {ui("الجنسية")}
+                            </TableHead>
+                            <TableHead className="px-3 py-2">
+                              {ui("الهوية / الجواز")}
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y theme-border">
@@ -1514,7 +1722,8 @@ export default function AdminContractsPage() {
               {selectedContract.notes && (
                 <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs">
                   <span className="font-bold text-amber-700 dark:text-amber-400 block mb-1">
-                    {ui("ملاحظات الرحلة والتشغيل:")}</span>
+                    {ui("ملاحظات الرحلة والتشغيل:")}
+                  </span>
                   <p className="text-[var(--text-muted)] dark:text-slate-300">
                     {selectedContract.notes}
                   </p>

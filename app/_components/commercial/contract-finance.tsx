@@ -52,10 +52,11 @@ import {
   Checkbox,
   Input,
   Label,
-  NativeSelect,
   Separator,
 } from "@/app/_components/ui";
 import { CustomerCombobox } from "./customer-combobox";
+import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
+import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 import { useCommercialData, useMutation } from "./shared";
 
 const TAX_CATEGORY_OPTIONS: {
@@ -122,19 +123,23 @@ export function CommercialFields({
   const ui = useUiText();
   const baseId = React.useId();
   const [sameGuest, setSameGuest] = React.useState(false);
-  const [pickedCustomer, setPickedCustomer] = React.useState<Customer | null>(null);
+  const [pickedCustomer, setPickedCustomer] = React.useState<Customer | null>(
+    null,
+  );
 
-  const [pricingOpen, setPricingOpen] = React.useState(() => hasActivePricing(value));
+  const [pricingOpen, setPricingOpen] = React.useState(() =>
+    hasActivePricing(value),
+  );
   const [commissionsOpen, setCommissionsOpen] = React.useState(() =>
-    hasAnyCommission(value)
+    hasAnyCommission(value),
   );
   const [driverEnabled, setDriverEnabled] = React.useState(() =>
-    hasActiveCommission(value.driverCommission)
+    hasActiveCommission(value.driverCommission),
   );
   const [repEnabled, setRepEnabled] = React.useState(
     () =>
       Boolean(value.representativeId) ||
-      hasActiveCommission(value.representativeCommission)
+      hasActiveCommission(value.representativeCommission),
   );
 
   const pricingDraftRef = React.useRef<PricingDraft | null>(null);
@@ -145,7 +150,8 @@ export function CommercialFields({
   } | null>(null);
 
   const isPricingOpen = pricingOpen || hasActivePricing(value);
-  const isDriverOpen = driverEnabled || hasActiveCommission(value.driverCommission);
+  const isDriverOpen =
+    driverEnabled || hasActiveCommission(value.driverCommission);
   const isRepOpen =
     repEnabled ||
     Boolean(value.representativeId) ||
@@ -153,12 +159,16 @@ export function CommercialFields({
   const isCommissionsOpen =
     commissionsOpen || hasAnyCommission(value) || isDriverOpen || isRepOpen;
 
-  const customers = useCommercialData<{ items: Customer[] }>("/customers?search=");
-  const members = useCommercialData<{ items: Member[] }>("/members?representatives=true");
+  const customers = useCommercialData<{ items: Customer[] }>(
+    "/customers?search=",
+  );
+  const members = useCommercialData<{ items: Member[] }>(
+    "/members?representatives=true",
+  );
 
   const activeMembers = React.useMemo(
     () => members.data?.items.filter((m) => m.active) ?? [],
-    [members.data]
+    [members.data],
   );
 
   const activeCustomer = React.useMemo(() => {
@@ -171,19 +181,19 @@ export function CommercialFields({
 
   const preview = purchasePreview(
     value.netAmount,
-    value.taxCategory === "S" ? undefined : "0"
+    value.taxCategory === "S" ? undefined : "0",
   );
   const totalCommissionText = commissionTotalPreview(
     value.driverCommission,
-    value.representativeCommission
+    value.representativeCommission,
   );
   const driverPreviewText = commissionTotalPreview(
     value.driverCommission,
-    emptyCommission()
+    emptyCommission(),
   );
   const repPreviewText = commissionTotalPreview(
     emptyCommission(),
-    value.representativeCommission
+    value.representativeCommission,
   );
 
   function handleTogglePricing(checked: boolean) {
@@ -241,7 +251,8 @@ export function CommercialFields({
           ...value,
           driverCommission: savedDriver ?? emptyCommission(),
           representativeId: savedRep?.representativeId ?? null,
-          representativeCommission: savedRep?.representativeCommission ?? emptyCommission(),
+          representativeCommission:
+            savedRep?.representativeCommission ?? emptyCommission(),
         });
       }
       return;
@@ -250,7 +261,10 @@ export function CommercialFields({
     if (hasActiveCommission(value.driverCommission)) {
       driverDraftRef.current = value.driverCommission;
     }
-    if (value.representativeId || hasActiveCommission(value.representativeCommission)) {
+    if (
+      value.representativeId ||
+      hasActiveCommission(value.representativeCommission)
+    ) {
       repDraftRef.current = {
         representativeId: value.representativeId,
         representativeCommission: value.representativeCommission,
@@ -275,7 +289,8 @@ export function CommercialFields({
       setDriverEnabled(true);
       onChange({
         ...value,
-        driverCommission: draft ?? activeCommissionOrEmpty(value.driverCommission),
+        driverCommission:
+          draft ?? activeCommissionOrEmpty(value.driverCommission),
       });
       return;
     }
@@ -297,7 +312,8 @@ export function CommercialFields({
       setRepEnabled(true);
       onChange({
         ...value,
-        representativeId: draft?.representativeId ?? value.representativeId ?? null,
+        representativeId:
+          draft?.representativeId ?? value.representativeId ?? null,
         representativeCommission:
           draft?.representativeCommission ??
           activeCommissionOrEmpty(value.representativeCommission),
@@ -305,7 +321,10 @@ export function CommercialFields({
       return;
     }
 
-    if (value.representativeId || hasActiveCommission(value.representativeCommission)) {
+    if (
+      value.representativeId ||
+      hasActiveCommission(value.representativeCommission)
+    ) {
       repDraftRef.current = {
         representativeId: value.representativeId,
         representativeCommission: value.representativeCommission,
@@ -339,13 +358,14 @@ export function CommercialFields({
     <Card
       className={cn(
         "overflow-hidden",
-        embedded && "border-0 rounded-none shadow-none bg-transparent dark:bg-transparent"
+        embedded &&
+          "border-0 rounded-none shadow-none bg-transparent dark:bg-transparent",
       )}
     >
       <CardHeader
         className={cn(
           "border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/40 px-5 py-4 sm:px-6",
-          embedded && "hidden md:block"
+          embedded && "hidden md:block",
         )}
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -359,7 +379,7 @@ export function CommercialFields({
               </CardTitle>
               <CardDescription className="mt-1">
                 {ui(
-                  "العميل مسؤول عن الفاتورة. العمولة مستقلة عن سعر العميل ولا تظهر في مستنداته."
+                  "العميل مسؤول عن الفاتورة. العمولة مستقلة عن سعر العميل ولا تظهر في مستنداته.",
                 )}
               </CardDescription>
             </div>
@@ -390,14 +410,19 @@ export function CommercialFields({
                 href="/admin/customers"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-800 dark:text-amber-400 hover:underline"
               >
                 <span>{ui("إضافة أو تعديل عميل")}</span>
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
 
-            <div className={cn("grid gap-3", onGuest ? "sm:grid-cols-12 sm:items-center" : "")}>
+            <div
+              className={cn(
+                "grid gap-3",
+                onGuest ? "sm:grid-cols-12 sm:items-center" : "",
+              )}
+            >
               <div className={onGuest ? "sm:col-span-8" : ""}>
                 <CustomerCombobox
                   id={customerFieldId}
@@ -418,11 +443,11 @@ export function CommercialFields({
                   <label
                     htmlFor={guestCheckboxId}
                     className={cn(
-                      "flex min-h-11 sm:min-h-10 cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors select-none",
+                      "flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-colors select-none",
                       sameGuest
                         ? "border-amber-500/60 bg-amber-500/10 text-amber-900 dark:text-amber-200"
                         : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700",
-                      disabled && "opacity-50 cursor-not-allowed"
+                      disabled && "opacity-50 cursor-not-allowed",
                     )}
                   >
                     <Checkbox
@@ -433,7 +458,10 @@ export function CommercialFields({
                         const checked = e.target.checked;
                         setSameGuest(checked);
                         if (checked && activeCustomer) {
-                          onGuest(activeCustomer.name, activeCustomer.phone || "");
+                          onGuest(
+                            activeCustomer.name,
+                            activeCustomer.phone || "",
+                          );
                         }
                       }}
                     />
@@ -458,14 +486,14 @@ export function CommercialFields({
                 "rounded-2xl border transition-colors",
                 isPricingOpen
                   ? "border-amber-500/40 bg-amber-500/[0.02] dark:bg-amber-500/[0.03]"
-                  : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40",
               )}
             >
               <label
                 htmlFor={pricingCheckboxId}
                 className={cn(
                   "flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 select-none",
-                  disabled && "cursor-not-allowed opacity-70"
+                  disabled && "cursor-not-allowed opacity-70",
                 )}
               >
                 <span className="flex min-w-0 items-center gap-3">
@@ -480,11 +508,13 @@ export function CommercialFields({
                     <ReceiptText className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                    <span className="block text-base font-bold text-slate-900 dark:text-white">
                       {ui("تسعير الرحلة والضريبة")}
                     </span>
-                    <span className="block text-xs text-slate-600 dark:text-slate-400">
-                      {ui("تحديد قيمة الخدمة ومعاملتها الضريبية لإصدار الفاتورة")}
+                    <span className="block text-sm text-slate-600 dark:text-slate-400">
+                      {ui(
+                        "تحديد قيمة الخدمة ومعاملتها الضريبية لإصدار الفاتورة",
+                      )}
                     </span>
                   </span>
                 </span>
@@ -508,55 +538,61 @@ export function CommercialFields({
                   <div className="grid gap-5 lg:grid-cols-12">
                     {/* Amount + Live VAT Breakdown */}
                     <div className="space-y-3 lg:col-span-5">
-                      <div className="space-y-1.5">
-                        <Label htmlFor={amountFieldId}>
-                          {ui("قيمة الخدمة بعد الخصم وقبل الضريبة")}
-                        </Label>
-                        <div className="relative" dir="ltr">
-                          <Input
-                            id={amountFieldId}
-                            required
-                            dir="ltr"
-                            inputMode="decimal"
-                            pattern="^\d{1,12}(\.\d{1,2})?$"
-                            placeholder="0.00"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck={false}
-                            value={value.netAmount}
-                            onChange={(e) =>
-                              onChange({ ...value, netAmount: e.target.value })
-                            }
-                            className="pe-14 font-mono text-base font-semibold h-11"
-                          />
-                          <span className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                            SAR
-                          </span>
-                        </div>
-                      </div>
+                      <ExpandableField
+                        label={ui("قيمة الخدمة بعد الخصم وقبل الضريبة")}
+                        htmlFor={amountFieldId}
+                        required
+                        dir="ltr"
+                        inputMode="decimal"
+                        pattern="^\d{1,12}(\.\d{1,2})?$"
+                        placeholder="0.00"
+                        inputBadge="SAR"
+                        disabled={disabled}
+                        value={value.netAmount}
+                        onApply={(next) =>
+                          onChange({ ...value, netAmount: next })
+                        }
+                      >
+                        <Input
+                          id={amountFieldId}
+                          required
+                          dir="ltr"
+                          inputMode="decimal"
+                          pattern="^\d{1,12}(\.\d{1,2})?$"
+                          placeholder="0.00"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck={false}
+                          value={value.netAmount}
+                          onChange={(e) =>
+                            onChange({ ...value, netAmount: e.target.value })
+                          }
+                          className="font-mono text-base font-semibold min-h-12"
+                        />
+                      </ExpandableField>
 
                       <div
                         role="status"
-                        className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5"
+                        className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4"
                       >
                         <div>
-                          <span className="block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                          <span className="block text-sm font-medium text-slate-600 dark:text-slate-400">
                             {ui("الضريبة")}
                           </span>
                           <bdi
                             dir="ltr"
-                            className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100"
+                            className="mt-0.5 block font-mono text-base font-bold tabular-nums text-slate-900 dark:text-slate-100"
                           >
                             {preview.vat} SAR
                           </bdi>
                         </div>
                         <div className="border-s border-slate-200 dark:border-slate-800 ps-3">
-                          <span className="block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                          <span className="block text-sm font-medium text-slate-600 dark:text-slate-400">
                             {ui("الإجمالي")}
                           </span>
                           <bdi
                             dir="ltr"
-                            className="mt-0.5 block font-mono text-base font-extrabold tabular-nums text-amber-800 dark:text-amber-300"
+                            className="mt-0.5 block font-mono text-lg font-extrabold tabular-nums text-amber-800 dark:text-amber-300"
                           >
                             {preview.total} SAR
                           </bdi>
@@ -566,8 +602,8 @@ export function CommercialFields({
 
                     {/* VAT Treatment Radio Cards (< 6 choices) */}
                     <div className="space-y-3 lg:col-span-7">
-                      <fieldset className="space-y-1.5">
-                        <legend className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <fieldset className="space-y-2">
+                        <legend className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                           {ui("معاملة الرحلة الضريبية")}
                         </legend>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
@@ -577,11 +613,11 @@ export function CommercialFields({
                               <label
                                 key={option.value}
                                 className={cn(
-                                  "relative flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs transition-all focus-within:ring-2 focus-within:ring-amber-500/40",
+                                  "relative flex min-h-12 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-sm transition-all focus-within:ring-2 focus-within:ring-amber-500/40",
                                   checked
                                     ? "border-amber-500 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-bold shadow-2xs"
                                     : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 font-medium hover:border-slate-300 dark:hover:border-slate-700",
-                                  disabled && "cursor-not-allowed opacity-60"
+                                  disabled && "cursor-not-allowed opacity-60",
                                 )}
                               >
                                 <input
@@ -603,17 +639,21 @@ export function CommercialFields({
                                       "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
                                       checked
                                         ? "border-amber-700 bg-amber-700 dark:border-amber-500 dark:bg-amber-500 text-white dark:text-slate-950"
-                                        : "border-slate-400 dark:border-slate-600"
+                                        : "border-slate-400 dark:border-slate-600",
                                     )}
                                     aria-hidden="true"
                                   >
-                                    {checked && <Check className="h-2.5 w-2.5" />}
+                                    {checked && (
+                                      <Check className="h-2.5 w-2.5" />
+                                    )}
                                   </span>
-                                  <span className="truncate">{ui(option.label)}</span>
+                                  <span className="truncate">
+                                    {ui(option.label)}
+                                  </span>
                                 </span>
                                 <Badge
                                   variant={checked ? "gold" : "secondary"}
-                                  className="shrink-0 font-mono text-[10px] px-1.5 py-0"
+                                  className="shrink-0 font-mono text-xs px-2 py-0.5"
                                 >
                                   {option.rate}
                                 </Badge>
@@ -625,10 +665,17 @@ export function CommercialFields({
 
                       {value.taxCategory !== "S" && (
                         <div className="grid gap-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3.5 sm:grid-cols-2">
-                          <div className="space-y-1.5">
-                            <Label htmlFor={exemptionCodeId}>
-                              {ui("رمز الإعفاء أو المعاملة")}
-                            </Label>
+                          <ExpandableField
+                            label={ui("رمز الإعفاء أو المعاملة")}
+                            htmlFor={exemptionCodeId}
+                            required
+                            dir="ltr"
+                            disabled={disabled}
+                            value={value.exemptionCode || ""}
+                            onApply={(next) =>
+                              onChange({ ...value, exemptionCode: next })
+                            }
+                          >
                             <Input
                               id={exemptionCodeId}
                               required
@@ -637,25 +684,37 @@ export function CommercialFields({
                               spellCheck={false}
                               value={value.exemptionCode || ""}
                               onChange={(e) =>
-                                onChange({ ...value, exemptionCode: e.target.value })
+                                onChange({
+                                  ...value,
+                                  exemptionCode: e.target.value,
+                                })
                               }
-                              className="font-mono text-base sm:text-sm"
+                              className="font-mono text-base min-h-12"
                             />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor={exemptionReasonId}>
-                              {ui("سبب المعاملة الضريبية")}
-                            </Label>
+                          </ExpandableField>
+                          <ExpandableField
+                            label={ui("سبب المعاملة الضريبية")}
+                            htmlFor={exemptionReasonId}
+                            required
+                            disabled={disabled}
+                            value={value.exemptionReason || ""}
+                            onApply={(next) =>
+                              onChange({ ...value, exemptionReason: next })
+                            }
+                          >
                             <Input
                               id={exemptionReasonId}
                               required
                               value={value.exemptionReason || ""}
                               onChange={(e) =>
-                                onChange({ ...value, exemptionReason: e.target.value })
+                                onChange({
+                                  ...value,
+                                  exemptionReason: e.target.value,
+                                })
                               }
-                              className="text-base sm:text-sm"
+                              className="text-base min-h-12"
                             />
-                          </div>
+                          </ExpandableField>
                         </div>
                       )}
                     </div>
@@ -670,14 +729,14 @@ export function CommercialFields({
                 "rounded-2xl border transition-colors",
                 isCommissionsOpen
                   ? "border-amber-500/40 bg-amber-500/[0.02] dark:bg-amber-500/[0.03]"
-                  : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40",
               )}
             >
               <label
                 htmlFor={commissionsCheckboxId}
                 className={cn(
                   "flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 select-none",
-                  disabled && "cursor-not-allowed opacity-70"
+                  disabled && "cursor-not-allowed opacity-70",
                 )}
               >
                 <span className="flex min-w-0 items-center gap-3">
@@ -685,18 +744,22 @@ export function CommercialFields({
                     id={commissionsCheckboxId}
                     checked={isCommissionsOpen}
                     disabled={disabled}
-                    aria-controls={isCommissionsOpen ? commissionsPanelId : undefined}
+                    aria-controls={
+                      isCommissionsOpen ? commissionsPanelId : undefined
+                    }
                     onChange={(e) => handleToggleCommissions(e.target.checked)}
                   />
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20">
                     <Percent className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                    <span className="block text-base font-bold text-slate-900 dark:text-white">
                       {ui("العمولات")}
                     </span>
-                    <span className="block text-xs text-slate-600 dark:text-slate-400">
-                      {ui("تحديد عمولة السائق أو المندوب للرحلة — منفصلة عن سعر العميل")}
+                    <span className="block text-sm text-slate-600 dark:text-slate-400">
+                      {ui(
+                        "تحديد عمولة السائق أو المندوب للرحلة — منفصلة عن سعر العميل",
+                      )}
                     </span>
                   </span>
                 </span>
@@ -704,7 +767,9 @@ export function CommercialFields({
                 {isCommissionsOpen ? (
                   <Badge variant="gold" className="shrink-0 font-mono">
                     <bdi dir="ltr">
-                      {totalCommissionText === "—" ? "—" : `${totalCommissionText} SAR`}
+                      {totalCommissionText === "—"
+                        ? "—"
+                        : `${totalCommissionText} SAR`}
                     </bdi>
                   </Badge>
                 ) : (
@@ -719,14 +784,14 @@ export function CommercialFields({
                   id={commissionsPanelId}
                   className="border-t border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-4"
                 >
-                  <p className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <Info
-                      className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-400"
+                      className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400"
                       aria-hidden="true"
                     />
                     <span>
                       {ui(
-                        "النسبة تُحسب على أساس مستقل تدخله بنفسك، وتستحق بعد اعتماد تنفيذ الرحلة."
+                        "النسبة تُحسب على أساس مستقل تدخله بنفسك، وتستحق بعد اعتماد تنفيذ الرحلة.",
                       )}
                     </span>
                   </p>
@@ -738,7 +803,7 @@ export function CommercialFields({
                         htmlFor={driverCheckboxId}
                         className={cn(
                           "flex min-h-12 cursor-pointer items-center justify-between gap-2.5 px-4 py-2.5 select-none",
-                          disabled && "cursor-not-allowed opacity-70"
+                          disabled && "cursor-not-allowed opacity-70",
                         )}
                       >
                         <span className="flex min-w-0 items-center gap-2.5">
@@ -746,7 +811,9 @@ export function CommercialFields({
                             id={driverCheckboxId}
                             checked={isDriverOpen}
                             disabled={disabled}
-                            aria-controls={isDriverOpen ? driverPanelId : undefined}
+                            aria-controls={
+                              isDriverOpen ? driverPanelId : undefined
+                            }
                             onChange={(e) =>
                               handleToggleDriverCommission(e.target.checked)
                             }
@@ -798,7 +865,7 @@ export function CommercialFields({
                         htmlFor={repCheckboxId}
                         className={cn(
                           "flex min-h-12 cursor-pointer items-center justify-between gap-2.5 px-4 py-2.5 select-none",
-                          disabled && "cursor-not-allowed opacity-70"
+                          disabled && "cursor-not-allowed opacity-70",
                         )}
                       >
                         <span className="flex min-w-0 items-center gap-2.5">
@@ -807,7 +874,9 @@ export function CommercialFields({
                             checked={isRepOpen}
                             disabled={disabled}
                             aria-controls={isRepOpen ? repPanelId : undefined}
-                            onChange={(e) => handleToggleRepCommission(e.target.checked)}
+                            onChange={(e) =>
+                              handleToggleRepCommission(e.target.checked)
+                            }
                           />
                           <Briefcase
                             className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0"
@@ -824,7 +893,9 @@ export function CommercialFields({
                         >
                           {isRepOpen ? (
                             <bdi dir="ltr">
-                              {repPreviewText === "—" ? "—" : `${repPreviewText} SAR`}
+                              {repPreviewText === "—"
+                                ? "—"
+                                : `${repPreviewText} SAR`}
                             </bdi>
                           ) : (
                             ui("غير مفعلة")
@@ -838,32 +909,34 @@ export function CommercialFields({
                           className="border-t border-slate-100 dark:border-slate-800 p-4 space-y-3"
                         >
                           <div className="space-y-1.5">
-                            <Label htmlFor={repSelectId}>
-                              {ui("المندوب الذي أحضر الرحلة")}
-                            </Label>
-                            <NativeSelect
+                            <FullscreenSelect
                               id={repSelectId}
+                              label={ui("المندوب الذي أحضر الرحلة")}
                               required={activeMembers.length > 0}
+                              searchable={activeMembers.length > 4}
+                              clearable
+                              placeholder={ui("اختر المندوب")}
                               value={value.representativeId || ""}
-                              onChange={(e) =>
+                              onChange={(nextId) =>
                                 onChange({
                                   ...value,
-                                  representativeId: e.target.value || null,
+                                  representativeId: nextId || null,
                                 })
                               }
-                              className="h-11 sm:h-10 text-base sm:text-sm"
-                            >
-                              <option value="">{ui("اختر المندوب")}</option>
-                              {activeMembers.map((m) => (
-                                <option key={m.id} value={m.id}>
-                                  {m.name}
-                                </option>
-                              ))}
-                            </NativeSelect>
+                              options={[
+                                { value: "", label: ui("اختر المندوب") },
+                                ...activeMembers.map((m) => ({
+                                  value: m.id,
+                                  label: m.name,
+                                })),
+                              ]}
+                            />
 
                             {!members.loading && activeMembers.length === 0 && (
-                              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
-                                <span>{ui("لا يوجد مناديب نشطون مسجلون حالياً")}</span>
+                              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 px-3 py-2 text-sm text-slate-600 dark:text-slate-400">
+                                <span>
+                                  {ui("لا يوجد مناديب نشطون مسجلون حالياً")}
+                                </span>
                                 <Link
                                   href="/admin/representatives"
                                   target="_blank"
@@ -871,7 +944,10 @@ export function CommercialFields({
                                   className="inline-flex items-center gap-1 font-semibold text-amber-800 dark:text-amber-400 hover:underline"
                                 >
                                   <span>{ui("إدارة المناديب")}</span>
-                                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                                  <ExternalLink
+                                    className="h-3 w-3"
+                                    aria-hidden="true"
+                                  />
                                 </Link>
                               </div>
                             )}
@@ -883,7 +959,10 @@ export function CommercialFields({
                             <CommissionMethodFields
                               value={value.representativeCommission}
                               onChange={(next) =>
-                                onChange({ ...value, representativeCommission: next })
+                                onChange({
+                                  ...value,
+                                  representativeCommission: next,
+                                })
                               }
                               disabled={disabled}
                             />
@@ -936,7 +1015,7 @@ function CommissionMethodFields({
 
   if (value.mode === "NONE") {
     return (
-      <p className="text-xs text-slate-600 dark:text-slate-400">
+      <p className="text-sm text-slate-600 dark:text-slate-400">
         {ui("بدون عمولة")}
       </p>
     );
@@ -945,7 +1024,7 @@ function CommissionMethodFields({
   return (
     <div className="space-y-3">
       <fieldset className="space-y-1.5">
-        <legend className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <legend className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           {ui("طريقة العمولة")}
         </legend>
         <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-950/70 p-1">
@@ -955,11 +1034,11 @@ function CommissionMethodFields({
               <label
                 key={option.value}
                 className={cn(
-                  "flex min-h-11 sm:min-h-10 cursor-pointer items-center justify-center rounded-lg px-2.5 py-2 text-center text-xs leading-snug transition-all focus-within:ring-2 focus-within:ring-amber-500/40",
+                  "flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-3 py-2 text-center text-sm leading-snug transition-all focus-within:ring-2 focus-within:ring-amber-500/40",
                   checked
                     ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold shadow-2xs"
                     : "text-slate-600 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-slate-200",
-                  disabled && "cursor-not-allowed opacity-60"
+                  disabled && "cursor-not-allowed opacity-60",
                 )}
               >
                 <input
@@ -972,18 +1051,22 @@ function CommissionMethodFields({
                       option.value === "FIXED"
                         ? {
                             mode: "FIXED",
-                            amount: hasPositiveMoney(value.amount) ? value.amount : "",
+                            amount: hasPositiveMoney(value.amount)
+                              ? value.amount
+                              : "",
                             base: "0",
                             percent: "0",
                           }
                         : {
                             mode: "PERCENT",
                             amount: "0",
-                            base: hasPositiveMoney(value.base) ? value.base : "",
+                            base: hasPositiveMoney(value.base)
+                              ? value.base
+                              : "",
                             percent: hasPositiveMoney(value.percent)
                               ? value.percent
                               : "",
-                          }
+                          },
                     )
                   }
                   className="sr-only"
@@ -996,11 +1079,53 @@ function CommissionMethodFields({
       </fieldset>
 
       {value.mode === "FIXED" && (
-        <div className="space-y-1.5">
-          <Label htmlFor={amountId}>{ui("مبلغ العمولة")}</Label>
-          <div className="relative" dir="ltr">
+        <ExpandableField
+          label={ui("مبلغ العمولة")}
+          htmlFor={amountId}
+          required
+          dir="ltr"
+          inputMode="decimal"
+          pattern="^\d{1,12}(\.\d{1,2})?$"
+          placeholder="0.00"
+          inputBadge="SAR"
+          disabled={disabled}
+          value={value.amount}
+          onApply={(next) => onChange({ ...value, amount: next })}
+        >
+          <Input
+            id={amountId}
+            required
+            dir="ltr"
+            inputMode="decimal"
+            pattern="^\d{1,12}(\.\d{1,2})?$"
+            placeholder="0.00"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={value.amount}
+            onChange={(e) => onChange({ ...value, amount: e.target.value })}
+            className="font-mono text-base min-h-12"
+          />
+        </ExpandableField>
+      )}
+
+      {value.mode === "PERCENT" && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ExpandableField
+            label={ui("أساس احتساب العمولة")}
+            htmlFor={basisId}
+            required
+            dir="ltr"
+            inputMode="decimal"
+            pattern="^\d{1,12}(\.\d{1,2})?$"
+            placeholder="0.00"
+            inputBadge="SAR"
+            disabled={disabled}
+            value={value.base}
+            onApply={(next) => onChange({ ...value, base: next })}
+          >
             <Input
-              id={amountId}
+              id={basisId}
               required
               dir="ltr"
               inputMode="decimal"
@@ -1009,64 +1134,40 @@ function CommissionMethodFields({
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
-              value={value.amount}
-              onChange={(e) => onChange({ ...value, amount: e.target.value })}
-              className="pe-12 font-mono text-base sm:text-sm h-11 sm:h-10"
+              value={value.base}
+              onChange={(e) => onChange({ ...value, base: e.target.value })}
+              className="font-mono text-base min-h-12"
             />
-            <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
-              SAR
-            </span>
-          </div>
-        </div>
-      )}
+          </ExpandableField>
 
-      {value.mode === "PERCENT" && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor={basisId}>{ui("أساس احتساب العمولة")}</Label>
-            <div className="relative" dir="ltr">
-              <Input
-                id={basisId}
-                required
-                dir="ltr"
-                inputMode="decimal"
-                pattern="^\d{1,12}(\.\d{1,2})?$"
-                placeholder="0.00"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                value={value.base}
-                onChange={(e) => onChange({ ...value, base: e.target.value })}
-                className="pe-12 font-mono text-base sm:text-sm h-11 sm:h-10"
-              />
-              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                SAR
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor={percentId}>{ui("نسبة العمولة %")}</Label>
-            <div className="relative" dir="ltr">
-              <Input
-                id={percentId}
-                required
-                dir="ltr"
-                inputMode="decimal"
-                pattern="^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)$"
-                placeholder="0"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                value={value.percent}
-                onChange={(e) => onChange({ ...value, percent: e.target.value })}
-                className="pe-9 font-mono text-base sm:text-sm h-11 sm:h-10"
-              />
-              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                %
-              </span>
-            </div>
-          </div>
+          <ExpandableField
+            label={ui("نسبة العمولة %")}
+            htmlFor={percentId}
+            required
+            dir="ltr"
+            inputMode="decimal"
+            pattern="^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)$"
+            placeholder="0"
+            inputBadge="%"
+            disabled={disabled}
+            value={value.percent}
+            onApply={(next) => onChange({ ...value, percent: next })}
+          >
+            <Input
+              id={percentId}
+              required
+              dir="ltr"
+              inputMode="decimal"
+              pattern="^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)$"
+              placeholder="0"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              value={value.percent}
+              onChange={(e) => onChange({ ...value, percent: e.target.value })}
+              className="font-mono text-base min-h-12"
+            />
+          </ExpandableField>
         </div>
       )}
     </div>
@@ -1077,9 +1178,9 @@ export function ContractFinancePanel({ contractId }: { contractId: string }) {
   const ui = useUiText();
   const data = useCommercialData<Commercial | null>(`/contracts/${contractId}`);
   const m = useMutation();
-  const [feedbackScope, setFeedbackScope] = React.useState<"save" | "execution" | null>(
-    null
-  );
+  const [feedbackScope, setFeedbackScope] = React.useState<
+    "save" | "execution" | null
+  >(null);
 
   if (data.loading) {
     return (
@@ -1138,7 +1239,9 @@ function ContractFinanceEditor({
   reload: () => void;
   m: ReturnType<typeof useMutation>;
   feedbackScope: "save" | "execution" | null;
-  setFeedbackScope: React.Dispatch<React.SetStateAction<"save" | "execution" | null>>;
+  setFeedbackScope: React.Dispatch<
+    React.SetStateAction<"save" | "execution" | null>
+  >;
 }) {
   const ui = useUiText();
   const baseId = React.useId();
@@ -1157,7 +1260,7 @@ function ContractFinanceEditor({
           representativeId: initial.representativeId,
           representativeCommission: initial.representativeCommission,
         }
-      : emptyCommercial()
+      : emptyCommercial(),
   );
   const [day, setDay] = React.useState(currentSaudiPeriod().day);
   const [reason, setReason] = React.useState("");
@@ -1171,7 +1274,7 @@ function ContractFinanceEditor({
           version: initial?.version || 0,
           commercial: normalizeCommercialInput(v),
         }),
-      reload
+      reload,
     );
   }
 
@@ -1185,7 +1288,7 @@ function ContractFinanceEditor({
           day,
           version: initial.version,
         }),
-      reload
+      reload,
     );
   }
 
@@ -1199,7 +1302,7 @@ function ContractFinanceEditor({
           reason,
           version: initial.version,
         }),
-      reload
+      reload,
     );
   }
 
@@ -1250,7 +1353,10 @@ function ContractFinanceEditor({
                   className="w-full sm:w-auto min-h-11 sm:min-h-10"
                 >
                   {m.busy && feedbackScope === "save" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    <Loader2
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
                   ) : (
                     <Save className="h-4 w-4" aria-hidden="true" />
                   )}
@@ -1277,17 +1383,11 @@ function ContractFinanceEditor({
                     </CardTitle>
 
                     {initial.executionStatus === "COMPLETED" ? (
-                      <Badge variant="success">
-                        {ui("تم التنفيذ")}
-                      </Badge>
+                      <Badge variant="success">{ui("تم التنفيذ")}</Badge>
                     ) : initial.executionStatus === "CANCELLED" ? (
-                      <Badge variant="destructive">
-                        {ui("أُلغيت")}
-                      </Badge>
+                      <Badge variant="destructive">{ui("أُلغيت")}</Badge>
                     ) : (
-                      <Badge variant="warning">
-                        {ui("لم تُنفذ")}
-                      </Badge>
+                      <Badge variant="warning">{ui("لم تُنفذ")}</Badge>
                     )}
 
                     {initial.reportedAt && (
@@ -1326,12 +1426,12 @@ function ContractFinanceEditor({
                         aria-hidden="true"
                       />
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
                           {ui("اعتماد التنفيذ واستحقاق العمولة")}
                         </h4>
-                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                           {ui(
-                            "يؤكد إتمام الرحلة ويفعّل استحقاق العمولات وإمكانية إصدار الفاتورة الضريبية."
+                            "يؤكد إتمام الرحلة ويفعّل استحقاق العمولات وإمكانية إصدار الفاتورة الضريبية.",
                           )}
                         </p>
                       </div>
@@ -1348,7 +1448,7 @@ function ContractFinanceEditor({
                         max={currentSaudiPeriod().day}
                         value={day}
                         onChange={(e) => setDay(e.target.value)}
-                        className="h-11 sm:h-10 text-base sm:text-sm"
+                        className="min-h-12 text-base"
                       />
                     </div>
                   </div>
@@ -1360,7 +1460,10 @@ function ContractFinanceEditor({
                     className="w-full sm:w-auto self-start min-h-11 sm:min-h-10"
                   >
                     {m.busy && feedbackScope === "execution" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <Loader2
+                        className="h-4 w-4 animate-spin"
+                        aria-hidden="true"
+                      />
                     ) : (
                       <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                     )}
@@ -1380,29 +1483,33 @@ function ContractFinanceEditor({
                         aria-hidden="true"
                       />
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
                           {ui("إلغاء قبل التنفيذ")}
                         </h4>
-                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                           {ui(
-                            "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب عمولات."
+                            "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب عمولات.",
                           )}
                         </p>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor={cancelReasonId}>
-                        {ui("سبب إلغاء التنفيذ")}
-                      </Label>
+                    <ExpandableField
+                      label={ui("سبب إلغاء التنفيذ")}
+                      htmlFor={cancelReasonId}
+                      required
+                      disabled={m.busy}
+                      value={reason}
+                      onApply={setReason}
+                    >
                       <Input
                         id={cancelReasonId}
                         required
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
-                        className="h-11 sm:h-10 text-base sm:text-sm"
+                        className="min-h-12 text-base"
                       />
-                    </div>
+                    </ExpandableField>
                   </div>
 
                   <Button
@@ -1419,13 +1526,19 @@ function ContractFinanceEditor({
             ) : initial.executionStatus === "COMPLETED" ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-500/[0.04] p-4 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-emerald-800 dark:text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <CheckCircle2
+                    className="h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span>{ui("تم التنفيذ")}</span>
                 </div>
                 {initial.executedOn && (
                   <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                     <span>{ui("تاريخ التنفيذ المعتمد")}:</span>
-                    <bdi dir="ltr" className="font-mono font-bold text-slate-900 dark:text-white">
+                    <bdi
+                      dir="ltr"
+                      className="font-mono font-bold text-slate-900 dark:text-white"
+                    >
                       {initial.executedOn.slice(0, 10)}
                     </bdi>
                   </div>

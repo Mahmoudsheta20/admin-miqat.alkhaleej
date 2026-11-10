@@ -9,73 +9,136 @@ import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ReportTripButton from "@/app/_components/commercial/report-trip-button";
-import { Car, CheckCircle2, AlertTriangle, FilePlus2, ClipboardCheck, FileText, ArrowUpLeft, ArrowUpRight, RefreshCw, Camera, Download, ArrowLeft, ArrowRight, Calendar, MapPin, Users } from "lucide-react";
+import {
+  Car,
+  CheckCircle2,
+  AlertTriangle,
+  FilePlus2,
+  ClipboardCheck,
+  FileText,
+  ArrowUpLeft,
+  ArrowUpRight,
+  RefreshCw,
+  Camera,
+  Download,
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  MapPin,
+  Users,
+  Maximize2,
+} from "lucide-react";
 import { backendUrl } from "@/lib/backend";
 import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
-import { getTodayInspection, getAllInspectionsList } from "@/app/_actions/inspection";
+import {
+  getTodayInspection,
+  getAllInspectionsList,
+} from "@/app/_actions/inspection";
 import { getContracts } from "@/app/_actions/contract";
 import { Contract, VehicleInspection } from "@/lib/types";
 import { formatOfficialDate } from "@/lib/contractConstants";
 import StatusBadge from "@/app/_components/StatusBadge";
-const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
+import FullscreenDialog from "@/app/_components/form/FullscreenDialog";
+import CaptainContractBuilder from "@/app/_components/contracts/CaptainContractBuilder";
+const PdfPreviewModal = dynamic(
+  () => import("@/app/_components/PdfPreviewModal"),
+  { ssr: false },
+);
 import InspectionDownloadButton from "@/app/_components/InspectionDownloadButton";
 import ProfileModal from "@/app/_components/ProfileModal";
 import { fetchCached, getCachedData } from "@/lib/clientCache";
 import { Card } from "@/app/_components/ui";
-import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
+import {
+  MobileCardField,
+  MobileCardMetaGrid,
+  MobileRecordCard,
+} from "@/app/_components/mobile";
 
 export default function CaptainHomePage() {
   const ui = useUiText();
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
   const { user } = useAuth();
   const [inspection, setInspection] = useState<VehicleInspection | null>(() => {
-    return user ? getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(`captain_inspection_${user.id}`)?.inspection || null : null;
+    return user
+      ? getCachedData<Awaited<ReturnType<typeof getTodayInspection>>>(
+          `captain_inspection_${user.id}`,
+        )?.inspection || null
+      : null;
   });
   const [contracts, setContracts] = useState<Contract[]>(() => {
-    return user ? getCachedData<Awaited<ReturnType<typeof getContracts>>>(`captain_contracts_${user.id}`)?.contracts || [] : [];
+    return user
+      ? getCachedData<Awaited<ReturnType<typeof getContracts>>>(
+          `captain_contracts_${user.id}`,
+        )?.contracts || []
+      : [];
   });
   const [isLoading, setIsLoading] = useState(() => {
-    return !user || !getCachedData<Awaited<ReturnType<typeof getContracts>>>(`captain_contracts_${user.id}`);
+    return (
+      !user ||
+      !getCachedData<Awaited<ReturnType<typeof getContracts>>>(
+        `captain_contracts_${user.id}`,
+      )
+    );
   });
   const [previewPdfId, setPreviewPdfId] = useState<string | null>(null);
   const [previewPdfRef, setPreviewPdfRef] = useState<string>("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCreateFullscreen, setIsCreateFullscreen] = useState(false);
 
-  const loadData = useCallback(async (forceRefresh = false) => {
-    if (!user) return;
+  const loadData = useCallback(
+    async (forceRefresh = false) => {
+      if (!user) return;
 
-    try {
-      const [inspRes, contrRes] = await Promise.all([
-        fetchCached(`captain_inspection_${user.id}`, () => getTodayInspection(user.id), {
-          ttlMs: 60_000,
-          forceRefresh,
-        }),
-        fetchCached(`captain_contracts_${user.id}`, () => getContracts({ captainId: user.id }), {
-          ttlMs: 60_000,
-          forceRefresh,
-        }),
-      ]);
+      try {
+        const [inspRes, contrRes] = await Promise.all([
+          fetchCached(
+            `captain_inspection_${user.id}`,
+            () => getTodayInspection(user.id),
+            {
+              ttlMs: 60_000,
+              forceRefresh,
+            },
+          ),
+          fetchCached(
+            `captain_contracts_${user.id}`,
+            () => getContracts({ captainId: user.id }),
+            {
+              ttlMs: 60_000,
+              forceRefresh,
+            },
+          ),
+        ]);
 
-      if (inspRes.success && inspRes.inspection) {
-        setInspection(inspRes.inspection);
-      } else {
-        const listRes = await getAllInspectionsList({ captainId: user.id, limit: 1 });
-        if (listRes.success && listRes.inspections && listRes.inspections.length > 0) {
-          setInspection(listRes.inspections[0]);
+        if (inspRes.success && inspRes.inspection) {
+          setInspection(inspRes.inspection);
         } else {
-          setInspection(null);
+          const listRes = await getAllInspectionsList({
+            captainId: user.id,
+            limit: 1,
+          });
+          if (
+            listRes.success &&
+            listRes.inspections &&
+            listRes.inspections.length > 0
+          ) {
+            setInspection(listRes.inspections[0]);
+          } else {
+            setInspection(null);
+          }
         }
+        if (contrRes.success && contrRes.contracts) {
+          setContracts(contrRes.contracts);
+        }
+      } finally {
+        setIsLoading(false);
       }
-      if (contrRes.success && contrRes.contracts) {
-        setContracts(contrRes.contracts);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
+    },
+    [user],
+  );
 
   useEffect(() => {
     loadData();
@@ -83,7 +146,11 @@ export default function CaptainHomePage() {
 
   if (!user) return null;
 
-  const hasInspectionToday = inspectionMatchesDay(inspection, getSaudiTodayDateStr(), user.assignedVehiclePlate || undefined);
+  const hasInspectionToday = inspectionMatchesDay(
+    inspection,
+    getSaudiTodayDateStr(),
+    user.assignedVehiclePlate || undefined,
+  );
 
   const openPdf = (c: Contract) => {
     setPreviewPdfId(c.id);
@@ -125,10 +192,14 @@ export default function CaptainHomePage() {
                   {ui("مرحباً بك، كابتن")} {user.name}
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-500/20 shrink-0">
-                  {ui("كابتن معتمد")}</span>
+                  {ui("كابتن معتمد")}
+                </span>
               </div>
               <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 mt-1 truncate">
-                {ui("بوابة الميدان • منظومة ميقات الخليج لإدارة الرحلات والعقود")}</p>
+                {ui(
+                  "بوابة الميدان • منظومة ميقات الخليج لإدارة الرحلات والعقود",
+                )}
+              </p>
             </div>
           </div>
 
@@ -138,38 +209,60 @@ export default function CaptainHomePage() {
             disabled={isLoading}
             className="self-start sm:self-center inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300 disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
-            {ui("تحديث")}</button>
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
+              aria-hidden="true"
+            />
+            {ui("تحديث")}
+          </button>
         </div>
 
         {/* Captain Meta Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-5 sm:mt-6 pt-4 sm:pt-5 border-t theme-border text-xs">
           <div>
-            <span className="text-[var(--text-muted)] text-xs block">{ui("المركبة المسندة")}</span>
+            <span className="text-[var(--text-muted)] text-xs block">
+              {ui("المركبة المسندة")}
+            </span>
             <span className="font-bold text-slate-900 dark:text-white font-mono flex items-center gap-1 mt-0.5">
-              <Car className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+              <Car
+                className="w-3.5 h-3.5 text-amber-500 shrink-0"
+                aria-hidden="true"
+              />
               <bdi>{user.assignedVehiclePlate || ui("لم تُسند مركبة")}</bdi>
             </span>
           </div>
 
           <div>
-            <span className="text-[var(--text-muted)] text-xs block">{ui("رقم الهوية")}</span>
-            <span className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block" dir="ltr">
+            <span className="text-[var(--text-muted)] text-xs block">
+              {ui("رقم الهوية")}
+            </span>
+            <span
+              className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block"
+              dir="ltr"
+            >
               <bdi>{user.nationalId || "—"}</bdi>
             </span>
           </div>
 
           <div>
-            <span className="text-[var(--text-muted)] text-xs block">{ui("رقم الجوال")}</span>
-            <span className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block" dir="ltr">
+            <span className="text-[var(--text-muted)] text-xs block">
+              {ui("رقم الجوال")}
+            </span>
+            <span
+              className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block"
+              dir="ltr"
+            >
               <bdi>{user.phone || "—"}</bdi>
             </span>
           </div>
 
           <div>
-            <span className="text-[var(--text-muted)] text-xs block">{ui("إجمالي العقود المنفذة")}</span>
+            <span className="text-[var(--text-muted)] text-xs block">
+              {ui("إجمالي العقود المنفذة")}
+            </span>
             <span className="font-bold text-slate-900 dark:text-white font-mono text-sm mt-0.5 block">
-              {contracts.length} {ui("عقد")}</span>
+              {contracts.length} {ui("عقد")}
+            </span>
           </div>
         </div>
       </Card>
@@ -192,43 +285,73 @@ export default function CaptainHomePage() {
               }`}
             >
               {hasInspectionToday ? (
-                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+                <CheckCircle2
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  aria-hidden="true"
+                />
               ) : (
-                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+                <AlertTriangle
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  aria-hidden="true"
+                />
               )}
             </div>
             <div>
               <h2 className="text-sm sm:text-lg font-semibold flex items-center gap-2">
-                {ui(hasInspectionToday
-                  ? "تم اعتماد الفحص التشغيلي للمركبة بنجاح"
-                  : "فحص المركبة التشغيلي غير مسجل حتى الآن")}
+                {ui(
+                  hasInspectionToday
+                    ? "تم اعتماد الفحص التشغيلي للمركبة بنجاح"
+                    : "فحص المركبة التشغيلي غير مسجل حتى الآن",
+                )}
               </h2>
               <p className="text-xs sm:text-sm mt-1 opacity-80 leading-relaxed max-w-2xl">
                 {hasInspectionToday
                   ? isRTL
                     ? `أكملت بنود الفحص الميداني الـ 16 للمركبة (${inspection?.vehiclePlate || "—"}) بتاريخ ${formatOfficialDate(inspection?.inspectionDate || "")}. حافلتك جاهزة للتشغيل، ويمكنك الآن إصدار وتوثيق عقود النقل البري الرسمية.`
                     : `You completed all 16 inspection checks for vehicle (${inspection?.vehiclePlate || "—"}) on ${formatOfficialDate(inspection?.inspectionDate || "")}. Your coach is ready to operate and you can issue official transport contracts.`
-                  : ui("بناءً على اشتراطات هيئة النقل للسلامة، يجب إتمام قائمة الفحص التشغيلي الـ 16 للمركبة لفتح صلاحية إصدار عقود الرحلات وكشف الركاب.")}
+                  : ui(
+                      "بناءً على اشتراطات هيئة النقل للسلامة، يجب إتمام قائمة الفحص التشغيلي الـ 16 للمركبة لفتح صلاحية إصدار عقود الرحلات وكشف الركاب.",
+                    )}
               </p>
             </div>
           </div>
 
           <div className="flex w-full flex-col gap-2 sm:w-auto shrink-0">
-            {inspection && <InspectionDownloadButton key={inspection.id} inspectionId={inspection.id} />}
+            {inspection && (
+              <InspectionDownloadButton
+                key={inspection.id}
+                inspectionId={inspection.id}
+              />
+            )}
             {hasInspectionToday ? (
-              <Link
-                href="/captain/contract"
-                className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl gold-gradient-btn text-xs font-bold transition shadow-md"
-              >
-                <FilePlus2 className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {ui("إنشاء عقد رحلة جديد")}</Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateFullscreen(true)}
+                  className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl sm:rounded-2xl border border-amber-500/30 bg-white dark:bg-slate-900 text-sm font-bold text-amber-700 dark:text-amber-400 hover:border-amber-500 transition cursor-pointer"
+                >
+                  <Maximize2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{text("إنشاء بملء الشاشة", "Full-screen create")}</span>
+                </button>
+                <Link
+                  href="/captain/contract"
+                  className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl gold-gradient-btn text-xs font-bold transition shadow-md"
+                >
+                  <FilePlus2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {ui("إنشاء عقد رحلة جديد")}
+                </Link>
+              </div>
             ) : (
               <Link
                 href="/captain/inspection"
                 className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl gold-gradient-btn text-xs font-bold transition shadow-md"
               >
-                <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {ui("إجراء الفحص اليومي الآن")}</Link>
+                <ClipboardCheck
+                  className="w-4 h-4 shrink-0"
+                  aria-hidden="true"
+                />
+                {ui("إجراء الفحص اليومي الآن")}
+              </Link>
             )}
           </div>
         </div>
@@ -244,15 +367,23 @@ export default function CaptainHomePage() {
               </div>
               <div className="min-w-0">
                 <h2 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition">
-                  {ui("فحص المركبة اليومي")}</h2>
+                  {ui("فحص المركبة اليومي")}
+                </h2>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {ui("16 بنداً: لوحة القيادة، الفحص الخارجي، وأدوات الأمان")}</p>
+                  {ui("16 بنداً: لوحة القيادة، الفحص الخارجي، وأدوات الأمان")}
+                </p>
               </div>
             </div>
             {isRTL ? (
-              <ArrowUpLeft className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0" aria-hidden="true" />
+              <ArrowUpLeft
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                aria-hidden="true"
+              />
             ) : (
-              <ArrowUpRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0" aria-hidden="true" />
+              <ArrowUpRight
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                aria-hidden="true"
+              />
             )}
           </Card>
         </Link>
@@ -265,15 +396,23 @@ export default function CaptainHomePage() {
               </div>
               <div className="min-w-0">
                 <h2 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition">
-                  {ui("إنشاء عقد رحلة جديد")}</h2>
+                  {ui("إنشاء عقد رحلة جديد")}
+                </h2>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {ui("كشف الركاب الديناميكي وتوليد الـ PDF الرسمي")}</p>
+                  {ui("كشف الركاب الديناميكي وتوليد الـ PDF الرسمي")}
+                </p>
               </div>
             </div>
             {isRTL ? (
-              <ArrowUpLeft className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0" aria-hidden="true" />
+              <ArrowUpLeft
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                aria-hidden="true"
+              />
             ) : (
-              <ArrowUpRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0" aria-hidden="true" />
+              <ArrowUpRight
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                aria-hidden="true"
+              />
             )}
           </Card>
         </Link>
@@ -284,31 +423,39 @@ export default function CaptainHomePage() {
         <div className="p-4 sm:p-5 border-b theme-border flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-              {ui("عقودي الأخيرة")}</h2>
+              {ui("عقودي الأخيرة")}
+            </h2>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              {ui("العقود الموثقة الصادرة بحسابك مع كشوف الركاب")}</p>
+              {ui("العقود الموثقة الصادرة بحسابك مع كشوف الركاب")}
+            </p>
           </div>
           <Link
             href="/captain/contract"
             className="min-h-10 inline-flex items-center text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline px-2"
           >
-            {ui("+ عقد جديد")}</Link>
+            {ui("+ عقد جديد")}
+          </Link>
         </div>
 
         {isLoading ? (
           <div className="p-10 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
-            <p className="text-xs text-[var(--text-muted)]">{ui("جاري تحميل البيانات...")}</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              {ui("جاري تحميل البيانات...")}
+            </p>
           </div>
         ) : contracts.length === 0 ? (
           <div className="p-10 text-center text-[var(--text-muted)] text-sm">
-            {ui("لم تقم بإنشاء أي عقود بعد.")}</div>
+            {ui("لم تقم بإنشاء أي عقود بعد.")}
+          </div>
         ) : (
           <>
             {/* Mobile Cards View */}
             <div className="md:hidden space-y-3 p-3.5">
               {contracts.map((c) => {
-                const pdfDownloadHref = backendUrl(`/contracts/${encodeURIComponent(c.id)}/pdf?download=1`);
+                const pdfDownloadHref = backendUrl(
+                  `/contracts/${encodeURIComponent(c.id)}/pdf?download=1`,
+                );
 
                 return (
                   <MobileRecordCard
@@ -324,7 +471,13 @@ export default function CaptainHomePage() {
                         {ui("العميل:")} {c.customerName}
                       </span>
                     }
-                    badge={<StatusBadge type="operation" status={c.operationType} size="sm" />}
+                    badge={
+                      <StatusBadge
+                        type="operation"
+                        status={c.operationType}
+                        size="sm"
+                      />
+                    }
                     footer={
                       <>
                         <ReportTripButton contractId={c.id} />
@@ -335,7 +488,10 @@ export default function CaptainHomePage() {
                           aria-label={`${ui("تحميل العقد PDF")} ${c.referenceNumber}`}
                           title={ui("تحميل العقد PDF")}
                         >
-                          <Download className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                          <Download
+                            className="w-3.5 h-3.5 text-amber-500"
+                            aria-hidden="true"
+                          />
                           <span>{ui("تحميل")}</span>
                         </a>
                         <button
@@ -344,7 +500,10 @@ export default function CaptainHomePage() {
                           aria-label={`${ui("عرض PDF")} ${c.referenceNumber}`}
                           className="min-h-11 flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs cursor-pointer"
                         >
-                          <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+                          <FileText
+                            className="w-3.5 h-3.5"
+                            aria-hidden="true"
+                          />
                           <span>{ui("عرض PDF")}</span>
                         </button>
                       </>
@@ -355,7 +514,10 @@ export default function CaptainHomePage() {
                         className="col-span-2 pb-2 border-b theme-border"
                         label={
                           <span className="inline-flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-emerald-500" aria-hidden="true" />
+                            <MapPin
+                              className="w-3 h-3 text-emerald-500"
+                              aria-hidden="true"
+                            />
                             <span>{ui("مسار الرحلة")}</span>
                           </span>
                         }
@@ -363,9 +525,15 @@ export default function CaptainHomePage() {
                           <span className="inline-flex flex-wrap items-center gap-1.5 leading-snug">
                             <bdi>{c.origin}</bdi>
                             {isRTL ? (
-                              <ArrowLeft className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                              <ArrowLeft
+                                className="w-3.5 h-3.5 text-amber-500 shrink-0"
+                                aria-hidden="true"
+                              />
                             ) : (
-                              <ArrowRight className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                              <ArrowRight
+                                className="w-3.5 h-3.5 text-amber-500 shrink-0"
+                                aria-hidden="true"
+                              />
                             )}
                             <bdi>{c.destination}</bdi>
                           </span>
@@ -374,7 +542,10 @@ export default function CaptainHomePage() {
                       <MobileCardField
                         label={
                           <span className="inline-flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-amber-500" aria-hidden="true" />
+                            <Calendar
+                              className="w-3 h-3 text-amber-500"
+                              aria-hidden="true"
+                            />
                             <span>{ui("موعد الرحلة")}</span>
                           </span>
                         }
@@ -389,7 +560,10 @@ export default function CaptainHomePage() {
                       <MobileCardField
                         label={
                           <span className="inline-flex items-center gap-1">
-                            <Users className="w-3 h-3 text-amber-500" aria-hidden="true" />
+                            <Users
+                              className="w-3 h-3 text-amber-500"
+                              aria-hidden="true"
+                            />
                             <span>{ui("الركاب")}</span>
                           </span>
                         }
@@ -405,7 +579,9 @@ export default function CaptainHomePage() {
             {/* Desktop List View */}
             <div className="hidden md:block divide-y theme-border">
               {contracts.map((c) => {
-                const pdfDownloadHref = backendUrl(`/contracts/${encodeURIComponent(c.id)}/pdf?download=1`);
+                const pdfDownloadHref = backendUrl(
+                  `/contracts/${encodeURIComponent(c.id)}/pdf?download=1`,
+                );
                 return (
                   <div
                     key={c.id}
@@ -416,15 +592,23 @@ export default function CaptainHomePage() {
                         <span className="font-mono font-bold text-amber-700 dark:text-amber-400 text-sm">
                           <bdi>{c.referenceNumber}</bdi>
                         </span>
-                        <StatusBadge type="operation" status={c.operationType} size="sm" />
+                        <StatusBadge
+                          type="operation"
+                          status={c.operationType}
+                          size="sm"
+                        />
                       </div>
                       <div className="font-bold text-slate-900 dark:text-white text-sm">
                         {ui("العميل:")} {c.customerName}
                       </div>
                       <div className="text-xs text-[var(--text-muted)] flex flex-wrap items-center gap-3">
-                        <span>{ui("من:")} {c.origin}</span>
+                        <span>
+                          {ui("من:")} {c.origin}
+                        </span>
                         <span aria-hidden="true">•</span>
-                        <span>{ui("إلى:")} {c.destination}</span>
+                        <span>
+                          {ui("إلى:")} {c.destination}
+                        </span>
                         <span aria-hidden="true">•</span>
                         <span className="font-mono" dir="ltr">
                           <bdi>{c.tripDate}</bdi>
@@ -434,7 +618,8 @@ export default function CaptainHomePage() {
 
                     <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                       <span className="text-xs text-[var(--text-muted)] font-mono">
-                        {c.passengers?.length || 0} {ui("ركاب")}</span>
+                        {c.passengers?.length || 0} {ui("ركاب")}
+                      </span>
                       <ReportTripButton contractId={c.id} />
                       <a
                         href={pdfDownloadHref}
@@ -443,8 +628,12 @@ export default function CaptainHomePage() {
                         aria-label={`${ui("تحميل العقد PDF")} ${c.referenceNumber}`}
                         title={ui("تحميل العقد PDF")}
                       >
-                        <Download className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
-                        {ui("تحميل")}</a>
+                        <Download
+                          className="w-3.5 h-3.5 text-amber-500"
+                          aria-hidden="true"
+                        />
+                        {ui("تحميل")}
+                      </a>
                       <button
                         type="button"
                         onClick={() => openPdf(c)}
@@ -452,7 +641,8 @@ export default function CaptainHomePage() {
                         className="inline-flex min-h-10 items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs cursor-pointer"
                       >
                         <FileText className="w-3.5 h-3.5" aria-hidden="true" />
-                        {ui("عرض PDF")}</button>
+                        {ui("عرض PDF")}
+                      </button>
                     </div>
                   </div>
                 );
@@ -483,6 +673,25 @@ export default function CaptainHomePage() {
           onClose={() => setIsProfileOpen(false)}
         />
       )}
+
+      {/* Full-Screen Captain Contract Builder */}
+      <FullscreenDialog
+        open={isCreateFullscreen}
+        onClose={() => setIsCreateFullscreen(false)}
+        title={ui("إنشاء عقد نقل بري رسمي")}
+        subtitle={ui(
+          "توليد العقد المعتمد من هيئة النقل (المادتين 39 و 40) مع كشف الركاب",
+        )}
+        variant="workspace"
+        closedBy="closerequest"
+        icon={<FilePlus2 className="h-5 w-5" aria-hidden="true" />}
+      >
+        <CaptainContractBuilder
+          inModal
+          onClose={() => setIsCreateFullscreen(false)}
+          onCreated={() => void loadData(true)}
+        />
+      </FullscreenDialog>
     </div>
   );
 }

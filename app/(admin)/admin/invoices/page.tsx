@@ -3,12 +3,34 @@ import { useApiQuery } from "@/lib/use-api-query";
 import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
-
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ReceiptText, Plus, Building2, FileSpreadsheet, Download, Eye, Copy, Check, ChevronRight, ChevronLeft, AlertCircle, Loader2, CreditCard, TrendingUp, FileMinus, FilePlus, ShieldCheck } from "lucide-react";
+import {
+  ReceiptText,
+  Plus,
+  Building2,
+  FileSpreadsheet,
+  Download,
+  Eye,
+  Copy,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  AlertCircle,
+  Loader2,
+  CreditCard,
+  TrendingUp,
+  FileMinus,
+  FilePlus,
+  ShieldCheck,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { invoiceTitle, dateLabel, downloadInvoice, type InvoiceRow } from "@/lib/invoices";
+import {
+  invoiceTitle,
+  dateLabel,
+  downloadInvoice,
+  type InvoiceRow,
+} from "@/lib/invoices";
 import InvoiceVisibilityAction from "./invoice-visibility-action";
 import RecordPaymentModal from "./record-payment-modal";
 import { useLanguage } from "@/lib/languageContext";
@@ -41,7 +63,9 @@ interface InvoiceList {
 
 function formatDecimalCommas(value: string): string {
   const [whole, decimals] = value.split(".");
-  return decimals === undefined ? value : `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${decimals}`;
+  return decimals === undefined
+    ? value
+    : `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${decimals}`;
 }
 
 export default function InvoicesPage() {
@@ -49,13 +73,13 @@ export default function InvoicesPage() {
 
   const { t, dir, isRTL } = useLanguage();
   const [page, setPage] = useUrlState<number>("page", 1);
-  const [isArchived,setIsArchived]=useUrlState<boolean>("archived", false);
+  const [isArchived, setIsArchived] = useUrlState<boolean>("archived", false);
 
   // Client-side instant filters
   const [search, setSearch] = useUrlState<string>("q", "");
   const [typeFilter, setTypeFilter] = useUrlState<
     "ALL" | "BOOKING" | "PROFORMA" | "TAX" | "NOTES"
-  >("type", "ALL", ["ALL","BOOKING","PROFORMA","TAX","NOTES"]);
+  >("type", "ALL", ["ALL", "BOOKING", "PROFORMA", "TAX", "NOTES"]);
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [seedMessage, setSeedMessage] = useState("");
@@ -65,10 +89,18 @@ export default function InvoicesPage() {
     useState<InvoiceRow | null>(null);
 
   const [actionError, setError] = useState("");
-  const { data, error: queryError, isLoading, refetch } = useApiQuery<InvoiceList>(`/invoices?page=${page}&archived=${isArchived}`);
+  const {
+    data,
+    error: queryError,
+    isLoading,
+    refetch,
+  } = useApiQuery<InvoiceList>(`/invoices?page=${page}&archived=${isArchived}`);
   const error = actionError || queryError;
   const isRefreshing = isLoading;
-  const load = (showRefresh = false) => { if (showRefresh) setError(""); refetch(); };
+  const load = (showRefresh = false) => {
+    if (showRefresh) setError("");
+    refetch();
+  };
 
   const items = useMemo(() => data?.items ?? [], [data]);
 
@@ -79,7 +111,10 @@ export default function InvoicesPage() {
       const isNote =
         row.taxDocument?.kind === "CREDIT" || row.taxDocument?.kind === "DEBIT";
 
-      if (typeFilter === "BOOKING" && (!["BOOKING","TAX"].includes(docType) || isNote))
+      if (
+        typeFilter === "BOOKING" &&
+        (!["BOOKING", "TAX"].includes(docType) || isNote)
+      )
         return false;
       if (typeFilter === "PROFORMA" && docType !== "PROFORMA") return false;
       if (typeFilter === "TAX" && (docType !== "TAX" || isNote)) return false;
@@ -118,7 +153,7 @@ export default function InvoicesPage() {
         bookingCount++;
       }
 
-      if(docType === "PROFORMA") continue;
+      if (docType === "PROFORMA") continue;
       const gross = Number(item.totalAmount);
       const vat = Number(item.vatAmount);
       if (Number.isFinite(gross)) {
@@ -172,77 +207,88 @@ export default function InvoicesPage() {
 
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / 30));
 
-  const invoiceHelpGuide = useMemo(() => ({
-    title: isRTL ? "دليل الفواتير والمستندات المالية" : "Invoicing & Financial Documents Guide",
-    summary: isRTL
-      ? "يجمع هذا القسم كافة فواتير المبيعات الصادرة عن شركة ميقات الخليج للنقل البري، مع تنظيم متابعة المبالغ المحصلة والمتبقية وإشعارات التعديل."
-      : "Consolidates all sales invoices issued by Miqat Al-Khaleej, organizing payment tracking, remaining balances, and credit/debit adjustment notes.",
-    cards: [
-      {
-        title: isRTL ? "١. أنواع المستندات" : "1. Document Types",
-        badge: isRTL ? "المبيعات" : "Sales",
-        items: [
-          {
-            label: isRTL ? "فاتورة للعميل" : "Customer Tax Invoice",
-            description: isRTL
-              ? "فاتورة نهائية معتمدة للرحلات وعقود النقل، تُثبت الإيراد والضريبة وتحتوي على رمز الفاتورة الضريبية ZATCA QR."
-              : "Final approved invoice establishing revenue and VAT, containing official ZATCA QR code.",
-          },
-          {
-            label: isRTL ? "فاتورة مبدئية (عرض سعر)" : "Proforma Invoice",
-            description: isRTL
-              ? "مستند أولي للعميل يتضمن تفاصيل الخدمة والآيبان البنكي (SNB) ولا يؤثر على القيود المحاسبية إلا بعد اعتماده."
-              : "Initial quotation with service details and SNB IBAN; does not post to ledger until approved.",
-          },
-          {
-            label: isRTL ? "إشعار دائن / مدين" : "Credit / Debit Note",
-            description: isRTL
-              ? "إشعار دائن لخفض القيمة أو إلغاء رحلة، وإشعار مدين لإضافة مبالغ لاحقة، مع ارتباط كامل برقم الفاتورة الأصلية."
-              : "Credit note to reduce value or cancel, and debit note to add amounts, linked to original invoice ref.",
-          },
-        ],
-      },
-      {
-        title: isRTL ? "٢. متابعة السداد والتحصيل" : "2. Payment Tracking",
-        badge: isRTL ? "سندات القبض" : "Receipt Vouchers",
-        items: [
-          {
-            label: isRTL ? "المتبقي على العميل" : "Remaining Balance",
-            description: isRTL
-              ? "يُحمل المبلغ غير المسدد على ذمم العملاء (1103)، وعند استلام دفعة يُسجل سند قبض فوري يخفض الرصيد."
-              : "Unpaid amounts sit on Accounts Receivable (1103); recording a payment issues a voucher reducing AR.",
-          },
-          {
-            label: isRTL ? "زر «تسجيل دفعة»" : "Record Payment Action",
-            description: isRTL
-              ? "يمكن تسجيل دفعة نقدية بالصندوق (1101) أو تحويل بنكي (1102) مباشرة من جدول الفواتير أو صفحة التفاصيل."
-              : "Directly record cash (1101) or bank transfer (1102) from invoice table or details page.",
-          },
-        ],
-      },
-      {
-        title: isRTL ? "٣. الحماية ومشاركة الفاتورة" : "3. Protection & Sharing",
-        badge: isRTL ? "محفوظة في النظام" : "System Protected",
-        items: [
-          {
-            label: isRTL ? "عدم القابلية للتعديل المباشر" : "Immutable Document",
-            description: isRTL
-              ? "الفاتورة المصدرة مستند مالي ثابت؛ أي تعديل يتم بمسار نظامي عبر إصدار إشعار دائن أو مدين."
-              : "Issued invoice is fixed; adjustments must follow official paths via credit or debit notes.",
-          },
-          {
-            label: isRTL ? "نسخة العميل ورابط التحقق" : "Customer Copy & Verification",
-            description: isRTL
-              ? "تنزيل PDF رسمي مجهز للطباعة أو نسخ رابط التحقق المباشر لمشاركته مع العميل عبر الواتساب أو الإيميل."
-              : "Download print-ready official PDF or copy direct verification link to share via WhatsApp or Email.",
-          },
-        ],
-      },
-    ],
-    tip: isRTL
-      ? "لتعديل فاتورة تم إصدارها سابقاً، اضغط على «عرض» ثم اختر «خفض قيمة الفاتورة (إشعار دائن)» أو «إضافة مبلغ (إشعار مدين)»."
-      : "To adjust an issued invoice, click 'View' and choose 'Credit Note' or 'Debit Note'.",
-  }), [isRTL]);
+  const invoiceHelpGuide = useMemo(
+    () => ({
+      title: isRTL
+        ? "دليل الفواتير والمستندات المالية"
+        : "Invoicing & Financial Documents Guide",
+      summary: isRTL
+        ? "يجمع هذا القسم كافة فواتير المبيعات الصادرة عن شركة ميقات الخليج للنقل البري، مع تنظيم متابعة المبالغ المحصلة والمتبقية وإشعارات التعديل."
+        : "Consolidates all sales invoices issued by Miqat Al-Khaleej, organizing payment tracking, remaining balances, and credit/debit adjustment notes.",
+      cards: [
+        {
+          title: isRTL ? "١. أنواع المستندات" : "1. Document Types",
+          badge: isRTL ? "المبيعات" : "Sales",
+          items: [
+            {
+              label: isRTL ? "فاتورة للعميل" : "Customer Tax Invoice",
+              description: isRTL
+                ? "فاتورة نهائية معتمدة للرحلات وعقود النقل، تُثبت الإيراد والضريبة وتحتوي على رمز الفاتورة الضريبية ZATCA QR."
+                : "Final approved invoice establishing revenue and VAT, containing official ZATCA QR code.",
+            },
+            {
+              label: isRTL ? "فاتورة مبدئية (عرض سعر)" : "Proforma Invoice",
+              description: isRTL
+                ? "مستند أولي للعميل يتضمن تفاصيل الخدمة والآيبان البنكي (SNB) ولا يؤثر على القيود المحاسبية إلا بعد اعتماده."
+                : "Initial quotation with service details and SNB IBAN; does not post to ledger until approved.",
+            },
+            {
+              label: isRTL ? "إشعار دائن / مدين" : "Credit / Debit Note",
+              description: isRTL
+                ? "إشعار دائن لخفض القيمة أو إلغاء رحلة، وإشعار مدين لإضافة مبالغ لاحقة، مع ارتباط كامل برقم الفاتورة الأصلية."
+                : "Credit note to reduce value or cancel, and debit note to add amounts, linked to original invoice ref.",
+            },
+          ],
+        },
+        {
+          title: isRTL ? "٢. متابعة السداد والتحصيل" : "2. Payment Tracking",
+          badge: isRTL ? "سندات القبض" : "Receipt Vouchers",
+          items: [
+            {
+              label: isRTL ? "المتبقي على العميل" : "Remaining Balance",
+              description: isRTL
+                ? "يُحمل المبلغ غير المسدد على ذمم العملاء (1103)، وعند استلام دفعة يُسجل سند قبض فوري يخفض الرصيد."
+                : "Unpaid amounts sit on Accounts Receivable (1103); recording a payment issues a voucher reducing AR.",
+            },
+            {
+              label: isRTL ? "زر «تسجيل دفعة»" : "Record Payment Action",
+              description: isRTL
+                ? "يمكن تسجيل دفعة نقدية بالصندوق (1101) أو تحويل بنكي (1102) مباشرة من جدول الفواتير أو صفحة التفاصيل."
+                : "Directly record cash (1101) or bank transfer (1102) from invoice table or details page.",
+            },
+          ],
+        },
+        {
+          title: isRTL
+            ? "٣. الحماية ومشاركة الفاتورة"
+            : "3. Protection & Sharing",
+          badge: isRTL ? "محفوظة في النظام" : "System Protected",
+          items: [
+            {
+              label: isRTL
+                ? "عدم القابلية للتعديل المباشر"
+                : "Immutable Document",
+              description: isRTL
+                ? "الفاتورة المصدرة مستند مالي ثابت؛ أي تعديل يتم بمسار نظامي عبر إصدار إشعار دائن أو مدين."
+                : "Issued invoice is fixed; adjustments must follow official paths via credit or debit notes.",
+            },
+            {
+              label: isRTL
+                ? "نسخة العميل ورابط التحقق"
+                : "Customer Copy & Verification",
+              description: isRTL
+                ? "تنزيل PDF رسمي مجهز للطباعة أو نسخ رابط التحقق المباشر لمشاركته مع العميل عبر الواتساب أو الإيميل."
+                : "Download print-ready official PDF or copy direct verification link to share via WhatsApp or Email.",
+            },
+          ],
+        },
+      ],
+      tip: isRTL
+        ? "لتعديل فاتورة تم إصدارها سابقاً، اضغط على «عرض» ثم اختر «خفض قيمة الفاتورة (إشعار دائن)» أو «إضافة مبلغ (إشعار مدين)»."
+        : "To adjust an issued invoice, click 'View' and choose 'Credit Note' or 'Debit Note'.",
+    }),
+    [isRTL],
+  );
 
   return (
     <div className="space-y-6 pb-12" dir={dir}>
@@ -299,7 +345,10 @@ export default function InvoicesPage() {
           className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-300 flex items-center justify-between gap-3 text-xs sm:text-sm font-bold"
         >
           <div className="flex items-center gap-2.5">
-            <AlertCircle className="w-5 h-5 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
+            <AlertCircle
+              className="w-5 h-5 text-rose-700 dark:text-rose-400 shrink-0"
+              aria-hidden="true"
+            />
             <span>{ui(error)}</span>
           </div>
           <button
@@ -325,7 +374,7 @@ export default function InvoicesPage() {
         />
         <StatCard
           label={ui(t("invoice.customerInvoices"))}
-          value={stats.bookingCount+stats.taxCount}
+          value={stats.bookingCount + stats.taxCount}
           subtext={t("invoice.customerInvoices")}
           icon={Check}
           variant="emerald"
@@ -361,9 +410,21 @@ export default function InvoicesPage() {
         searchPlaceholder={ui(t("invoice.searchPlaceholder"))}
         tabs={[
           { id: "ALL", label: t("common.all"), count: items.length },
-          { id: "BOOKING", label: t("invoice.customerInvoices"), count: stats.bookingCount+stats.taxCount },
-          { id: "PROFORMA", label: t("invoice.proformaInvoices"), count: stats.proformaCount },
-          { id: "NOTES", label: t("invoice.notesCount"), count: stats.notesCount },
+          {
+            id: "BOOKING",
+            label: t("invoice.customerInvoices"),
+            count: stats.bookingCount + stats.taxCount,
+          },
+          {
+            id: "PROFORMA",
+            label: t("invoice.proformaInvoices"),
+            count: stats.proformaCount,
+          },
+          {
+            id: "NOTES",
+            label: t("invoice.notesCount"),
+            count: stats.notesCount,
+          },
         ]}
         activeTab={typeFilter}
         onTabChange={(tabId) => setTypeFilter(tabId as typeof typeFilter)}
@@ -378,7 +439,9 @@ export default function InvoicesPage() {
               setPage(1);
             }}
           />
-          <span>{isRTL ? "عرض الفواتير المحذوفة" : "Show removed invoices"}</span>
+          <span>
+            {isRTL ? "عرض الفواتير المحذوفة" : "Show removed invoices"}
+          </span>
         </label>
         <p className="text-xs text-[var(--text-muted)]">
           {isRTL
@@ -397,7 +460,8 @@ export default function InvoicesPage() {
       <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
         <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
           <span className="font-bold text-slate-700 dark:text-slate-300">
-            {ui(t("invoice.title"))} ({filteredItems.length} {ui(t("common.of"))} {data?.total || 0})
+            {ui(t("invoice.title"))} ({filteredItems.length}{" "}
+            {ui(t("common.of"))} {data?.total || 0})
           </span>
           <span className="text-[var(--text-muted)] font-mono">
             {ui(t("common.page"))} {page} {ui(t("common.of"))} {totalPages}
@@ -420,14 +484,18 @@ export default function InvoicesPage() {
               <ReceiptText className="w-6 h-6" />
             </div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-              {ui(items.length === 0
-                ? "لا توجد فواتير حتى الآن."
-                : "لا توجد فواتير مطابقة للبحث")}
+              {ui(
+                items.length === 0
+                  ? "لا توجد فواتير حتى الآن."
+                  : "لا توجد فواتير مطابقة للبحث",
+              )}
             </h3>
             <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 max-w-sm mx-auto">
-              {ui(items.length === 0
-                ? "ابدأ بإنشاء فاتورة جديدة أو فاتورة مبدئية وسيتم حفظها مع رمز الفاتورة الضريبية ZATCA QR ونسخة PDF للعميل."
-                : "جرب تعديل كلمات البحث أو تغيير تصفية نوع الفاتورة.")}
+              {ui(
+                items.length === 0
+                  ? "ابدأ بإنشاء فاتورة جديدة أو فاتورة مبدئية وسيتم حفظها مع رمز الفاتورة الضريبية ZATCA QR ونسخة PDF للعميل."
+                  : "جرب تعديل كلمات البحث أو تغيير تصفية نوع الفاتورة.",
+              )}
             </p>
             {items.length === 0 ? (
               <Link
@@ -444,7 +512,7 @@ export default function InvoicesPage() {
                   setSearch("");
                   setTypeFilter("ALL");
                 }}
-                className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition"
+                className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
               >
                 {ui(t("common.cancel"))}
               </button>
@@ -457,18 +525,28 @@ export default function InvoicesPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-[var(--text-muted)] dark:text-slate-400 font-bold whitespace-nowrap">
-                    <TableHead className="py-3.5 px-4">{ui(t("invoice.number"))}</TableHead>
+                    <TableHead className="py-3.5 px-4">
+                      {ui(t("invoice.number"))}
+                    </TableHead>
                     <TableHead className="py-3.5 px-4">
                       {ui(t("invoice.typeAndStatus"))}
                     </TableHead>
-                    <TableHead className="py-3.5 px-4">{ui(t("invoice.customer"))}</TableHead>
-                    <TableHead className="py-3.5 px-4">{ui(t("invoice.subtotal"))}</TableHead>
-                    <TableHead className="py-3.5 px-4">{ui(t("invoice.vat"))}</TableHead>
-                    <TableHead className="py-3.5 px-4">{ui(t("invoice.total"))}</TableHead>
-                    <TableHead className="py-3.5 px-4">{ui(t("invoice.date"))}</TableHead>
-                    <TableHead
-                      className={`py-3.5 px-4 ${"text-end"}`}
-                    >
+                    <TableHead className="py-3.5 px-4">
+                      {ui(t("invoice.customer"))}
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4">
+                      {ui(t("invoice.subtotal"))}
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4">
+                      {ui(t("invoice.vat"))}
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4">
+                      {ui(t("invoice.total"))}
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4">
+                      {ui(t("invoice.date"))}
+                    </TableHead>
+                    <TableHead className={`py-3.5 px-4 ${"text-end"}`}>
                       {ui(t("common.actions"))}
                     </TableHead>
                   </TableRow>
@@ -505,9 +583,15 @@ export default function InvoicesPage() {
                               title={ui("نسخ رقم الفاتورة")}
                             >
                               {copiedNumber === row.invoiceNumber ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
+                                <Check
+                                  className="w-3.5 h-3.5 text-emerald-500"
+                                  aria-hidden="true"
+                                />
                               ) : (
-                                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                                <Copy
+                                  className="w-3.5 h-3.5"
+                                  aria-hidden="true"
+                                />
                               )}
                             </button>
                           </div>
@@ -528,12 +612,18 @@ export default function InvoicesPage() {
                             >
                               {isCredit ? (
                                 <>
-                                  <FileMinus className="w-3 h-3" aria-hidden="true" />
+                                  <FileMinus
+                                    className="w-3 h-3"
+                                    aria-hidden="true"
+                                  />
                                   <span>{ui("إشعار دائن (خفض)")}</span>
                                 </>
                               ) : isDebit ? (
                                 <>
-                                  <FilePlus className="w-3 h-3" aria-hidden="true" />
+                                  <FilePlus
+                                    className="w-3 h-3"
+                                    aria-hidden="true"
+                                  />
                                   <span>{ui("إشعار مدين (إضافة)")}</span>
                                 </>
                               ) : (
@@ -541,7 +631,10 @@ export default function InvoicesPage() {
                               )}
                             </span>
                             <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
-                              <ShieldCheck className="w-3 h-3 text-emerald-500" aria-hidden="true" />
+                              <ShieldCheck
+                                className="w-3 h-3 text-emerald-500"
+                                aria-hidden="true"
+                              />
                               <span>{ui("محفوظة في النظام")}</span>
                             </span>
                           </div>
@@ -549,7 +642,10 @@ export default function InvoicesPage() {
 
                         <TableCell className="py-3.5 px-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 border theme-border text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0" aria-hidden="true">
+                            <div
+                              className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 border theme-border text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0"
+                              aria-hidden="true"
+                            >
                               {row.customerName
                                 ? row.customerName.trim().charAt(0)
                                 : "ع"}
@@ -561,11 +657,19 @@ export default function InvoicesPage() {
                         </TableCell>
 
                         <TableCell className="py-3.5 px-4 whitespace-nowrap">
-                          <Money amount={row.netAmount} color="muted" size="xs" />
+                          <Money
+                            amount={row.netAmount}
+                            color="muted"
+                            size="xs"
+                          />
                         </TableCell>
 
                         <TableCell className="py-3.5 px-4 whitespace-nowrap">
-                          <Money amount={row.vatAmount} color="muted" size="xs" />
+                          <Money
+                            amount={row.vatAmount}
+                            color="muted"
+                            size="xs"
+                          />
                         </TableCell>
 
                         <TableCell className="py-3.5 px-4 whitespace-nowrap">
@@ -577,20 +681,24 @@ export default function InvoicesPage() {
                           />
                         </TableCell>
 
-                        <TableCell className="py-3.5 px-4 whitespace-nowrap text-[var(--text-muted)] dark:text-slate-400 font-mono text-xs" dir="ltr">
+                        <TableCell
+                          className="py-3.5 px-4 whitespace-nowrap text-[var(--text-muted)] dark:text-slate-400 font-mono text-xs"
+                          dir="ltr"
+                        >
                           {dateLabel(row.invoiceDate, ui.language)}
                         </TableCell>
 
-                        <TableCell
-                          className="py-3.5 px-4 whitespace-nowrap text-end"
-                        >
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap text-end">
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition"
                               title={ui(t("common.view"))}
                             >
-                              <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                              <Eye
+                                className="w-3.5 h-3.5 text-amber-500"
+                                aria-hidden="true"
+                              />
                               <span>{ui(t("common.view"))}</span>
                             </Link>
 
@@ -602,9 +710,15 @@ export default function InvoicesPage() {
                               title={ui(t("common.downloadPdf"))}
                             >
                               {isDownloadingThis ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                                <Loader2
+                                  className="w-3.5 h-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
                               ) : (
-                                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                                <Download
+                                  className="w-3.5 h-3.5"
+                                  aria-hidden="true"
+                                />
                               )}
                               <span>PDF</span>
                             </button>
@@ -616,11 +730,23 @@ export default function InvoicesPage() {
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 font-bold transition cursor-pointer"
                                 title={ui(t("invoice.recordPayment"))}
                               >
-                                <CreditCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                                <CreditCard
+                                  className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
+                                  aria-hidden="true"
+                                />
                                 <span>{ui(t("invoice.recordPayment"))}</span>
                               </button>
                             )}
-                            <InvoiceVisibilityAction id={row.id} number={row.invoiceNumber} isArchived={isArchived} onChanged={()=>{if(filteredItems.length===1&&page>1)setPage(v=>v-1);else void load(true);}}/>
+                            <InvoiceVisibilityAction
+                              id={row.id}
+                              number={row.invoiceNumber}
+                              isArchived={isArchived}
+                              onChanged={() => {
+                                if (filteredItems.length === 1 && page > 1)
+                                  setPage((v) => v - 1);
+                                else void load(true);
+                              }}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -657,7 +783,10 @@ export default function InvoicesPage() {
                           aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                         >
                           {copiedNumber === row.invoiceNumber ? (
-                            <Check className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                            <Check
+                              className="w-4 h-4 text-emerald-500"
+                              aria-hidden="true"
+                            />
                           ) : (
                             <Copy className="w-4 h-4" aria-hidden="true" />
                           )}
@@ -676,22 +805,30 @@ export default function InvoicesPage() {
                                 ? "outline"
                                 : "success"
                         }
-                        className="text-[11px]"
+                        className="text-xs"
                       >
                         {ui(
                           isCredit
                             ? "إشعار دائن"
                             : isDebit
                               ? "إشعار مدين"
-                              : invoiceTitle(row)
+                              : invoiceTitle(row),
                         )}
                       </Badge>
                     }
                     footer={
                       <>
-                        <Button variant="outline" size="sm" asChild className="flex-1 min-h-11 gap-1.5 text-xs font-bold">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
+                        >
                           <Link href={`/admin/invoices/${row.id}`}>
-                            <Eye className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                            <Eye
+                              className="w-4 h-4 text-amber-500"
+                              aria-hidden="true"
+                            />
                             <span>{ui(t("common.view"))}</span>
                           </Link>
                         </Button>
@@ -705,7 +842,10 @@ export default function InvoicesPage() {
                           className="flex-1 min-h-11 gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold"
                         >
                           {isDownloadingThis ? (
-                            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                            <Loader2
+                              className="w-4 h-4 animate-spin"
+                              aria-hidden="true"
+                            />
                           ) : (
                             <Download className="w-4 h-4" aria-hidden="true" />
                           )}
@@ -720,7 +860,10 @@ export default function InvoicesPage() {
                             onClick={() => setPaymentModalInvoice(row)}
                             className="w-full min-h-11 gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold"
                           >
-                            <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                            <CreditCard
+                              className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                              aria-hidden="true"
+                            />
                             <span>{ui(t("invoice.recordPayment"))}</span>
                           </Button>
                         )}
@@ -731,7 +874,8 @@ export default function InvoicesPage() {
                             number={row.invoiceNumber}
                             isArchived={isArchived}
                             onChanged={() => {
-                              if (filteredItems.length === 1 && page > 1) setPage((v) => v - 1);
+                              if (filteredItems.length === 1 && page > 1)
+                                setPage((v) => v - 1);
                               else void load(true);
                             }}
                           />
@@ -743,11 +887,21 @@ export default function InvoicesPage() {
                       <MobileCardField
                         label={ui("التاريخ")}
                         mono
-                        value={<bdi dir="ltr">{dateLabel(row.invoiceDate, ui.language)}</bdi>}
+                        value={
+                          <bdi dir="ltr">
+                            {dateLabel(row.invoiceDate, ui.language)}
+                          </bdi>
+                        }
                       />
                       <MobileCardField
                         label={ui(t("invoice.vat"))}
-                        value={<Money amount={row.vatAmount} size="xs" color="muted" />}
+                        value={
+                          <Money
+                            amount={row.vatAmount}
+                            size="xs"
+                            color="muted"
+                          />
+                        }
                       />
                       <MobileCardField
                         label={ui(t("invoice.total"))}

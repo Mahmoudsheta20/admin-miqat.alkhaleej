@@ -56,7 +56,7 @@ export function MobileCollapsibleSection({
               {typeof stepNumber === "number" ? (
                 <span
                   className={cn(
-                    "w-7 h-7 rounded-lg text-xs font-mono font-bold flex items-center justify-center shrink-0 border",
+                    "w-8 h-8 rounded-lg text-sm font-mono font-bold flex items-center justify-center shrink-0 border",
                     hasError
                       ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
                       : isComplete
@@ -67,9 +67,9 @@ export function MobileCollapsibleSection({
                   )}
                 >
                   {hasError ? (
-                    <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                    <AlertCircle className="w-4 h-4" aria-hidden="true" />
                   ) : isComplete && !isOpen ? (
-                    <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                   ) : (
                     stepNumber
                   )}
@@ -78,11 +78,11 @@ export function MobileCollapsibleSection({
                 icon
               )}
               <div className="min-w-0">
-                <span className="block text-sm font-semibold text-slate-900 dark:text-white truncate">
+                <span className="block text-base font-semibold text-slate-900 dark:text-white truncate">
                   {title}
                 </span>
                 {summary && !isOpen && (
-                  <span className="block text-xs text-[var(--text-muted)] truncate mt-0.5">
+                  <span className="block text-sm text-[var(--text-muted)] truncate mt-0.5">
                     {summary}
                   </span>
                 )}
@@ -91,7 +91,7 @@ export function MobileCollapsibleSection({
 
             <div className="flex items-center gap-2 shrink-0">
               {hasError && (
-                <Badge variant="destructive" className="text-[10px]">
+                <Badge variant="destructive" className="text-xs">
                   !
                 </Badge>
               )}
