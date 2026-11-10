@@ -547,17 +547,17 @@ export default function CaptainInspectionPage() {
                 </div>
               </div>
 
-              {/* Submit Action (DOM & visual order match: Cancel first, primary Submit second) */}
+              {/* Submit Action (DOM & visual order match: Cancel first, primary Submit second; inline on mobile/tablet) */}
               <div className="contract-submit-bar justify-end">
                 <Link
                   href="/captain"
-                  className="min-h-11 px-4 sm:px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
+                  className="w-full sm:w-auto min-h-11 px-4 sm:px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
                 >
                   {ui("إلغاء")}</Link>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 sm:flex-initial min-h-11 justify-center px-6 sm:px-7 rounded-xl gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto min-h-11 justify-center px-6 sm:px-7 rounded-xl gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{ui(isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص التشغيلي")}</span>

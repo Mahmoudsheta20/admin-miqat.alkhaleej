@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 
 import { useState, useEffect, useId } from "react";
 import Link from "next/link";
-import { useForm, useFieldArray, useWatch, type FieldErrors } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller, type FieldErrors } from "react-hook-form";
 import { FilePlus2, Users, Plus, Trash2, Plane, MapPin, CheckCircle2, AlertTriangle, FileText, ArrowRight, ClipboardCheck } from "lucide-react";
 import { MobileCollapsibleSection, MobileHorizontalStrip } from "@/app/_components/mobile";
 import { useAuth } from "@/lib/authContext";
@@ -20,7 +20,7 @@ const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 
 interface FormValues {
-  operationType: OperationType;
+  operationType: OperationType | "";
   customerName: string;
   customerPhone: string;
   origin: string;
@@ -58,7 +58,7 @@ export default function CaptainContractBuilderPage() {
   const [openSections, setOpenSections] = useState({ trip: true, passengers: true });
 
   const buildDefaultValues = (plate?: string): FormValues => ({
-    operationType: "AIRPORT_TRANSFER",
+    operationType: "",
     customerName: "",
     customerPhone: "",
     origin: "مكة المكرمة",
@@ -89,15 +89,15 @@ export default function CaptainContractBuilderPage() {
     name: "passengers",
   });
 
-  const [watchedGuest, watchedOrigin, watchedDest] = useWatch({
+  const [watchedOperationType, watchedGuest, watchedOrigin, watchedDest] = useWatch({
     control,
-    name: ["customerName", "origin", "destination"],
+    name: ["operationType", "customerName", "origin", "destination"],
   });
 
   const onFormInvalid = (formErrors: FieldErrors<FormValues>) => {
     const hasPassengerError = Boolean(formErrors.passengers);
     const firstTripField = (
-      ["customerName", "origin", "destination", "vehiclePlate", "tripDate", "tripTime", "operationType"] as const
+      ["operationType", "customerName", "origin", "destination", "vehiclePlate", "tripDate", "tripTime"] as const
     ).find((name) => Boolean(formErrors[name]));
     const hasTripError = Boolean(firstTripField);
     setOpenSections((prev) => ({
@@ -140,6 +140,12 @@ export default function CaptainContractBuilderPage() {
 
   const onFormSubmit = async (data: FormValues) => {
     if (!user) return;
+    if (!data.operationType) {
+      setFormError("نوع العملية التشغيلية مطلوب");
+      setOpenSections((prev) => ({ ...prev, trip: true }));
+      window.setTimeout(() => setFocus("operationType"), 40);
+      return;
+    }
     if (!data.customerName.trim()) {
       setFormError("اسم الضيف الأساسي مطلوب");
       return;
@@ -333,8 +339,8 @@ export default function CaptainContractBuilderPage() {
           }
           isOpen={openSections.trip}
           onToggle={() => setOpenSections((s) => ({ ...s, trip: !s.trip }))}
-          hasError={Boolean(errors.customerName || errors.origin || errors.destination || errors.vehiclePlate || errors.tripDate || errors.tripTime)}
-          isComplete={Boolean(watchedGuest?.trim() && watchedOrigin?.trim() && watchedDest?.trim())}
+          hasError={Boolean(errors.operationType || errors.customerName || errors.origin || errors.destination || errors.vehiclePlate || errors.tripDate || errors.tripTime)}
+          isComplete={Boolean(watchedOperationType && watchedGuest?.trim() && watchedOrigin?.trim() && watchedDest?.trim())}
         >
           <div className="p-4 sm:p-6 space-y-4">
             <h2 className="hidden md:flex text-sm font-semibold text-slate-900 dark:text-white items-center gap-2 border-b theme-border pb-3">
@@ -347,16 +353,44 @@ export default function CaptainContractBuilderPage() {
               <div className="space-y-1">
                 <label htmlFor={`${fieldId}-opType`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {ui("نوع العملية التشغيلية *")}</label>
-                <select
-                  id={`${fieldId}-opType`}
-                  {...register("operationType", { required: true })}
-                  className="w-full min-h-11 px-3 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
-                >
-                  <option value="AIRPORT_TRANSFER">{ui("توصيل مطار (Airport Transfer)")}</option>
-                  <option value="CITY_TOUR">{ui("جولة سياحية (City Tour)")}</option>
-                  <option value="INTERCITY">{ui("نقل بين المدن (Intercity)")}</option>
-                  <option value="HAJJ_UMRAH">{ui("نقل زوار ومعتمرين (Hajj & Umrah)")}</option>
-                </select>
+                <Controller
+                  control={control}
+                  name="operationType"
+                  rules={{ required: "نوع العملية التشغيلية مطلوب" }}
+                  render={({ field, fieldState }) => (
+                    <>
+                      <select
+                        id={`${fieldId}-opType`}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        required
+                        aria-invalid={fieldState.error ? true : undefined}
+                        aria-describedby={fieldState.error ? `${fieldId}-opType-error` : undefined}
+                        className={`w-full min-h-11 px-3 py-2.5 text-base sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden ${
+                          fieldState.error ? "border-rose-500 dark:border-rose-400" : ""
+                        }`}
+                      >
+                        <option value="" disabled>{ui("بدون — اختر نوع العملية")}</option>
+                        <option value="AIRPORT_TRANSFER">{ui("توصيل مطار (Airport Transfer)")}</option>
+                        <option value="CITY_TOUR">{ui("جولة سياحية (City Tour)")}</option>
+                        <option value="INTERCITY">{ui("نقل بين المدن (Intercity)")}</option>
+                        <option value="HAJJ_UMRAH">{ui("نقل زوار ومعتمرين (Hajj & Umrah)")}</option>
+                      </select>
+                      {fieldState.error?.message && (
+                        <p
+                          id={`${fieldId}-opType-error`}
+                          role="alert"
+                          className="text-xs text-rose-700 dark:text-rose-400"
+                        >
+                          {ui(fieldState.error.message)}
+                        </p>
+                      )}
+                    </>
+                  )}
+                />
               </div>
 
               {/* Customer Name */}
@@ -688,17 +722,17 @@ export default function CaptainContractBuilderPage() {
           </div>
         </MobileCollapsibleSection>
 
-        {/* Submit Actions (DOM & visual order match: Cancel first, primary Submit second) */}
+        {/* Submit Actions (DOM & visual order match: Cancel first, primary Submit second; inline on mobile/tablet) */}
         <div className="contract-submit-bar justify-end">
           <Link
             href="/captain"
-            className="min-h-11 px-4 sm:px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
+            className="w-full sm:w-auto min-h-11 px-4 sm:px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
           >
             {ui("إلغاء")}</Link>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial min-h-11 justify-center px-6 sm:px-8 rounded-xl gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto min-h-11 justify-center px-6 sm:px-8 rounded-xl gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             <FilePlus2 className="w-4 h-4 shrink-0" />
             <span>{ui(isSubmitting ? "جاري توثيق وتوليد العقد..." : "اعتماد وتوثيق العقد الرسمي")}</span>

@@ -32,9 +32,11 @@ export const INSPECTION_GROUPS = [
 /** A historical report is never proof of readiness for a different Saudi business day. */
 export function inspectionMatchesDay(inspection: Pick<VehicleInspection, "inspectionDate" | "vehiclePlate"> | null, day: string, plate?: string): boolean {
   if (!inspection || (plate && inspection.vehiclePlate !== plate)) return false;
+  const normalizedDay = day.trim().replace(/\//g, "-");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDay)) return false;
   const date = new Date(inspection.inspectionDate);
   if (!Number.isFinite(date.getTime())) return false;
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
   const part = (type: string) => parts.find(value => value.type === type)?.value || "";
-  return `${part("year")}-${part("month")}-${part("day")}` === day;
+  return `${part("year")}-${part("month")}-${part("day")}` === normalizedDay;
 }

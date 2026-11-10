@@ -2725,7 +2725,10 @@ export const UI_PHRASES: Record<string,string> = {
   "تم تعطيل حساب المسؤول بنجاح.": "Administrator account deactivated.",
   "تم حذف حساب المسؤول بنجاح.": "Administrator account deleted.",
   "تعذر النسخ التلقائي — يرجى نسخ كلمة المرور يدوياً": "Automatic copy failed — please copy the password manually",
-  "تم إصدار كلمة مرور مؤقتة جديدة بنجاح!": "New temporary password issued!"
+  "تم إصدار كلمة مرور مؤقتة جديدة بنجاح!": "New temporary password issued!",
+  "بدون — اختر أو اكتب نوع العملية": "None — pick or enter service type",
+  "بدون — اختر نوع العملية": "None — choose service type",
+  "نوع التشغيل في الـ PDF:": "Service type on PDF:"
 };
 export const UI_TEMPLATES: Record<string,string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",

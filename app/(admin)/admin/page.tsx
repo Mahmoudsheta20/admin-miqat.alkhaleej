@@ -43,6 +43,7 @@ import {
   StatCard,
   Card,
   Table,
+  TableCaption,
   TableHeader,
   TableBody,
   TableHead,
@@ -548,49 +549,9 @@ export default function AdminDashboardPage() {
         hasLoadError={Boolean(readiness.error || fleetQuery.error || reportQuery.error || contractsQuery.error)}
       />
 
-      {/* Operational Charts Row */}
-      <section aria-labelledby="charts-section-heading" className="space-y-2.5">
-        <h2 id="charts-section-heading" className="sr-only">
-          {text("الرسوم البيانية التحليلية", "Operational analytics charts")}
-        </h2>
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-          <div className="xl:col-span-7">
-            <ContractsActivityChart
-              points7={trend7}
-              points14={trend14}
-              todayContracts={todayStats.todayContracts}
-              todayPassengers={todayStats.todayPassengers}
-              isLoading={contractsQuery.isLoading && stats.isLoading}
-            />
-          </div>
-          <div className="xl:col-span-5">
-            <OperationsMixCard
-              inspectedToday={inspectedTodayCount}
-              totalCaptains={totalCaptainsCount}
-              pendingToday={pendingTodayCount}
-              totalInspections={readiness.data?.stats.totalInspections ?? stats.data?.todayInspections ?? 0}
-              fleet={fleetAnalytics}
-              operations={operationsBreakdown}
-              isLoading={readiness.isLoading && fleetQuery.isLoading && contractsQuery.isLoading}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Upgraded Financial Pulse & Vehicle P&L */}
-      <FinanceSummary
-        purchasesTotal={purchasesQuery.data?.totals.totalAmount}
-        purchasesCount={purchasesQuery.data?.total}
-        invoicesCount={invoicesQuery.data?.total}
-        revision={refreshTick}
-      />
-
       {/* Multi-View Live Operational Records Desk */}
-      <section
-        aria-labelledby="operational-feed-title"
-        className="theme-card overflow-hidden rounded-2xl border theme-border"
-      >
-        <header className="border-b theme-border p-4 sm:p-5 space-y-3.5">
+      <Card className="theme-card overflow-hidden rounded-2xl border theme-border shadow-xs">
+        <div className="border-b theme-border p-4 sm:p-5 space-y-3.5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 id="operational-feed-title" className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
@@ -625,10 +586,10 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             {/* Accessible Segmented Filter Tabs */}
             <div
-              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x touch-pan-x touch-pan-y pb-1 md:pb-0"
+              className="flex flex-wrap items-center gap-1.5"
               role="group"
               aria-label={text("أقسام المتابعة", "Workspace record views")}
             >
@@ -679,7 +640,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Instant Search */}
-            <div className="relative w-full md:w-72 shrink-0">
+            <div className="relative w-full lg:w-72 shrink-0">
               <Search
                 className="w-4 h-4 text-[var(--text-muted)] pointer-events-none absolute top-1/2 -translate-y-1/2 start-3"
                 aria-hidden="true"
@@ -704,7 +665,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
           </div>
-        </header>
+        </div>
 
         {invoiceDownloadError && (
           <p role="alert" className="mx-4 mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-xs font-semibold text-rose-700 dark:text-rose-300">
@@ -730,7 +691,7 @@ export default function AdminDashboardPage() {
               </p>
             ) : (
               <>
-                <div className="md:hidden space-y-3 p-3.5">
+                <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 sm:p-4">
                   {(activeTab === "contracts"
                     ? visibleRecentContracts
                     : visibleUpcomingTrips
@@ -862,163 +823,171 @@ export default function AdminDashboardPage() {
                   ))}
                 </div>
 
-                <div className="hidden md:block overflow-x-auto w-full">
-                  <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-start">
-                        {text("العقد والعملية", "Contract & type")}
-                      </TableHead>
-                      <TableHead className="text-start">
-                        {text("العميل والوجهة", "Customer & route")}
-                      </TableHead>
-                      <TableHead className="text-start">
-                        {text("الكابتن والمركبة", "Captain & vehicle")}
-                      </TableHead>
-                      <TableHead className="text-start">
-                        {text("الموعد والركاب", "Schedule & pax")}
-                      </TableHead>
-                      <TableHead className="text-end">
-                        {text("الإجراءات", "Actions")}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(activeTab === "contracts"
-                      ? visibleRecentContracts
-                      : visibleUpcomingTrips
-                    ).map((contract) => (
-                      <TableRow key={contract.id} className="hover:bg-muted/40 transition-colors">
-                        <TableCell className="py-3.5 font-medium">
-                          <div className="flex flex-col gap-1 items-start">
-                            <Link
-                              href={`/admin/contracts/${contract.id}`}
-                              className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-[var(--accent-gold)] transition-colors"
-                            >
-                              <bdi>{contract.referenceNumber}</bdi>
-                            </Link>
-                            <div className="flex flex-wrap items-center gap-1">
-                              <Badge variant="outline" className="text-[11px] font-normal px-1.5 py-0">
-                                {operationLabels[contract.operationType] || contract.operationType}
-                              </Badge>
-                              {contract.status && (
-                                <Badge
-                                  variant={
-                                    contract.status === "APPROVED" || contract.status === "ACTIVE"
-                                      ? "success"
-                                      : contract.status === "REJECTED" || contract.status === "CANCELLED"
-                                        ? "destructive"
-                                        : contract.status === "PENDING_REVIEW"
-                                          ? "warning"
-                                          : "secondary"
-                                  }
-                                  className="text-[11px] px-1.5 py-0"
-                                >
-                                  {contractStatusLabels[contract.status] || contract.status}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3.5">
-                          <div className="space-y-0.5 max-w-[230px]">
-                            <span className="block text-xs sm:text-sm font-semibold text-slate-900 dark:text-white break-words">
-                              {contract.customerName}
-                            </span>
-                            {(contract.origin || contract.destination) && (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
-                                <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" />
-                                <span className="truncate">
-                                  {contract.origin} {language === "ar" ? "←" : "→"} {contract.destination}
-                                </span>
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3.5">
-                          <div className="flex flex-col gap-1 text-xs">
-                            <span className="text-slate-900 dark:text-white font-medium">
-                              {contract.captainName}
-                            </span>
-                            <div>
-                              <Badge variant="secondary" className="font-mono text-[11px] px-1.5 py-0">
-                                <bdi>{contract.vehiclePlate}</bdi>
-                              </Badge>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3.5">
-                          <div className="flex flex-col gap-1 text-xs">
-                            <span className="font-mono font-medium text-slate-900 dark:text-white" dir="ltr">
-                              <bdi>
-                                {contract.tripDate.slice(0, 10)}
-                                {contract.tripTime ? ` · ${contract.tripTime}` : ""}
-                              </bdi>
-                            </span>
-                            <div>
-                              <Badge variant="secondary" className="font-mono text-[11px] gap-1 px-2 py-0">
-                                <Users className="w-3 h-3 text-[var(--text-muted)]" aria-hidden="true" />
-                                <span>{contract.passengersCount}</span>
-                                <span className="text-[10px] text-[var(--text-muted)] font-sans">
-                                  {text("ركاب", "pax")}
-                                </span>
-                              </Badge>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-end py-3.5">
-                          <div className="flex items-center justify-end gap-1.5 flex-nowrap">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs"
-                              aria-label={`${text("معاينة العقد", "Preview contract")} ${contract.referenceNumber}`}
-                              onClick={() =>
-                                setPreview({
-                                  id: contract.id,
-                                  referenceNumber: contract.referenceNumber,
-                                })
-                              }
-                            >
-                              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span className="hidden sm:inline">
-                                {text("معاينة PDF", "Preview PDF")}
-                              </span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs"
-                            >
-                              <Link
-                                href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
-                                aria-label={`${text("إصدار فاتورة للعقد", "Create invoice for")} ${contract.referenceNumber}`}
-                                title={text("إصدار فاتورة من العقد", "Create invoice from contract")}
-                              >
-                                <FilePlus2 className="w-3.5 h-3.5" aria-hidden="true" />
-                                <span className="hidden lg:inline">{text("فاتورة", "Invoice")}</span>
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs font-semibold"
-                            >
+                <div className="hidden lg:block">
+                  <Table
+                    regionLabelledBy="operational-feed-title"
+                    wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                  >
+                    <TableCaption className="sr-only">
+                      {activeTab === "upcoming"
+                        ? text("الرحلات القادمة", "Today & upcoming")
+                        : text("أحدث العقود", "Recent contracts")}
+                    </TableCaption>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-start">
+                          {text("العقد والعملية", "Contract & type")}
+                        </TableHead>
+                        <TableHead className="text-start">
+                          {text("العميل والوجهة", "Customer & route")}
+                        </TableHead>
+                        <TableHead className="text-start">
+                          {text("الكابتن والمركبة", "Captain & vehicle")}
+                        </TableHead>
+                        <TableHead className="text-start">
+                          {text("الموعد والركاب", "Schedule & pax")}
+                        </TableHead>
+                        <TableHead className="text-end">
+                          {text("الإجراءات", "Actions")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(activeTab === "contracts"
+                        ? visibleRecentContracts
+                        : visibleUpcomingTrips
+                      ).map((contract) => (
+                        <TableRow key={contract.id} className="hover:bg-muted/40 transition-colors">
+                          <th scope="row" className="p-4 py-3.5 text-start align-middle font-medium text-slate-900 dark:text-white">
+                            <div className="flex flex-col gap-1.5 items-start">
                               <Link
                                 href={`/admin/contracts/${contract.id}`}
-                                aria-label={`${text("عرض العقد", "View contract")} ${contract.referenceNumber}`}
+                                className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-[var(--accent-gold)] whitespace-nowrap transition-colors"
                               >
-                                <span>{text("التفاصيل", "Details")}</span>
-                                <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                                <bdi>{contract.referenceNumber}</bdi>
                               </Link>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
+                              <div className="flex flex-wrap items-center gap-1">
+                                <Badge variant="outline" className="rounded-lg text-[11px] font-normal px-2 py-0.5 whitespace-nowrap">
+                                  {operationLabels[contract.operationType] || contract.operationType}
+                                </Badge>
+                                {contract.status && (
+                                  <Badge
+                                    variant={
+                                      contract.status === "APPROVED" || contract.status === "ACTIVE"
+                                        ? "success"
+                                        : contract.status === "REJECTED" || contract.status === "CANCELLED"
+                                          ? "destructive"
+                                          : contract.status === "PENDING_REVIEW"
+                                            ? "warning"
+                                            : "secondary"
+                                    }
+                                    className="rounded-lg text-[11px] px-2 py-0.5 whitespace-nowrap"
+                                  >
+                                    {contractStatusLabels[contract.status] || contract.status}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </th>
+                          <TableCell className="py-3.5">
+                            <div className="space-y-0.5 max-w-[230px]">
+                              <span className="block text-xs sm:text-sm font-semibold text-slate-900 dark:text-white break-words">
+                                {contract.customerName}
+                              </span>
+                              {(contract.origin || contract.destination) && (
+                                <span className="flex max-w-full items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                                  <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" />
+                                  <span className="min-w-0 truncate">
+                                    {contract.origin} {language === "ar" ? "←" : "→"} {contract.destination}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            <div className="flex flex-col gap-1 text-xs">
+                              <span className="text-slate-900 dark:text-white font-medium whitespace-nowrap">
+                                {contract.captainName}
+                              </span>
+                              <div>
+                                <Badge variant="secondary" className="rounded-lg font-mono text-[11px] px-2 py-0.5 whitespace-nowrap">
+                                  <bdi>{contract.vehiclePlate}</bdi>
+                                </Badge>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            <div className="flex flex-col gap-1 text-xs">
+                              <span className="font-mono font-medium text-slate-900 dark:text-white whitespace-nowrap" dir="ltr">
+                                <bdi>
+                                  {contract.tripDate.slice(0, 10)}
+                                  {contract.tripTime ? ` · ${contract.tripTime}` : ""}
+                                </bdi>
+                              </span>
+                              <div>
+                                <Badge variant="secondary" className="rounded-lg font-mono text-[11px] gap-1 px-2 py-0.5 whitespace-nowrap">
+                                  <Users className="w-3 h-3 text-[var(--text-muted)]" aria-hidden="true" />
+                                  <span>{contract.passengersCount}</span>
+                                  <span className="text-[10px] text-[var(--text-muted)] font-sans">
+                                    {text("ركاب", "pax")}
+                                  </span>
+                                </Badge>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-end py-3.5">
+                            <div className="flex items-center justify-end gap-1.5 flex-nowrap">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="min-h-11 lg:min-h-9 gap-1.5 text-xs whitespace-nowrap"
+                                aria-label={`${text("معاينة العقد", "Preview contract")} ${contract.referenceNumber}`}
+                                onClick={() =>
+                                  setPreview({
+                                    id: contract.id,
+                                    referenceNumber: contract.referenceNumber,
+                                  })
+                                }
+                              >
+                                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span className="hidden sm:inline">
+                                  {text("معاينة PDF", "Preview PDF")}
+                                </span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="min-h-11 lg:min-h-9 gap-1.5 text-xs whitespace-nowrap"
+                              >
+                                <Link
+                                  href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
+                                  aria-label={`${text("إصدار فاتورة للعقد", "Create invoice for")} ${contract.referenceNumber}`}
+                                  title={text("إصدار فاتورة من العقد", "Create invoice from contract")}
+                                >
+                                  <FilePlus2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                  <span className="hidden lg:inline">{text("فاتورة", "Invoice")}</span>
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="min-h-11 lg:min-h-9 gap-1.5 text-xs font-semibold whitespace-nowrap"
+                              >
+                                <Link
+                                  href={`/admin/contracts/${contract.id}`}
+                                  aria-label={`${text("عرض العقد", "View contract")} ${contract.referenceNumber}`}
+                                >
+                                  <span>{text("التفاصيل", "Details")}</span>
+                                  <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
                   </Table>
                 </div>
               </>
@@ -1040,10 +1009,11 @@ export default function AdminDashboardPage() {
               </p>
             ) : (
               <>
-                <div className="md:hidden space-y-3 p-3.5">
+                <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 sm:p-4">
                   {visibleInvoices.map((inv) => (
                     <MobileRecordCard
                       key={inv.id}
+                      titleAs="h3"
                       title={
                         <Link
                           href={`/admin/invoices/${inv.id}`}
@@ -1061,7 +1031,7 @@ export default function AdminDashboardPage() {
                         </span>
                       }
                       badge={
-                        <Badge variant={inv.documentType === "TAX" ? "gold" : "outline"} className="text-[11px]">
+                        <Badge variant={inv.documentType === "TAX" ? "gold" : "outline"} className="rounded-lg text-[11px] whitespace-nowrap">
                           {invoiceTitle(inv)}
                         </Badge>
                       }
@@ -1108,79 +1078,85 @@ export default function AdminDashboardPage() {
                   ))}
                 </div>
 
-                <div className="hidden md:block overflow-x-auto w-full">
-                  <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-start">{text("رقم الفاتورة", "Invoice #")}</TableHead>
-                      <TableHead className="text-start">{text("النوع", "Type")}</TableHead>
-                      <TableHead className="text-start">{text("العميل", "Customer")}</TableHead>
-                      <TableHead className="text-start">{text("التاريخ", "Date")}</TableHead>
-                      <TableHead className="text-start">{text("الصافي والضريبة", "Net & VAT")}</TableHead>
-                      <TableHead className="text-start">{text("الإجمالي", "Total")}</TableHead>
-                      <TableHead className="text-end">{text("الإجراءات", "Actions")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {visibleInvoices.map((inv) => (
-                      <TableRow key={inv.id} className="hover:bg-muted/40 transition-colors">
-                        <TableCell className="py-3.5 font-mono text-xs sm:text-sm font-bold">
-                          <Link
-                            href={`/admin/invoices/${inv.id}`}
-                            className="text-slate-900 dark:text-white hover:text-[var(--accent-gold)]"
-                          >
-                            <bdi>{inv.invoiceNumber}</bdi>
-                          </Link>
-                        </TableCell>
-                        <TableCell className="py-3.5">
-                          <Badge variant={inv.documentType === "TAX" ? "gold" : "outline"} className="text-[11px]">
-                            {invoiceTitle(inv)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="py-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white">
-                          {inv.customerName}
-                        </TableCell>
-                        <TableCell className="py-3.5 text-xs text-[var(--text-muted)] font-mono">
-                          <bdi>{dateLabel(inv.invoiceDate, language)}</bdi>
-                        </TableCell>
-                        <TableCell className="py-3.5 text-xs">
-                          <div className="flex flex-col gap-0.5">
-                            <Money amount={inv.netAmount} size="xs" />
-                            <span className="text-[11px] text-[var(--text-muted)]">
-                              {text("ضريبة", "VAT")}: <Money amount={inv.vatAmount} size="xs" color="muted" />
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3.5">
-                          <Money amount={inv.totalAmount} size="sm" color="emerald" />
-                        </TableCell>
-                        <TableCell className="py-3.5 text-end">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={downloadingInvoiceId === inv.id}
-                              aria-label={`${text("تنزيل فاتورة PDF", "Download invoice PDF")} ${inv.invoiceNumber}`}
-                              onClick={() => void handleInvoicePdf(inv.id)}
-                              className="min-h-11 lg:min-h-9 gap-1.5 text-xs"
-                            >
-                              <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span>{text("PDF", "PDF")}</span>
-                            </Button>
-                            <Button variant="outline" size="sm" asChild className="min-h-11 lg:min-h-9 gap-1.5 text-xs">
-                              <Link
-                                href={`/admin/invoices/${inv.id}`}
-                                aria-label={`${text("عرض الفاتورة", "Open invoice")} ${inv.invoiceNumber}`}
-                              >
-                                <span>{text("عرض", "Open")}</span>
-                                <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Link>
-                            </Button>
-                          </div>
-                        </TableCell>
+                <div className="hidden lg:block">
+                  <Table
+                    regionLabelledBy="operational-feed-title"
+                    wrapperClassName="border-0 rounded-none shadow-none bg-transparent"
+                  >
+                    <TableCaption className="sr-only">
+                      {text("أحدث الفواتير", "Recent invoices")}
+                    </TableCaption>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-start">{text("رقم الفاتورة", "Invoice #")}</TableHead>
+                        <TableHead className="text-start">{text("النوع", "Type")}</TableHead>
+                        <TableHead className="text-start">{text("العميل", "Customer")}</TableHead>
+                        <TableHead className="text-start">{text("التاريخ", "Date")}</TableHead>
+                        <TableHead className="text-start">{text("الصافي والضريبة", "Net & VAT")}</TableHead>
+                        <TableHead className="text-start">{text("الإجمالي", "Total")}</TableHead>
+                        <TableHead className="text-end">{text("الإجراءات", "Actions")}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
+                    </TableHeader>
+                    <TableBody>
+                      {visibleInvoices.map((inv) => (
+                        <TableRow key={inv.id} className="hover:bg-muted/40 transition-colors">
+                          <th scope="row" className="p-4 py-3.5 text-start align-middle font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                            <Link
+                              href={`/admin/invoices/${inv.id}`}
+                              className="text-slate-900 dark:text-white hover:text-[var(--accent-gold)] whitespace-nowrap"
+                            >
+                              <bdi>{inv.invoiceNumber}</bdi>
+                            </Link>
+                          </th>
+                          <TableCell className="py-3.5">
+                            <Badge variant={inv.documentType === "TAX" ? "gold" : "outline"} className="rounded-lg text-[11px] whitespace-nowrap">
+                              {invoiceTitle(inv)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white">
+                            {inv.customerName}
+                          </TableCell>
+                          <TableCell className="py-3.5 text-xs text-[var(--text-muted)] font-mono whitespace-nowrap">
+                            <bdi>{dateLabel(inv.invoiceDate, language)}</bdi>
+                          </TableCell>
+                          <TableCell className="py-3.5 text-xs whitespace-nowrap">
+                            <div className="flex flex-col gap-0.5">
+                              <Money amount={inv.netAmount} size="xs" />
+                              <span className="text-[11px] text-[var(--text-muted)]">
+                                {text("ضريبة", "VAT")}: <Money amount={inv.vatAmount} size="xs" color="muted" />
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3.5 whitespace-nowrap">
+                            <Money amount={inv.totalAmount} size="sm" color="emerald" />
+                          </TableCell>
+                          <TableCell className="py-3.5 text-end">
+                            <div className="flex items-center justify-end gap-1.5 flex-nowrap">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={downloadingInvoiceId === inv.id}
+                                aria-label={`${text("تنزيل فاتورة PDF", "Download invoice PDF")} ${inv.invoiceNumber}`}
+                                onClick={() => void handleInvoicePdf(inv.id)}
+                                className="min-h-11 lg:min-h-9 gap-1.5 text-xs whitespace-nowrap"
+                              >
+                                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span>{text("PDF", "PDF")}</span>
+                              </Button>
+                              <Button variant="outline" size="sm" asChild className="min-h-11 lg:min-h-9 gap-1.5 text-xs whitespace-nowrap">
+                                <Link
+                                  href={`/admin/invoices/${inv.id}`}
+                                  aria-label={`${text("عرض الفاتورة", "Open invoice")} ${inv.invoiceNumber}`}
+                                >
+                                  <span>{text("عرض", "Open")}</span>
+                                  <Arrow className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
                   </Table>
                 </div>
               </>
@@ -1203,9 +1179,9 @@ export default function AdminDashboardPage() {
                   {text("فتح شاشة الفحوصات", "Open inspections")}
                 </Link>
               </div>
-              <div className="md:hidden space-y-2.5">
+              <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {visibleCaptains.length === 0 ? (
-                  <p className="rounded-xl border theme-border p-5 text-center text-xs text-[var(--text-muted)]">
+                  <p className="md:col-span-2 rounded-xl border theme-border p-5 text-center text-xs text-[var(--text-muted)]">
                     {text("لا يوجد كباتن مطابقون", "No matching captains")}
                   </p>
                 ) : (
@@ -1215,7 +1191,7 @@ export default function AdminDashboardPage() {
                       title={cap.name}
                       subtitle={
                         cap.assignedVehiclePlate ? (
-                          <Badge variant="secondary" className="font-mono text-[11px] mt-0.5">
+                          <Badge variant="secondary" className="rounded-lg font-mono text-[11px] mt-0.5 whitespace-nowrap">
                             <bdi>{cap.assignedVehiclePlate}</bdi>
                           </Badge>
                         ) : (
@@ -1223,7 +1199,7 @@ export default function AdminDashboardPage() {
                         )
                       }
                       badge={
-                        <Badge variant={cap.hasTodayInspection ? "success" : "warning"}>
+                        <Badge variant={cap.hasTodayInspection ? "success" : "warning"} className="rounded-lg whitespace-nowrap">
                           {cap.hasTodayInspection
                             ? text("مكتمل", "Inspected")
                             : text("بانتظار الفحص", "Pending")}
@@ -1234,8 +1210,14 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="hidden md:block overflow-x-auto rounded-xl border theme-border">
-                <Table>
+              <div className="hidden lg:block">
+                <Table
+                  regionLabel={text("حالة فحص الكباتن اليوم", "Captain readiness today")}
+                  wrapperClassName="rounded-xl shadow-none"
+                >
+                  <TableCaption className="sr-only">
+                    {text("حالة فحص الكباتن اليوم", "Captain readiness today")}
+                  </TableCaption>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="text-start">{text("الكابتن", "Captain")}</TableHead>
@@ -1253,12 +1235,12 @@ export default function AdminDashboardPage() {
                     ) : (
                       visibleCaptains.slice(0, 8).map((cap) => (
                         <TableRow key={cap.id}>
-                          <TableCell className="py-2.5 text-xs font-semibold text-slate-900 dark:text-white">
+                          <th scope="row" className="px-4 py-2.5 text-start align-middle text-xs font-semibold text-slate-900 dark:text-white">
                             {cap.name}
-                          </TableCell>
+                          </th>
                           <TableCell className="py-2.5">
                             {cap.assignedVehiclePlate ? (
-                              <Badge variant="secondary" className="font-mono text-[11px]">
+                              <Badge variant="secondary" className="rounded-lg font-mono text-[11px] whitespace-nowrap">
                                 <bdi>{cap.assignedVehiclePlate}</bdi>
                               </Badge>
                             ) : (
@@ -1266,7 +1248,7 @@ export default function AdminDashboardPage() {
                             )}
                           </TableCell>
                           <TableCell className="py-2.5 text-end">
-                            <Badge variant={cap.hasTodayInspection ? "success" : "warning"}>
+                            <Badge variant={cap.hasTodayInspection ? "success" : "warning"} className="rounded-lg whitespace-nowrap">
                               {cap.hasTodayInspection
                                 ? text("مكتمل", "Inspected")
                                 : text("بانتظار الفحص", "Pending")}
@@ -1294,9 +1276,9 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
 
-              <div className="md:hidden space-y-2.5">
+              <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {visibleVehicles.length === 0 ? (
-                  <p className="rounded-xl border theme-border p-5 text-center text-xs text-[var(--text-muted)]">
+                  <p className="md:col-span-2 rounded-xl border theme-border p-5 text-center text-xs text-[var(--text-muted)]">
                     {text("لا توجد مركبات مطابقة", "No matching vehicles")}
                   </p>
                 ) : (
@@ -1324,13 +1306,13 @@ export default function AdminDashboardPage() {
                             {text("الاستمارة / التأمين", "Reg. / Insurance")}
                           </span>
                           {minDays !== null && minDays <= 30 ? (
-                            <Badge variant={minDays < 0 ? "destructive" : "warning"} className="font-mono text-[11px]">
+                            <Badge variant={minDays < 0 ? "destructive" : "warning"} className="rounded-lg font-mono text-[11px] whitespace-nowrap">
                               {minDays < 0
                                 ? text("منتهٍ", "Expired")
                                 : text(`خلال ${minDays}ي`, `${minDays}d left`)}
                             </Badge>
                           ) : (
-                            <Badge variant="success" className="text-[11px]">
+                            <Badge variant="success" className="rounded-lg text-[11px] whitespace-nowrap">
                               {text("ساري", "Valid")}
                             </Badge>
                           )}
@@ -1341,8 +1323,14 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="hidden md:block overflow-x-auto rounded-xl border theme-border">
-                <Table>
+              <div className="hidden lg:block">
+                <Table
+                  regionLabel={text("حالة الأسطول والوثائق", "Fleet status & expiries")}
+                  wrapperClassName="rounded-xl shadow-none"
+                >
+                  <TableCaption className="sr-only">
+                    {text("حالة الأسطول والوثائق", "Fleet status & expiries")}
+                  </TableCaption>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="text-start">{text("المركبة", "Vehicle")}</TableHead>
@@ -1368,7 +1356,7 @@ export default function AdminDashboardPage() {
 
                         return (
                           <TableRow key={veh.id}>
-                            <TableCell className="py-2.5">
+                            <th scope="row" className="px-4 py-2.5 text-start align-middle font-normal">
                               <div className="text-xs">
                                 <span className="font-mono font-bold text-slate-900 dark:text-white block">
                                   <bdi>{veh.plateNumberAr || veh.plateNumberEn}</bdi>
@@ -1377,19 +1365,19 @@ export default function AdminDashboardPage() {
                                   {veh.make} {veh.model} ({veh.capacity})
                                 </span>
                               </div>
-                            </TableCell>
+                            </th>
                             <TableCell className="py-2.5">
                               <StatusBadge type="vehicle" status={veh.status} />
                             </TableCell>
                             <TableCell className="py-2.5 text-end">
                               {minDays !== null && minDays <= 30 ? (
-                                <Badge variant={minDays < 0 ? "destructive" : "warning"} className="font-mono text-[11px]">
+                                <Badge variant={minDays < 0 ? "destructive" : "warning"} className="rounded-lg font-mono text-[11px] whitespace-nowrap">
                                   {minDays < 0
                                     ? text("منتهٍ", "Expired")
                                     : text(`خلال ${minDays}ي`, `${minDays}d left`)}
                                 </Badge>
                               ) : (
-                                <Badge variant="success" className="text-[11px]">
+                                <Badge variant="success" className="rounded-lg text-[11px] whitespace-nowrap">
                                   {text("ساري", "Valid")}
                                 </Badge>
                               )}
@@ -1404,7 +1392,44 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         )}
+      </Card>
+
+      {/* Operational Charts Row */}
+      <section aria-labelledby="charts-section-heading" className="space-y-2.5">
+        <h2 id="charts-section-heading" className="sr-only">
+          {text("الرسوم البيانية التحليلية", "Operational analytics charts")}
+        </h2>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div className="xl:col-span-7">
+            <ContractsActivityChart
+              points7={trend7}
+              points14={trend14}
+              todayContracts={todayStats.todayContracts}
+              todayPassengers={todayStats.todayPassengers}
+              isLoading={contractsQuery.isLoading && stats.isLoading}
+            />
+          </div>
+          <div className="xl:col-span-5">
+            <OperationsMixCard
+              inspectedToday={inspectedTodayCount}
+              totalCaptains={totalCaptainsCount}
+              pendingToday={pendingTodayCount}
+              totalInspections={readiness.data?.stats.totalInspections ?? stats.data?.todayInspections ?? 0}
+              fleet={fleetAnalytics}
+              operations={operationsBreakdown}
+              isLoading={readiness.isLoading && fleetQuery.isLoading && contractsQuery.isLoading}
+            />
+          </div>
+        </div>
       </section>
+
+      {/* Upgraded Financial Pulse & Vehicle P&L */}
+      <FinanceSummary
+        purchasesTotal={purchasesQuery.data?.totals.totalAmount}
+        purchasesCount={purchasesQuery.data?.total}
+        invoicesCount={invoicesQuery.data?.total}
+        revision={refreshTick}
+      />
 
       <PdfPreviewModal
         isOpen={Boolean(preview)}

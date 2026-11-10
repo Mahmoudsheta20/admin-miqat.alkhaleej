@@ -114,12 +114,30 @@ test("responsive layouts, keyboard access, and accessibility", async ({ page }) 
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 960 }); await page.goto("/admin");
     await expect(page.getByRole("heading", { name: "Workspace overview" })).toBeVisible();
+    await expect(page.locator("#operational-feed-title")).toBeVisible();
+    const order = await page.evaluate(() => {
+      const feed = document.querySelector("#operational-feed-title")?.getBoundingClientRect().top ?? Infinity;
+      const quick = document.querySelector("#quick-workflows-heading")?.getBoundingClientRect().top ?? -1;
+      const kpi = document.querySelector("#kpi-strip-heading")?.getBoundingClientRect().top ?? -1;
+      const charts = document.querySelector("#charts-section-heading")?.getBoundingClientRect().top ?? -1;
+      return { feed, quick, kpi, charts };
+    });
+    expect(order.quick).toBeLessThan(order.feed);
+    expect(order.kpi).toBeLessThan(order.feed);
+    expect(order.feed).toBeLessThan(order.charts);
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     if (width < 1024) { await page.getByRole("button", { name: "Open navigation" }).click(); await expect(page.locator("#mobile-navigation")).toBeVisible(); await page.keyboard.press("Escape"); await expect(page.locator("#mobile-navigation")).not.toBeVisible(); }
     fs.mkdirSync("/tmp/miqat-redesign-review", { recursive: true });
     await page.screenshot({ path: `/tmp/miqat-redesign-review/${width === 1440 ? "desktop" : width === 390 ? "mobile" : "tablet"}.png`, fullPage: true });
   }
+  await page.getByRole("button", { name: /Recent invoices/ }).click();
+  await expect(page.getByRole("region", { name: "Live operations & records desk" })).toBeVisible();
+  await page.getByRole("button", { name: /Captains & fleet/ }).click();
+  await expect(page.getByRole("region", { name: "Captain readiness today" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Fleet status & expiries" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.getByRole("button", { name: /Recent contracts/ }).click();
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([]);
   await page.context().request.post("/api/proxy/auth/logout"); await page.goto("/login");
@@ -128,23 +146,95 @@ test("responsive layouts, keyboard access, and accessibility", async ({ page }) 
 });
 
 test("admin contract creation uses the shared fields, inspection, and protected preview", async ({ page }) => {
-  await preferences(page); await login(page); await page.goto("/admin/contracts/new");
+  await preferences(page); await login(page);
+  await page.setViewportSize({ width: 390, height: 960 });
+  await page.goto("/admin/contracts/new");
+  const submitBar = page.locator(".contract-submit-bar");
+  await expect(submitBar).toBeAttached();
+  expect(await submitBar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+  await submitBar.scrollIntoViewIfNeeded();
+  await expect(submitBar).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  fs.mkdirSync("/tmp/miqat-redesign-review", { recursive: true });
+  await page.screenshot({ path: "/tmp/miqat-redesign-review/contract-submit-bottom-390.png", animations: "disabled", caret: "hide" });
+  await page.setViewportSize({ width: 768, height: 960 });
+  expect(await submitBar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+  await page.setViewportSize({ width: 1280, height: 960 });
+  expect(await submitBar.evaluate((el) => getComputedStyle(el).position)).toBe("sticky");
   const picker = page.locator("details.search-select").first();
   await picker.locator("summary").click();
   await picker.getByRole("button", { name: /Fixture Captain/ }).click();
+
+  // Service type starts empty ("None") with unselected templates and no premature invalid state
+  const opTypeInput = page.locator('input[name="operationType"]');
+  await expect(opTypeInput).toHaveValue("");
+  await expect(opTypeInput).not.toHaveAttribute("aria-invalid", "true");
+  const cityTourChip = page.getByRole("button", { name: "+ City tour" });
+  await expect(cityTourChip).toHaveAttribute("aria-pressed", "false");
+
   await page.getByLabel("Lead guest name").fill("Created Fixture Guest");
   await page.locator('input[name="passengers.0.name"]').fill("Created Fixture Passenger");
+
+  // Submitting with default None blocks POST and highlights required Service type
+  await page.locator('form button[type="submit"]').click();
+  await expect(page.getByRole("alert").filter({ hasText: "Service type is required" })).toBeVisible();
+  await expect(opTypeInput).toHaveAttribute("aria-invalid", "true");
+
+  // Typing a compound custom phrase previews the canonical operation type written to the PDF
+  await opTypeInput.fill("توصيل بين المدن");
+  await expect(page.getByText(/Service type on PDF:\s*Intercity transport/)).toBeVisible();
+
+  // Selecting a template fills the input, shows active pressed state, and supports clear
+  await cityTourChip.click();
+  await expect(opTypeInput).toHaveValue("جولة سياحية");
+  await expect(page.getByText("Service type on PDF:")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "City tour", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Clear Service type" }).click();
+  await expect(opTypeInput).toHaveValue("");
+  await page.getByRole("button", { name: "+ City tour" }).click();
+  await expect(opTypeInput).toHaveValue("جولة سياحية");
+
   const saved = page.waitForResponse(response => response.request().method() === "POST" && /\/contracts$/.test(response.url()));
   await page.locator('form button[type="submit"]').click();
   const response = await saved;
   const payload = response.request().postDataJSON();
   const created = (await response.json()) as { data: { status: string; referenceNumber: string } };
+  expect(payload.operationType).toBe("CITY_TOUR");
   expect(payload.customerName).toBe("Created Fixture Guest"); expect(payload.captainId).toBe(ID); expect(payload.inspectionId).toBe(ID);
   expect(created.data.status).toBe("ACTIVE");
   await expect(page.getByRole("dialog", { name: "Contract preview" })).toBeVisible();
   await page.keyboard.press("Escape");
   await page.goto("/admin");
   await expect(page.getByText("Contracts awaiting review")).toHaveCount(0);
+});
+
+test("captain contract creation starts with Service type as None and validates before submit", async ({ page }) => {
+  await preferences(page, "ar", "light");
+  await login(page, "captain@example.test");
+  await page.goto("/captain/contract");
+
+  const opSelect = page.locator('select[name="operationType"]');
+  await expect(opSelect).toHaveValue("");
+  await expect(opSelect).not.toHaveAttribute("aria-invalid", "true");
+  await expect(opSelect.locator('option[value=""]')).toContainText("بدون — اختر نوع العملية");
+
+  await page.locator('input[name="customerName"]').fill("ضيف الكابتن التجريبي");
+  await page.locator('form button[type="submit"]').click();
+  await expect(page.getByRole("alert").filter({ hasText: "نوع العملية التشغيلية مطلوب" })).toBeVisible();
+  await expect(opSelect).toHaveAttribute("aria-invalid", "true");
+
+  await opSelect.selectOption("INTERCITY");
+  const saved = page.waitForResponse(response => response.request().method() === "POST" && /\/contracts$/.test(response.url()));
+  await page.locator('form button[type="submit"]').click();
+  const response = await saved;
+  expect(response.request().postDataJSON().operationType).toBe("INTERCITY");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "+ إنشاء عقد جديد" }).click();
+  await expect(page.locator('select[name="operationType"]')).toHaveValue("");
+
+  const captainAxe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+  expect(captainAxe.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([]);
 });
 test("captain inspection requires an explicit declaration and saves the complete checklist", async ({ page }) => {
   await preferences(page, "ar"); await login(page, "captain@example.test");
@@ -330,6 +420,12 @@ test("mobile captain field routes keep zero horizontal overflow and clean access
     if (shot === "captain-ar-dark-390.png") {
       await page.evaluate(() => document.querySelector("#main-content article")?.scrollIntoView({ block: "center" }));
       await page.waitForTimeout(150);
+    }
+    if (route === "/captain/inspection") {
+      const submitBar = page.locator(".contract-submit-bar");
+      if ((await submitBar.count()) > 0) {
+        expect(await submitBar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+      }
     }
     await page.screenshot({ path: `${output}/${shot}`, animations: "disabled", caret: "hide" });
   }

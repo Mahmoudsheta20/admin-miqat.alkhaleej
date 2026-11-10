@@ -7,6 +7,8 @@ const exports={};new Function('exports',compiled)(exports);
 test('readiness requires the selected vehicle and Saudi business date, including midnight',()=>{
  const value={vehiclePlate:'ABC',inspectionDate:'2026-11-07T21:30:00Z'};
  assert.equal(exports.inspectionMatchesDay(value,'2026-11-08','ABC'),true);
+ assert.equal(exports.inspectionMatchesDay(value,'2026/11/08','ABC'),true);
+ assert.equal(exports.inspectionMatchesDay({vehiclePlate:'أ ب ج 1234',inspectionDate:'2026-11-10T09:00:00+03:00'},'2026/11/10','أ ب ج 1234'),true);
  assert.equal(exports.inspectionMatchesDay(value,'2026-11-07','ABC'),false);
  assert.equal(exports.inspectionMatchesDay(value,'2026-11-08','OTHER'),false);
  assert.equal(exports.inspectionMatchesDay(null,'2026-11-08'),false);

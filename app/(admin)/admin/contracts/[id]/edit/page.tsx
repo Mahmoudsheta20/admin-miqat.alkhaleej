@@ -767,11 +767,11 @@ export default function EditContractPage({ params }: PageProps) {
           </label>
         </div>
 
-        {/* Keep the main actions reachable above mobile bottom navigation. */}
+        {/* Inline submit bar on mobile/tablet so form fields stay clear; sticky on desktop lg+. */}
         <div className="contract-submit-bar">
           <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
-          <Link href="/admin/contracts" className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">{ui("إلغاء")}</Link>
-          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50 cursor-pointer">
+          <Link href="/admin/contracts" className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">{ui("إلغاء")}</Link>
+          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50 cursor-pointer">
             <Save className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>
           </button>

@@ -26,7 +26,7 @@ import { getVehicles } from "@/app/_actions/fleet";
 import { submitContract } from "@/app/_actions/contract";
 import { getTodayInspection, submitInspection } from "@/app/_actions/inspection";
 import { Vehicle, VehicleInspection } from "@/lib/types";
-import { adminContractSchema, AdminContractFormValues, sanitizeContractPayload } from "@/lib/validations/contract";
+import { adminContractSchema, AdminContractFormValues, OPERATION_TYPE_LABELS, parseOperationType, sanitizeContractPayload } from "@/lib/validations/contract";
 import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
@@ -111,12 +111,13 @@ export default function AdminContractBuilderPage() {
     control,
     handleSubmit,
     setValue,
+    setFocus,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitted },
   } = useForm<AdminContractFormValues>({
     resolver: zodResolver(adminContractSchema),
     defaultValues: {
-      operationType: "توصيل واستقبال مطار",
+      operationType: "",
       customerName: "",
       customerPhone: "",
       origin: "مكة المكرمة",
@@ -318,6 +319,25 @@ export default function AdminContractBuilderPage() {
       section4: prev.section4 || !isConfirmed,
     }));
 
+    const firstInvalidField = (
+      [
+        "captainId",
+        "vehiclePlate",
+        "operationType",
+        "customerName",
+        "customerPhone",
+        "origin",
+        "destination",
+        "tripDate",
+        "tripTime",
+        "notes",
+      ] as const
+    ).find((name) => Boolean(formErrors[name]));
+
+    if (firstInvalidField) {
+      window.setTimeout(() => setFocus(firstInvalidField), 40);
+    }
+
     if (!isConfirmed) {
       setConfirmError("يجب إتمام وتأكيد الإقرار والفحص التشغيلي أدناه قبل إنشاء وتوثيق العقد");
     }
@@ -444,7 +464,7 @@ export default function AdminContractBuilderPage() {
       (safeVehicles.length > 0 ? safeVehicles[0].plateNumberAr : "");
 
     reset({
-      operationType: "توصيل واستقبال مطار",
+      operationType: "",
       customerName: "",
       customerPhone: "",
       origin: "مكة المكرمة",
@@ -693,7 +713,7 @@ export default function AdminContractBuilderPage() {
           isOpen={openSections.section2}
           onToggle={() => toggleSection("section2")}
           hasError={section2Error}
-          isComplete={Boolean(watchedCustomerName?.trim() && watchedOrigin?.trim() && watchedDestination?.trim() && !section2Error)}
+          isComplete={Boolean(watchedOperationType?.trim() && watchedCustomerName?.trim() && watchedOrigin?.trim() && watchedDestination?.trim() && !section2Error)}
         >
           <div className="p-4 sm:p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:border-b theme-border md:pb-3">
@@ -719,33 +739,78 @@ export default function AdminContractBuilderPage() {
                     "جولة سياحية",
                     "نقل بين المدن",
                     "نقل معتمرين وزوار",
-                  ].map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() =>
-                        setValue("operationType", tag, { shouldValidate: true })
-                      }
-                      className="min-h-10 sm:min-h-8 shrink-0 snap-start whitespace-nowrap text-xs font-bold px-3 py-1 rounded-lg bg-slate-100 hover:bg-amber-500/15 dark:bg-slate-800 dark:hover:bg-amber-500/20 text-[var(--text-muted)] dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
-                    >
-                      + {ui(tag)}
-                    </button>
-                  ))}
+                  ].map((tag) => {
+                    const isSelected = (watchedOperationType ?? "").trim() === tag;
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() =>
+                          setValue("operationType", isSelected ? "" : tag, {
+                            shouldValidate: !isSelected || isSubmitted,
+                            shouldDirty: true,
+                          })
+                        }
+                        className={`min-h-10 sm:min-h-8 shrink-0 snap-start whitespace-nowrap text-xs font-bold px-3 py-1 rounded-lg border transition cursor-pointer ${
+                          isSelected
+                            ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500 shadow-2xs"
+                            : "bg-slate-100 hover:bg-amber-500/15 dark:bg-slate-800 dark:hover:bg-amber-500/20 text-[var(--text-muted)] dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-400 border-slate-200 dark:border-slate-700"
+                        }`}
+                      >
+                        {isSelected ? ui(tag) : `+ ${ui(tag)}`}
+                      </button>
+                    );
+                  })}
                 </MobileHorizontalStrip>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Operation Type - Clean and Simple Text Input */}
-              <CustomInput
-                label={ui("نوع العملية التشغيلية")}
-                required
-                icon={<Briefcase className="w-3.5 h-3.5 text-amber-500" />}
-                placeholder={ui("توصيل مطار، جولة سياحية، نقل بين المدن...")}
-                clearable
-                onClear={() => setValue("operationType", "", { shouldValidate: true })}
-                {...register("operationType")}
-                error={errors.operationType?.message}
+              {/* Operation Type - Defaults to None/empty; pick via templates or enter manually */}
+              <Controller
+                control={control}
+                name="operationType"
+                render={({ field, fieldState }) => {
+                  const trimmedValue = (field.value ?? "").trim();
+                  const resolvedLabel = trimmedValue
+                    ? OPERATION_TYPE_LABELS[parseOperationType(trimmedValue)]
+                    : "";
+                  const showPdfPreviewHint =
+                    Boolean(trimmedValue) && trimmedValue !== resolvedLabel;
+
+                  return (
+                    <div>
+                      <CustomInput
+                        ref={field.ref}
+                        name={field.name}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        label={ui("نوع العملية التشغيلية")}
+                        required
+                        icon={<Briefcase className="w-3.5 h-3.5 text-amber-500" />}
+                        placeholder={ui("بدون — اختر أو اكتب نوع العملية")}
+                        clearable
+                        onClear={() =>
+                          setValue("operationType", "", {
+                            shouldValidate: isSubmitted,
+                            shouldDirty: true,
+                          })
+                        }
+                        error={fieldState.error?.message}
+                      />
+                      {showPdfPreviewHint && (
+                        <p className="mt-1.5 text-xs text-[var(--text-muted)] px-1">
+                          {ui("نوع التشغيل في الـ PDF:")}{" "}
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {ui(resolvedLabel)}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                }}
               />
 
               <ContractGuestFields register={register} errors={errors} />
@@ -1155,21 +1220,21 @@ export default function AdminContractBuilderPage() {
           />
         </MobileCollapsibleSection>
 
-        {/* Form Bottom Submission Bar (docked above mobile bottom nav; single type="submit" button) */}
+        {/* Form Bottom Submission Bar (inline on mobile/tablet so form fields stay clear; sticky on desktop lg+) */}
         <div className="contract-submit-bar">
           <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">
             {ui("سيُحفظ العقد وتُعتمد وثيقة PDF تلقائياً بصفة ساري.")}
           </p>
           <Link
             href="/admin/contracts"
-            className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border px-4 sm:px-5 text-xs sm:text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border theme-border px-4 sm:px-5 text-xs sm:text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             {ui("إلغاء والعودة")}
           </Link>
           <button
             type="submit"
             disabled={isSubmitting || !isConfirmed}
-            className="inline-flex min-h-12 flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl gold-gradient-btn px-6 sm:px-8 text-xs sm:text-sm font-bold transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl gold-gradient-btn px-6 sm:px-8 text-xs sm:text-sm font-bold transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {isSubmitting ? (
               <>

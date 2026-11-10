@@ -79,6 +79,13 @@ export const adminContractSchema = z.object({
 
 export type AdminContractFormValues = z.infer<typeof adminContractSchema>;
 
+export const OPERATION_TYPE_LABELS: Record<OperationType, string> = {
+  AIRPORT_TRANSFER: "توصيل واستقبال مطار",
+  CITY_TOUR: "جولة سياحية",
+  INTERCITY: "نقل بين المدن",
+  HAJJ_UMRAH: "نقل معتمرين وزوار",
+};
+
 /**
  * Maps free-form text or custom operation input to a valid OperationType enum
  */
@@ -86,26 +93,25 @@ export function parseOperationType(val?: string | null): OperationType {
   if (!val) return "AIRPORT_TRANSFER";
   const str = val.trim().toLowerCase();
 
-  if (
-    str === "airport_transfer" ||
-    str.includes("مطار") ||
-    str.includes("استقبال") ||
-    str.includes("توصيل") ||
-    str.includes("airport")
-  ) {
+  if (str === "airport_transfer") return "AIRPORT_TRANSFER";
+  if (str === "city_tour") return "CITY_TOUR";
+  if (str === "intercity") return "INTERCITY";
+  if (str === "hajj_umrah") return "HAJJ_UMRAH";
+
+  if (str.includes("مطار") || str.includes("airport")) {
     return "AIRPORT_TRANSFER";
   }
   if (
-    str === "city_tour" ||
-    str.includes("سياح") ||
-    str.includes("جولة") ||
-    str.includes("tour") ||
-    str.includes("زيار")
+    str.includes("عمر") ||
+    str.includes("معتمر") ||
+    str.includes("زوار") ||
+    str.includes("حج") ||
+    str.includes("hajj") ||
+    str.includes("umrah")
   ) {
-    return "CITY_TOUR";
+    return "HAJJ_UMRAH";
   }
   if (
-    str === "intercity" ||
     str.includes("مدن") ||
     str.includes("بين") ||
     str.includes("intercity") ||
@@ -114,13 +120,15 @@ export function parseOperationType(val?: string | null): OperationType {
     return "INTERCITY";
   }
   if (
-    str === "hajj_umrah" ||
-    str.includes("عمر") ||
-    str.includes("حج") ||
-    str.includes("hajj") ||
-    str.includes("umrah")
+    str.includes("سياح") ||
+    str.includes("جولة") ||
+    str.includes("tour") ||
+    str.includes("زيار")
   ) {
-    return "HAJJ_UMRAH";
+    return "CITY_TOUR";
+  }
+  if (str.includes("استقبال") || str.includes("توصيل")) {
+    return "AIRPORT_TRANSFER";
   }
   return "AIRPORT_TRANSFER";
 }
