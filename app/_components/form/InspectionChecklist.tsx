@@ -14,7 +14,7 @@ export default function InspectionChecklist({ checks, onChange, isDisabled }: In
             {group.items.map((item) => (
               <label
                 key={item.key}
-                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border theme-border px-3.5 py-2.5 text-base font-medium transition-colors hover:bg-[var(--bg-card-subtle)] has-[:checked]:border-emerald-500/35 has-[:checked]:bg-emerald-500/[0.04]"
+                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border theme-border px-3.5 py-2.5 text-base font-medium transition-colors hover:bg-[var(--bg-card-subtle)] has-[:checked]:border-emerald-600/45 has-[:checked]:bg-emerald-500/12 dark:has-[:checked]:border-emerald-500/45 dark:has-[:checked]:bg-emerald-950/35"
               >
                 <Checkbox
                   checked={checks[item.key] ?? false}

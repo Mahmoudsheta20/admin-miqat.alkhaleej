@@ -141,25 +141,25 @@ export default function VatReturnsPage() {
           <>
             <Link
               href="/admin/vat-returns/selected"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
             >
-              <FileCheck2 className="size-4 text-amber-500" aria-hidden="true" />
+              <FileCheck2 className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("اختيار فواتير لتقرير مستقل")}</span>
             </Link>
 
             <Link
               href="/admin/purchases"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
             >
-              <ShoppingBag className="size-4 text-amber-500" aria-hidden="true" />
+              <ShoppingBag className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("purchases.title"))}</span>
             </Link>
 
             <Link
               href="/admin/invoices"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
             >
-              <ReceiptText className="size-4 text-amber-500" aria-hidden="true" />
+              <ReceiptText className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("invoice.title"))}</span>
             </Link>
           </>
@@ -167,20 +167,20 @@ export default function VatReturnsPage() {
       />
 
       {/* Official ZATCA Submission Notice Banner (§14.1) */}
-      <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/5 text-amber-900 dark:text-amber-200 text-xs sm:text-sm leading-relaxed flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="p-4 rounded-2xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--text-main)] text-xs sm:text-sm leading-relaxed flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-[var(--accent-gold)] shrink-0 mt-0.5" aria-hidden="true" />
         <div className="space-y-1">
-          <strong className="font-semibold text-slate-900 dark:text-white block">
+          <strong className="font-semibold text-[var(--text-main)] block">
             {isRTL ? "طريقة تقديم الإقرار الضريبي الرسمي:" : "Official ZATCA Tax Return Filing:"}
           </strong>
-          <p>
+          <p className="text-[var(--text-main)]">
             {isRTL ? (
               <>
                 {ui("يتم تقديم الإقرار الضريبي رسمياً عبر بوابة هيئة الزكاة والضريبة والجمارك (")}<a
                   href="https://zatca.gov.sa"
                   target="_blank"
                   rel="noreferrer"
-                  className="underline font-bold text-amber-700 dark:text-amber-400 inline-flex items-center gap-0.5"
+                  className="underline font-bold text-[var(--accent-gold)] inline-flex items-center gap-0.5"
                 >
                   zatca.gov.sa
                   <ExternalLink className="size-3" />
@@ -193,7 +193,7 @@ export default function VatReturnsPage() {
                   href="https://zatca.gov.sa"
                   target="_blank"
                   rel="noreferrer"
-                  className="underline font-bold text-amber-700 dark:text-amber-400 inline-flex items-center gap-0.5"
+                  className="underline font-bold text-[var(--accent-gold)] inline-flex items-center gap-0.5"
                 >
                   zatca.gov.sa
                   <ExternalLink className="size-3" />
@@ -209,7 +209,7 @@ export default function VatReturnsPage() {
       {seedMessage && (
         <p
           role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 dark:border-emerald-500/35 dark:bg-emerald-950/45 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300"
         >
           {ui(seedMessage)}
         </p>
@@ -250,11 +250,11 @@ export default function VatReturnsPage() {
             type="button"
             onClick={() => setReload((value) => value + 1)}
             disabled={isLoading}
-            className="theme-card inline-flex min-h-11 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition cursor-pointer"
+            className="theme-card inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2.5 text-xs font-bold text-[var(--text-main)] transition cursor-pointer"
             title={ui(t("common.refresh"))}
           >
             <RefreshCw
-              className={`size-4 ${isLoading ? "animate-spin text-amber-500" : ""}`}
+              className={`size-4 ${isLoading ? "animate-spin text-[var(--accent-gold)]" : ""}`}
               aria-hidden="true"
             />
             <span>{ui(t("common.refresh"))}</span>
@@ -264,10 +264,10 @@ export default function VatReturnsPage() {
             type="button"
             disabled={!data || isLoading || isExporting}
             onClick={() => void download("csv")}
-            className="theme-card inline-flex min-h-11 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition disabled:opacity-50 cursor-pointer"
+            className="theme-card inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2.5 text-xs font-bold text-[var(--text-main)] transition disabled:opacity-50 cursor-pointer"
             title="CSV"
           >
-            <FileSpreadsheet className="size-4 text-emerald-500" aria-hidden="true" />
+            <FileSpreadsheet className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui(t("accounting.exportCsv"))}</span>
           </button>
 
@@ -285,7 +285,7 @@ export default function VatReturnsPage() {
       </section>
 
       {period.mode !== "QUARTER" && (
-        <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 text-xs font-bold">
+        <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-900 dark:text-sky-200 text-xs font-bold">
           {ui("ملاحظة: هذا العرض مخصص للتحليل الإحصائي للفترة المحددة. لتقديم الإقرار الفعلي للهيئة، اختر الربع الضريبي (Q1–Q4).")}</div>
       )}
 
@@ -295,7 +295,7 @@ export default function VatReturnsPage() {
           className="theme-card space-y-4 rounded-2xl p-8 border theme-border"
         >
           <div className="flex items-center justify-center gap-2 text-xs font-bold text-[var(--text-muted)]">
-            <div className="size-5 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+            <div className="size-5 border-2 border-[var(--accent-gold)]/25 border-t-[var(--accent-gold)] rounded-full animate-spin" />
             <span>{ui("جارٍ حساب خانات الإقرار ومطابقة القيود…")}</span>
           </div>
         </div>
@@ -304,26 +304,26 @@ export default function VatReturnsPage() {
       {data && (
         <>
           {/* Company & Due Date Banner */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border">
             <div>
-              <p className="font-semibold text-slate-900 dark:text-white text-sm">
+              <p className="font-semibold text-[var(--text-main)] text-sm">
                 {data.company.legalName}
               </p>
               <p className="text-[var(--text-muted)] mt-0.5 font-mono">
                 {ui("الرقم الضريبي:")}{" "}
-                <bdi dir="ltr" className="font-bold text-slate-800 dark:text-slate-200">
+                <bdi dir="ltr" className="font-bold text-[var(--text-main)]">
                   {data.company.vatNumber}
                 </bdi>
               </p>
             </div>
             <div className="text-end">
               <span className="text-[var(--text-muted)] block">{ui("الفترة الضريبية:")}</span>
-              <p className="font-mono font-bold text-slate-800 dark:text-slate-200">
+              <p className="font-mono font-bold text-[var(--text-main)]">
                 <bdi dir="ltr">{data.period.start}</bdi> {ui("إلى")}{" "}
                 <bdi dir="ltr">{vatPeriodEnd(data.period)}</bdi>
               </p>
               {data.period.dueDate && (
-                <p className="text-amber-700 dark:text-amber-400 font-bold mt-0.5">
+                <p className="text-[var(--accent-gold)] font-bold mt-0.5">
                   {ui("آخر موعد اعتيادي للسداد:")}{" "}
                   <bdi dir="ltr" className="font-mono">{data.period.dueDate}</bdi>
                 </p>
@@ -340,7 +340,7 @@ export default function VatReturnsPage() {
               <span className="text-xs font-bold text-[var(--text-muted)] block">
                 {ui("إجمالي صافي المبيعات")}</span>
               <p
-                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-slate-900 dark:text-white"
+                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-[var(--text-main)]"
                 dir="ltr"
               >
                 {amountLabel(data.summary.netSales)}
@@ -350,10 +350,10 @@ export default function VatReturnsPage() {
             </div>
 
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 block">
+              <span className="text-xs font-bold text-[var(--accent-gold)] block">
                 {ui("ضريبة المبيعات (خ6)")}</span>
               <p
-                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-amber-700 dark:text-amber-400"
+                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-[var(--accent-gold)]"
                 dir="ltr"
               >
                 {amountLabel(data.summary.outputVat)}
@@ -366,7 +366,7 @@ export default function VatReturnsPage() {
               <span className="text-xs font-bold text-[var(--text-muted)] block">
                 {ui("إجمالي المشتريات الداخلة في الإقرار")}</span>
               <p
-                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-slate-900 dark:text-white"
+                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-[var(--text-main)]"
                 dir="ltr"
               >
                 {amountLabel(data.summary.netPurchases)}
@@ -376,10 +376,10 @@ export default function VatReturnsPage() {
             </div>
 
             <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5">
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 block">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">
                 {ui("ضريبة قابلة للخصم (خ12)")}</span>
               <p
-                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-emerald-700 dark:text-emerald-400"
+                className="mt-2 font-mono text-lg sm:text-xl font-semibold text-emerald-700 dark:text-emerald-300"
                 dir="ltr"
               >
                 {amountLabel(data.summary.recoverableInputVat)}
@@ -391,29 +391,29 @@ export default function VatReturnsPage() {
             <div
               className={`rounded-2xl border p-4 sm:p-5 col-span-2 lg:col-span-1 ${
                 isRefundable
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
-                  : "bg-slate-900 dark:bg-slate-800 text-white border-slate-900"
+                  ? "bg-emerald-500/12 border-emerald-600/45 text-[var(--text-main)] dark:bg-emerald-950/45 dark:border-emerald-500/45"
+                  : "bg-slate-900 dark:bg-slate-800/95 text-white border-slate-700"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold opacity-80 block">
+                <span className={`text-xs font-bold block ${isRefundable ? "text-[var(--text-main)]" : "text-slate-200"}`}>
                   {ui(isRefundable
                     ? "رصيد دائن لصالح المنشأة (خ16)"
                     : "صافي الضريبة المستحقة (خ16)")}
                 </span>
                 {isRefundable ? (
-                  <TrendingDown className="size-4 text-emerald-500" aria-hidden="true" />
+                  <TrendingDown className="size-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 ) : (
-                  <TrendingUp className="size-4 text-amber-400" aria-hidden="true" />
+                  <TrendingUp className="size-4 text-amber-300" aria-hidden="true" />
                 )}
               </div>
               <p
-                className="mt-2 font-mono text-xl sm:text-2xl font-semibold text-amber-400"
+                className={`mt-2 font-mono text-xl sm:text-2xl font-semibold ${isRefundable ? "text-emerald-800 dark:text-emerald-300" : "text-amber-300"}`}
                 dir="ltr"
               >
                 {amountLabel(data.summary.netVatDue)}
               </p>
-              <span className="text-xs opacity-70">
+              <span className={`text-xs ${isRefundable ? "text-[var(--text-muted)]" : "text-slate-300"}`}>
                 {ui(isRefundable
                   ? "يخضع الاسترداد أو الترحيل للإجراء المناسب لدى الهيئة"
                   : "واجب السداد لهيئة الزكاة")}
@@ -438,16 +438,16 @@ export default function VatReturnsPage() {
           {/* 6. Matching & Audit Checklist (§14.5) */}
           <section className="theme-card rounded-2xl border theme-border p-5 space-y-4">
             <div className="flex items-center gap-2 border-b theme-border pb-3">
-              <FileCheck2 className="size-4 text-amber-500" aria-hidden="true" />
-              <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+              <FileCheck2 className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                 {ui("مطابقة وفحص القيود المسجلة")}</h2>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <span className="text-[var(--text-muted)] block mb-1">
                   {ui("إجمالي مشتريات الأسطول:")}</span>
-                <strong className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
+                <strong className="font-mono font-bold text-sm text-[var(--text-main)]">
                   <bdi dir="ltr">{amountLabel(data.summary.netPurchases)}</bdi> {ui("ر.س")}
                 </strong>
                 <span className="text-xs text-[var(--text-muted)] block mt-1">
@@ -456,20 +456,20 @@ export default function VatReturnsPage() {
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <span className="text-[var(--text-muted)] block mb-1">
                   {ui("الضريبة غير القابلة للخصم:")}</span>
-                <strong className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
+                <strong className="font-mono font-bold text-sm text-[var(--text-main)]">
                   <bdi dir="ltr">{amountLabel(data.summary.nonRecoverableInputVat)}</bdi> {ui("ر.س")}
                 </strong>
                 <span className="text-xs text-[var(--text-muted)] block mt-1">
                   {ui("تُضاف تلقائياً إلى تكلفة المصروف")}</span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <span className="text-[var(--text-muted)] block mb-1">
                   {ui("فواتير مبدئية مستبعدة:")}</span>
-                <strong className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
+                <strong className="font-mono font-bold text-sm text-[var(--text-main)]">
                   {data.coverage.proformaCount} {ui("فاتورة")}
                 </strong>
                 <span className="text-xs text-[var(--text-muted)] block mt-1">
@@ -479,19 +479,19 @@ export default function VatReturnsPage() {
 
             {/* Warnings list if any */}
             {data.warnings.length > 0 ? (
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1.5">
-                <strong className="font-semibold block">
+              <div className="p-4 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-xs text-[var(--text-main)] space-y-1.5">
+                <strong className="font-semibold block text-[var(--accent-gold)]">
                   {ui("ملاحظات التحقق من القيود:")}</strong>
                 {data.warnings.map((w, idx) => (
                   <p key={idx} className="flex items-center gap-1.5">
-                    <AlertCircle className="size-3.5 text-amber-700 shrink-0" aria-hidden="true" />
+                    <AlertCircle className="size-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <span>{ui(w)}</span>
                   </p>
                 ))}
               </div>
             ) : (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-emerald-700 shrink-0" aria-hidden="true" />
+              <div className="p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/35 text-xs font-bold text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
                 <span>
                   {ui("لا توجد تنبيهات حسابية في هذا التقرير. راجع المستندات ونطاق التغطية قبل التقديم.")}</span>
               </div>
@@ -499,7 +499,7 @@ export default function VatReturnsPage() {
 
             {/* 7. Document Drill-down (§14.7) */}
             <details className="mt-4 border-t theme-border pt-4">
-              <summary className="min-h-11 flex items-center cursor-pointer text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline">
+              <summary className="min-h-11 flex items-center cursor-pointer text-xs font-bold text-[var(--accent-gold)] hover:underline">
                 {ui("عرض المستندات المؤيدة للإقرار (فواتير المبيعات:")}{" "}
                 {data.sales.length} {ui("· فواتير المشتريات:")} {data.purchases.length})
               </summary>
@@ -511,7 +511,7 @@ export default function VatReturnsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Link
-                        className="font-mono font-semibold text-amber-700 dark:text-amber-400 hover:underline"
+                        className="font-mono font-semibold text-[var(--accent-gold)] hover:underline"
                         href={`/admin/invoices/${row.id}`}
                       >
                         <bdi>{row.number}</bdi>
@@ -524,7 +524,7 @@ export default function VatReturnsPage() {
                         }[row.kind] || row.kind)}
                       </span>
                     </div>
-                    <p className="font-mono text-[var(--text-muted)] dark:text-slate-300">
+                    <p className="font-mono text-[var(--text-main)]">
                       <bdi dir="ltr">{row.date}</bdi> {ui("· الصافي:")}{" "}
                       <strong dir="ltr">{row.net}</strong> {ui("· الضريبة:")}{" "}
                       <strong dir="ltr">{row.vat}</strong> {ui("ر.س")}
@@ -537,16 +537,16 @@ export default function VatReturnsPage() {
                     className="flex flex-wrap items-center justify-between gap-2 pt-2.5"
                     key={row.id}
                   >
-                    <p className="font-bold text-slate-800 dark:text-slate-200">
+                    <p className="font-bold text-[var(--text-main)]">
                       {row.supplierName} ·{" "}
                       <span className="font-mono text-[var(--text-muted)]">
                         {row.invoiceNumber}
                       </span>
                     </p>
-                    <p className="font-mono text-[var(--text-muted)] dark:text-slate-300">
+                    <p className="font-mono text-[var(--text-main)]">
                       {ui("الصافي:")} <strong dir="ltr">{row.netAmount}</strong>{" "}
                       {ui("· ضريبة قابلة للخصم:")}{" "}
-                      <strong dir="ltr" className="text-emerald-700 dark:text-emerald-400">
+                      <strong dir="ltr" className="text-emerald-700 dark:text-emerald-300">
                         {row.recoverableVat}
                       </strong>{" "}
                       {ui("ر.س")}
@@ -575,7 +575,7 @@ export default function VatReturnsPage() {
               href="https://zatca.gov.sa/en/eServices/UserManual/Pages/UserManual-009.aspx"
               target="_blank"
               rel="noreferrer"
-              className="hover:underline flex items-center gap-1 text-amber-700 dark:text-amber-400 font-bold"
+              className="hover:underline flex items-center gap-1 text-[var(--accent-gold)] font-bold"
             >
               <span>{ui("دليل هيئة الزكاة لتقديم الإقرار الإلكتروني")}</span>
               <ExternalLink className="size-3" />

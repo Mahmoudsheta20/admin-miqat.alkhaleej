@@ -154,9 +154,9 @@ export default function PaymentPanel({
     <section className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
             {ui("القبض والدفع (سندات التحصيل والصرف)")}</h2>
-          <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)]">
             {ui("تسوية الذمم، تحصيل مستحقات العملاء، وسداد فواتير الموردين عبر البنك أو الصندوق.")}</p>
         </div>
       </div>
@@ -164,9 +164,9 @@ export default function PaymentPanel({
       {successMessage && (
         <div
           role="status"
-          className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
+          className="p-4 rounded-2xl border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
         >
-          <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-300 shrink-0" />
           <span>{ui(successMessage)}</span>
         </div>
       )}
@@ -181,7 +181,7 @@ export default function PaymentPanel({
       >
         {/* Direction Switcher (Receipt vs Disbursement) */}
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
+          <label className="text-xs font-bold text-[var(--text-main)] block mb-2">
             {ui("نوع العملية *")}</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
             <button
@@ -194,13 +194,13 @@ export default function PaymentPanel({
               }}
               className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 type === "SALE"
-                  ? "bg-emerald-500/10 border-emerald-500/50 ring-1 ring-emerald-500/30"
-                  : "theme-card theme-border opacity-70 hover:opacity-100"
+                  ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
+                  : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
               }`}
             >
-              <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+              <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
               <div>
-                <strong className="text-xs font-semibold block text-slate-900 dark:text-white">
+                <strong className="text-xs font-semibold block text-[var(--text-main)]">
                   {ui("تحصيل من عميل (سند قبض)")}</strong>
                 <span className="text-xs text-[var(--text-muted)]">{ui("إيداع بالبنك وتخفيض ذمة العميل")}</span>
               </div>
@@ -216,13 +216,13 @@ export default function PaymentPanel({
               }}
               className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 type === "PURCHASE"
-                  ? "bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/30"
-                  : "theme-card theme-border opacity-70 hover:opacity-100"
+                  ? "bg-[var(--accent-surface)] border-amber-600 ring-1 ring-amber-600/30"
+                  : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
               }`}
             >
-              <ArrowUpRight className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
+              <ArrowUpRight className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
               <div>
-                <strong className="text-xs font-semibold block text-slate-900 dark:text-white">
+                <strong className="text-xs font-semibold block text-[var(--text-main)]">
                   {ui("سداد لمورد (سند صرف)")}</strong>
                 <span className="text-xs text-[var(--text-muted)]">{ui("صرف من البنك وسداد مستحقات")}</span>
               </div>
@@ -233,7 +233,7 @@ export default function PaymentPanel({
         {/* Form Inputs Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="sm:col-span-2 space-y-2">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+            <label className="text-xs font-bold text-[var(--text-main)] block">
               {ui("اختر المستند المطلوب تسويته *")}
               <select
                 required
@@ -262,7 +262,7 @@ export default function PaymentPanel({
                   setPage((v) => v - 1);
                   setDocumentId("");
                 }}
-                className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border theme-border hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-400 disabled:opacity-30 cursor-pointer font-bold"
+                className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
               >
                 {ui("السابق")}
               </button>
@@ -276,14 +276,14 @@ export default function PaymentPanel({
                   setPage((v) => v + 1);
                   setDocumentId("");
                 }}
-                className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border theme-border hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-400 disabled:opacity-30 cursor-pointer font-bold"
+                className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
               >
                 {ui("التالي")}
               </button>
             </div>
           </div>
 
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("طريقة الدفع / الحساب المالي *")}<select
               className={INPUT}
               value={cashAccount}
@@ -295,7 +295,7 @@ export default function PaymentPanel({
           </label>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+            <label className="text-xs font-bold text-[var(--text-main)] block">
               {ui("المبلغ المسدد (ر.س) *")}
               <div className="relative">
                 <input
@@ -317,7 +317,7 @@ export default function PaymentPanel({
               <button
                 type="button"
                 onClick={() => setAmount(remainingBalanceText)}
-                className="inline-flex min-h-11 sm:min-h-8 items-center text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                className="inline-flex min-h-11 sm:min-h-8 items-center text-xs font-bold text-[var(--accent-gold)] hover:underline cursor-pointer"
               >
                 {ui("نسخ كامل المتبقي (")}
                 <bdi dir="ltr">{amountLabel(remainingBalanceText)}</bdi> {ui("ر.س)")}
@@ -325,7 +325,7 @@ export default function PaymentPanel({
             )}
           </div>
 
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
               <span>{ui("تاريخ السند *")}</span>
@@ -340,7 +340,7 @@ export default function PaymentPanel({
             />
           </label>
 
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("رقم الحوالة أو المرجع *")}<input
               required
               maxLength={300}
@@ -354,15 +354,15 @@ export default function PaymentPanel({
 
         {/* Balance Status Banner */}
         {documentId && (
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="p-3.5 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="text-[var(--text-muted)]">{ui("حالة المستند المالي المحدد:")}</span>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-slate-700 dark:text-slate-300">
+              <span className="font-bold text-[var(--text-main)]">
                 {ui("الرصيد المتبقي:")}</span>
-              <strong className="font-mono font-semibold text-amber-700 dark:text-amber-400 text-sm">
+              <strong className="font-mono font-semibold text-[var(--accent-gold)] text-sm">
                 <bdi dir="ltr">{amountLabel(remainingBalanceText || "0.00")}</bdi> {ui("ر.س")}
               </strong>
-              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 font-bold text-xs">
+              <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-amber-600/30 font-bold text-xs">
                 {ui(type === "SALE" ? "سند قبض" : "سند صرف")}
               </span>
             </div>
@@ -403,8 +403,8 @@ export default function PaymentPanel({
 
       {/* Recent Payments Table */}
       <div className="theme-card overflow-hidden rounded-2xl sm:rounded-3xl border theme-border shadow-xs space-y-0">
-        <div className="px-5 py-4 border-b theme-border bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between text-xs">
-          <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
+        <div className="px-5 py-4 border-b theme-border bg-[var(--table-header-bg)] flex items-center justify-between text-xs">
+          <h3 className="font-semibold text-[var(--text-main)] text-sm">
             {ui("سجل سندات القبض والصرف الأخيرة (")}
             {payments.data?.items.length ?? 0})
           </h3>
@@ -462,7 +462,7 @@ export default function PaymentPanel({
                       label={ui("رقم القيد المحاسبي")}
                       mono
                       value={
-                        <bdi dir="ltr" className="text-amber-700 dark:text-amber-400">
+                        <bdi dir="ltr" className="text-[var(--accent-gold)]">
                           JE-{String(p.journal.number).padStart(6, "0")}
                         </bdi>
                       }
@@ -477,7 +477,7 @@ export default function PaymentPanel({
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[650px] text-start text-xs sm:text-sm border-collapse">
             <thead>
-              <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-[var(--text-muted)] dark:text-slate-400 font-bold whitespace-nowrap">
+              <tr className="border-b theme-border bg-[var(--table-header-bg)] text-[var(--text-muted)] font-bold whitespace-nowrap">
                 <th className="px-4 py-3.5">{ui("التاريخ")}</th>
                 <th className="px-4 py-3.5">{ui("النوع")}</th>
                 <th className="px-4 py-3.5">{ui("المرجع والبيان")}</th>
@@ -489,16 +489,16 @@ export default function PaymentPanel({
               {payments.data?.items.map((p) => {
                 const isReceipt = p.direction === "RECEIPT";
                 return (
-                  <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
-                    <td className="px-4 py-3.5 font-mono text-[var(--text-muted)] dark:text-slate-300 whitespace-nowrap">
+                  <tr key={p.id} className="hover:bg-[var(--table-row-hover)] transition">
+                    <td className="px-4 py-3.5 font-mono text-[var(--text-muted)] whitespace-nowrap">
                       <bdi dir="ltr">{p.paymentDate.slice(0, 10)}</bdi>
                     </td>
                     <td className="px-4 py-3.5 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                           isReceipt
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                            ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35"
+                            : "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-amber-600/30"
                         }`}
                       >
                         {isReceipt ? (
@@ -514,13 +514,13 @@ export default function PaymentPanel({
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-bold text-slate-800 dark:text-slate-200">
+                    <td className="px-4 py-3.5 font-bold text-[var(--text-main)]">
                       {ui(p.reference)}
                     </td>
-                    <td className="px-4 py-3.5 font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap" dir="ltr">
-                      {amountLabel(p.amount)} <span className="text-xs text-amber-700 dark:text-amber-400 font-bold">{ui("ر.س")}</span>
+                    <td className="px-4 py-3.5 font-mono font-semibold text-[var(--text-main)] whitespace-nowrap" dir="ltr">
+                      {amountLabel(p.amount)} <span className="text-xs text-[var(--accent-gold)] font-bold">{ui("ر.س")}</span>
                     </td>
-                    <td className="px-4 py-3.5 font-mono font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-mono font-bold text-[var(--accent-gold)] whitespace-nowrap">
                       <bdi dir="ltr">JE-{String(p.journal.number).padStart(6, "0")}</bdi>
                     </td>
                   </tr>

@@ -25,11 +25,11 @@ const SIZE_STYLES = {
 };
 
 const COLOR_STYLES = {
-  default: "text-slate-900 dark:text-white",
-  muted: "text-[var(--text-muted)] dark:text-slate-400 font-medium",
-  rose: "text-rose-700 dark:text-rose-400 font-bold",
-  emerald: "text-emerald-700 dark:text-emerald-400 font-bold",
-  amber: "text-[var(--text-muted)] font-bold",
+  default: "text-[var(--text-main)]",
+  muted: "text-[var(--text-muted)] font-medium",
+  rose: "text-rose-700 dark:text-rose-300 font-bold",
+  emerald: "text-emerald-800 dark:text-emerald-300 font-bold",
+  amber: "text-[var(--accent-gold)] font-bold",
 };
 
 function addGroupingCommas(wholeDigits: string): string {

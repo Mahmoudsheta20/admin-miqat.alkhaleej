@@ -244,14 +244,14 @@ export default function CaptainInspectionPage() {
             <Link
               href="/captain"
               aria-label={ui("العودة للرئيسية")}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-slate-700 dark:hover:text-white transition"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] transition"
             >
               <ArrowRight className="w-5 h-5 ltr:rotate-180" aria-hidden="true" />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
               {ui("سجل الفحص التشغيلي للمركبة")}</h1>
           </div>
-          <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 mt-1 ms-13">
+          <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1 ms-13">
             {ui("الفحص الإلزامي قبل التشغيل (16 بنداً معتمداً في الصفحة 3 من العقد الرسمي) • يدوي وتلقائي")}</p>
         </div>
 
@@ -260,7 +260,7 @@ export default function CaptainInspectionPage() {
             <button
               type="button"
               onClick={() => setAllSound(true)}
-              className="w-full sm:w-auto min-h-11 justify-center px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto min-h-11 justify-center px-4 py-2 rounded-xl border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-700 hover:text-white dark:hover:bg-emerald-400 dark:hover:text-slate-950 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" aria-hidden="true" />
               {ui("تحديد الكل سليم")}</button>
@@ -277,7 +277,7 @@ export default function CaptainInspectionPage() {
           className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === "form"
               ? "gold-gradient-btn shadow-xs"
-              : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              : "border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
           }`}
         >
           <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -293,13 +293,13 @@ export default function CaptainInspectionPage() {
           className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === "history"
               ? "gold-gradient-btn shadow-xs"
-              : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              : "border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
           }`}
         >
           <Clock className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span>{ui("سجل الفحوصات السابقة")}</span>
           {historyList.length > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-800 dark:text-amber-900 shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-amber-600/30 shrink-0">
               {historyList.length}
             </span>
           )}
@@ -314,9 +314,9 @@ export default function CaptainInspectionPage() {
           )}
 
           {alreadyInspected && !submittedSuccess && (
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-blue-900 dark:text-blue-200 text-xs">
+            <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-600/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[var(--text-main)] text-xs">
               <div className="flex items-center gap-2.5 font-bold">
-                <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
+                <CheckCircle2 className="w-4 h-4 text-sky-700 dark:text-sky-300 shrink-0" aria-hidden="true" />
                 <span>
                   {ui("لقد قمت بالفعل بتسجيل فحص اليوم بنجاح. يمكنك تحديث الفحص أو اختيار نمط «يدوي» لتسجيل فحص بتاريخ مخصص.")}</span>
               </div>
@@ -324,9 +324,9 @@ export default function CaptainInspectionPage() {
                 <button
                   type="button"
                   onClick={() => setInspectionDateMode("MANUAL")}
-                  className="min-h-11 px-3 py-2 rounded-lg border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  className="min-h-11 px-3 py-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                  <Edit3 className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   {ui("تحديد تاريخ يدوي")}</button>
                 <Link
                   href="/captain/contract"
@@ -339,12 +339,12 @@ export default function CaptainInspectionPage() {
 
           {submittedSuccess ? (
             <div className="theme-card rounded-2xl p-6 sm:p-8 border theme-border text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/12 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300 flex items-center justify-center mx-auto border border-emerald-600/35 dark:border-emerald-500/35">
                 <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-[var(--text-main)]">
                 {ui("تم توثيق فحص المركبة بنجاح!")}</h2>
-              <p className="text-sm text-[var(--text-muted)] dark:text-slate-400 max-w-md mx-auto">
+              <p className="text-sm text-[var(--text-muted)] max-w-md mx-auto">
                 {isRTL
                   ? `تم اعتماد جاهزية الحافلة (${vehiclePlate}) ${inspectionDateMode === "MANUAL" ? `بتاريخ (${formatOfficialDate(inspectionDate)})` : "ليومنا هذا"}. تم فتح صلاحية إصدار عقود النقل البري وكشف الركاب.`
                   : `Vehicle (${vehiclePlate}) has been cleared ${inspectionDateMode === "MANUAL" ? `for (${formatOfficialDate(inspectionDate)})` : "for today"}. You can now issue transport contracts and passenger manifests.`}
@@ -357,7 +357,7 @@ export default function CaptainInspectionPage() {
                     setSubmittedSuccess(false);
                     setInspectionDateMode("AUTO");
                   }}
-                  className="w-full sm:w-auto min-h-11 px-5 py-2.5 rounded-xl border theme-card text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-center cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto min-h-11 px-5 py-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition text-center cursor-pointer flex items-center justify-center gap-2"
                 >
                   <RotateCw className="w-3.5 h-3.5" aria-hidden="true" />
                   {ui("إجراء فحص جديد")}</button>
@@ -372,7 +372,7 @@ export default function CaptainInspectionPage() {
           ) : (
             <form noValidate onSubmit={handleSubmit} className="space-y-6">
               {errorMessage && (
-                <div role="alert" className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
+                <div role="alert" className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-600/30 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {ui(errorMessage)}
                 </div>
@@ -383,7 +383,7 @@ export default function CaptainInspectionPage() {
                 <div>
                   <span className="text-xs text-[var(--text-muted)] font-bold block mb-1">
                     {ui("اسم الكابتن الفاحص")}</span>
-                  <div className="font-bold text-slate-900 dark:text-white text-sm">
+                  <div className="font-bold text-[var(--text-main)] text-sm">
                     {user?.name || "—"}
                   </div>
                 </div>
@@ -391,13 +391,13 @@ export default function CaptainInspectionPage() {
                 <div>
                   <span className="text-xs text-[var(--text-muted)] font-bold block mb-1">
                     {ui("رقم الهوية الوطنية")}</span>
-                  <div className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm" dir="ltr">
+                  <div className="font-mono font-bold text-[var(--text-main)] text-sm" dir="ltr">
                     <bdi>{user?.nationalId || "—"}</bdi>
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor={`${fieldId}-plate`} className="text-xs text-slate-700 dark:text-slate-300 font-bold block mb-1">
+                  <label htmlFor={`${fieldId}-plate`} className="text-xs text-[var(--text-main)] font-bold block mb-1">
                     {ui("رقم لوحة المركبة *")}</label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
@@ -412,7 +412,7 @@ export default function CaptainInspectionPage() {
                         if (errorMessage) setErrorMessage("");
                       }}
                       placeholder={ui("ا ص ل 7223")}
-                      className="flex-1 min-h-11 px-3 py-2 text-xs font-mono font-bold rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                      className="flex-1 min-h-11 px-3 py-2 text-xs font-mono font-bold rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden"
                     />
                     {vehicles.length > 0 && (
                       <select
@@ -425,7 +425,7 @@ export default function CaptainInspectionPage() {
                           }
                         }}
                         value=""
-                        className="min-h-11 px-2.5 py-2 text-xs rounded-xl border theme-card font-mono text-[var(--text-muted)] dark:text-slate-400 focus:border-amber-500 focus:outline-hidden"
+                        className="min-h-11 px-2.5 py-2 text-xs rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] font-mono text-[var(--text-main)] focus:border-[var(--accent-gold)] focus:outline-hidden"
                       >
                         <option value="">{ui("من الأسطول...")}</option>
                         {vehicles.map((v) => (
@@ -443,14 +443,14 @@ export default function CaptainInspectionPage() {
               <div className="theme-card p-4 sm:p-5 rounded-2xl border theme-border space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                    <span className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                       {ui("تاريخ الفحص التشغيلي المعتمد (يدوي / مانيوال)")}</span>
                     <p className="text-xs text-[var(--text-muted)] mt-0.5">
                       {ui("يمكن اعتماد تاريخ اليوم الفعلي تلقائياً أو اختيار تاريخ يدوي مخصص في السجلات")}</p>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:flex w-full sm:w-auto items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border theme-border shadow-2xs">
+                  <div className="grid grid-cols-2 sm:flex w-full sm:w-auto items-center gap-1 bg-[var(--bg-card-subtle)] p-1 rounded-xl border theme-border shadow-2xs">
                     <button
                       type="button"
                       aria-pressed={inspectionDateMode === "AUTO"}
@@ -458,7 +458,7 @@ export default function CaptainInspectionPage() {
                       className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
                         inspectionDateMode === "AUTO"
                           ? "gold-gradient-btn shadow-xs"
-                          : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                       }`}
                     >
                       <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
@@ -470,7 +470,7 @@ export default function CaptainInspectionPage() {
                       className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
                         inspectionDateMode === "MANUAL"
                           ? "gold-gradient-btn shadow-xs"
-                          : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                       }`}
                     >
                       <Edit3 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
@@ -480,9 +480,9 @@ export default function CaptainInspectionPage() {
 
                 {inspectionDateMode === "AUTO" ? (
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t theme-border text-xs">
-                    <span className="text-[var(--text-muted)] dark:text-slate-400">
+                    <span className="text-[var(--text-muted)]">
                       {ui("تاريخ الفحص المعتمد في السجلات والوثيقة:")}</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/12 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300 font-mono font-bold border border-emerald-600/35 dark:border-emerald-500/35 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                       <bdi dir="ltr">{formatOfficialDate(getSaudiTodayDateStr())}</bdi> {ui("(تاريخ اليوم الفعلي بتوقيت المملكة)")}</span>
                   </div>
@@ -496,8 +496,8 @@ export default function CaptainInspectionPage() {
                         onChange={setInspectionDate}
                       />
                     </div>
-                    <div className="text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 sm:self-end min-h-11">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+                    <div className="text-xs text-[var(--accent-gold)] flex items-center gap-2 bg-[var(--accent-surface)] p-2.5 rounded-xl border border-amber-600/35 sm:self-end min-h-11">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <span>
                         {ui("سيتم توثيق الفحص واعتماده بهذا التاريخ المخصص في السجلات وتقارير الفحص ووثيقة الـ PDF الرسمية.")}</span>
                     </div>
@@ -510,7 +510,7 @@ export default function CaptainInspectionPage() {
               {/* Notes & Declaration */}
               <div className="theme-card p-4 sm:p-6 rounded-2xl border theme-border space-y-4">
                 <div className="space-y-1.5">
-                  <label htmlFor={`${fieldId}-notes`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${fieldId}-notes`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("ملاحظات الفحص الإضافية (اختياري)")}</label>
                   <textarea
                     id={`${fieldId}-notes`}
@@ -518,12 +518,12 @@ export default function CaptainInspectionPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder={ui("أية ملاحظات ميدانية عن حالة المركبة...")}
-                    className="w-full px-3 py-2.5 text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden resize-y"
+                    className="w-full px-3 py-2.5 text-xs rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden resize-y"
                   />
                 </div>
 
                 {/* Official Legal Declaration Checkbox */}
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <div className="p-4 rounded-xl bg-[var(--accent-surface)]/80 border border-amber-600/35">
                   <label htmlFor={`${fieldId}-declaration`} className="flex min-h-11 items-start gap-3 cursor-pointer select-none">
                     <Checkbox
                       id={`${fieldId}-declaration`}
@@ -538,9 +538,9 @@ export default function CaptainInspectionPage() {
                       className="mt-0.5 shrink-0"
                     />
                     <div className="text-xs">
-                      <span className="font-bold text-slate-900 dark:text-white block mb-0.5">
+                      <span className="font-bold text-[var(--text-main)] block mb-0.5">
                         {ui("إقرار وتعهد الكابتن (مدرج رسمياً في نموذج هيئة النقل)")}</span>
-                      <p className="text-[var(--text-muted)] dark:text-slate-300 leading-relaxed">
+                      <p className="text-[var(--text-muted)] leading-relaxed">
                         {ui("«أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها التامة قبل التشغيل والانطلاق على الطرق البرية.»")}</p>
                     </div>
                   </label>
@@ -551,7 +551,7 @@ export default function CaptainInspectionPage() {
               <div className="contract-submit-bar justify-end">
                 <Link
                   href="/captain"
-                  className="w-full sm:w-auto min-h-11 px-4 sm:px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
+                  className="w-full sm:w-auto min-h-11 px-4 sm:px-5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition inline-flex items-center justify-center shrink-0"
                 >
                   {ui("إلغاء")}</Link>
                 <button
@@ -572,8 +572,8 @@ export default function CaptainInspectionPage() {
       {activeTab === "history" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
               {ui("سجل الفحوصات التشغيلية المعتمدة")}</h2>
             <span className="text-xs text-[var(--text-muted)]">
               {historyList.length} {ui("فحص موثق")}</span>
@@ -581,13 +581,13 @@ export default function CaptainInspectionPage() {
 
           {isLoadingHistory ? (
             <div className="p-8 text-center theme-card rounded-2xl border theme-border">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent-gold)] mx-auto" />
               <p className="text-xs text-[var(--text-muted)] mt-2">{ui("جاري تحميل سجل الفحوصات...")}</p>
             </div>
           ) : historyList.length === 0 ? (
             <div className="p-8 text-center theme-card rounded-2xl border theme-border space-y-3">
-              <ClipboardCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" aria-hidden="true" />
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              <ClipboardCheck className="w-10 h-10 text-[var(--text-muted)] mx-auto" aria-hidden="true" />
+              <p className="text-sm font-bold text-[var(--text-main)]">
                 {ui("لا توجد فحوصات تشغيلية مسجلة حتى الآن")}</p>
               <button
                 type="button"
@@ -611,7 +611,7 @@ export default function CaptainInspectionPage() {
                     key={item.id}
                     title={
                       <span className="flex items-center gap-2">
-                        <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                        <span className="w-8 h-8 rounded-lg bg-emerald-500/12 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-600/35 dark:border-emerald-500/35">
                           <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                         </span>
                         <span>{ui("حافلة")}: {item.vehiclePlate}</span>
@@ -640,9 +640,9 @@ export default function CaptainInspectionPage() {
                             })
                           }
                           aria-label={`${ui("معاينة الوثيقة")} #${shortCode}`}
-                          className="flex-1 min-h-11 px-3 rounded-xl border theme-border bg-[var(--bg-card-subtle)] hover:border-amber-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                          className="flex-1 min-h-11 px-3 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] flex items-center justify-center gap-1.5 transition cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                          <Eye className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                           <span>{ui("معاينة الوثيقة")}</span>
                         </button>
                         <div className="shrink-0">
@@ -666,7 +666,7 @@ export default function CaptainInspectionPage() {
                     </MobileCardMetaGrid>
 
                     {item.notes && (
-                      <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border theme-border line-clamp-2">
+                      <p className="text-xs text-[var(--text-muted)] bg-[var(--bg-card-subtle)] p-2.5 rounded-xl border theme-border line-clamp-2">
                         {item.notes}
                       </p>
                     )}

@@ -159,10 +159,10 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             ${shouldAutoExpandOnClick ? "cursor-pointer" : ""}
             ${
               error
-                ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 placeholder:text-rose-700/75 dark:placeholder:text-rose-300/75 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20"
+                : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-2 focus:ring-[var(--accent-gold)]/20"
             }
-            ${disabled ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}
+            ${disabled ? "opacity-55 cursor-not-allowed bg-[var(--bg-card-subtle)]" : ""}
             ${className}`}
         />
 

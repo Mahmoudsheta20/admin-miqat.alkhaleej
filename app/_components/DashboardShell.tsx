@@ -74,28 +74,28 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
       title: text("عقد نقل جديد", "New contract"),
       subtitle: text("إصدار وتوثيق رحلة جديدة", "Issue & assign trip contract"),
       icon: FileText,
-      accent: "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-amber-500/30",
+      accent: "bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 border-emerald-600/30",
     },
     {
       href: "/admin/invoices/new",
       title: text("فاتورة عميل جديدة", "New invoice"),
       subtitle: text("ضريبية، مبدئية، أو إشعار", "Tax, proforma, or credit note"),
       icon: ReceiptText,
-      accent: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
+      accent: "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/30",
     },
     {
       href: "/admin/purchases",
       title: text("مصروفات ومشتريات", "Purchases & expenses"),
       subtitle: text("تسجيل فواتير الموردين", "Log supplier bills & VAT"),
       icon: Wallet,
-      accent: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25",
+      accent: "bg-sky-500/12 text-sky-800 dark:text-sky-300 border-sky-600/30",
     },
     {
       href: "/admin/inspections",
       title: text("فحوصات المركبات", "Fleet inspections"),
       subtitle: text("اعتماد ومتابعة الفحص اليومي", "Daily safety readiness"),
       icon: ClipboardCheck,
-      accent: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25",
+      accent: "bg-indigo-500/12 text-indigo-800 dark:text-indigo-300 border-indigo-600/30",
     },
   ];
 
@@ -208,12 +208,12 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
           }}
         >
           <div className="mobile-sheet-panel p-4 sm:p-5 space-y-4">
-            <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+            <div className="mx-auto h-1.5 w-10 rounded-full bg-[var(--control-border)]/50" />
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2
                   id="mobile-quick-create-title"
-                  className="text-base font-semibold text-slate-900 dark:text-white"
+                  className="text-base font-semibold text-[var(--text-main)]"
                 >
                   {text("إنشاء سريع", "Quick create")}
                 </h2>
@@ -239,16 +239,16 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
                     key={act.href}
                     href={act.href}
                     onClick={() => setQuickCreatePath(null)}
-                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] rounded-2xl"
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-color)] rounded-2xl"
                   >
-                    <Card className="theme-card border theme-border p-3.5 shadow-none hover:border-amber-500/50 transition-colors flex items-center gap-3 min-h-16">
+                    <Card className="theme-card border theme-border p-3.5 shadow-none hover:border-[var(--accent-gold)]/55 transition-colors flex items-center gap-3 min-h-16">
                       <span
                         className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${act.accent}`}
                       >
                         <Icon className="w-5 h-5" aria-hidden="true" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <strong className="block text-sm font-semibold text-slate-900 dark:text-white">
+                        <strong className="block text-sm font-semibold text-[var(--text-main)]">
                           {act.title}
                         </strong>
                         <span className="block text-xs text-[var(--text-muted)] truncate">

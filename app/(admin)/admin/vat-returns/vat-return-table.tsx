@@ -67,7 +67,7 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
 
     if (value === null) {
       return (
-        <span className="text-slate-300 dark:text-slate-600 font-mono">
+        <span className="text-[var(--text-muted)] font-mono">
           —
         </span>
       );
@@ -90,14 +90,14 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
             onClick={() => void handleCopy(row, field, label)}
             className={
               compact
-                ? "min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border theme-border bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-amber-600 hover:border-amber-500/40 transition cursor-pointer shrink-0"
-                : "p-1.5 rounded-md text-[var(--text-muted)] hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
+                ? "min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer shrink-0"
+                : "p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
             }
             title={ui(vatCopyPurpose(row, field) === "ENTRY" ? "نسخ للإدخال" : "نسخ للمطابقة")}
             aria-label={copyAria}
           >
             {isCopied ? (
-              <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <Check className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
             ) : (
               <Copy className="size-3.5" aria-hidden="true" />
             )}
@@ -106,8 +106,8 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
             dir="ltr"
             className={`font-mono text-xs sm:text-sm select-all ${
               row.isTotal
-                ? "font-semibold text-slate-900 dark:text-white"
-                : "font-bold text-slate-700 dark:text-slate-200"
+                ? "font-semibold text-[var(--text-main)]"
+                : "font-bold text-[var(--text-main)]"
             }`}
           >
             {amountLabel(value)}
@@ -129,24 +129,24 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
   return (
     <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs space-y-0">
       {/* Table Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border px-5 py-4 bg-slate-50/70 dark:bg-slate-800/40">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border px-5 py-4 bg-[var(--bg-card-subtle)]">
         <div>
-          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
             {ui(t("vat.title"))} (1–16)
           </h2>
-          <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {ui(t("vat.copyNotice"))}
           </p>
         </div>
         {feedback && (
-          <span role="status" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full animate-in fade-in">
+          <span role="status" className="text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 dark:bg-emerald-950/45 border border-emerald-600/35 dark:border-emerald-500/35 px-3 py-1 rounded-full animate-in fade-in">
             {feedback}
           </span>
         )}
       </div>
 
       {domesticPurchasesOnly && (
-        <p className="px-5 py-3 border-b theme-border text-xs leading-relaxed text-amber-800 dark:text-amber-300 bg-amber-500/5">
+        <p className="px-5 py-3 border-b theme-border text-xs leading-relaxed text-[var(--accent-gold)] bg-[var(--accent-surface)]/65 font-medium">
           {ui("يغطي هذا التقرير المشتريات المحلية فقط. الأصفار في خانات الواردات والاحتساب العكسي لا تؤكد عدم وجود معاملات؛ راجعها منفصلًا قبل التقديم.")}
         </p>
       )}
@@ -155,7 +155,7 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
       <div className="hidden md:block overflow-x-auto">
         <table className={`w-full min-w-[850px] ${"text-start"} text-xs sm:text-sm border-collapse`}>
           <thead>
-            <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-[var(--text-muted)] dark:text-slate-400 font-bold whitespace-nowrap">
+            <tr className="border-b theme-border bg-[var(--table-header-bg)] text-[var(--text-muted)] font-bold whitespace-nowrap">
               <th className="w-16 px-4 py-3.5">{ui(t("vat.box"))}</th>
               <th className="px-4 py-3.5">{ui(t("vat.desc"))}</th>
               <th className={`px-4 py-3.5 ${"text-end"}`}>{ui(t("vat.net"))} ({ui(t("common.sar"))})</th>
@@ -174,8 +174,8 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
               const sectionRows = rows.filter((r) => r.section === sectionKey);
               return (
                 <React.Fragment key={sectionKey}>
-                  <tr className="bg-slate-900 dark:bg-slate-800/90 text-white font-semibold">
-                    <td colSpan={5} className="px-5 py-2.5 text-xs font-semibold">
+                  <tr className="bg-slate-900 dark:bg-slate-800/95 hover:bg-slate-900 dark:hover:bg-slate-800/95 text-white font-semibold">
+                    <td colSpan={5} className="px-5 py-2.5 text-xs font-semibold text-white">
                       {ui(sectionTitle)}
                     </td>
                   </tr>
@@ -189,34 +189,28 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
                         key={row.box}
                         className={`transition duration-150 ${
                           isGrandTotal
-                            ? "bg-amber-500/10 border-y-2 border-amber-500/40"
+                            ? "bg-[var(--accent-surface)] border-y-2 border-[var(--accent-gold)]/50"
                             : isSubtotal
-                              ? "bg-slate-50/80 dark:bg-slate-800/50 font-bold"
-                              : "hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
+                              ? "bg-[var(--bg-card-subtle)] font-bold"
+                              : "hover:bg-[var(--table-row-hover)]"
                         }`}
                       >
-                        <td className="px-4 py-3.5 font-mono font-semibold text-amber-700 dark:text-amber-400">
+                        <td className="px-4 py-3.5 font-mono font-semibold text-[var(--accent-gold)]">
                           {row.box}
                         </td>
 
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
-                            <span
-                              className={`${
-                                row.isTotal
-                                  ? "font-semibold text-slate-900 dark:text-white"
-                                  : "font-semibold text-slate-800 dark:text-slate-200"
-                              }`}
-                            >
+                            <span className="font-semibold text-[var(--text-main)]">
                               {ui(row.label)}
                             </span>
                             {row.box === 1 && (
-                              <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold">
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] font-bold">
                                 15%
                               </span>
                             )}
                             {row.box === 7 && (
-                              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold">
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/12 border border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300 font-bold">
                                 {ui("قابلة للخصم")}</span>
                             )}
                           </div>
@@ -240,7 +234,7 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
       </div>
 
       {/* Mobile Cards View (Below md) */}
-      <div className="md:hidden p-3 space-y-4 bg-slate-50/40 dark:bg-slate-950/20">
+      <div className="md:hidden p-3 space-y-4 bg-[var(--bg-card-subtle)]/40">
         {(
           [
             ["SALES", t("vat.salesSection")],
@@ -251,7 +245,7 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
           const sectionRows = rows.filter((r) => r.section === sectionKey);
           return (
             <section key={sectionKey} className="space-y-2.5">
-              <h3 className="px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white font-semibold text-xs">
+              <h3 className="px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800/95 border border-slate-700 text-white font-semibold text-xs">
                 {ui(sectionTitle)}
               </h3>
 
@@ -265,14 +259,14 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
                       key={row.box}
                       className={
                         isGrandTotal
-                          ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/10"
+                          ? "border-[var(--accent-gold)]/50 bg-[var(--accent-surface)]"
                           : isSubtotal
-                            ? "bg-[var(--bg-card-subtle)]/70"
+                            ? "bg-[var(--bg-card-subtle)]"
                             : undefined
                       }
                       title={
                         <span className="flex items-start gap-2">
-                          <span className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 font-mono font-semibold text-xs flex items-center justify-center shrink-0">
+                          <span className="w-7 h-7 rounded-lg bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] font-mono font-semibold text-xs flex items-center justify-center shrink-0">
                             {row.box}
                           </span>
                           <span className="leading-snug">{ui(row.label)}</span>
@@ -280,7 +274,7 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
                       }
                       badge={
                         row.box === 1 ? (
-                          <Badge variant="outline" className="text-[11px] border-amber-500/30 text-amber-700 dark:text-amber-400">
+                          <Badge variant="gold" className="text-[11px]">
                             {ui("15% أساسية")}
                           </Badge>
                         ) : row.box === 7 ? (
@@ -303,7 +297,7 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
                         />
                         <div
                           className={`col-span-2 flex items-center justify-between gap-2 pt-2 border-t theme-border ${
-                            isGrandTotal ? "text-amber-800 dark:text-amber-300" : ""
+                            isGrandTotal ? "text-[var(--accent-gold)]" : ""
                           }`}
                         >
                           <span className="text-xs font-semibold text-[var(--text-muted)]">
@@ -322,9 +316,9 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
       </div>
 
       {/* Table Footer Instructions */}
-      <div className="border-t theme-border px-5 py-3.5 text-xs text-[var(--text-muted)] dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/20 flex items-center justify-between">
+      <div className="border-t theme-border px-5 py-3.5 text-xs text-[var(--text-muted)] bg-[var(--bg-card-subtle)] flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <HelpCircle className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" />
           <span>
             {ui("المبلغ قبل الضريبة، والتعديل تخفيض يُطرح منه. استخدم «نسخ للإدخال» للحقول القابلة للتعبئة، و«نسخ للمطابقة» للضريبة والإجماليات المحسوبة.")}</span>
         </div>

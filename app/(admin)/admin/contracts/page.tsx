@@ -467,11 +467,11 @@ export default function AdminContractsPage() {
       {syncStatus && (
         <div
           role="status"
-          className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-xs"
+          className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--text-main)] text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-xs"
         >
           <div className="flex items-center gap-2 min-w-0">
             <ClipboardCheck
-              className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0"
+              className="w-5 h-5 text-[var(--accent-gold)] shrink-0"
               aria-hidden="true"
             />
             <span className="truncate">{ui(syncStatus)}</span>
@@ -480,7 +480,7 @@ export default function AdminContractsPage() {
             type="button"
             onClick={() => setSyncStatus(null)}
             aria-label={ui("إغلاق")}
-            className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition shrink-0 cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg hover:bg-amber-500/15 text-[var(--accent-gold)] transition shrink-0 cursor-pointer"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -562,7 +562,7 @@ export default function AdminContractsPage() {
           {/* Search Box */}
           <form
             onSubmit={handleSearchSubmit}
-            className="md:col-span-6 lg:col-span-5 theme-card px-3.5 py-2.5 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-amber-500 transition shadow-xs"
+            className="md:col-span-6 lg:col-span-5 theme-card px-3.5 py-2.5 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-[var(--accent-gold)] transition shadow-xs"
           >
             <Search
               className="w-4 h-4 text-[var(--text-muted)] shrink-0"
@@ -578,7 +578,7 @@ export default function AdminContractsPage() {
               aria-label={ui(
                 "ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...",
               )}
-              className="w-full min-h-9 bg-transparent border-none text-base sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-hidden"
+              className="w-full min-h-9 bg-transparent border-none text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:outline-hidden"
             />
             {search && (
               <button
@@ -589,23 +589,23 @@ export default function AdminContractsPage() {
                   setSubmittedSearch("");
                   setCurrentPage(1);
                 }}
-                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 shrink-0 cursor-pointer"
+                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             )}
             <button
               type="submit"
-              className="min-h-11 sm:min-h-8 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition shrink-0 cursor-pointer"
+              className="min-h-11 sm:min-h-8 px-3 py-1.5 rounded-xl bg-[var(--accent-btn-bg)] hover:bg-[var(--accent-btn-hover)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] text-xs font-bold transition shrink-0 cursor-pointer"
             >
               {ui("بحث")}
             </button>
           </form>
 
           {/* Captain Selector Filter */}
-          <div className="md:col-span-6 lg:col-span-4 theme-card px-3 py-2 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-amber-500 transition shadow-xs">
+          <div className="md:col-span-6 lg:col-span-4 theme-card px-3 py-2 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-[var(--accent-gold)] transition shadow-xs">
             <User
-              className="w-4 h-4 text-amber-500 shrink-0"
+              className="w-4 h-4 text-[var(--accent-gold)] shrink-0"
               aria-hidden="true"
             />
             <div className="flex-1 min-w-0">
@@ -616,15 +616,15 @@ export default function AdminContractsPage() {
                 {ui("تصفية حسب الكابتن:")}
               </label>
               {isLoadingCaptains ? (
-                <div className="h-5 w-32 bg-slate-200 dark:bg-slate-700/60 rounded-md animate-pulse my-0.5" />
+                <div className="h-5 w-32 bg-[var(--bg-card-subtle)] rounded-md animate-pulse my-0.5" />
               ) : (
                 <select
                   id="captainFilterSelect"
                   value={captainFilter}
                   onChange={(e) => handleCaptainFilterSelect(e.target.value)}
-                  className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
+                  className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-[var(--text-main)] focus:outline-hidden cursor-pointer"
                 >
-                  <option value="ALL" className="bg-white dark:bg-slate-900">
+                  <option value="ALL" className="bg-[var(--bg-card)] text-[var(--text-main)]">
                     {ui("جميع الكباتن (")}
                     {Array.isArray(captains) ? captains.length : 0})
                   </option>
@@ -632,7 +632,7 @@ export default function AdminContractsPage() {
                     <option
                       key={cap.id}
                       value={cap.id}
-                      className="bg-white dark:bg-slate-900"
+                      className="bg-[var(--bg-card)] text-[var(--text-main)]"
                     >
                       {cap.name}
                       {cap.assignedVehiclePlate
@@ -648,7 +648,7 @@ export default function AdminContractsPage() {
                 type="button"
                 aria-label={ui("إلغاء تصفية الكابتن")}
                 onClick={() => handleCaptainFilterSelect("ALL")}
-                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 shrink-0 cursor-pointer"
+                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0 cursor-pointer"
                 title={ui("إلغاء تصفية الكابتن")}
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -657,9 +657,9 @@ export default function AdminContractsPage() {
           </div>
 
           {/* Inspection Filter Dropdown */}
-          <div className="md:col-span-6 lg:col-span-3 theme-card px-3 py-2 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-amber-500 transition shadow-xs">
+          <div className="md:col-span-6 lg:col-span-3 theme-card px-3 py-2 rounded-2xl border theme-border flex items-center gap-2.5 focus-within:border-[var(--accent-gold)] transition shadow-xs">
             <ClipboardCheck
-              className="w-4 h-4 text-emerald-500 shrink-0"
+              className="w-4 h-4 text-[var(--accent-gold)] shrink-0"
               aria-hidden="true"
             />
             <div className="flex-1 min-w-0">
@@ -678,19 +678,19 @@ export default function AdminContractsPage() {
                   );
                   setCurrentPage(1);
                 }}
-                className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden cursor-pointer"
+                className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-[var(--text-main)] focus:outline-hidden cursor-pointer"
               >
-                <option value="ALL" className="bg-white dark:bg-slate-900">
+                <option value="ALL" className="bg-[var(--bg-card)] text-[var(--text-main)]">
                   {ui("كافة الحالات")}
                 </option>
                 <option
                   value="INSPECTED"
-                  className="bg-white dark:bg-slate-900"
+                  className="bg-[var(--bg-card)] text-[var(--text-main)]"
                 >
                   {ui("مفحوص ومعتمد فقط (")}
                   {stats.inspected})
                 </option>
-                <option value="PENDING" className="bg-white dark:bg-slate-900">
+                <option value="PENDING" className="bg-[var(--bg-card)] text-[var(--text-main)]">
                   {ui("بانتظار الفحص فقط (")}
                   {stats.pending})
                 </option>
@@ -704,7 +704,7 @@ export default function AdminContractsPage() {
                   setInspectionFilter("ALL");
                   setCurrentPage(1);
                 }}
-                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 shrink-0 cursor-pointer"
+                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0 cursor-pointer"
                 title={ui("إلغاء التصفية")}
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -729,8 +729,8 @@ export default function AdminContractsPage() {
                 onClick={() => handleTypeFilterSelect(op.id)}
                 className={`min-h-10 sm:min-h-8 px-3 py-1.5 rounded-xl text-xs font-bold border transition shrink-0 cursor-pointer ${
                   typeFilter === op.id
-                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-500/40 shadow-xs"
-                    : "theme-card text-[var(--text-muted)] dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-amber-500/50"
+                    ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border-[var(--accent-btn-border)] shadow-xs"
+                    : "theme-card text-[var(--text-muted)] border theme-border hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
                 }`}
               >
                 {ui(op.label)}
@@ -765,7 +765,7 @@ export default function AdminContractsPage() {
             {ui("قائمة العقود")}
           </h2>
           {!isLoading && (
-            <span className="text-xs font-mono font-semibold text-amber-700 dark:text-amber-400">
+            <span className="text-xs font-mono font-semibold text-[var(--accent-gold)]">
               {filteredContracts.length} {ui("عقد")}
             </span>
           )}
@@ -776,7 +776,7 @@ export default function AdminContractsPage() {
             {/* Desktop Table Skeleton */}
             <div className="hidden lg:block">
               <Table>
-                <TableHeader className="bg-slate-50/95 dark:bg-slate-900/90 border-b theme-border text-[var(--text-muted)] dark:text-slate-400 font-bold">
+                <TableHeader className="bg-[var(--table-header-bg)] border-b theme-border text-[var(--text-muted)] font-bold">
                   <TableRow>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
                       {ui("رقم العقد والعملية")}
@@ -796,59 +796,59 @@ export default function AdminContractsPage() {
                     <TableHead className="px-3 py-3.5 text-center whitespace-nowrap">
                       {ui("الركاب")}
                     </TableHead>
-                    <TableHead className="sticky end-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap bg-slate-50/95 dark:bg-slate-900/95 border-s border-slate-200/80 dark:border-slate-800">
+                    <TableHead className="sticky end-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap bg-[var(--table-header-bg)] border-s theme-border">
                       {ui("الإجراءات")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="text-slate-800 dark:text-slate-200">
+                <TableBody className="text-[var(--text-main)]">
                   {[...Array(6)].map((_, i) => (
                     <TableRow key={`tbl-skel-${i}`} className="animate-pulse">
                       {/* Ref & Operation */}
                       <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
                         <div className="space-y-1.5">
-                          <div className="h-4 w-28 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
-                          <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800 rounded-full" />
+                          <div className="h-4 w-28 bg-[var(--bg-card-subtle)] rounded-md" />
+                          <div className="h-4 w-20 bg-[var(--bg-card-subtle)] rounded-full" />
                         </div>
                       </TableCell>
                       {/* Customer */}
                       <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700/60 shrink-0" />
+                          <div className="w-7 h-7 rounded-xl bg-[var(--bg-card-subtle)] shrink-0" />
                           <div className="space-y-1.5 min-w-0">
-                            <div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
-                            <div className="h-2.5 w-16 bg-slate-100 dark:bg-slate-800 rounded-sm" />
+                            <div className="h-3.5 w-24 bg-[var(--bg-card-subtle)] rounded-md" />
+                            <div className="h-2.5 w-16 bg-[var(--bg-card-subtle)] rounded-sm" />
                           </div>
                         </div>
                       </TableCell>
                       {/* Captain & Vehicle */}
                       <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
                         <div className="space-y-1.5">
-                          <div className="h-3.5 w-20 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
-                          <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700/40 rounded-md" />
+                          <div className="h-3.5 w-20 bg-[var(--bg-card-subtle)] rounded-md" />
+                          <div className="h-4 w-16 bg-[var(--bg-card-subtle)] rounded-md" />
                         </div>
                       </TableCell>
                       {/* Route & Date */}
                       <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
                         <div className="space-y-1.5">
-                          <div className="h-3.5 w-32 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
-                          <div className="h-2.5 w-20 bg-slate-100 dark:bg-slate-800 rounded-sm" />
+                          <div className="h-3.5 w-32 bg-[var(--bg-card-subtle)] rounded-md" />
+                          <div className="h-2.5 w-20 bg-[var(--bg-card-subtle)] rounded-sm" />
                         </div>
                       </TableCell>
                       {/* Inspection */}
                       <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
-                        <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
+                        <div className="h-6 w-24 bg-[var(--bg-card-subtle)] rounded-xl" />
                       </TableCell>
                       {/* Passengers */}
                       <TableCell className="px-3 py-3 align-middle text-center whitespace-nowrap border-b theme-border">
-                        <div className="inline-block h-6 w-10 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
+                        <div className="inline-block h-6 w-10 bg-[var(--bg-card-subtle)] rounded-xl" />
                       </TableCell>
                       {/* Actions (Sticky end) */}
-                      <TableCell className="sticky end-0 z-10 bg-white dark:bg-slate-900 px-3.5 py-3 align-middle text-end whitespace-nowrap border-b theme-border border-s border-slate-200/80 dark:border-slate-800">
+                      <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] px-3.5 py-3 align-middle text-end whitespace-nowrap border-b theme-border border-s theme-border">
                         <div className="inline-flex items-center gap-1.5">
-                          <div className="w-16 h-9 bg-slate-200 dark:bg-slate-700/60 rounded-lg" />
-                          <div className="w-14 h-9 bg-slate-200 dark:bg-slate-700/60 rounded-lg" />
-                          <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700/60 rounded-lg" />
+                          <div className="w-16 h-9 bg-[var(--bg-card-subtle)] rounded-lg" />
+                          <div className="w-14 h-9 bg-[var(--bg-card-subtle)] rounded-lg" />
+                          <div className="w-9 h-9 bg-[var(--bg-card-subtle)] rounded-lg" />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -866,55 +866,55 @@ export default function AdminContractsPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1.5">
-                      <div className="h-4 w-28 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
-                      <div className="h-3 w-36 bg-slate-100 dark:bg-slate-800 rounded-sm" />
+                      <div className="h-4 w-28 bg-[var(--bg-card-subtle)] rounded-md" />
+                      <div className="h-3 w-36 bg-[var(--bg-card-subtle)] rounded-sm" />
                     </div>
-                    <div className="h-5 w-16 bg-slate-200 dark:bg-slate-700/60 rounded-full" />
+                    <div className="h-5 w-16 bg-[var(--bg-card-subtle)] rounded-full" />
                   </div>
 
                   <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border space-y-2.5">
-                    <div className="h-3.5 w-48 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
+                    <div className="h-3.5 w-48 bg-[var(--bg-card)] rounded-md" />
                     <div className="pt-2 border-t theme-border flex items-center justify-between">
-                      <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700/40 rounded-sm" />
-                      <div className="h-3 w-28 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
+                      <div className="h-3 w-20 bg-[var(--bg-card)] rounded-sm" />
+                      <div className="h-3 w-28 bg-[var(--bg-card)] rounded-md" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="h-11 rounded-xl bg-slate-200/70 dark:bg-slate-800/70" />
-                    <div className="h-11 rounded-xl bg-slate-200/70 dark:bg-slate-800/70" />
+                    <div className="h-11 rounded-xl bg-[var(--bg-card-subtle)]" />
+                    <div className="h-11 rounded-xl bg-[var(--bg-card-subtle)]" />
                   </div>
 
                   <div className="flex items-center gap-2 pt-2 border-t theme-border">
-                    <div className="flex-1 h-11 bg-slate-200 dark:bg-slate-700/60 rounded-lg" />
-                    <div className="flex-1 h-11 bg-slate-200 dark:bg-slate-700/60 rounded-lg" />
-                    <div className="w-11 h-11 bg-slate-200 dark:bg-slate-700/60 rounded-lg" />
+                    <div className="flex-1 h-11 bg-[var(--bg-card-subtle)] rounded-lg" />
+                    <div className="flex-1 h-11 bg-[var(--bg-card-subtle)] rounded-lg" />
+                    <div className="w-11 h-11 bg-[var(--bg-card-subtle)] rounded-lg" />
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Pagination Skeleton */}
-            <div className="theme-card rounded-2xl border theme-border lg:rounded-none lg:border-0 lg:border-t lg:bg-slate-50/50 lg:dark:bg-slate-900/40 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
-              <div className="h-4 w-44 bg-slate-200 dark:bg-slate-700/60 rounded-md" />
+            <div className="theme-card rounded-2xl border theme-border lg:rounded-none lg:border-0 lg:border-t lg:bg-[var(--bg-card-subtle)] px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+              <div className="h-4 w-44 bg-[var(--bg-card)] rounded-md" />
               <div className="flex items-center gap-1.5">
-                <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
-                <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
-                <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
-                <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700/60 rounded-xl" />
+                <div className="w-8 h-8 bg-[var(--bg-card)] rounded-xl" />
+                <div className="w-8 h-8 bg-[var(--bg-card)] rounded-xl" />
+                <div className="w-8 h-8 bg-[var(--bg-card)] rounded-xl" />
+                <div className="w-8 h-8 bg-[var(--bg-card)] rounded-xl" />
               </div>
             </div>
           </>
         ) : filteredContracts.length === 0 ? (
           /* Empty State */
           <div className="theme-card rounded-2xl border theme-border lg:border-0 lg:rounded-none p-10 sm:p-16 text-center space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center">
               <FileText className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-[var(--text-main)]">
               {ui("لا توجد عقود مسجلة")}
             </h3>
-            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
               {ui(
                 hasActiveFilters
                   ? "لا توجد نتائج تطابق معايير البحث والتصفية المحددة. جرب تغيير المدخلات أو إعادة ضبط التصفية."
@@ -925,7 +925,7 @@ export default function AdminContractsPage() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="min-h-11 sm:min-h-9 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:border-amber-500 text-amber-700 dark:text-amber-400 transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-[var(--accent-gold)] transition cursor-pointer"
               >
                 {ui("إلغاء عوامل التصفية")}
               </button>
@@ -944,7 +944,7 @@ export default function AdminContractsPage() {
             {/* Desktop Table View (lg and up) (shadcn Table) */}
             <div className="hidden lg:block">
               <Table>
-                <TableHeader className="bg-slate-50/95 dark:bg-slate-900/90 border-b theme-border text-[var(--text-muted)] dark:text-slate-400 font-bold">
+                <TableHeader className="bg-[var(--table-header-bg)] border-b theme-border text-[var(--text-muted)] font-bold">
                   <TableRow>
                     <TableHead className="px-3.5 py-3.5 whitespace-nowrap">
                       {ui("رقم العقد والعملية")}
@@ -964,26 +964,26 @@ export default function AdminContractsPage() {
                     <TableHead className="px-3 py-3.5 text-center whitespace-nowrap">
                       {ui("الركاب")}
                     </TableHead>
-                    <TableHead className="sticky end-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap bg-slate-50/95 dark:bg-slate-900/95 border-s border-slate-200/80 dark:border-slate-800">
+                    <TableHead className="sticky end-0 z-20 px-3.5 py-3.5 text-end whitespace-nowrap bg-[var(--table-header-bg)] border-s theme-border">
                       {ui("الإجراءات")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="text-slate-800 dark:text-slate-200">
+                <TableBody className="text-[var(--text-main)]">
                   {paginatedContracts.map((c) => {
                     const isInspected = Boolean(c.inspectionId || c.inspection);
 
                     return (
                       <TableRow
                         key={c.id}
-                        className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150"
+                        className="group hover:bg-[var(--table-row-hover)] transition-colors duration-150"
                       >
                         {/* Reference & Operation Type */}
                         <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
                           <div className="flex items-center gap-1.5">
                             <Link
                               href={`/admin/contracts/${c.id}`}
-                              className="font-mono font-semibold text-amber-700 dark:text-amber-400 text-sm tracking-tight hover:underline"
+                              className="font-mono font-semibold text-[var(--accent-gold)] text-sm tracking-tight hover:underline"
                             >
                               {c.referenceNumber}
                             </Link>
@@ -993,12 +993,12 @@ export default function AdminContractsPage() {
                                 handleCopyRef(c.referenceNumber, e)
                               }
                               aria-label={`${ui("نسخ رقم العقد")} ${c.referenceNumber}`}
-                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
+                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
                               title={ui("نسخ رقم العقد")}
                             >
                               {copiedRef === c.referenceNumber ? (
                                 <Check
-                                  className="w-3.5 h-3.5 text-emerald-500"
+                                  className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300"
                                   aria-hidden="true"
                                 />
                               ) : (
@@ -1020,13 +1020,13 @@ export default function AdminContractsPage() {
                                 className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold border ${
                                   c.status === "APPROVED" ||
                                   c.status === "ACTIVE"
-                                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                                    ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35"
                                     : c.status === "REJECTED" ||
                                         c.status === "CANCELLED"
-                                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"
                                       : c.status === "EXPIRED"
-                                        ? "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
-                                        : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                        ? "bg-[var(--bg-card-subtle)] text-[var(--text-muted)] theme-border"
+                                        : "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/30"
                                 }`}
                               >
                                 {ui(
@@ -1045,9 +1045,9 @@ export default function AdminContractsPage() {
                               </span>
                             )}
                             {c.flightNumber && (
-                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-mono text-xs font-bold">
+                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono text-xs font-bold">
                                 <Plane
-                                  className="w-2.5 h-2.5 text-blue-500"
+                                  className="w-2.5 h-2.5 text-sky-600 dark:text-sky-400"
                                   aria-hidden="true"
                                 />
                                 <bdi>
@@ -1063,7 +1063,7 @@ export default function AdminContractsPage() {
                         <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
                           <div className="flex items-center gap-2">
                             <div
-                              className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 border theme-border"
+                              className="w-7 h-7 rounded-xl bg-[var(--bg-card-subtle)] text-[var(--text-main)] font-bold text-xs flex items-center justify-center shrink-0 border theme-border"
                               aria-hidden="true"
                             >
                               {c.customerName
@@ -1072,7 +1072,7 @@ export default function AdminContractsPage() {
                             </div>
                             <div className="min-w-0">
                               <div
-                                className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[140px]"
+                                className="font-bold text-[var(--text-main)] text-xs truncate max-w-[140px]"
                                 title={c.customerName}
                               >
                                 {c.customerName}
@@ -1080,11 +1080,11 @@ export default function AdminContractsPage() {
                               {c.customerPhone ? (
                                 <a
                                   href={`tel:${c.customerPhone}`}
-                                  className="text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 font-mono transition inline-flex items-center gap-1 mt-0.5"
+                                  className="text-xs text-[var(--text-muted)] hover:text-[var(--accent-gold)] font-mono transition inline-flex items-center gap-1 mt-0.5"
                                   dir="ltr"
                                 >
                                   <Phone
-                                    className="w-2.5 h-2.5 opacity-60"
+                                    className="w-2.5 h-2.5 opacity-75"
                                     aria-hidden="true"
                                   />
                                   <span>{c.customerPhone}</span>
@@ -1100,9 +1100,9 @@ export default function AdminContractsPage() {
 
                         {/* Captain & Vehicle */}
                         <TableCell className="px-3.5 py-3 align-middle whitespace-nowrap border-b theme-border">
-                          <div className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                          <div className="font-bold text-[var(--text-main)] text-xs flex items-center gap-1.5">
                             <span
-                              className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"
+                              className="w-1.5 h-1.5 rounded-full bg-[var(--accent-gold)] shrink-0"
                               aria-hidden="true"
                             />
                             <span
@@ -1112,9 +1112,9 @@ export default function AdminContractsPage() {
                               {c.captain?.name || ui("الكابتن")}
                             </span>
                           </div>
-                          <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/90 font-mono text-xs font-bold text-slate-700 dark:text-slate-300 border theme-border">
+                          <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-card-subtle)] font-mono text-xs font-bold text-[var(--text-main)] border theme-border">
                             <Car
-                              className="w-3 h-3 text-amber-500"
+                              className="w-3 h-3 text-[var(--accent-gold)]"
                               aria-hidden="true"
                             />
                             <bdi>{c.vehiclePlate}</bdi>
@@ -1124,9 +1124,9 @@ export default function AdminContractsPage() {
                         {/* Route & Date */}
                         <TableCell className="px-3.5 py-3 align-middle border-b theme-border">
                           <div className="space-y-1">
-                            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-xs">
+                            <div className="flex items-center gap-1 text-[var(--text-main)] font-semibold text-xs">
                               <MapPin
-                                className="w-3 h-3 text-emerald-500 shrink-0"
+                                className="w-3 h-3 text-[var(--accent-gold)] shrink-0"
                                 aria-hidden="true"
                               />
                               <span
@@ -1176,11 +1176,11 @@ export default function AdminContractsPage() {
                               onClick={() =>
                                 openContractDetails(c, "inspection")
                               }
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 text-xs font-bold hover:bg-emerald-500/20 transition cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/12 text-emerald-800 border border-emerald-600/35 text-xs font-bold hover:bg-emerald-500/20 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35 dark:hover:bg-emerald-950/70 transition cursor-pointer"
                               title={ui("فحص تشغيلي مكتمل - اضغط للتفاصيل")}
                             >
                               <ClipboardCheck
-                                className="w-3.5 h-3.5 text-emerald-500"
+                                className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300"
                                 aria-hidden="true"
                               />
                               <span>{ui("مفحوص ومعتمد")}</span>
@@ -1191,13 +1191,13 @@ export default function AdminContractsPage() {
                               onClick={() =>
                                 openContractDetails(c, "inspection")
                               }
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/35 text-xs font-bold hover:bg-amber-500/15 transition cursor-pointer"
                               title={ui(
                                 "تنبيه: بانتظار الفحص التشغيلي قبل الرحلة",
                               )}
                             >
                               <AlertCircle
-                                className="w-3.5 h-3.5 text-amber-500"
+                                className="w-3.5 h-3.5 text-[var(--accent-gold)]"
                                 aria-hidden="true"
                               />
                               <span>{ui("بانتظار الفحص")}</span>
@@ -1210,11 +1210,11 @@ export default function AdminContractsPage() {
                           <button
                             type="button"
                             onClick={() => openContractDetails(c, "passengers")}
-                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-100 hover:bg-amber-500/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition border theme-border hover:border-amber-500/30 cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-surface)] text-[var(--text-main)] font-bold text-xs transition border theme-border hover:border-[var(--accent-gold)] cursor-pointer"
                             title={ui("عرض كشف الركاب والمرافقين")}
                           >
                             <Users
-                              className="w-3.5 h-3.5 text-amber-500"
+                              className="w-3.5 h-3.5 text-[var(--accent-gold)]"
                               aria-hidden="true"
                             />
                             <span className="font-mono">
@@ -1224,7 +1224,7 @@ export default function AdminContractsPage() {
                         </TableCell>
 
                         {/* Action Buttons (Sticky end) */}
-                        <TableCell className="sticky end-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors px-3.5 py-3 align-middle text-end whitespace-nowrap border-b theme-border border-s border-slate-200/80 dark:border-slate-800">
+                        <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-subtle)] transition-colors px-3.5 py-3 align-middle text-end whitespace-nowrap border-b theme-border border-s theme-border">
                           <ContractActions
                             contractId={c.id}
                             onPreview={() => openPdf(c)}
@@ -1255,20 +1255,20 @@ export default function AdminContractsPage() {
             </div>
 
             {/* Pagination Controls Section */}
-            <div className="theme-card rounded-2xl border theme-border mt-3 lg:mt-0 lg:rounded-none lg:border-0 lg:border-t lg:bg-slate-50/50 lg:dark:bg-slate-900/40 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="theme-card rounded-2xl border theme-border mt-3 lg:mt-0 lg:rounded-none lg:border-0 lg:border-t lg:bg-[var(--bg-card-subtle)] px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               {/* Items Counter Summary & Page Size */}
-              <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)] dark:text-slate-400 w-full sm:w-auto justify-between sm:justify-start">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)] w-full sm:w-auto justify-between sm:justify-start">
                 <span>
                   {ui("عرض")}{" "}
-                  <strong className="text-slate-900 dark:text-white font-mono">
+                  <strong className="text-[var(--text-main)] font-mono">
                     {startIndex + 1}
                   </strong>{" "}
                   -{" "}
-                  <strong className="text-slate-900 dark:text-white font-mono">
+                  <strong className="text-[var(--text-main)] font-mono">
                     {endIndex}
                   </strong>{" "}
                   {ui("من إجمالي")}{" "}
-                  <strong className="text-amber-700 dark:text-amber-400 font-mono">
+                  <strong className="text-[var(--accent-gold)] font-mono">
                     {filteredContracts.length}
                   </strong>{" "}
                   {ui("عقد")}
@@ -1288,7 +1288,7 @@ export default function AdminContractsPage() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="min-h-11 sm:min-h-8 bg-white dark:bg-slate-800 border theme-border rounded-lg px-2 py-1 text-base sm:text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden"
+                    className="theme-input min-h-11 sm:min-h-8 rounded-lg px-2 py-1 text-base sm:text-xs font-bold focus:outline-hidden"
                   >
                     <option value={10}>{ui("10 / صفحة")}</option>
                     <option value={25}>{ui("25 / صفحة")}</option>
@@ -1306,7 +1306,7 @@ export default function AdminContractsPage() {
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={safeCurrentPage <= 1}
-                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-xl border theme-card text-[var(--text-muted)] dark:text-slate-300 hover:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
                   title={ui("الصفحة السابقة")}
                   aria-label={ui("الصفحة السابقة")}
                 >
@@ -1340,7 +1340,7 @@ export default function AdminContractsPage() {
                       className={`min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-xl text-xs font-bold font-mono transition cursor-pointer ${
                         isCurrent
                           ? "gold-gradient-btn shadow-xs"
-                          : "theme-card border theme-border text-slate-700 dark:text-slate-300 hover:border-amber-500"
+                          : "theme-card border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
                       }`}
                     >
                       {page}
@@ -1355,7 +1355,7 @@ export default function AdminContractsPage() {
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
                   disabled={safeCurrentPage >= totalPages}
-                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-xl border theme-card text-[var(--text-muted)] dark:text-slate-300 hover:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
                   title={ui("الصفحة التالية")}
                   aria-label={ui("الصفحة التالية")}
                 >
@@ -1384,11 +1384,11 @@ export default function AdminContractsPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center font-bold shrink-0">
                   <FileText className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white truncate">
+                  <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)] truncate">
                     {ui("تفاصيل العقد:")}{" "}
                     <bdi>{selectedContract.referenceNumber}</bdi>
                   </h2>
@@ -1396,7 +1396,7 @@ export default function AdminContractsPage() {
                     {ui("العميل:")} <bdi>{selectedContract.customerName}</bdi>{" "}
                     {ui("• تاريخ الإصدار:")}{" "}
                     <span
-                      className="font-mono text-amber-700 dark:text-amber-400 font-bold"
+                      className="font-mono text-[var(--accent-gold)] font-bold"
                       dir="ltr"
                     >
                       {formatOfficialDate(
@@ -1418,7 +1418,7 @@ export default function AdminContractsPage() {
                   setContractModalFocus(null);
                 }}
                 aria-label={ui("إغلاق")}
-                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)] transition shrink-0 cursor-pointer"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
@@ -1427,12 +1427,12 @@ export default function AdminContractsPage() {
             {/* Modal Body */}
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
               {/* Trip & Captain Summary Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border text-xs">
                 <div>
                   <span className="text-[var(--text-muted)] text-xs block">
                     {ui("الكابتن المعتمد")}
                   </span>
-                  <span className="font-bold text-slate-900 dark:text-white">
+                  <span className="font-bold text-[var(--text-main)]">
                     {selectedContract.captain?.name || ui("كابتن ميقات")}
                   </span>
                 </div>
@@ -1440,7 +1440,7 @@ export default function AdminContractsPage() {
                   <span className="text-[var(--text-muted)] text-xs block">
                     {ui("رقم اللوحة")}
                   </span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                  <span className="font-mono font-bold text-[var(--text-main)]">
                     <bdi>{selectedContract.vehiclePlate}</bdi>
                   </span>
                 </div>
@@ -1448,7 +1448,7 @@ export default function AdminContractsPage() {
                   <span className="text-[var(--text-muted)] text-xs block">
                     {ui("محطة الانطلاق")}
                   </span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  <span className="font-semibold text-[var(--text-main)]">
                     {selectedContract.origin}
                   </span>
                 </div>
@@ -1456,7 +1456,7 @@ export default function AdminContractsPage() {
                   <span className="text-[var(--text-muted)] text-xs block">
                     {ui("الوجهة المقصودة")}
                   </span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  <span className="font-semibold text-[var(--text-main)]">
                     {selectedContract.destination}
                   </span>
                 </div>
@@ -1467,31 +1467,31 @@ export default function AdminContractsPage() {
                 id="contract-modal-inspection"
                 className={`p-4 rounded-2xl border space-y-3 transition ${
                   contractModalFocus === "inspection"
-                    ? "border-amber-500/60 ring-2 ring-amber-500/20"
+                    ? "border-emerald-600/60 ring-2 ring-emerald-500/20"
                     : "theme-border"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <h3 className="font-bold text-xs sm:text-sm text-[var(--text-main)] flex items-center gap-2">
                     <ClipboardCheck
-                      className="w-4 h-4 text-emerald-500"
+                      className="w-4 h-4 text-emerald-700 dark:text-emerald-300"
                       aria-hidden="true"
                     />
                     {ui("بيانات الفحص والإقرار التشغيلي")}
                   </h3>
                   {selectedContract.inspectionId ||
                   selectedContract.inspection ? (
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold inline-flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/12 text-emerald-800 border border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35 text-xs font-bold inline-flex items-center gap-1">
                       <CheckCircle2
-                        className="w-3 h-3 text-emerald-500"
+                        className="w-3 h-3 text-emerald-700 dark:text-emerald-300"
                         aria-hidden="true"
                       />
                       {ui("معتمد ومكتمل")}
                     </span>
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-bold inline-flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/35 text-xs font-bold inline-flex items-center gap-1">
                       <AlertCircle
-                        className="w-3 h-3 text-amber-500"
+                        className="w-3 h-3 text-[var(--accent-gold)]"
                         aria-hidden="true"
                       />
                       {ui("بانتظار الفحص")}
@@ -1501,13 +1501,13 @@ export default function AdminContractsPage() {
 
                 {selectedContract.inspection ? (
                   <div className="space-y-2 text-xs">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                       <div>
                         <span className="text-[var(--text-muted)] text-xs block">
                           {ui("تاريخ الفحص")}
                         </span>
                         <span
-                          className="font-mono font-bold text-slate-800 dark:text-slate-200"
+                          className="font-mono font-bold text-[var(--text-main)]"
                           dir="ltr"
                         >
                           {selectedContract.inspection.inspectionDate
@@ -1521,7 +1521,7 @@ export default function AdminContractsPage() {
                         <span className="text-[var(--text-muted)] text-xs block">
                           {ui("لوحة المركبة المفحوصة")}
                         </span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                        <span className="font-mono font-bold text-[var(--text-main)]">
                           <bdi>{selectedContract.inspection.vehiclePlate}</bdi>
                         </span>
                       </div>
@@ -1529,7 +1529,7 @@ export default function AdminContractsPage() {
                         <span className="text-[var(--text-muted)] text-xs block">
                           {ui("إقرار الكابتن")}
                         </span>
-                        <span className="font-bold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
+                        <span className="font-bold text-emerald-800 dark:text-emerald-300 inline-flex items-center gap-1">
                           <CheckCircle2
                             className="w-3.5 h-3.5"
                             aria-hidden="true"
@@ -1542,7 +1542,7 @@ export default function AdminContractsPage() {
                     {/* Checklist summary pills */}
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       <span
-                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.fireExtinguisher ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
+                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.fireExtinguisher ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/30 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"}`}
                       >
                         {ui("طفاية الحريق:")}{" "}
                         {ui(
@@ -1552,7 +1552,7 @@ export default function AdminContractsPage() {
                         )}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.firstAidKit ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
+                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.firstAidKit ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/30 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"}`}
                       >
                         {ui("حقيبة الإسعافات:")}{" "}
                         {ui(
@@ -1562,7 +1562,7 @@ export default function AdminContractsPage() {
                         )}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.seatBelts ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
+                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.seatBelts ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/30 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"}`}
                       >
                         {ui("أحزمة الأمان:")}{" "}
                         {ui(
@@ -1572,7 +1572,7 @@ export default function AdminContractsPage() {
                         )}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.tires ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"}`}
+                        className={`px-2 py-0.5 rounded-md text-xs font-bold border ${selectedContract.inspection.tires ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/30 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35" : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"}`}
                       >
                         {ui("سلامة الإطارات:")}{" "}
                         {ui(
@@ -1584,7 +1584,7 @@ export default function AdminContractsPage() {
                     </div>
                   </div>
                 ) : selectedContract.inspectionId ? (
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-xs text-emerald-800 dark:text-emerald-300 p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500/35">
                     {ui(
                       "تم ربط فحص تشغيلي وإقرار معتمد لهذا العقد برقم معرّف:",
                     )}{" "}
@@ -1593,15 +1593,15 @@ export default function AdminContractsPage() {
                     </code>
                   </p>
                 ) : (
-                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-300 space-y-1">
-                    <p className="font-bold flex items-center gap-1.5">
+                  <div className="p-3 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-main)] space-y-1">
+                    <p className="font-bold flex items-center gap-1.5 text-[var(--accent-gold)]">
                       <AlertCircle
-                        className="w-4 h-4 text-amber-500"
+                        className="w-4 h-4 text-[var(--accent-gold)]"
                         aria-hidden="true"
                       />
                       {ui("تنبيه تشغيلي إلزامي:")}
                     </p>
-                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                    <p className="text-xs text-[var(--text-muted)]">
                       {ui(
                         "لم يتم إرفاق الفحص اليومي والإقرار التشغيلي المسبق للمركبة قبل انطلاق هذه الرحلة. يُرجى توجيه الكابتن لإتمام الفحص التشغيلي اليومي عبر بوابته.",
                       )}
@@ -1615,14 +1615,14 @@ export default function AdminContractsPage() {
                 id="contract-modal-passengers"
                 className={
                   contractModalFocus === "passengers"
-                    ? "rounded-2xl ring-2 ring-amber-500/25 p-2 -m-2 transition"
+                    ? "rounded-2xl ring-2 ring-[var(--accent-gold)]/25 p-2 -m-2 transition"
                     : undefined
                 }
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <h3 className="font-bold text-xs sm:text-sm text-[var(--text-main)] flex items-center gap-2">
                     <Users
-                      className="w-4 h-4 text-amber-500"
+                      className="w-4 h-4 text-[var(--accent-gold)]"
                       aria-hidden="true"
                     />
                     {ui("كشف الركاب والمرافقين المعتمد (")}
@@ -1634,7 +1634,7 @@ export default function AdminContractsPage() {
                 </div>
 
                 {!selectedContract.passengers?.length ? (
-                  <p className="text-xs text-[var(--text-muted)] p-4 text-center rounded-xl bg-slate-50 dark:bg-slate-900/40 border theme-border">
+                  <p className="text-xs text-[var(--text-muted)] p-4 text-center rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                     {ui(
                       "لا يوجد ركاب مرافقين مضافين لهذا العقد (تم قيد الضيف الرئيسي فقط)",
                     )}
@@ -1643,7 +1643,7 @@ export default function AdminContractsPage() {
                   <div className="rounded-xl border theme-border overflow-hidden">
                     <div className="hidden sm:block">
                       <Table>
-                        <TableHeader className="bg-slate-50 dark:bg-slate-900/50 border-b theme-border text-[var(--text-muted)] font-bold">
+                        <TableHeader className="bg-[var(--table-header-bg)] border-b theme-border text-[var(--text-muted)] font-bold">
                           <TableRow>
                             <TableHead className="px-3 py-2 text-center w-10">
                               #
@@ -1665,14 +1665,14 @@ export default function AdminContractsPage() {
                               <TableCell className="px-3 py-2 text-center font-mono font-bold text-[var(--text-muted)]">
                                 {p.sequence || idx + 1}
                               </TableCell>
-                              <TableCell className="px-3 py-2 font-bold text-slate-900 dark:text-white">
+                              <TableCell className="px-3 py-2 font-bold text-[var(--text-main)]">
                                 {p.name}
                               </TableCell>
-                              <TableCell className="px-3 py-2 text-[var(--text-muted)] dark:text-slate-300">
+                              <TableCell className="px-3 py-2 text-[var(--text-muted)]">
                                 {p.nationality || "—"}
                               </TableCell>
                               <TableCell
-                                className="px-3 py-2 font-mono text-slate-700 dark:text-slate-300"
+                                className="px-3 py-2 font-mono text-[var(--text-main)]"
                                 dir="ltr"
                               >
                                 {p.idNumber || "—"}
@@ -1691,14 +1691,14 @@ export default function AdminContractsPage() {
                           className="pt-2 first:pt-0 space-y-1 text-xs"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-mono flex items-center justify-center text-[var(--text-muted)] font-bold">
+                            <span className="font-bold text-[var(--text-main)] flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded-full bg-[var(--bg-card-subtle)] text-xs font-mono flex items-center justify-center text-[var(--text-muted)] font-bold border theme-border">
                                 {p.sequence || idx + 1}
                               </span>
                               <span>{p.name}</span>
                             </span>
                             {p.nationality && (
-                              <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300">
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-[var(--bg-card-subtle)] text-[var(--text-muted)] border theme-border">
                                 {p.nationality}
                               </span>
                             )}
@@ -1720,11 +1720,11 @@ export default function AdminContractsPage() {
 
               {/* Notes */}
               {selectedContract.notes && (
-                <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs">
-                  <span className="font-bold text-amber-700 dark:text-amber-400 block mb-1">
+                <div className="p-3.5 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-xs">
+                  <span className="font-bold text-[var(--accent-gold)] block mb-1">
                     {ui("ملاحظات الرحلة والتشغيل:")}
                   </span>
-                  <p className="text-[var(--text-muted)] dark:text-slate-300">
+                  <p className="text-[var(--text-main)]">
                     {selectedContract.notes}
                   </p>
                 </div>
@@ -1749,7 +1749,7 @@ export default function AdminContractsPage() {
                     setContractModalFocus(null);
                     openPdf(c);
                   }}
-                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 hover:bg-amber-500/20 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)] hover:bg-amber-500/15 transition cursor-pointer"
                 >
                   <FileText className="w-4 h-4" aria-hidden="true" />
                   <span>{ui("استعراض الـ PDF")}</span>
@@ -1762,7 +1762,7 @@ export default function AdminContractsPage() {
                     setContractModalFocus(null);
                     setReverseContract(c);
                   }}
-                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-300 hover:border-blue-500 hover:bg-blue-500/10 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:border-sky-500 hover:bg-sky-500/15 transition cursor-pointer"
                   title={ui("إنشاء رحلة عكسية من هذا العقد")}
                 >
                   <ArrowLeftRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1776,7 +1776,7 @@ export default function AdminContractsPage() {
                     setContractModalFocus(null);
                     setContractToDelete(c);
                   }}
-                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border theme-card hover:border-rose-500 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
+                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl danger-btn transition cursor-pointer"
                   title={ui("حذف العقد نهائياً")}
                 >
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1789,7 +1789,7 @@ export default function AdminContractsPage() {
                   setSelectedContract(null);
                   setContractModalFocus(null);
                 }}
-                className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 text-xs rounded-xl secondary-btn transition cursor-pointer"
               >
                 {ui("إغلاق")}
               </button>

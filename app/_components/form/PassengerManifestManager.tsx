@@ -96,13 +96,13 @@ export function PassengerManifestManager({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b theme-border pb-4">
         <div className={embedded ? "hidden md:block" : undefined}>
           <div className="flex items-center gap-2.5">
-            <div aria-hidden="true" className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <div aria-hidden="true" className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
               <Users className="w-4.5 h-4.5" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
                 {ui("كشف الركاب والمرافقين (بيان تفصيلي)")}</h2>
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-sm font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-mono">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-sm font-bold bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 font-mono">
                 <span>{fields.length}</span>
                 <span className="text-sm font-medium text-[var(--text-muted)]">{ui("/ 50 راكب")}</span>
               </span>
@@ -115,7 +115,7 @@ export function PassengerManifestManager({
         {/* Counter Stepper, Direct Count & Add Button */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Stepper + Direct Number Input */}
-          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-border bg-slate-50/80 dark:bg-slate-900/60 shadow-2xs">
+          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] shadow-2xs">
             <span className="text-sm font-bold text-[var(--text-muted)] px-1 select-none">
               {ui("العدد:")}</span>
 
@@ -127,7 +127,7 @@ export function PassengerManifestManager({
                 setCustomCount("");
               }}
               disabled={fields.length <= 1}
-              className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-[var(--text-main)] hover:bg-[var(--bg-card)] disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               aria-label={ui("إنقاص راكب واحد")}
               title={ui("إنقاص راكب واحد")}
             >
@@ -164,7 +164,7 @@ export function PassengerManifestManager({
                 setCustomCount("");
               }}
               disabled={fields.length >= 50}
-              className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-[var(--text-main)] hover:bg-[var(--bg-card)] disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               aria-label={ui("زيادة راكب واحد")}
               title={ui("زيادة راكب واحد")}
             >
@@ -198,7 +198,7 @@ export function PassengerManifestManager({
             <button
               type="button"
               onClick={onToggleFullscreen}
-              className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl border theme-border bg-white dark:bg-slate-900 text-sm font-semibold text-slate-900 dark:text-white hover:border-amber-500 hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 transition cursor-pointer"
+              className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)] transition cursor-pointer"
             >
               {isFullscreen ? (
                 <>
@@ -217,9 +217,9 @@ export function PassengerManifestManager({
       </div>
 
       {/* Quick Capacity Presets */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-900/50 border theme-border">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 p-3 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border">
         <div className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-muted)] pe-1 shrink-0">
-          <Sparkles className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          <Sparkles className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
           <span>{ui("تحديد سريع لسعة المركبة:")}</span>
         </div>
         <MobileHorizontalStrip
@@ -239,8 +239,8 @@ export function PassengerManifestManager({
                 }}
                 className={`min-h-11 sm:min-h-10 shrink-0 snap-start whitespace-nowrap px-3.5 py-1.5 rounded-xl text-sm font-bold transition cursor-pointer ${
                   isActive
-                    ? "gold-gradient-btn shadow-2xs font-semibold ring-2 ring-amber-500/20"
-                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border theme-border hover:border-amber-500/50"
+                    ? "gold-gradient-btn shadow-2xs font-semibold ring-2 ring-[var(--accent-gold)]/25"
+                    : "bg-[var(--input-bg)] text-[var(--text-main)] border border-[var(--control-border)] hover:border-[var(--accent-gold)]"
                 }`}
               >
                 {ui(preset.label)}
@@ -261,8 +261,8 @@ export function PassengerManifestManager({
               key={field.id}
               className={`p-4 sm:p-5 rounded-2xl border transition-all duration-150 ${
                 isPrimary
-                  ? "bg-amber-500/5 border-amber-500/30"
-                  : "bg-slate-50/70 dark:bg-slate-900/50 theme-border hover:border-amber-500/30"
+                  ? "bg-[var(--accent-surface)]/55 border-[var(--accent-gold)]/35"
+                  : "bg-[var(--bg-card-subtle)] theme-border hover:border-[var(--accent-gold)]/35"
               }`}
             >
               {/* Header on Mobile */}
@@ -272,12 +272,12 @@ export function PassengerManifestManager({
                     className={`w-7 h-7 rounded-lg font-mono font-semibold text-sm flex items-center justify-center ${
                       isPrimary
                         ? "gold-gradient-btn"
-                        : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
                     }`}
                   >
                     {index + 1}
                   </span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  <span className="text-sm font-bold text-[var(--text-main)]">
                     {ui(isPrimary ? "الضيف الأساسي (المرافق الأول)" : `الراكب ${index + 1}`)}
                   </span>
                 </div>
@@ -286,7 +286,7 @@ export function PassengerManifestManager({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="min-h-10 px-2.5 py-1.5 rounded-lg text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition flex items-center gap-1.5 text-sm font-bold cursor-pointer"
+                    className="min-h-10 px-2.5 py-1.5 rounded-lg text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition flex items-center gap-1.5 text-sm font-bold cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" aria-hidden="true" />
                     <span>{ui("حذف")}</span>
@@ -302,7 +302,7 @@ export function PassengerManifestManager({
                   className={`hidden sm:flex w-9 h-9 rounded-xl font-mono font-semibold text-sm items-center justify-center shrink-0 mt-7 ${
                     isPrimary
                       ? "gold-gradient-btn shadow-2xs"
-                      : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
                   }`}
                 >
                   {index + 1}
@@ -361,12 +361,12 @@ export function PassengerManifestManager({
       {/* Footer Info */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3.5 border-t theme-border text-sm text-[var(--text-muted)]">
         <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+          <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" />
           <span>{ui("يمكنك ضبط وتحديد حتى 50 راكباً للرحلات الجماعية والباصات والوفود الرسمية.")}</span>
         </div>
-        <div className="flex items-center gap-2 font-mono font-bold text-amber-700 dark:text-amber-400 shrink-0">
+        <div className="flex items-center gap-2 font-mono font-bold text-[var(--accent-gold)] shrink-0">
           <span>{ui("إجمالي الركاب:")}</span>
-          <span className="text-base font-semibold bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20" dir="ltr">
+          <span className="text-base font-semibold bg-[var(--accent-surface)] px-2.5 py-0.5 rounded-lg border border-[var(--accent-gold)]/30" dir="ltr">
             {fields.length} / 50
           </span>
         </div>

@@ -85,20 +85,20 @@ function SendWhatsAppModalContent({
           type="button"
           disabled={sending}
           aria-label={ui("إغلاق")}
-          className="absolute top-3.5 end-3.5 min-h-11 min-w-11 flex items-center justify-center text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          className="absolute top-3.5 end-3.5 min-h-11 min-w-11 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--table-row-hover)] transition cursor-pointer"
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
 
         <div className="flex items-center gap-3 mb-4 pe-10">
-          <div aria-hidden="true" className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <div aria-hidden="true" className="w-10 h-10 rounded-xl bg-emerald-500/12 border border-emerald-600/30 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300 flex items-center justify-center shrink-0">
             <MessageSquare className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h2 className="font-bold text-base text-slate-900 dark:text-white">{modalTitle}</h2>
-            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 truncate">
+            <h2 className="font-bold text-base text-[var(--text-main)]">{modalTitle}</h2>
+            <p className="text-xs text-[var(--text-muted)] truncate">
               {ui("المستند:")}{" "}
-              <span className="font-mono font-bold text-amber-700 dark:text-amber-400" dir="ltr">
+              <span className="font-mono font-bold text-[var(--accent-gold)]" dir="ltr">
                 {targetTitle}
               </span>
             </p>
@@ -107,22 +107,22 @@ function SendWhatsAppModalContent({
 
         {success ? (
           <div role="status" className="py-6 text-center space-y-3">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" aria-hidden="true" />
-            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+            <CheckCircle2 className="w-12 h-12 text-emerald-700 dark:text-emerald-300 mx-auto" aria-hidden="true" />
+            <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
               {ui("تم إرسال الرسالة عبر الواتساب بنجاح!")}
             </p>
           </div>
         ) : (
           <form onSubmit={handleSend} className="space-y-4">
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-slate-800/50 border theme-border text-xs space-y-1">
+            <div className="rounded-xl p-3 bg-[var(--bg-card-subtle)] border theme-border text-xs space-y-1">
               <div className="flex justify-between gap-2">
-                <span className="text-[var(--text-muted)] dark:text-slate-400">{ui("المستلم:")}</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{recipientName}</span>
+                <span className="text-[var(--text-muted)]">{ui("المستلم:")}</span>
+                <span className="font-bold text-[var(--text-main)] truncate">{recipientName}</span>
               </div>
             </div>
 
             <div>
-              <label htmlFor={phoneId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={phoneId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("رقم هاتف الواتساب")}
               </label>
               <input
@@ -136,7 +136,7 @@ function SendWhatsAppModalContent({
                 aria-describedby={phoneHintId}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full min-h-11 px-3.5 py-2.5 rounded-xl border theme-border bg-white dark:bg-slate-900 text-sm font-mono text-start focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className="theme-input w-full min-h-11 px-3.5 py-2.5 rounded-xl text-sm font-mono text-start"
               />
               <span id={phoneHintId} className="text-xs text-[var(--text-muted)] mt-1.5 block">
                 {ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
@@ -144,7 +144,7 @@ function SendWhatsAppModalContent({
             </div>
 
             {error && (
-              <div role="alert" className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{error}</span>
               </div>
@@ -154,7 +154,7 @@ function SendWhatsAppModalContent({
               <button
                 type="submit"
                 disabled={sending}
-                className="flex-1 min-h-11 py-2.5 px-4 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                className="flex-1 min-h-11 py-2.5 px-4 rounded-xl text-xs font-bold gold-gradient-btn transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {sending ? (
                   <>
@@ -172,7 +172,7 @@ function SendWhatsAppModalContent({
                 type="button"
                 disabled={sending}
                 onClick={onClose}
-                className="min-h-11 px-4 py-2.5 rounded-xl text-xs font-bold border theme-border text-[var(--text-muted)] dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="min-h-11 px-4 py-2.5 rounded-xl text-xs font-bold border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}
               </button>

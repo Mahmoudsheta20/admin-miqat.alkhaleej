@@ -64,7 +64,7 @@ export default function InvoiceVisibilityAction({
           setError("");
           setIsOpen(true);
         }}
-        className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 rounded-xl border theme-border px-3 py-2 text-xs font-bold text-[var(--text-muted)] hover:border-amber-500 hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-400 transition cursor-pointer"
+        className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3 py-2 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition cursor-pointer"
         aria-label={`${label} ${number}`}
         title={label}
       >
@@ -85,8 +85,8 @@ export default function InvoiceVisibilityAction({
             className="mobile-dialog-panel theme-card m-auto w-full max-w-lg space-y-5 rounded-2xl border theme-border p-5 sm:p-7"
           >
             <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{label}</h2>
-              <p className="mt-2 font-mono text-sm text-amber-700 dark:text-amber-400" dir="ltr">
+              <h2 className="text-xl font-bold text-[var(--text-main)]">{label}</h2>
+              <p className="mt-2 font-mono text-sm text-[var(--accent-gold)]" dir="ltr">
                 {number}
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function InvoiceVisibilityAction({
                   ? "ستنتقل الفاتورة إلى قائمة المحذوفات ويمكن استعادتها. هذه الإزالة لا تلغي الفاتورة أو دفعاتها ولا تستبعدها من الضريبة. لتخفيض فاتورة صادرة، استخدم إشعارًا دائنًا."
                   : "The invoice will move to Removed invoices and can be restored. This does not cancel the invoice or its payments, or remove it from VAT. Use a credit note to reduce an issued invoice."}
             </p>
-            <label className="block text-sm font-bold">
+            <label className="block text-sm font-bold text-[var(--text-main)]">
               {isRTL ? "سبب الإجراء" : "Reason"}
               <textarea
                 required
@@ -122,7 +122,7 @@ export default function InvoiceVisibilityAction({
                 type="button"
                 disabled={isSaving}
                 onClick={() => setIsOpen(false)}
-                className="theme-card min-h-11 rounded-xl border theme-border px-4 py-2.5 text-sm font-bold cursor-pointer"
+                className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-4 py-2.5 text-sm font-bold transition cursor-pointer"
               >
                 {isRTL ? "إلغاء" : "Cancel"}
               </button>

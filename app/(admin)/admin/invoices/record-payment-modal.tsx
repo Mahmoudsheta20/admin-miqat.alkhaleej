@@ -137,19 +137,19 @@ function RecordPaymentModalContent({
         aria-labelledby="payment-modal-title"
       >
         {/* Modal Header */}
-        <div className="p-5 border-b theme-border flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40">
+        <div className="p-5 border-b theme-border flex items-center justify-between bg-[var(--bg-card-subtle)]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
               <h2
                 id="payment-modal-title"
-                className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white"
+                className="text-base sm:text-lg font-semibold text-[var(--text-main)]"
               >
                 {isRTL ? "تسجيل دفعة للعميل" : "Record Customer Payment"}
               </h2>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 {isRTL ? "سند قبض محاسبي وتخفيض الرصيد المستحق" : "Receipt voucher and receivable balance reduction"}
               </p>
             </div>
@@ -158,7 +158,7 @@ function RecordPaymentModalContent({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)] transition cursor-pointer"
             aria-label={ui(t("common.close"))}
           >
             <X className="w-5 h-5" aria-hidden="true" />
@@ -168,23 +168,23 @@ function RecordPaymentModalContent({
         {/* Modal Content */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
           {/* Invoice Summary Ribbon */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border theme-border space-y-3">
+          <div className="p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border space-y-3">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[var(--text-muted)]">{isRTL ? "رقم الفاتورة:" : "Invoice Number:"}</span>
-              <span className="font-mono font-semibold text-amber-700 dark:text-amber-400" dir="ltr">
+              <span className="font-mono font-semibold text-[var(--accent-gold)]" dir="ltr">
                 {invoiceNumber}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-[var(--text-muted)]">{isRTL ? "اسم العميل:" : "Customer Name:"}</span>
-              <span className="font-bold text-slate-900 dark:text-white truncate max-w-[240px]">
+              <span className="font-bold text-[var(--text-main)] truncate max-w-[240px]">
                 {customerName}
               </span>
             </div>
             <div className="pt-2 border-t theme-border flex items-center justify-between">
               <div>
                 <span className="text-xs text-[var(--text-muted)] block">{isRTL ? "الإجمالي الشامل:" : "Grand Total:"}</span>
-                <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
+                <span className="font-mono font-bold text-xs text-[var(--text-main)]">
                   <bdi dir="ltr">{totalAmount}</bdi> {ui(t("common.sar"))}
                 </span>
               </div>
@@ -198,8 +198,8 @@ function RecordPaymentModalContent({
                   <span
                     className={`font-mono font-semibold text-sm ${
                       isFullyPaid
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-amber-700 dark:text-amber-400"
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : "text-[var(--accent-gold)]"
                     }`}
                   >
                     <bdi dir="ltr">{balance ?? "—"}</bdi> {ui(t("common.sar"))}
@@ -212,9 +212,9 @@ function RecordPaymentModalContent({
           {successMessage && (
             <div
               role="status"
-              className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
+              className="p-4 rounded-2xl border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
             >
-              <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
               <span>{successMessage}</span>
             </div>
           )}
@@ -230,20 +230,20 @@ function RecordPaymentModalContent({
           )}
 
           {isRefundDue ? (
-            <p role="status" className="rounded-2xl border border-amber-300 bg-amber-500/10 p-5 text-sm">
+            <p role="status" className="rounded-2xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--text-main)] p-5 text-sm">
               {isRTL ? "يوجد مبلغ مستحق للعميل. سجّل رد المبلغ من صفحة القيود والتقارير المالية." : "A refund is due to the customer. Record the refund from Accounting & Reports."}
             </p>
           ) : !isLoadingBalance && balance === null ? (
-            <p role="alert" className="rounded-2xl border border-rose-300 p-5 text-sm text-rose-700 dark:text-rose-400">
+            <p role="alert" className="rounded-2xl border border-rose-500/40 p-5 text-sm text-rose-700 dark:text-rose-400">
               {isRTL ? "تعذر تحميل الرصيد. أغلق النافذة وأعد المحاولة قبل تسجيل دفعة." : "Unable to load the balance. Close this window and retry before recording a payment."}
             </p>
           ) : isFullyPaid && !isLoadingBalance ? (
-            <div className="p-6 text-center space-y-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <CheckCircle2 className="w-8 h-8 text-emerald-700 dark:text-emerald-400 mx-auto" aria-hidden="true" />
+            <div className="p-6 text-center space-y-2 rounded-2xl bg-emerald-500/12 border border-emerald-600/35 dark:bg-emerald-950/45 dark:border-emerald-500/35">
+              <CheckCircle2 className="w-8 h-8 text-emerald-700 dark:text-emerald-300 mx-auto" aria-hidden="true" />
               <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                 {isRTL ? "هذه الفاتورة مسددة بالكامل" : "This Invoice is Fully Paid"}
               </h3>
-              <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
+              <p className="text-xs text-[var(--text-muted)]">
                 {isRTL ? "تم تحصيل كامل القيمة المستحقة ولا يوجد رصيد متبقي على العميل." : "Full due amount collected with zero remaining balance."}
               </p>
             </div>
@@ -252,7 +252,7 @@ function RecordPaymentModalContent({
               {/* Amount to Pay */}
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                  <label htmlFor="pay-amount" className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor="pay-amount" className="text-xs font-bold text-[var(--text-main)]">
                     {isRTL ? "المبلغ المحصل الآن (ر.س) *" : "Amount Collected (SAR) *"}
                   </label>
                   {balance && remainingMinor !== null && remainingMinor > BigInt(0) && (
@@ -260,7 +260,7 @@ function RecordPaymentModalContent({
                       <button
                         type="button"
                         onClick={() => setAmount(balance)}
-                        className="min-h-8 text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 cursor-pointer"
+                        className="min-h-8 text-xs font-bold text-[var(--accent-gold)] hover:underline px-2.5 py-1 rounded-lg bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 cursor-pointer"
                       >
                         {isRTL ? `كامل المتبقي (${balance} ر.س)` : `Full Balance (${balance} SAR)`}
                       </button>
@@ -268,7 +268,7 @@ function RecordPaymentModalContent({
                         <button
                           type="button"
                           onClick={() => setAmount(moneyDecimal(remainingMinor / BigInt(2)))}
-                          className="min-h-8 text-xs font-bold text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border theme-border cursor-pointer"
+                          className="min-h-8 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] px-2.5 py-1 rounded-lg bg-[var(--bg-card-subtle)] border border-[var(--control-border)] cursor-pointer transition"
                         >
                           {isRTL ? "النصف" : "Half"}
                         </button>
@@ -299,7 +299,7 @@ function RecordPaymentModalContent({
 
               {/* Payment Account */}
               <div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                <span className="text-xs font-bold text-[var(--text-main)] block mb-1.5">
                   {isRTL ? "طريقة استلام المبلغ (حساب الإيداع) *" : "Payment Method (Deposit Account) *"}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -309,13 +309,13 @@ function RecordPaymentModalContent({
                     onClick={() => setCashAccount("1102")}
                     className={`min-h-11 p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
                       cashAccount === "1102"
-                        ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30"
-                        : "theme-card theme-border hover:border-amber-500/30"
+                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
+                        : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
                     }`}
                   >
-                    <Building2 className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
+                    <Building2 className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <div>
-                      <strong className="text-xs font-semibold block text-slate-900 dark:text-white">
+                      <strong className="text-xs font-semibold block text-[var(--text-main)]">
                         {isRTL ? "تحويل بنكي" : "Bank Transfer"}
                       </strong>
                       <span className="text-xs text-[var(--text-muted)]">{isRTL ? "البنك الأهلي (1102)" : "SNB Bank (1102)"}</span>
@@ -328,13 +328,13 @@ function RecordPaymentModalContent({
                     onClick={() => setCashAccount("1101")}
                     className={`min-h-11 p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
                       cashAccount === "1101"
-                        ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30"
-                        : "theme-card theme-border hover:border-amber-500/30"
+                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
+                        : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
                     }`}
                   >
-                    <Receipt className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                    <Receipt className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <div>
-                      <strong className="text-xs font-semibold block text-slate-900 dark:text-white">
+                      <strong className="text-xs font-semibold block text-[var(--text-main)]">
                         {isRTL ? "نقداً في الصندوق" : "Cash in Drawer"}
                       </strong>
                       <span className="text-xs text-[var(--text-muted)]">{isRTL ? "الصندوق الرئيسي (1101)" : "Main Petty Cash (1101)"}</span>
@@ -345,7 +345,7 @@ function RecordPaymentModalContent({
 
               {/* Payment Date */}
               <div>
-                <label htmlFor="pay-date" className="text-xs font-bold text-slate-700 dark:text-slate-300 inline-flex items-center gap-1.5 mb-1.5">
+                <label htmlFor="pay-date" className="text-xs font-bold text-[var(--text-main)] inline-flex items-center gap-1.5 mb-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                   <span>{isRTL ? "تاريخ التحصيل *" : "Collection Date *"}</span>
                 </label>
@@ -361,7 +361,7 @@ function RecordPaymentModalContent({
 
               {/* Reference / Note */}
               <div>
-                <label htmlFor="pay-ref" className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                <label htmlFor="pay-ref" className="text-xs font-bold text-[var(--text-main)] block mb-1.5">
                   {isRTL ? "رقم الحوالة أو المرجع " : "Reference / Transfer No. "}
                   <span className="text-[var(--text-muted)] font-normal">({ui(t("common.optional"))})</span>
                 </label>
@@ -376,8 +376,8 @@ function RecordPaymentModalContent({
               </div>
 
               {/* Explanatory footer */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border flex items-start gap-2 text-xs text-[var(--text-muted)]">
-                <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border flex items-start gap-2 text-xs text-[var(--text-muted)]">
+                <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0 mt-0.5" aria-hidden="true" />
                 <p>
                   {isRTL
                     ? "يتم قيد العملية تلقائياً: طرف مدين لحساب النقد/البنك، وطرف دائن لذمم العميل لتخفيض الرصيد المستحق فوراً."
@@ -391,7 +391,7 @@ function RecordPaymentModalContent({
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="min-h-11 px-4 py-2.5 rounded-xl border theme-border text-xs font-bold text-[var(--text-muted)] dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  className="min-h-11 px-4 py-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
                 >
                   {ui(t("common.cancel"))}
                 </button>

@@ -69,7 +69,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
       }}
       onClose={onClose}
       aria-labelledby="purchase-history-title"
-      className="theme-card mobile-dialog-panel m-auto max-h-[85dvh] w-[calc(100%_-_24px)] max-w-[600px] overflow-y-auto rounded-2xl p-6 text-[var(--text-main)] backdrop:bg-slate-950/60"
+      className="theme-card mobile-dialog-panel m-auto max-h-[85dvh] w-[calc(100%_-_24px)] max-w-[600px] overflow-y-auto rounded-2xl p-6 text-[var(--text-main)] backdrop:bg-black/60"
       dir={ui.dir}
     >
       <header className="flex justify-between gap-4">
@@ -169,7 +169,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
               <button
                 key={file.id}
                 type="button"
-                className="flex min-h-11 sm:min-h-9 w-full items-center py-2 text-start text-sm text-amber-700 dark:text-amber-400 underline cursor-pointer"
+                className="flex min-h-11 sm:min-h-9 w-full items-center py-2 text-start text-sm font-semibold text-[var(--accent-gold)] underline cursor-pointer"
                 onClick={() =>
                   void downloadAccounting(`/attachments/${file.id}`, file.fileName).catch((e) =>
                     setFailure(e instanceof Error ? e.message : "تعذر التنزيل")
@@ -183,7 +183,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
 
           <ol className="space-y-4">
             {data.audit.map((entry) => (
-              <li key={entry.id} className="border-s-2 border-amber-500 ps-4">
+              <li key={entry.id} className="border-s-2 border-[var(--accent-gold)] ps-4">
                 <p className="text-sm font-bold">
                   {ui(
                     {

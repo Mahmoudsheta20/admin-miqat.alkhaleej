@@ -588,7 +588,7 @@ export default function AdminContractBuilder({
   const loadingView = (
     <div className="flex items-center justify-center p-20">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[var(--accent-gold)]/25 border-t-[var(--accent-gold)] rounded-full animate-spin" />
         <p className="text-sm text-[var(--text-muted)]">
           {ui("جاري تحميل بيانات الأسطول والكباتن...")}
         </p>
@@ -597,7 +597,7 @@ export default function AdminContractBuilder({
   );
 
   const adminPrivilegeBadge = (
-    <span className="px-3.5 py-2 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 text-sm font-bold inline-flex items-center gap-1.5">
+    <span className="px-3.5 py-2 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/25 text-sm font-bold inline-flex items-center gap-1.5">
       <ShieldAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
       <span>{ui("صلاحيات الإدارة (تخطي الفحص)")}</span>
     </span>
@@ -623,20 +623,20 @@ export default function AdminContractBuilder({
 
   const createdView = createdContract && (
     <div className="theme-card rounded-3xl p-6 sm:p-10 border theme-border text-center space-y-5 max-w-2xl mx-auto my-8 shadow-xl">
-      <div className="w-20 h-20 rounded-3xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+      <div className="w-20 h-20 rounded-3xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mx-auto border border-emerald-500/30">
         <CheckCircle2 className="w-10 h-10" />
       </div>
 
       <div className="space-y-1.5">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+        <h2 className="text-2xl font-semibold text-[var(--text-main)]">
           {ui("تم توثيق العقد بنجاح!")}
         </h2>
-        <p className="text-sm text-[var(--text-muted)] dark:text-slate-400">
+        <p className="text-sm text-[var(--text-muted)]">
           {ui("تم تسجيل العقد وإسناده للكابتن وتوليد وثيقة الـ PDF المعتمدة")}
         </p>
       </div>
 
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 inline-block font-mono font-semibold text-amber-700 dark:text-amber-400 text-2xl tracking-wider">
+      <div className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 inline-block font-mono font-semibold text-[var(--accent-gold)] text-2xl tracking-wider">
         {createdContract.referenceNumber}
       </div>
 
@@ -653,7 +653,7 @@ export default function AdminContractBuilder({
         <button
           type="button"
           onClick={handleResetForm}
-          className="w-full sm:w-auto min-h-12 px-5 py-3 rounded-xl border theme-card text-sm sm:text-base font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full sm:w-auto min-h-12 px-5 py-3 rounded-xl border theme-card text-[var(--text-main)] text-sm sm:text-base font-bold hover:bg-[var(--bg-card-subtle)] transition flex items-center justify-center gap-2 cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" />
           {ui("إنشاء عقد إضافي آخر")}
@@ -663,7 +663,7 @@ export default function AdminContractBuilder({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto min-h-12 px-5 py-3 rounded-xl border theme-card text-sm sm:text-base font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="w-full sm:w-auto min-h-12 px-5 py-3 rounded-xl border theme-card text-[var(--text-main)] text-sm sm:text-base font-semibold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
           >
             {text("إغلاق النافذة", "Close")}
           </button>
@@ -733,7 +733,7 @@ export default function AdminContractBuilder({
       {serverError && (
         <div
           role="alert"
-          className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-sm font-bold flex items-center gap-2 animate-shake"
+          className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 text-sm font-bold flex items-center gap-2 animate-shake"
         >
           <ShieldAlert className="w-5 h-5 shrink-0" aria-hidden="true" />
           <span>{ui(serverError)}</span>
@@ -754,8 +754,8 @@ export default function AdminContractBuilder({
       >
         <div className="p-4 sm:p-6 space-y-4">
           <div className="hidden md:flex items-center justify-between border-b theme-border pb-3">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <Car className="w-5 h-5 text-amber-500" />
+            <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] flex items-center gap-2">
+              <Car className="w-5 h-5 text-[var(--accent-gold)]" />
               {ui("إسناد الرحلة والمركبة")}
             </h2>
             <span className="text-sm text-[var(--text-muted)]">
@@ -834,8 +834,8 @@ export default function AdminContractBuilder({
         <div className="p-4 sm:p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:border-b theme-border md:pb-3">
             <div className="hidden md:block">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-amber-500" />
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-[var(--accent-gold)]" />
                 {ui("بيانات الرحلة والعميل الأساسي")}
               </h2>
               <p className="text-sm text-[var(--text-muted)] mt-0.5">
@@ -873,8 +873,8 @@ export default function AdminContractBuilder({
                       }
                       className={`min-h-11 sm:min-h-10 shrink-0 snap-start whitespace-nowrap text-sm font-bold px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
                         isSelected
-                          ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500 shadow-2xs"
-                          : "bg-slate-100 hover:bg-amber-500/15 dark:bg-slate-800 dark:hover:bg-amber-500/20 text-[var(--text-muted)] dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-400 border-slate-200 dark:border-slate-700"
+                          ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)] shadow-2xs"
+                          : "bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-surface)] text-[var(--text-main)] hover:text-[var(--accent-gold)] border-[var(--control-border)]"
                       }`}
                     >
                       {isSelected ? ui(tag) : `+ ${ui(tag)}`}
@@ -908,7 +908,7 @@ export default function AdminContractBuilder({
                       label={ui("نوع العملية التشغيلية")}
                       required
                       expandable
-                      icon={<Briefcase className="w-4 h-4 text-amber-500" />}
+                      icon={<Briefcase className="w-4 h-4 text-[var(--accent-gold)]" />}
                       placeholder={ui("بدون — اختر أو اكتب نوع العملية")}
                       clearable
                       onClear={() =>
@@ -922,7 +922,7 @@ export default function AdminContractBuilder({
                     {showPdfPreviewHint && (
                       <p className="mt-1.5 text-sm text-[var(--text-muted)] px-1">
                         {ui("نوع التشغيل في الـ PDF:")}{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                        <span className="font-bold text-[var(--text-main)]">
                           {ui(resolvedLabel)}
                         </span>
                       </p>
@@ -1006,14 +1006,14 @@ export default function AdminContractBuilder({
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                   isConfirmed
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                    : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                    : "bg-[var(--accent-surface)] text-[var(--accent-gold)]"
                 }`}
               >
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
                   {ui("الفحص والإقرار التشغيلي الإلزامي (التحقق قبل التوثيق)")}
                 </h2>
                 <p className="text-sm text-[var(--text-muted)]">
@@ -1026,25 +1026,25 @@ export default function AdminContractBuilder({
 
             <div className="shrink-0">
               {isCheckingInspection ? (
-                <span className="px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] text-sm font-bold inline-flex items-center gap-1.5">
+                <span className="px-3.5 py-1.5 rounded-full bg-[var(--bg-card-subtle)] text-[var(--text-muted)] text-sm font-bold inline-flex items-center gap-1.5">
                   <span
-                    className="inline-block w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"
+                    className="inline-block w-3.5 h-3.5 border-2 border-[var(--accent-gold)]/40 border-t-[var(--accent-gold)] rounded-full animate-spin"
                     aria-hidden="true"
                   />
                   {ui("جاري التحقق من الفحص...")}
                 </span>
               ) : effectiveCaptainInspection ? (
-                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-sm font-bold inline-flex items-center gap-1.5">
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 text-sm font-bold inline-flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                   {ui("تم الفحص مسبقاً من الكابتن")}
                 </span>
               ) : adminInspectionId ? (
-                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-sm font-bold inline-flex items-center gap-1.5">
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 text-sm font-bold inline-flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                   {ui("تم الاعتماد والإرسال من الإدارة")}
                 </span>
               ) : (
-                <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-sm font-bold inline-flex items-center gap-1.5">
+                <span className="px-3.5 py-1.5 rounded-full bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 text-sm font-bold inline-flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4" aria-hidden="true" />
                   {ui("بانتظار الاعتماد التشغيلي")}
                 </span>
@@ -1053,31 +1053,31 @@ export default function AdminContractBuilder({
           </div>
 
           {/* Inspection Mode Toggle: Auto vs Manual */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border theme-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border">
             <div className="space-y-0.5">
-              <span className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white block">
+              <span className="text-sm sm:text-base font-semibold text-[var(--text-main)] block">
                 {ui("طريقة اعتماد وتوثيق الفحص التشغيلي:")}
               </span>
-              <span className="text-sm text-[var(--text-muted)] dark:text-slate-400 block">
+              <span className="text-sm text-[var(--text-muted)] block">
                 {ui(
                   "اختر الاعتماد الآلي (فحص الكابتن اليومي أو اللحظة الحالية) أو التخصيص اليدوي للوقت والتاريخ",
                 )}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:inline-flex p-1.5 rounded-xl bg-white dark:bg-slate-800 border theme-border shrink-0 w-full sm:w-auto shadow-2xs gap-1.5">
+            <div className="grid grid-cols-2 sm:inline-flex p-1.5 rounded-xl bg-[var(--bg-card)] border theme-border shrink-0 w-full sm:w-auto shadow-2xs gap-1.5">
               <button
                 type="button"
                 aria-pressed={adminInspectionMode === "AUTO"}
                 onClick={() => setAdminInspectionMode("AUTO")}
                 className={`min-h-11 px-3.5 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                   adminInspectionMode === "AUTO"
-                    ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs border border-amber-500/30"
-                    : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] shadow-xs border border-[var(--accent-gold)]/40"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                 }`}
               >
                 <Sparkles
-                  className="w-4 h-4 text-amber-500 shrink-0"
+                  className="w-4 h-4 text-[var(--accent-gold)] shrink-0"
                   aria-hidden="true"
                 />
                 <span className="truncate">
@@ -1091,8 +1091,8 @@ export default function AdminContractBuilder({
                 onClick={() => setAdminInspectionMode("MANUAL")}
                 className={`min-h-11 px-3.5 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                   adminInspectionMode === "MANUAL"
-                    ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs border border-amber-500/30"
-                    : "text-[var(--text-muted)] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] shadow-xs border border-[var(--accent-gold)]/40"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                 }`}
               >
                 <Edit3 className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -1104,9 +1104,9 @@ export default function AdminContractBuilder({
           {/* Mode-dependent Content */}
           {adminInspectionMode === "AUTO" ? (
             effectiveCaptainInspection ? (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-500/12 dark:bg-emerald-950/45 border border-emerald-600/35 dark:border-emerald-500/35 text-emerald-900 dark:text-emerald-300">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
                   </div>
                   <div>
@@ -1116,7 +1116,7 @@ export default function AdminContractBuilder({
                       )}
                       {currentCaptain?.name || ui("الكابتن")})
                     </span>
-                    <span className="text-sm text-emerald-700/80 dark:text-emerald-400/80 block">
+                    <span className="text-sm text-emerald-800 dark:text-emerald-300 block">
                       {ui("لوحة المركبة المفحوصة:")}{" "}
                       <strong className="font-mono">
                         {effectiveCaptainInspection.vehiclePlate}
@@ -1138,9 +1138,9 @@ export default function AdminContractBuilder({
                 </span>
               </div>
             ) : adminInspectionId ? (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-500/12 dark:bg-emerald-950/45 border border-emerald-600/35 dark:border-emerald-500/35 text-emerald-900 dark:text-emerald-300">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-5 h-5" aria-hidden="true" />
                   </div>
                   <div>
@@ -1149,7 +1149,7 @@ export default function AdminContractBuilder({
                         "تم إرسال وتوثيق الفحص التشغيلي بنجاح من إدارة العمليات",
                       )}
                     </span>
-                    <span className="text-sm text-emerald-700/80 dark:text-emerald-400/80 block">
+                    <span className="text-sm text-emerald-800 dark:text-emerald-300 block">
                       {ui("تم اعتماد الفحص الفني لمركبة الكابتن")}{" "}
                       {currentCaptain?.name || ""}{" "}
                       {ui("وربطه بالعقد رسمياً • تاريخ الفحص:")}{" "}
@@ -1165,9 +1165,9 @@ export default function AdminContractBuilder({
                 </span>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-3">
+              <div className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--text-main)] space-y-3">
                 <div className="flex items-start gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] flex items-center justify-center shrink-0 mt-0.5">
                     <AlertTriangle className="w-5 h-5" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1176,7 +1176,7 @@ export default function AdminContractBuilder({
                       {currentCaptain?.name || ui("المحدد")}
                       {ui(") لم يرسل الفحص اليومي للمركبة لهذا اليوم")}
                     </span>
-                    <span className="text-sm text-amber-800 dark:text-amber-300 block mt-0.5">
+                    <span className="text-sm text-[var(--text-muted)] block mt-0.5">
                       {ui(
                         "في الوضع التلقائي، سيتم اعتماد وتوثيق الفحص التشغيلي باللحظة الحالية فوراً وربطه بالعقد، أو يمكنك توثيقه مسبقاً الآن:",
                       )}
@@ -1184,14 +1184,14 @@ export default function AdminContractBuilder({
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-amber-500/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[var(--accent-gold)]/20">
                   <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-amber-800 dark:text-amber-300 font-semibold">
+                    <span className="text-[var(--accent-gold)] font-semibold">
                       {ui("موعد الفحص الآلي:")}
                     </span>
                     <span className="px-3 py-1 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
                       <CheckCircle2
-                        className="w-4 h-4 text-emerald-700 shrink-0"
+                        className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0"
                         aria-hidden="true"
                       />
                       {ui("الآن (")}
@@ -1204,7 +1204,7 @@ export default function AdminContractBuilder({
                       </span>
                       )
                     </span>
-                    <span className="text-sm text-amber-700/70 dark:text-amber-400/70">
+                    <span className="text-sm text-[var(--text-muted)]">
                       {ui("(تسجيل الفحص باللحظة الحالية فوراً)")}
                     </span>
                   </div>
@@ -1238,16 +1238,16 @@ export default function AdminContractBuilder({
               </div>
             )
           ) : (
-            <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/80 border theme-border space-y-3">
+            <div className="p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border space-y-3">
               <div className="flex items-start gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0 mt-0.5">
                   <Edit3 className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white block">
+                  <span className="text-sm sm:text-base font-semibold text-[var(--text-main)] block">
                     {ui("تخصيص تاريخ الفحص التشغيلي المعتمد (يدوي)")}
                   </span>
-                  <span className="text-sm text-[var(--text-muted)] dark:text-slate-400 block mt-0.5">
+                  <span className="text-sm text-[var(--text-muted)] block mt-0.5">
                     {ui(
                       "حدد تاريخ الفحص التشغيلي الذي ترغب في اعتماده وربطه بمركبة الكابتن",
                     )}{" "}
@@ -1292,7 +1292,7 @@ export default function AdminContractBuilder({
               {adminInspectionId && (
                 <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm font-bold flex items-center gap-2">
                   <CheckCircle2
-                    className="w-4 h-4 text-emerald-700 shrink-0"
+                    className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0"
                     aria-hidden="true"
                   />
                   <span>
@@ -1310,42 +1310,42 @@ export default function AdminContractBuilder({
               role="status"
               className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm font-bold flex items-center gap-2"
             >
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" aria-hidden="true" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
               <span>{adminInspectionSuccessMsg}</span>
             </div>
           )}
 
           {/* High-level verification summary cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[var(--bg-card)] border theme-border flex items-center gap-2">
               <CheckCircle2
-                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-[var(--text-muted)]"}`}
+                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--text-muted)]"}`}
               />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-sm font-bold text-[var(--text-main)]">
                 {ui("سلامة الإطارات والفرامل")}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[var(--bg-card)] border theme-border flex items-center gap-2">
               <CheckCircle2
-                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-[var(--text-muted)]"}`}
+                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--text-muted)]"}`}
               />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-sm font-bold text-[var(--text-main)]">
                 {ui("الأنوار وأجهزة الطوارئ")}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[var(--bg-card)] border theme-border flex items-center gap-2">
               <CheckCircle2
-                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-[var(--text-muted)]"}`}
+                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--text-muted)]"}`}
               />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-sm font-bold text-[var(--text-main)]">
                 {ui("مطابقة كشف الركاب")}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border theme-border flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[var(--bg-card)] border theme-border flex items-center gap-2">
               <CheckCircle2
-                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-500" : "text-[var(--text-muted)]"}`}
+                className={`w-4 h-4 shrink-0 ${isConfirmed ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--text-muted)]"}`}
               />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-sm font-bold text-[var(--text-main)]">
                 {ui("جاهزية الكابتن المعتمد")}
               </span>
             </div>
@@ -1356,7 +1356,7 @@ export default function AdminContractBuilder({
             <button
               type="button"
               onClick={() => setShowDetailedChecks(!showDetailedChecks)}
-              className="min-h-11 text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1.5 transition cursor-pointer"
+              className="min-h-11 text-sm font-bold text-[var(--accent-gold)] hover:underline flex items-center gap-1.5 transition cursor-pointer"
             >
               {showDetailedChecks ? (
                 <>
@@ -1372,9 +1372,9 @@ export default function AdminContractBuilder({
             </button>
 
             {showDetailedChecks && (
-              <div className="mt-3 p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/70 border theme-border space-y-3">
+              <div className="mt-3 p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-2">
-                  <span className="text-sm font-bold text-[var(--text-muted)] dark:text-slate-300">
+                  <span className="text-sm font-bold text-[var(--text-main)]">
                     {ui("بنود الفحص الفني المعتمدة وفق اشتراطات هيئة النقل")}
                   </span>
                   <button
@@ -1386,7 +1386,7 @@ export default function AdminContractBuilder({
                       );
                       setChecks(allPassed);
                     }}
-                    className="min-h-11 text-sm font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="min-h-11 text-sm font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
                   >
                     {ui("تحديد الكل سليم (100%)")}
                   </button>
@@ -1403,7 +1403,7 @@ export default function AdminContractBuilder({
           </div>
 
           {/* Interactive Declaration Checkbox */}
-          <label className="flex min-h-12 items-start gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border theme-border cursor-pointer hover:border-amber-500/60 transition shadow-2xs">
+          <label className="flex min-h-12 items-start gap-3 p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--control-border)] cursor-pointer hover:border-[var(--accent-gold)] transition shadow-2xs">
             <Checkbox
               checked={isConfirmed}
               onChange={(e) => {
@@ -1413,7 +1413,7 @@ export default function AdminContractBuilder({
               className="mt-0.5"
             />
             <div className="space-y-1">
-              <span className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white block leading-relaxed">
+              <span className="text-sm sm:text-base font-semibold text-[var(--text-main)] block leading-relaxed">
                 {ui(
                   "أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل، وكافة بيانات الرحلة والمسار والركاب مدخلة بدقة ومسؤولية تشغيلية كاملة.",
                 )}
@@ -1433,7 +1433,7 @@ export default function AdminContractBuilder({
           {confirmError && (
             <div
               role="alert"
-              className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-sm text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2 animate-shake"
+              className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-sm text-rose-700 dark:text-rose-300 font-bold flex items-center gap-2 animate-shake"
             >
               <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{ui(confirmError)}</span>
@@ -1476,14 +1476,14 @@ export default function AdminContractBuilder({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border theme-border px-5 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] px-5 text-sm sm:text-base font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
           >
             {ui("إلغاء والعودة")}
           </button>
         ) : (
           <Link
             href="/admin/contracts"
-            className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border theme-border px-5 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] px-5 text-sm sm:text-base font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition"
           >
             {ui("إلغاء والعودة")}
           </Link>
@@ -1529,7 +1529,7 @@ export default function AdminContractBuilder({
           <div className="flex items-center gap-2">
             <Link
               href="/admin/contracts"
-              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition"
               title={ui("رجوع لقائمة العقود")}
             >
               <ArrowRight
@@ -1537,7 +1537,7 @@ export default function AdminContractBuilder({
                 aria-hidden="true"
               />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
               {ui("إنشاء وتوثيق عقد نقل رسمي")}
             </h1>
           </div>

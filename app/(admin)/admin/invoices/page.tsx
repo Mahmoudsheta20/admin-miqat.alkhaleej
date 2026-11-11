@@ -334,7 +334,7 @@ export default function InvoicesPage() {
       {seedMessage && (
         <p
           role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 dark:border-emerald-500/35 dark:bg-emerald-950/45 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300"
         >
           {ui(seedMessage)}
         </p>
@@ -450,16 +450,16 @@ export default function InvoicesPage() {
         </p>
       </div>
       {isArchived && (
-        <p className="rounded-xl border border-amber-300 bg-amber-500/5 p-4 text-sm">
+        <p className="rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] p-4 text-sm font-medium text-[var(--text-main)]">
           {isRTL
             ? "هذه الفواتير مخفية من القائمة فقط. مستنداتها ودفعاتها وحساب الضريبة محفوظة."
             : "These invoices are hidden from the list only. Their documents, payments and VAT records are retained."}
         </p>
       )}
       {/* Invoices List Container */}
-      <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden shadow-xs">
-        <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-700 dark:text-slate-300">
+      <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border overflow-hidden">
+        <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-[var(--bg-card-subtle)] flex items-center justify-between text-xs">
+          <span className="font-bold text-[var(--text-main)]">
             {ui(t("invoice.title"))} ({filteredItems.length}{" "}
             {ui(t("common.of"))} {data?.total || 0})
           </span>
@@ -473,24 +473,24 @@ export default function InvoicesPage() {
             role="status"
             className="p-12 flex flex-col items-center justify-center gap-3"
           >
-            <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-            <p className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
+            <div className="w-9 h-9 border-3 border-[var(--accent-gold)]/25 border-t-[var(--accent-gold)] rounded-full animate-spin" />
+            <p className="text-xs font-bold text-[var(--text-muted)]">
               {ui(t("common.loading"))}
             </p>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-14 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center mx-auto">
               <ReceiptText className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-sm font-semibold text-[var(--text-main)]">
               {ui(
                 items.length === 0
                   ? "لا توجد فواتير حتى الآن."
                   : "لا توجد فواتير مطابقة للبحث",
               )}
             </h3>
-            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
               {ui(
                 items.length === 0
                   ? "ابدأ بإنشاء فاتورة جديدة أو فاتورة مبدئية وسيتم حفظها مع رمز الفاتورة الضريبية ZATCA QR ونسخة PDF للعميل."
@@ -512,7 +512,7 @@ export default function InvoicesPage() {
                   setSearch("");
                   setTypeFilter("ALL");
                 }}
-                className="px-4 py-2 rounded-xl border theme-border text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
               >
                 {ui(t("common.cancel"))}
               </button>
@@ -524,7 +524,7 @@ export default function InvoicesPage() {
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-[var(--text-muted)] dark:text-slate-400 font-bold whitespace-nowrap">
+                  <TableRow className="border-b theme-border bg-[var(--table-header-bg)] text-[var(--text-muted)] font-bold whitespace-nowrap">
                     <TableHead className="py-3.5 px-4">
                       {ui(t("invoice.number"))}
                     </TableHead>
@@ -562,13 +562,13 @@ export default function InvoicesPage() {
                     return (
                       <TableRow
                         key={row.id}
-                        className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition duration-150"
+                        className="hover:bg-[var(--table-row-hover)] transition duration-150"
                       >
                         <TableCell className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
-                              className="text-amber-700 dark:text-amber-400 font-semibold font-mono text-sm hover:underline"
+                              className="text-[var(--accent-gold)] font-semibold font-mono text-sm hover:underline"
                               dir="ltr"
                             >
                               {row.invoiceNumber}
@@ -578,13 +578,13 @@ export default function InvoicesPage() {
                               onClick={() =>
                                 handleCopyNumber(row.invoiceNumber)
                               }
-                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-amber-600 hover:bg-amber-500/10 transition cursor-pointer"
+                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
                               aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                               title={ui("نسخ رقم الفاتورة")}
                             >
                               {copiedNumber === row.invoiceNumber ? (
                                 <Check
-                                  className="w-3.5 h-3.5 text-emerald-500"
+                                  className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300"
                                   aria-hidden="true"
                                 />
                               ) : (
@@ -602,12 +602,12 @@ export default function InvoicesPage() {
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                                 isCredit
-                                  ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                                  ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"
                                   : isDebit
-                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                    ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/35"
                                     : isProforma
-                                      ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
-                                      : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                                      ? "bg-sky-500/10 text-sky-800 dark:text-sky-300 border-sky-600/25"
+                                      : "bg-emerald-500/12 text-emerald-800 border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35"
                               }`}
                             >
                               {isCredit ? (
@@ -632,7 +632,7 @@ export default function InvoicesPage() {
                             </span>
                             <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
                               <ShieldCheck
-                                className="w-3 h-3 text-emerald-500"
+                                className="w-3 h-3 text-[var(--accent-gold)]"
                                 aria-hidden="true"
                               />
                               <span>{ui("محفوظة في النظام")}</span>
@@ -643,14 +643,14 @@ export default function InvoicesPage() {
                         <TableCell className="py-3.5 px-4">
                           <div className="flex items-center gap-2.5">
                             <div
-                              className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 border theme-border text-[var(--text-muted)] dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0"
+                              className="w-7 h-7 rounded-xl bg-[var(--bg-card-subtle)] border theme-border text-[var(--text-muted)] font-bold text-xs flex items-center justify-center shrink-0"
                               aria-hidden="true"
                             >
                               {row.customerName
                                 ? row.customerName.trim().charAt(0)
                                 : "ع"}
                             </div>
-                            <span className="font-bold text-slate-900 dark:text-white truncate max-w-[200px]">
+                            <span className="font-bold text-[var(--text-main)] truncate max-w-[200px]">
                               {row.customerName}
                             </span>
                           </div>
@@ -682,7 +682,7 @@ export default function InvoicesPage() {
                         </TableCell>
 
                         <TableCell
-                          className="py-3.5 px-4 whitespace-nowrap text-[var(--text-muted)] dark:text-slate-400 font-mono text-xs"
+                          className="py-3.5 px-4 whitespace-nowrap text-[var(--text-muted)] font-mono text-xs"
                           dir="ltr"
                         >
                           {dateLabel(row.invoiceDate, ui.language)}
@@ -692,11 +692,11 @@ export default function InvoicesPage() {
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-[var(--text-main)] font-bold transition"
                               title={ui(t("common.view"))}
                             >
                               <Eye
-                                className="w-3.5 h-3.5 text-amber-500"
+                                className="w-3.5 h-3.5 text-[var(--accent-gold)]"
                                 aria-hidden="true"
                               />
                               <span>{ui(t("common.view"))}</span>
@@ -706,7 +706,7 @@ export default function InvoicesPage() {
                               type="button"
                               disabled={isDownloadingThis}
                               onClick={() => void handleDownloadPdf(row)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold transition disabled:opacity-50 cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] font-bold transition disabled:opacity-50 cursor-pointer"
                               title={ui(t("common.downloadPdf"))}
                             >
                               {isDownloadingThis ? (
@@ -727,11 +727,11 @@ export default function InvoicesPage() {
                               <button
                                 type="button"
                                 onClick={() => setPaymentModalInvoice(row)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 font-bold transition cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 font-bold transition cursor-pointer"
                                 title={ui(t("invoice.recordPayment"))}
                               >
                                 <CreditCard
-                                  className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
+                                  className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300"
                                   aria-hidden="true"
                                 />
                                 <span>{ui(t("invoice.recordPayment"))}</span>
@@ -772,19 +772,19 @@ export default function InvoicesPage() {
                       <div className="flex items-center gap-1.5">
                         <Link
                           href={`/admin/invoices/${row.id}`}
-                          className="font-mono font-semibold text-sm text-amber-700 dark:text-amber-400 hover:underline"
+                          className="font-mono font-semibold text-sm text-[var(--accent-gold)] hover:underline"
                         >
                           <bdi dir="ltr">{row.invoiceNumber}</bdi>
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleCopyNumber(row.invoiceNumber)}
-                          className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg text-[var(--text-muted)] hover:text-amber-600 cursor-pointer"
+                          className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer"
                           aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                         >
                           {copiedNumber === row.invoiceNumber ? (
                             <Check
-                              className="w-4 h-4 text-emerald-500"
+                              className="w-4 h-4 text-emerald-700 dark:text-emerald-300"
                               aria-hidden="true"
                             />
                           ) : (
@@ -826,7 +826,7 @@ export default function InvoicesPage() {
                         >
                           <Link href={`/admin/invoices/${row.id}`}>
                             <Eye
-                              className="w-4 h-4 text-amber-500"
+                              className="w-4 h-4 text-[var(--accent-gold)]"
                               aria-hidden="true"
                             />
                             <span>{ui(t("common.view"))}</span>
@@ -839,7 +839,7 @@ export default function InvoicesPage() {
                           size="sm"
                           disabled={isDownloadingThis}
                           onClick={() => void handleDownloadPdf(row)}
-                          className="flex-1 min-h-11 gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold"
+                          className="flex-1 min-h-11 gap-1.5 border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--accent-gold)] text-xs font-bold"
                         >
                           {isDownloadingThis ? (
                             <Loader2
@@ -858,10 +858,10 @@ export default function InvoicesPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => setPaymentModalInvoice(row)}
-                            className="w-full min-h-11 gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold"
+                            className="w-full min-h-11 gap-1.5 border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs font-bold"
                           >
                             <CreditCard
-                              className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                              className="w-4 h-4 text-emerald-700 dark:text-emerald-300"
                               aria-hidden="true"
                             />
                             <span>{ui(t("invoice.recordPayment"))}</span>
@@ -923,12 +923,12 @@ export default function InvoicesPage() {
         )}
 
         {/* Pagination Footer */}
-        <div className="px-4 sm:px-6 py-3.5 border-t theme-border bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between gap-4 text-xs">
+        <div className="px-4 sm:px-6 py-3.5 border-t theme-border bg-[var(--bg-card-subtle)] flex items-center justify-between gap-4 text-xs">
           <button
             type="button"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-bold disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
           >
             {isRTL ? (
               <ChevronRight className="w-4 h-4" aria-hidden="true" />
@@ -938,7 +938,7 @@ export default function InvoicesPage() {
             <span>{ui(t("common.back"))}</span>
           </button>
 
-          <span className="font-bold text-[var(--text-muted)] dark:text-slate-300">
+          <span className="font-bold text-[var(--text-muted)]">
             {ui(t("common.page"))} <span className="font-mono">{page}</span>{" "}
             {ui(t("common.of"))} <span className="font-mono">{totalPages}</span>
           </span>
@@ -947,7 +947,7 @@ export default function InvoicesPage() {
             type="button"
             disabled={!data || page * 30 >= data.total}
             onClick={() => setPage(page + 1)}
-            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-bold disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
           >
             <span>{ui(t("common.next"))}</span>
             {isRTL ? (

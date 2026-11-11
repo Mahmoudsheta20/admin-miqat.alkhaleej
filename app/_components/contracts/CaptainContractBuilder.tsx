@@ -120,8 +120,8 @@ function CaptainPassengerManifest({
     <div className="p-4 sm:p-6 space-y-5">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b theme-border pb-4">
         <div className="hidden md:block">
-          <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-amber-500" aria-hidden="true" />
+          <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] flex items-center gap-2">
+            <Users className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("كشف الركاب المرافقين (الصفحة 2 من العقد)")}</span>
           </h2>
           <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -134,7 +134,7 @@ function CaptainPassengerManifest({
         <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
           <MobileHorizontalStrip
             label={ui("عدد الركاب السريع")}
-            className="bg-slate-50 dark:bg-slate-900/60 p-1.5 rounded-xl border theme-border"
+            className="bg-[var(--bg-card-subtle)] p-1.5 rounded-xl border theme-border"
           >
             {[1, 4, 7, 12, 25, 45, 50].map((num) => (
               <button
@@ -144,8 +144,8 @@ function CaptainPassengerManifest({
                 onClick={() => setTotalPassengers(num)}
                 className={`min-h-11 min-w-11 shrink-0 snap-start px-3 rounded-lg text-sm font-bold transition font-mono cursor-pointer ${
                   fields.length === num
-                    ? "bg-amber-700 text-white shadow-2xs"
-                    : "text-[var(--text-muted)] dark:text-slate-400 hover:text-amber-700 dark:hover:text-amber-300"
+                    ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] shadow-2xs"
+                    : "text-[var(--text-muted)] hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)]"
                 }`}
                 title={isRTL ? `${num} راكب` : `${num} passengers`}
               >
@@ -180,8 +180,8 @@ function CaptainPassengerManifest({
               key={field.id}
               className={`p-4 sm:p-5 rounded-2xl border transition ${
                 isPrimary
-                  ? "bg-amber-500/5 border-amber-500/30"
-                  : "bg-slate-50/70 dark:bg-slate-900/50 theme-border hover:border-amber-500/30"
+                  ? "bg-[var(--accent-surface)]/65 border-[var(--accent-gold)]/35"
+                  : "bg-[var(--bg-card-subtle)] theme-border hover:border-[var(--border-hover)]"
               }`}
             >
               {/* Mobile row header */}
@@ -191,12 +191,12 @@ function CaptainPassengerManifest({
                     className={`w-7 h-7 rounded-lg font-mono font-bold text-sm flex items-center justify-center ${
                       isPrimary
                         ? "gold-gradient-btn"
-                        : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
                     }`}
                   >
                     {index + 1}
                   </span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  <span className="text-sm font-bold text-[var(--text-main)]">
                     {isPrimary
                       ? ui("الضيف الأساسي")
                       : text(`الراكب ${index + 1}`, `Passenger ${index + 1}`)}
@@ -206,7 +206,7 @@ function CaptainPassengerManifest({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="min-h-11 px-3 rounded-xl text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition flex items-center gap-1.5 text-sm font-bold cursor-pointer"
+                    className="min-h-11 px-3 rounded-xl text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition flex items-center gap-1.5 text-sm font-bold cursor-pointer"
                     aria-label={
                       isRTL
                         ? `حذف الراكب ${index + 1}`
@@ -226,7 +226,7 @@ function CaptainPassengerManifest({
                   className={`hidden sm:flex w-9 h-9 rounded-xl font-mono font-bold text-sm items-center justify-center shrink-0 mt-7 ${
                     isPrimary
                       ? "gold-gradient-btn shadow-2xs"
-                      : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
                   }`}
                 >
                   {index + 1}
@@ -300,7 +300,7 @@ function CaptainPassengerManifest({
 
       <div className="text-sm text-[var(--text-muted)] font-bold text-end pt-2 border-t theme-border">
         {ui("إجمالي ركاب الرحلة:")}{" "}
-        <span className="font-mono text-amber-700 dark:text-amber-400">
+        <span className="font-mono text-[var(--accent-gold)]">
           {fields.length}
         </span>
       </div>
@@ -543,7 +543,7 @@ export default function CaptainContractBuilder({
   };
 
   const inspectionBadge = todayInspection ? (
-    <span className="min-h-10 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-sm font-bold inline-flex items-center gap-1.5">
+    <span className="min-h-10 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25 text-sm font-bold inline-flex items-center gap-1.5">
       <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
       <span>
         {ui("فحص المركبة معتمد (")}
@@ -568,7 +568,7 @@ export default function CaptainContractBuilder({
   const loadingView = (
     <div className="flex items-center justify-center p-20">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-9 h-9 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+        <div className="w-9 h-9 border-2 border-[var(--accent-gold)]/25 border-t-[var(--accent-gold)] rounded-full animate-spin" />
         <p className="text-sm sm:text-base text-[var(--text-muted)]">
           {ui("التحقق من حالة فحص المركبة اليومي...")}
         </p>
@@ -577,14 +577,14 @@ export default function CaptainContractBuilder({
   );
 
   const gatingView = !checkingInspection && !todayInspection && (
-    <div className="theme-card rounded-3xl p-6 sm:p-10 border border-amber-500/30 text-center space-y-5 max-w-2xl mx-auto my-8 shadow-lg">
-      <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
+    <div className="theme-card rounded-3xl p-6 sm:p-10 border border-[var(--accent-gold)]/35 text-center space-y-5 max-w-2xl mx-auto my-8 shadow-lg">
+      <div className="w-16 h-16 rounded-full bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center mx-auto border border-[var(--accent-gold)]/30">
         <AlertTriangle className="w-8 h-8" aria-hidden="true" />
       </div>
-      <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+      <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
         {ui("إجراء فحص المركبة اليومي إلزامي أولاً")}
       </h2>
-      <p className="text-sm sm:text-base text-[var(--text-muted)] dark:text-slate-400 leading-relaxed">
+      <p className="text-sm sm:text-base text-[var(--text-muted)] leading-relaxed">
         {ui(
           "بناءً على اشتراطات هيئة النقل للنقل المتخصص، لا يمكن إنشاء وتوثيق عقد نقل بري جديد إلا بعد توثيق فحص المركبة اليومي (الصفحة 3 من العقد الرسمي).",
         )}
@@ -594,14 +594,14 @@ export default function CaptainContractBuilder({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto min-h-12 flex items-center justify-center text-center px-6 py-2.5 rounded-xl border theme-card text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="w-full sm:w-auto min-h-12 flex items-center justify-center text-center px-6 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
           >
             {ui("إغلاق")}
           </button>
         ) : (
           <Link
             href="/captain"
-            className="w-full sm:w-auto min-h-12 flex items-center justify-center text-center px-6 py-2.5 rounded-xl border theme-card text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="w-full sm:w-auto min-h-12 flex items-center justify-center text-center px-6 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition"
           >
             {ui("العودة للرئيسية")}
           </Link>
@@ -619,16 +619,16 @@ export default function CaptainContractBuilder({
 
   const createdView = createdContract && (
     <div className="theme-card rounded-3xl p-6 sm:p-10 border theme-border text-center space-y-5 max-w-2xl mx-auto my-8 shadow-xl">
-      <div className="w-20 h-20 rounded-3xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+      <div className="w-20 h-20 rounded-3xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mx-auto border border-emerald-500/30">
         <CheckCircle2 className="w-10 h-10" aria-hidden="true" />
       </div>
-      <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+      <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
         {ui("تم توثيق العقد بنجاح!")}
       </h2>
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 inline-block font-mono font-semibold text-amber-700 dark:text-amber-400 text-2xl tracking-wider">
+      <div className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 inline-block font-mono font-semibold text-[var(--accent-gold)] text-2xl tracking-wider">
         {createdContract.referenceNumber}
       </div>
-      <p className="text-sm sm:text-base text-[var(--text-muted)] dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+      <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-lg mx-auto leading-relaxed">
         {ui(
           "تم إنشاء العقد الرسمي المكون من 3 صفحات وتضمين كشف الركاب وتقرير الفحص المعتمد. يمكنك الآن تحميل أو طباعة نسخة الـ PDF.",
         )}
@@ -646,10 +646,10 @@ export default function CaptainContractBuilder({
           href={`/verify/contract/${encodeURIComponent(createdContract.referenceNumber)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card hover:border-emerald-500 text-emerald-700 dark:text-emerald-400 text-sm sm:text-base font-bold transition flex items-center justify-center gap-2"
+          className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card hover:border-emerald-600/50 text-emerald-800 dark:text-emerald-300 text-sm sm:text-base font-bold transition flex items-center justify-center gap-2"
         >
           <CheckCircle2
-            className="w-4 h-4 text-emerald-500"
+            className="w-4 h-4 text-emerald-700 dark:text-emerald-300"
             aria-hidden="true"
           />
           {ui("صفحة التحقق الإلكتروني (QR)")}
@@ -667,7 +667,7 @@ export default function CaptainContractBuilder({
               ),
             );
           }}
-          className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card text-sm sm:text-base font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm sm:text-base font-bold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
         >
           {ui("+ إنشاء عقد جديد")}
         </button>
@@ -675,7 +675,7 @@ export default function CaptainContractBuilder({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card text-sm sm:text-base font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm sm:text-base font-semibold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
           >
             {text("إغلاق النافذة", "Close")}
           </button>
@@ -695,7 +695,7 @@ export default function CaptainContractBuilder({
         {formError && (
           <div
             role="alert"
-            className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-sm font-bold"
+            className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 text-sm font-bold"
           >
             {ui(formError)}
           </div>
@@ -729,9 +729,9 @@ export default function CaptainContractBuilder({
           )}
         >
           <div className="p-4 sm:p-6 space-y-5">
-            <h2 className="hidden md:flex text-base sm:text-lg font-semibold text-slate-900 dark:text-white items-center gap-2 border-b theme-border pb-3">
+            <h2 className="hidden md:flex text-base sm:text-lg font-semibold text-[var(--text-main)] items-center gap-2 border-b theme-border pb-3">
               <MapPin
-                className="w-5 h-5 text-amber-500"
+                className="w-5 h-5 text-[var(--accent-gold)]"
                 aria-hidden="true"
               />
               <span>
@@ -908,7 +908,7 @@ export default function CaptainContractBuilder({
                 id={`${fieldId}-flightCarrier`}
                 label={ui("شركة الطيران (اختياري)")}
                 expandable
-                icon={<Plane className="w-4 h-4 text-blue-500" />}
+                icon={<Plane className="w-4 h-4 text-sky-700 dark:text-sky-300" aria-hidden="true" />}
                 placeholder={ui("الخطوط السعودية")}
                 {...register("flightCarrier")}
               />
@@ -919,7 +919,7 @@ export default function CaptainContractBuilder({
                 label={ui("رقم الرحلة الجوية (اختياري)")}
                 expandable
                 dir="ltr"
-                icon={<Plane className="w-4 h-4 text-blue-500" />}
+                icon={<Plane className="w-4 h-4 text-sky-700 dark:text-sky-300" aria-hidden="true" />}
                 placeholder="SV841"
                 className="text-start font-mono"
                 {...register("flightNumber")}
@@ -967,14 +967,14 @@ export default function CaptainContractBuilder({
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto min-h-12 px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0 cursor-pointer"
+              className="w-full sm:w-auto min-h-12 px-5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-sm sm:text-base font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition inline-flex items-center justify-center shrink-0 cursor-pointer"
             >
               {ui("إلغاء")}
             </button>
           ) : (
             <Link
               href="/captain"
-              className="w-full sm:w-auto min-h-12 px-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition inline-flex items-center justify-center shrink-0"
+              className="w-full sm:w-auto min-h-12 px-5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-sm sm:text-base font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition inline-flex items-center justify-center shrink-0"
             >
               {ui("إلغاء")}
             </Link>
@@ -1019,14 +1019,14 @@ export default function CaptainContractBuilder({
             <Link
               href="/captain"
               aria-label={ui("العودة للرئيسية")}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-slate-700 dark:hover:text-white transition"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] transition"
             >
               <ArrowRight
                 className="w-5 h-5 ltr:rotate-180"
                 aria-hidden="true"
               />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
               {ui("إنشاء عقد نقل بري رسمي")}
             </h1>
           </div>

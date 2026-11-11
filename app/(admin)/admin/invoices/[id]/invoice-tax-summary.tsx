@@ -13,12 +13,12 @@ export default function InvoiceTaxSummary({ invoice }: InvoiceTaxSummaryProps) {
   return (
     <section className="theme-card flex flex-wrap items-center justify-between gap-5 rounded-2xl border theme-border p-5 sm:p-6">
       <div className="space-y-3">
-        <h2 className="text-base font-bold">{ui(invoiceTitle(invoice.snapshot.input))}</h2>
-        <p className="text-sm">
+        <h2 className="text-base font-bold text-[var(--text-main)]">{ui(invoiceTitle(invoice.snapshot.input))}</h2>
+        <p className="text-sm text-[var(--text-main)]">
           {ui("تاريخ التوريد:")} <bdi className="font-mono" dir="ltr">{tax.supplyDate}</bdi>
         </p>
         {invoice.snapshot.original && (
-          <p className="text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed text-[var(--text-main)]">
             {ui("الفاتورة الأصلية:")} <bdi className="font-mono" dir="ltr">{invoice.snapshot.original.number}</bdi>
             <br />
             {ui("سبب الإشعار:")} {tax.adjustmentReason}
@@ -27,12 +27,12 @@ export default function InvoiceTaxSummary({ invoice }: InvoiceTaxSummaryProps) {
         {tax.kind === "INVOICE" && (
           <div className="flex flex-wrap gap-3">
             <Link
-              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border theme-border hover:border-amber-500 px-3 py-2 text-sm font-bold transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-3 py-2 text-sm font-bold transition"
               href={`/admin/zatca/new?originalInvoiceId=${invoice.id}&kind=CREDIT`}
             >
               {ui("إشعار دائن")}</Link>
             <Link
-              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border theme-border hover:border-amber-500 px-3 py-2 text-sm font-bold transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-3 py-2 text-sm font-bold transition"
               href={`/admin/zatca/new?originalInvoiceId=${invoice.id}&kind=DEBIT`}
             >
               {ui("إشعار مدين")}</Link>

@@ -73,19 +73,19 @@ export default function ContractMobileCard({
             <h3 className="text-sm font-semibold leading-tight flex items-center gap-1 min-w-0">
               <Link
                 href={`/admin/contracts/${c.id}`}
-                className="font-mono font-semibold text-amber-700 dark:text-amber-400 hover:underline truncate min-h-11 inline-flex items-center"
+                className="font-mono font-semibold text-[var(--accent-gold)] hover:underline truncate min-h-11 inline-flex items-center"
               >
                 <bdi>{c.referenceNumber}</bdi>
               </Link>
               <button
                 type="button"
                 onClick={(e) => onCopyRef(c.referenceNumber, e)}
-                className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-xl text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition shrink-0 cursor-pointer"
+                className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-xl text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition shrink-0 cursor-pointer"
                 title={ui("نسخ رقم العقد")}
                 aria-label={`${ui("نسخ رقم العقد")} ${c.referenceNumber}`}
               >
                 {isCopied ? (
-                  <Check className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                  <Check className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 ) : (
                   <Copy className="w-4 h-4" aria-hidden="true" />
                 )}
@@ -104,11 +104,11 @@ export default function ContractMobileCard({
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span
                   aria-hidden="true"
-                  className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 border theme-border text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0"
+                  className="w-7 h-7 rounded-lg bg-[var(--bg-card-subtle)] border theme-border text-[var(--text-main)] font-bold text-xs flex items-center justify-center shrink-0"
                 >
                   {customerInitial}
                 </span>
-                <span className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                <span className="font-semibold text-sm text-[var(--text-main)] truncate">
                   {c.customerName}
                 </span>
               </div>
@@ -118,7 +118,7 @@ export default function ContractMobileCard({
                   href={`tel:${c.customerPhone}`}
                   dir="ltr"
                   aria-label={`${ui("الاتصال بالعميل")} ${c.customerName}`}
-                  className="inline-flex items-center gap-1.5 min-h-11 px-2.5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs font-mono font-medium text-amber-700 dark:text-amber-400 hover:border-amber-500/50 transition shrink-0"
+                  className="inline-flex items-center gap-1.5 min-h-11 px-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-mono font-medium text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition shrink-0"
                 >
                   <Phone className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>{c.customerPhone}</span>
@@ -130,7 +130,7 @@ export default function ContractMobileCard({
               <StatusBadge type="operation" status={c.operationType} size="sm" />
               {c.flightNumber && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/25 font-mono text-[11px] font-semibold">
-                  <Plane className="w-3 h-3 text-blue-500" aria-hidden="true" />
+                  <Plane className="w-3 h-3 text-blue-600 dark:text-blue-400" aria-hidden="true" />
                   <bdi>
                     {c.flightCarrier ? `${c.flightCarrier} • ` : ""}
                     {c.flightNumber}
@@ -147,21 +147,21 @@ export default function ContractMobileCard({
           <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3 space-y-2">
             <div className="space-y-1">
               <div className="text-[11px] font-medium text-[var(--text-muted)] flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-500 shrink-0" aria-hidden="true" />
+                <MapPin className="w-3 h-3 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                 <span>{ui("مسار الرحلة")}</span>
               </div>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-semibold text-slate-900 dark:text-white leading-snug">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-semibold text-[var(--text-main)] leading-snug">
                 <span className="inline-flex items-center gap-1.5 min-w-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                   <bdi className="break-words">{c.origin}</bdi>
                 </span>
                 {isRTL ? (
-                  <ArrowLeft className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                  <ArrowLeft className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                 ) : (
-                  <ArrowRight className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                  <ArrowRight className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                 )}
                 <span className="inline-flex items-center gap-1.5 min-w-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" aria-hidden="true" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                   <bdi className="break-words">{c.destination}</bdi>
                 </span>
               </div>
@@ -171,18 +171,18 @@ export default function ContractMobileCard({
               <span className="text-[11px] font-medium text-[var(--text-muted)]">
                 {ui("موعد الرحلة")}
               </span>
-              <span className="inline-flex items-center gap-2 font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">
+              <span className="inline-flex items-center gap-2 font-mono tabular-nums font-semibold text-[var(--text-main)]">
                 <span className="inline-flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                  <Calendar className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   <bdi dir="ltr">{c.tripDate}</bdi>
                 </span>
                 {c.tripTime && (
                   <>
-                    <span className="text-slate-300 dark:text-slate-600" aria-hidden="true">
+                    <span className="text-[var(--text-muted)]" aria-hidden="true">
                       •
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                      <Clock className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                       <bdi dir="ltr">{c.tripTime}</bdi>
                     </span>
                   </>
@@ -197,8 +197,8 @@ export default function ContractMobileCard({
               <dt className="text-[11px] font-medium text-[var(--text-muted)] truncate">
                 {ui("الكابتن")}
               </dt>
-              <dd className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5 min-w-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+              <dd className="text-xs font-semibold text-[var(--text-main)] flex items-center gap-1.5 min-w-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                 <span className="truncate">{c.captain?.name || ui("الكابتن")}</span>
               </dd>
             </div>
@@ -207,8 +207,8 @@ export default function ContractMobileCard({
               <dt className="text-[11px] font-medium text-[var(--text-muted)] truncate">
                 {ui("المركبة")}
               </dt>
-              <dd className="text-xs font-semibold font-mono text-slate-900 dark:text-white flex items-center gap-1.5 min-w-0">
-                <Car className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+              <dd className="text-xs font-semibold font-mono text-[var(--text-main)] flex items-center gap-1.5 min-w-0">
+                <Car className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                 <bdi className="truncate">{c.vehiclePlate}</bdi>
               </dd>
             </div>
@@ -222,13 +222,13 @@ export default function ContractMobileCard({
               className={cn(
                 "min-h-11 w-full rounded-xl border px-3 py-2 text-start transition flex items-center justify-between gap-2 cursor-pointer",
                 isInspected
-                  ? "border-emerald-500/25 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
-                  : "border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/15 text-amber-800 dark:text-amber-300",
+                  ? "border-emerald-600/35 bg-emerald-500/12 hover:bg-emerald-500/20 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300"
+                  : "border-amber-600/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)]",
               )}
               title={ui("تفاصيل الفحص")}
             >
               <span className="min-w-0">
-                <span className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">
+                <span className="block text-[11px] font-medium text-[var(--text-muted)] leading-tight">
                   {ui("الفحص التشغيلي")}
                 </span>
                 <span className="block text-xs font-semibold leading-tight mt-0.5">
@@ -236,32 +236,32 @@ export default function ContractMobileCard({
                 </span>
               </span>
               {isInspected ? (
-                <ClipboardCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                <ClipboardCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+                <AlertCircle className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
               )}
             </button>
 
             <button
               type="button"
               onClick={() => onInspectOrManifest(c, "passengers")}
-              className="min-h-11 w-full rounded-xl border theme-border bg-[var(--bg-card-subtle)] hover:border-amber-500/50 hover:bg-amber-500/5 px-3 py-2 text-start transition flex items-center justify-between gap-2 cursor-pointer"
+              className="min-h-11 w-full rounded-xl border theme-border bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 px-3 py-2 text-start transition flex items-center justify-between gap-2 cursor-pointer"
               title={ui("كشف الركاب")}
             >
               <span className="min-w-0">
                 <span className="block text-[11px] font-medium text-[var(--text-muted)] leading-tight">
                   {ui("الركاب")}
                 </span>
-                <span className="block text-xs font-semibold leading-tight mt-0.5 text-slate-900 dark:text-white">
+                <span className="block text-xs font-semibold leading-tight mt-0.5 text-[var(--text-main)]">
                   <span className="font-mono tabular-nums">{passengersCount}</span> {ui("ركاب")}
                 </span>
               </span>
-              <Users className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+              <Users className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
             </button>
           </div>
 
           {c.reviewNotes && (
-            <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs text-rose-800 dark:text-rose-300">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-800 dark:text-rose-200">
               <span className="font-semibold">{ui("ملاحظة المراجعة")}: </span>
               <span>{c.reviewNotes}</span>
             </div>
@@ -269,7 +269,7 @@ export default function ContractMobileCard({
         </CardContent>
 
         {/* Footer: Full-width Contract Actions */}
-        <CardFooter className="mt-0 px-4 py-3 border-t theme-border bg-slate-50/50 dark:bg-slate-900/35">
+        <CardFooter className="mt-0 px-4 py-3 border-t theme-border bg-[var(--bg-card-subtle)]">
           <ContractActions
             contractId={c.id}
             onPreview={() => onPreviewPdf(c)}

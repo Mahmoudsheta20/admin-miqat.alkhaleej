@@ -96,7 +96,7 @@ export default function ImageUpload({
   return (
     <div className={`space-y-2 ${className}`}>
       {label && (
-        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+        <label className="block text-xs font-bold text-[var(--text-main)]">
           {ui(label)}
         </label>
       )}
@@ -108,7 +108,7 @@ export default function ImageUpload({
           disabled={isUploading}
           aria-label={ui(`تغيير ${label}`)}
           onClick={() => !isUploading && fileInputRef.current?.click()}
-          className={`relative group cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500/80 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center transition shadow-xs ${sizeClasses} ${shapeClasses}`}
+          className={`relative group cursor-pointer overflow-hidden border-2 border-dashed border-[var(--control-border)] hover:border-[var(--accent-gold)] bg-[var(--bg-card-subtle)] flex items-center justify-center transition shadow-xs ${sizeClasses} ${shapeClasses}`}
           title={ui("اضغط لاختيار صورة جديدة")}
         >
           {value ? (
@@ -128,9 +128,9 @@ export default function ImageUpload({
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center text-[var(--text-muted)] group-hover:text-amber-500 transition p-2 text-center">
+            <div className="flex flex-col items-center justify-center text-[var(--text-muted)] group-hover:text-[var(--accent-gold)] transition p-2 text-center">
               {isUploading ? (
-                <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--accent-gold)]" />
               ) : (
                 <>
                   <Camera className="w-6 h-6 mb-1" />
@@ -144,7 +144,7 @@ export default function ImageUpload({
             <div
               className={`absolute inset-0 bg-black/60 flex items-center justify-center text-white ${shapeClasses}`}
             >
-              <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-amber-300" />
             </div>
           )}
         </button>
@@ -156,9 +156,9 @@ export default function ImageUpload({
               type="button"
               disabled={isUploading}
               onClick={() => fileInputRef.current?.click()}
-              className="px-3 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[var(--text-main)] font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
-              <Upload className="w-3.5 h-3.5 text-amber-500" />
+              <Upload className="w-3.5 h-3.5 text-[var(--accent-gold)]" />
               {ui(value ? "تغيير الصورة" : "اختيار صورة")}
             </button>
 
@@ -167,7 +167,7 @@ export default function ImageUpload({
                 type="button"
                 disabled={isUploading}
                 onClick={handleRemove}
-                className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                className="p-1.5 rounded-xl border border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition cursor-pointer"
                 title={ui("حذف الصورة")}
               >
                 <X className="w-3.5 h-3.5" />
@@ -189,7 +189,7 @@ export default function ImageUpload({
       />
 
       {error && (
-        <div className="text-xs text-rose-700 flex items-center gap-1.5 mt-1">
+        <div className="text-xs text-rose-700 dark:text-rose-300 flex items-center gap-1.5 mt-1">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>{ui(error)}</span>
         </div>

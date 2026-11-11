@@ -124,7 +124,7 @@ export default function Sidebar({
         }}
       >
         <div className="mobile-hub-panel">
-          <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+          <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-[var(--control-border)]/50 shrink-0" />
           <header className="flex items-center justify-between gap-3 px-4 py-3 border-b theme-border shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <Image
@@ -138,7 +138,7 @@ export default function Sidebar({
               <div className="min-w-0">
                 <h2
                   id="mobile-hub-title"
-                  className="text-sm font-semibold text-slate-900 dark:text-white truncate"
+                  className="text-sm font-semibold text-[var(--text-main)] truncate"
                 >
                   {text("أقسام المنظومة", "All Sections")}
                 </h2>
@@ -193,24 +193,24 @@ export default function Sidebar({
                       {entries.map((item) => {
                         const isActive = active === item.href;
                         return (
-                          <Link
+                            <Link
                             key={item.href}
                             href={item.href}
                             onClick={onMobileClose}
                             aria-current={isActive ? "page" : undefined}
-                            className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] rounded-xl"
+                            className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-color)] rounded-xl"
                           >
                             <Card
                               className={`p-3 min-h-12 shadow-none flex items-center gap-2.5 transition-colors ${
                                 isActive
-                                  ? "border-amber-500/50 bg-[var(--accent-surface)] text-[var(--accent-gold)] font-semibold"
-                                  : "theme-card border theme-border text-slate-800 dark:text-slate-200 hover:border-amber-500/40"
+                                  ? "border-[var(--accent-gold)]/55 bg-[var(--accent-surface)] text-[var(--accent-gold)] font-semibold"
+                                  : "theme-card border theme-border text-[var(--text-main)] hover:border-[var(--border-hover)]"
                               }`}
                             >
                               <span
                                 className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                                   isActive
-                                    ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-amber-500/30"
+                                    ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/35"
                                     : "bg-[var(--bg-card-subtle)] text-[var(--text-muted)]"
                                 }`}
                               >

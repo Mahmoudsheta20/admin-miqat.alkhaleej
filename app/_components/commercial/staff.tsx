@@ -498,10 +498,10 @@ export function MembersPage({ representatives = false }: { representatives?: boo
 
       {/* Directory Table & Mobile Cards inside a single shadcn Card */}
       <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 space-y-4">
+        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)] space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                 {representatives ? (
                   <Users className="w-4 h-4" aria-hidden="true" />
                 ) : (
@@ -512,7 +512,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                 <div className="flex flex-wrap items-center gap-2">
                   <h2
                     id={membersHeadingId}
-                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                    className="text-sm sm:text-base font-bold text-[var(--text-main)] leading-tight"
                   >
                     {ui(representatives ? "سجل المناديب" : "سجل الحسابات")}
                   </h2>
@@ -529,7 +529,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                 variant="ghost"
                 size="sm"
                 onClick={resetFilters}
-                className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 gap-1.5"
+                className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 gap-1.5"
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>{ui("مسح عوامل التصفية")}</span>
@@ -549,16 +549,16 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                     onClick={() => setKindFilter(tab.id)}
                     className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition cursor-pointer ${
                       active
-                        ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-2xs"
-                        : "bg-white dark:bg-slate-900/70 theme-border text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white hover:border-amber-500/40"
+                        ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border-[var(--accent-btn-border)] shadow-2xs"
+                        : "bg-[var(--bg-card)] border-[var(--control-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
                     }`}
                   >
                     <span>{ui(tab.label)}</span>
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono tabular-nums ${
                         active
-                          ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          ? "bg-black/20 text-[var(--accent-btn-fg)] dark:bg-white/25 dark:text-[var(--accent-btn-fg)]"
+                          : "bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
                       }`}
                     >
                       {filterCounts[tab.id]}
@@ -575,7 +575,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
               />
               <input
                 type="search"
-                className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border theme-border bg-white dark:bg-slate-900 text-base sm:text-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-xs outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
                 aria-label={ui("بحث بالاسم، الجوال، الضريبي أو الآيبان...")}
                 placeholder={ui("بحث بالاسم، الجوال، الضريبي أو الآيبان...")}
                 value={search}
@@ -586,7 +586,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                   type="button"
                   onClick={() => setSearch("")}
                   aria-label={ui("مسح البحث")}
-                  className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                  className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
@@ -607,13 +607,13 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                   <TableCaption className="sr-only">
                     {ui(representatives ? "سجل المناديب" : "سجل الحسابات")}
                   </TableCaption>
-                  <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80">
+                  <TableHeader className="bg-[var(--table-header-bg)]">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("الحساب والصفة")}</TableHead>
                       <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("التواصل والهوية")}</TableHead>
                       <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("البيانات البنكية")}</TableHead>
                       <TableHead className="py-3 px-3 border-b theme-border leading-snug">{ui("عمولات الإحالة")}</TableHead>
-                      <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                      <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                         {ui("الإجراءات")}
                       </TableHead>
                     </TableRow>
@@ -623,35 +623,35 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       <TableRow key={`member-skel-${idx}`} className="animate-pulse motion-reduce:animate-none">
                         <th scope="row" className="py-3.5 px-3 border-b theme-border text-start">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700/60 shrink-0" />
+                            <div className="w-9 h-9 rounded-xl bg-[var(--border-color)]/60 shrink-0" />
                             <div className="space-y-1.5">
-                              <div className="h-3.5 w-28 rounded bg-slate-200 dark:bg-slate-700/60" />
+                              <div className="h-3.5 w-28 rounded bg-[var(--border-color)]/60" />
                               <div className="flex items-center gap-1.5">
-                                <div className="h-4 w-16 rounded-lg bg-slate-100 dark:bg-slate-800" />
-                                <div className="h-4 w-12 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                                <div className="h-4 w-16 rounded-lg bg-[var(--bg-card-subtle)]" />
+                                <div className="h-4 w-12 rounded-lg bg-[var(--border-color)]/60" />
                               </div>
                             </div>
                           </div>
                         </th>
                         <TableCell className="py-3.5 px-3 border-b theme-border">
                           <div className="space-y-1.5">
-                            <div className="h-3.5 w-24 rounded bg-slate-200 dark:bg-slate-700/60" />
-                            <div className="h-3 w-20 rounded bg-slate-100 dark:bg-slate-800" />
+                            <div className="h-3.5 w-24 rounded bg-[var(--border-color)]/60" />
+                            <div className="h-3 w-20 rounded bg-[var(--bg-card-subtle)]" />
                           </div>
                         </TableCell>
                         <TableCell className="py-3.5 px-3 border-b theme-border">
                           <div className="space-y-1.5">
-                            <div className="h-3 w-24 rounded bg-slate-100 dark:bg-slate-800" />
-                            <div className="h-5 w-44 rounded bg-slate-200 dark:bg-slate-700/60" />
+                            <div className="h-3 w-24 rounded bg-[var(--bg-card-subtle)]" />
+                            <div className="h-5 w-44 rounded bg-[var(--border-color)]/60" />
                           </div>
                         </TableCell>
                         <TableCell className="py-3.5 px-3 border-b theme-border">
-                          <div className="h-5 w-24 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                          <div className="h-5 w-24 rounded-lg bg-[var(--border-color)]/60" />
                         </TableCell>
-                        <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] py-3.5 px-3 border-b theme-border border-s border-slate-200 dark:border-slate-800 text-end">
+                        <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] py-3.5 px-3 border-b theme-border border-s theme-border text-end">
                           <div className="inline-flex items-center gap-1.5">
-                            <div className="h-9 w-24 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
-                            <div className="h-9 w-16 rounded-lg bg-slate-200 dark:bg-slate-700/60" />
+                            <div className="h-9 w-24 rounded-lg bg-[var(--border-color)]/60" />
+                            <div className="h-9 w-16 rounded-lg bg-[var(--border-color)]/60" />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -667,18 +667,18 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700/60" />
+                        <div className="w-9 h-9 rounded-xl bg-[var(--border-color)]/60" />
                         <div className="space-y-1.5">
-                          <div className="h-4 w-28 rounded bg-slate-200 dark:bg-slate-700/60" />
-                          <div className="h-4 w-20 rounded-full bg-slate-100 dark:bg-slate-800" />
+                          <div className="h-4 w-28 rounded bg-[var(--border-color)]/60" />
+                          <div className="h-4 w-20 rounded-full bg-[var(--bg-card-subtle)]" />
                         </div>
                       </div>
-                      <div className="h-5 w-14 rounded-full bg-slate-200 dark:bg-slate-700/60" />
+                      <div className="h-5 w-14 rounded-full bg-[var(--border-color)]/60" />
                     </div>
-                    <div className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/70" />
+                    <div className="h-14 rounded-xl bg-[var(--bg-card-subtle)]" />
                     <div className="flex gap-2">
-                      <div className="h-11 flex-1 rounded-xl bg-slate-200 dark:bg-slate-700/60" />
-                      <div className="h-11 w-20 rounded-xl bg-slate-200 dark:bg-slate-700/60" />
+                      <div className="h-11 flex-1 rounded-xl bg-[var(--border-color)]/60" />
+                      <div className="h-11 w-20 rounded-xl bg-[var(--border-color)]/60" />
                     </div>
                   </div>
                 ))}
@@ -686,14 +686,14 @@ export function MembersPage({ representatives = false }: { representatives?: boo
             </>
           ) : !filteredItems.length ? (
             <div className="p-10 sm:p-14 text-center space-y-3">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center">
                 {representatives ? (
                   <Users className="w-6 h-6" aria-hidden="true" />
                 ) : (
                   <UserCheck className="w-6 h-6" aria-hidden="true" />
                 )}
               </div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">
+              <p className="text-sm font-bold text-[var(--text-main)]">
                 {ui(hasActiveFilter ? "لا توجد نتائج مطابقة للبحث" : "لا توجد حسابات مسجلة")}
               </p>
               <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
@@ -734,13 +734,13 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                   <TableCaption className="sr-only">
                     {ui(representatives ? "سجل المناديب" : "سجل الحسابات")}
                   </TableCaption>
-                  <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                  <TableHeader className="bg-[var(--table-header-bg)] text-xs font-bold text-[var(--text-muted)]">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("الحساب والصفة")}</TableHead>
                       <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("التواصل والهوية")}</TableHead>
                       <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("البيانات البنكية")}</TableHead>
                       <TableHead className="py-3.5 px-3 border-b theme-border leading-snug">{ui("عمولات الإحالة")}</TableHead>
-                      <TableHead className="sticky end-0 z-20 py-3.5 px-3 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                      <TableHead className="sticky end-0 z-20 py-3.5 px-3 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                         {ui("الإجراءات")}
                       </TableHead>
                     </TableRow>
@@ -756,7 +756,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       return (
                         <TableRow
                           key={r.id}
-                          className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                          className="group hover:bg-[var(--table-row-hover)] transition-colors"
                         >
                           {/* Account, Role & Status (Semantic Row Header) */}
                           <th scope="row" className="py-3.5 px-3 text-start align-middle border-b theme-border font-normal">
@@ -764,8 +764,8 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                               <div
                                 className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 border ${
                                   r.active
-                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                                    : "bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] theme-border"
+                                    ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/30"
+                                    : "bg-[var(--bg-card-subtle)] text-[var(--text-muted)] theme-border"
                                 }`}
                                 aria-hidden="true"
                               >
@@ -773,7 +773,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                               </div>
                               <div className="min-w-0 space-y-1.5">
                                 <Link
-                                  className="block font-bold text-sm text-slate-900 dark:text-white hover:text-amber-700 dark:hover:text-amber-400 hover:underline truncate max-w-[220px] transition"
+                                  className="block font-bold text-sm text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:underline truncate max-w-[220px] transition"
                                   href={`/admin/staff/${r.id}`}
                                 >
                                   {r.name}
@@ -790,7 +790,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                     className="rounded-lg text-[11px] font-semibold px-2 py-0.5 whitespace-nowrap"
                                   >
                                     <span
-                                      className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-emerald-600 dark:bg-emerald-400" : "bg-slate-400"}`}
+                                      className={`w-1.5 h-1.5 rounded-full ${r.active ? "bg-emerald-600 dark:bg-emerald-300" : "bg-[var(--text-placeholder)]"}`}
                                       aria-hidden="true"
                                     />
                                     <span>{ui(r.active ? "نشط" : "موقوف")}</span>
@@ -809,7 +809,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                     <a
                                       href={`tel:${r.phone}`}
                                       dir="ltr"
-                                      className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-amber-700 dark:hover:text-amber-400 whitespace-nowrap transition"
+                                      className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-[var(--text-main)] hover:text-[var(--accent-gold)] whitespace-nowrap transition"
                                     >
                                       <Phone className="w-3 h-3 text-[var(--text-muted)]" aria-hidden="true" />
                                       <span>{r.phone}</span>
@@ -820,7 +820,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                 {r.vatNumber && (
                                   <div className="text-[11px] text-[var(--text-muted)] flex flex-wrap items-center gap-x-1 gap-y-0.5">
                                     <span>{ui("الرقم الضريبي")}:</span>
-                                    <bdi dir="ltr" className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                    <bdi dir="ltr" className="font-mono font-semibold text-[var(--text-main)]">
                                       {r.vatNumber}
                                     </bdi>
                                   </div>
@@ -838,7 +838,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                 {(r.bankDetails?.bankName || r.bankDetails?.accountHolder) && (
                                   <div className="flex flex-wrap items-center gap-1.5 text-xs">
                                     {r.bankDetails?.bankName && (
-                                      <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]" title={r.bankDetails.bankName}>
+                                      <span className="font-semibold text-[var(--text-main)] truncate max-w-[150px]" title={r.bankDetails.bankName}>
                                         {r.bankDetails.bankName}
                                       </span>
                                     )}
@@ -850,17 +850,17 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                   </div>
                                 )}
                                 {r.bankDetails?.iban && (
-                                  <div className="inline-flex items-center gap-1 rounded-lg border theme-border bg-slate-50/80 dark:bg-slate-900/60 px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums whitespace-nowrap" dir="ltr">
+                                  <div className="inline-flex items-center gap-1 rounded-lg border theme-border bg-[var(--bg-card-subtle)] text-[var(--text-main)] px-2 py-0.5 font-mono text-[11px] font-semibold tabular-nums whitespace-nowrap" dir="ltr">
                                     <span className="whitespace-nowrap">{formatIbanDisplay(r.bankDetails.iban)}</span>
                                     <button
                                       type="button"
                                       onClick={() => void handleCopyIban(r.id, r.bankDetails?.iban || "")}
-                                      className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 transition cursor-pointer shrink-0"
+                                      className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-color)]/50 transition cursor-pointer shrink-0"
                                       aria-label={`${ui("نسخ الآيبان")} ${r.name}`}
                                       title={ui(copiedId === r.id ? "تم نسخ الآيبان" : "نسخ الآيبان")}
                                     >
                                       {copiedId === r.id ? (
-                                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                                       ) : (
                                         <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                                       )}
@@ -889,16 +889,16 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                           </TableCell>
 
                           {/* Actions (Sticky end) */}
-                          <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors py-3.5 px-3 align-middle text-end whitespace-nowrap border-b theme-border border-s border-slate-200 dark:border-slate-800">
+                          <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-subtle)] transition-colors py-3.5 px-3 align-middle text-end whitespace-nowrap border-b theme-border border-s theme-border">
                             <div className="inline-flex items-center justify-end gap-1.5">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 asChild
-                                className="h-8 px-2.5 gap-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 hover:border-amber-500/60 hover:bg-amber-500/5"
+                                className="h-8 px-2.5 gap-1.5 text-xs font-bold hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)]"
                               >
                                 <Link href={`/admin/staff/${r.id}`}>
-                                  <FileText className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+                                  <FileText className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                                   <span>{ui("كشف الحساب")}</span>
                                   <span className="sr-only"> — {r.name}</span>
                                 </Link>
@@ -909,7 +909,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                 type="button"
                                 aria-label={`${ui("تعديل")} — ${r.name}`}
                                 onClick={() => setEditing(r)}
-                                className="h-8 px-2.5 gap-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 hover:border-amber-500/60"
+                                className="h-8 px-2.5 gap-1.5 text-xs font-bold hover:border-[var(--accent-gold)]"
                               >
                                 <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                                 <span>{ui("تعديل")}</span>
@@ -933,13 +933,13 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                     title={
                       <span className="flex items-center gap-2.5 min-w-0">
                         <span
-                          className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-500/20"
+                          className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold text-xs flex items-center justify-center shrink-0 border border-[var(--accent-gold)]/30"
                           aria-hidden="true"
                         >
                           {r.name.trim().charAt(0) || "•"}
                         </span>
                         <Link
-                          className="font-bold text-slate-900 dark:text-white hover:underline text-sm truncate"
+                          className="font-bold text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:underline text-sm truncate"
                           href={`/admin/staff/${r.id}`}
                         >
                           {r.name}
@@ -969,10 +969,10 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                           variant="outline"
                           size="sm"
                           asChild
-                          className="flex-1 min-h-11 gap-1.5 text-xs font-bold bg-[var(--bg-card-subtle)] hover:border-amber-500/40"
+                          className="flex-1 min-h-11 gap-1.5 text-xs font-bold bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)]"
                         >
                           <Link href={`/admin/staff/${r.id}`}>
-                            <FileText className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+                            <FileText className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                             <span>{ui("كشف الحساب")}</span>
                             <span className="sr-only"> — {r.name}</span>
                           </Link>
@@ -997,7 +997,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                           <MobileCardField
                             label={ui("رقم التواصل")}
                             value={
-                              <a href={`tel:${r.phone}`} className="font-mono text-amber-700 dark:text-amber-400 font-bold" dir="ltr">
+                              <a href={`tel:${r.phone}`} className="font-mono text-[var(--accent-gold)] font-bold" dir="ltr">
                                 {r.phone}
                               </a>
                             }
@@ -1021,11 +1021,11 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                             {r.bankDetails?.bankName ? ` · ${r.bankDetails.bankName}` : ""}
                           </span>
                           {r.bankDetails?.iban ? (
-                            <span className="font-mono font-bold text-xs break-all tabular-nums block" dir="ltr">
+                            <span className="font-mono font-bold text-xs text-[var(--text-main)] break-all tabular-nums block" dir="ltr">
                               {formatIbanDisplay(r.bankDetails.iban)}
                             </span>
                           ) : r.bankDetails?.accountHolder ? (
-                            <span className="text-xs font-semibold text-slate-900 dark:text-white block">
+                            <span className="text-xs font-semibold text-[var(--text-main)] block">
                               {r.bankDetails.accountHolder}
                             </span>
                           ) : null}
@@ -1034,12 +1034,12 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                           <button
                             type="button"
                             onClick={() => void handleCopyIban(r.id, r.bankDetails?.iban || "")}
-                            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-lg border theme-border bg-[var(--bg-card)] hover:border-amber-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 transition cursor-pointer shrink-0"
+                            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-color)]/50 transition cursor-pointer shrink-0"
                             title={ui(copiedId === r.id ? "تم نسخ الآيبان" : "نسخ الآيبان")}
                             aria-label={`${ui("نسخ الآيبان")} ${r.name}`}
                           >
                             {copiedId === r.id ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                              <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                             ) : (
                               <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                             )}
@@ -1055,14 +1055,14 @@ export function MembersPage({ representatives = false }: { representatives?: boo
         </CardContent>
 
         {!list.loading && filteredItems.length > 0 && (
-          <CardFooter className="mt-0 px-4 sm:px-5 py-3 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+          <CardFooter className="mt-0 px-4 sm:px-5 py-3 bg-[var(--bg-card-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
             <span>
               {ui("عرض")}{" "}
-              <strong className="font-mono tabular-nums text-slate-900 dark:text-white">
+              <strong className="font-mono tabular-nums text-[var(--text-main)]">
                 {filteredItems.length}
               </strong>{" "}
               {ui("من إجمالي")}{" "}
-              <strong className="font-mono tabular-nums text-amber-700 dark:text-amber-400">
+              <strong className="font-mono tabular-nums text-[var(--accent-gold)]">
                 {items.length}
               </strong>{" "}
               {ui("حساب مالي")}
@@ -1367,14 +1367,14 @@ export function StaffPage({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div
-              className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-lg flex items-center justify-center shrink-0 border border-amber-500/20"
+              className="w-12 h-12 rounded-2xl bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold text-lg flex items-center justify-center shrink-0 border border-[var(--accent-gold)]/30"
               aria-hidden="true"
             >
               {d.member.name.trim().charAt(0) || "•"}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-bold text-[var(--text-main)]">
                   {d.member.name}
                 </h2>
                 <Badge variant="outline" className="text-xs font-semibold">
@@ -1391,17 +1391,17 @@ export function StaffPage({
                 {d.member.phone && (
                   <a
                     href={`tel:${d.member.phone}`}
-                    className="inline-flex items-center gap-1 hover:text-amber-700 dark:hover:text-amber-400 font-mono transition"
+                    className="inline-flex items-center gap-1 hover:text-[var(--accent-gold)] font-mono transition"
                     dir="ltr"
                   >
-                    <Phone className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
+                    <Phone className="w-3.5 h-3.5 opacity-80" aria-hidden="true" />
                     <span>{d.member.phone}</span>
                   </a>
                 )}
                 {d.member.vatNumber && (
                   <span>
                     {ui("الرقم الضريبي")}:{" "}
-                    <bdi dir="ltr" className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <bdi dir="ltr" className="font-mono font-semibold text-[var(--text-main)]">
                       {d.member.vatNumber}
                     </bdi>
                   </span>
@@ -1411,9 +1411,9 @@ export function StaffPage({
           </div>
 
           {/* Bank Account Info Box */}
-          <div className="rounded-xl border theme-border bg-slate-50/70 dark:bg-slate-900/40 p-3 sm:px-4 sm:py-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-              <CreditCard className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3 sm:px-4 sm:py-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
+              <CreditCard className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("البيانات المصرفية والبنكية")}</span>
             </div>
             {hasAnyBank ? (
@@ -1427,19 +1427,19 @@ export function StaffPage({
                 )}
                 {d.member.bankDetails?.iban && (
                   <div
-                    className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border theme-border tabular-nums"
+                    className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[var(--text-main)] bg-[var(--bg-card)] px-2.5 py-0.5 rounded-lg border theme-border tabular-nums"
                     dir="ltr"
                   >
                     <span>{formatIbanDisplay(d.member.bankDetails.iban)}</span>
                     <button
                       type="button"
                       onClick={() => void handleCopyIban()}
-                      className="min-h-8 min-w-8 inline-flex items-center justify-center rounded-md hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 transition cursor-pointer"
+                      className="min-h-8 min-w-8 inline-flex items-center justify-center rounded-md hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-color)]/50 transition cursor-pointer"
                       title={ui(copiedIban ? "تم نسخ الآيبان" : "نسخ الآيبان")}
                       aria-label={`${ui("نسخ الآيبان")} ${d.member.name}`}
                     >
                       {copiedIban ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                       ) : (
                         <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                       )}
@@ -1464,13 +1464,13 @@ export function StaffPage({
             <span className="text-xs font-bold text-[var(--text-muted)]">
               {ui("مستحقات متاحة للصرف")}
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 flex items-center justify-center">
               <Wallet className="w-4 h-4" aria-hidden="true" />
             </div>
           </div>
           <div>
             <div
-              className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+              className="text-2xl font-bold font-mono tabular-nums text-[var(--text-main)]"
               dir="ltr"
             >
               {formatMoneyValue(d.balances.entitlement)}{" "}
@@ -1506,13 +1506,13 @@ export function StaffPage({
             <span className="text-xs font-bold text-[var(--text-muted)]">
               {ui("عهدة لم تُسوَّ")}
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center">
               <Coins className="w-4 h-4" aria-hidden="true" />
             </div>
           </div>
           <div>
             <div
-              className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+              className="text-2xl font-bold font-mono tabular-nums text-[var(--text-main)]"
               dir="ltr"
             >
               {formatMoneyValue(d.balances.custody)}{" "}
@@ -1533,9 +1533,9 @@ export function StaffPage({
                   defaultKind: "CUSTODY_ISSUE",
                 })
               }
-              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] transition shadow-2xs cursor-pointer"
             >
-              <Coins className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <Coins className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("حركة عهدة")}</span>
             </button>
           )}
@@ -1547,13 +1547,13 @@ export function StaffPage({
             <span className="text-xs font-bold text-[var(--text-muted)]">
               {ui("سلف متبقية")}
             </span>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/12 text-rose-700 dark:text-rose-300 flex items-center justify-center">
               <HandCoins className="w-4 h-4" aria-hidden="true" />
             </div>
           </div>
           <div>
             <div
-              className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+              className="text-2xl font-bold font-mono tabular-nums text-[var(--text-main)]"
               dir="ltr"
             >
               {formatMoneyValue(d.balances.advance)}{" "}
@@ -1574,9 +1574,9 @@ export function StaffPage({
                   defaultKind: "ADVANCE_ISSUE",
                 })
               }
-              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl border theme-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+              className="w-full min-h-11 sm:min-h-10 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] transition shadow-2xs cursor-pointer"
             >
-              <HandCoins className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+              <HandCoins className="w-3.5 h-3.5 text-rose-700 dark:text-rose-300" aria-hidden="true" />
               <span>{ui("حركة سلفة")}</span>
             </button>
           )}
@@ -1600,8 +1600,8 @@ export function StaffPage({
             onKeyDown={(e) => handleTabKeyDown(e, "OPERATIONS")}
             className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
               activeTab === "OPERATIONS"
-                ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
-                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+                ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] shadow-xs"
+                : "border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)]"
             }`}
           >
             <Clock className="w-4 h-4" aria-hidden="true" />
@@ -1609,8 +1609,8 @@ export function StaffPage({
             <span
               className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                 activeTab === "OPERATIONS"
-                  ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
-                  : "bg-black/10 dark:bg-white/10"
+                  ? "bg-black/20 text-[var(--accent-btn-fg)] dark:bg-white/25 dark:text-[var(--accent-btn-fg)]"
+                  : "bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
               }`}
             >
               {d.operations.length}
@@ -1627,8 +1627,8 @@ export function StaffPage({
             onKeyDown={(e) => handleTabKeyDown(e, "SALARY")}
             className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
               activeTab === "SALARY"
-                ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
-                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+                ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] shadow-xs"
+                : "border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)]"
             }`}
           >
             <Banknote className="w-4 h-4" aria-hidden="true" />
@@ -1636,8 +1636,8 @@ export function StaffPage({
             <span
               className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                 activeTab === "SALARY"
-                  ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
-                  : "bg-black/10 dark:bg-white/10"
+                  ? "bg-black/20 text-[var(--accent-btn-fg)] dark:bg-white/25 dark:text-[var(--accent-btn-fg)]"
+                  : "bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
               }`}
             >
               {d.payroll.length}
@@ -1654,8 +1654,8 @@ export function StaffPage({
             onKeyDown={(e) => handleTabKeyDown(e, "COMMISSIONS")}
             className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
               activeTab === "COMMISSIONS"
-                ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
-                : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+                ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] shadow-xs"
+                : "border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)]"
             }`}
           >
             <Sparkles className="w-4 h-4" aria-hidden="true" />
@@ -1663,8 +1663,8 @@ export function StaffPage({
             <span
               className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                 activeTab === "COMMISSIONS"
-                  ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
-                  : "bg-black/10 dark:bg-white/10"
+                  ? "bg-black/20 text-[var(--accent-btn-fg)] dark:bg-white/25 dark:text-[var(--accent-btn-fg)]"
+                  : "bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
               }`}
             >
               {d.commissions.length}
@@ -1682,8 +1682,8 @@ export function StaffPage({
               onKeyDown={(e) => handleTabKeyDown(e, "LEGACY")}
               className={`min-h-11 sm:min-h-10 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "LEGACY"
-                  ? "bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 shadow-xs"
-                  : "border theme-border theme-card text-slate-700 dark:text-slate-300 hover:border-amber-500/50"
+                  ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] shadow-xs"
+                  : "border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)]"
               }`}
             >
               <FileText className="w-4 h-4" aria-hidden="true" />
@@ -1691,8 +1691,8 @@ export function StaffPage({
               <span
                 className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                   activeTab === "LEGACY"
-                    ? "bg-white/20 text-white dark:bg-slate-950/15 dark:text-slate-950"
-                    : "bg-black/10 dark:bg-white/10"
+                    ? "bg-black/20 text-[var(--accent-btn-fg)] dark:bg-white/25 dark:text-[var(--accent-btn-fg)]"
+                    : "bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
                 }`}
               >
                 {d.legacy.length}
@@ -1722,16 +1722,16 @@ export function StaffPage({
           aria-labelledby={`${tabIdPrefix}-tab-OPERATIONS`}
         >
           <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 space-y-4">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)] space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                     <Clock className="w-4 h-4" aria-hidden="true" />
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2
                       id={opsHeadingId}
-                      className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                      className="text-sm sm:text-base font-bold text-[var(--text-main)] leading-tight"
                     >
                       {ui("كشف العمليات والحركات")}
                     </h2>
@@ -1747,7 +1747,7 @@ export function StaffPage({
                     variant="ghost"
                     size="sm"
                     onClick={resetOpsFilters}
-                    className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 gap-1.5"
+                    className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 gap-1.5"
                   >
                     <X className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{ui("مسح عوامل التصفية")}</span>
@@ -1768,16 +1768,16 @@ export function StaffPage({
                         onClick={() => setOperationFilter(tab.id)}
                         className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition cursor-pointer ${
                           active
-                            ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-2xs"
-                            : "bg-white dark:bg-slate-900/70 theme-border text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white hover:border-amber-500/40"
+                            ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border-[var(--accent-btn-border)] shadow-2xs"
+                            : "bg-[var(--bg-card)] border-[var(--control-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
                         }`}
                       >
                         <span>{ui(tab.label)}</span>
                         <span
                           className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono tabular-nums ${
                             active
-                              ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                              ? "bg-black/20 text-[var(--accent-btn-fg)] dark:bg-white/25 dark:text-[var(--accent-btn-fg)]"
+                              : "bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
                           }`}
                         >
                           {operationFilterCounts[tab.id]}
@@ -1798,14 +1798,14 @@ export function StaffPage({
                     placeholder={ui("بحث في الحركات...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border theme-border bg-white dark:bg-slate-900 text-base sm:text-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                    className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-xs outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
                       aria-label={ui("مسح البحث")}
-                      className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                      className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
@@ -1817,10 +1817,10 @@ export function StaffPage({
             <CardContent className="p-0">
               {!filteredOps.length ? (
                 <div className="p-10 sm:p-14 text-center space-y-3">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center">
                     <Clock className="w-6 h-6" aria-hidden="true" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  <p className="text-sm font-bold text-[var(--text-main)]">
                     {ui(hasOpsFilter ? "لا توجد نتائج مطابقة للبحث" : "لا توجد حركات مسجلة")}
                   </p>
                   {hasOpsFilter && (
@@ -1865,7 +1865,7 @@ export function StaffPage({
                       <TableCaption className="sr-only">
                         {ui("كشف العمليات والحركات")}
                       </TableCaption>
-                      <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                      <TableHeader className="bg-[var(--table-header-bg)] text-xs font-bold text-[var(--text-muted)]">
                         <TableRow className="hover:bg-transparent">
                           <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">
                             {ui("التاريخ")}
@@ -1886,7 +1886,7 @@ export function StaffPage({
                             {ui("أثر العهدة / السلفة")}
                           </TableHead>
                           {!readOnly && (
-                            <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                            <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                               {ui("الإجراءات")}
                             </TableHead>
                           )}
@@ -1906,11 +1906,11 @@ export function StaffPage({
                           return (
                             <TableRow
                               key={o.id}
-                              className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                              className="group hover:bg-[var(--table-row-hover)] transition-colors"
                             >
                               <th
                                 scope="row"
-                                className="py-3.5 px-3 text-start align-middle border-b theme-border font-mono font-semibold tabular-nums whitespace-nowrap text-slate-700 dark:text-slate-300"
+                                className="py-3.5 px-3 text-start align-middle border-b theme-border font-mono font-semibold tabular-nums whitespace-nowrap text-[var(--text-main)]"
                               >
                                 <bdi dir="ltr">{o.effectiveDate.slice(0, 10)}</bdi>
                               </th>
@@ -1924,11 +1924,11 @@ export function StaffPage({
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell className="py-3.5 px-3 align-middle border-b theme-border font-medium min-w-[140px] max-w-[230px] whitespace-normal break-words leading-relaxed text-slate-800 dark:text-slate-200">
+                              <TableCell className="py-3.5 px-3 align-middle border-b theme-border font-medium min-w-[140px] max-w-[230px] whitespace-normal break-words leading-relaxed text-[var(--text-main)]">
                                 {o.description}
                               </TableCell>
                               <TableCell
-                                className="py-3.5 px-3 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap"
+                                className="py-3.5 px-3 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap text-[var(--text-main)]"
                                 dir="ltr"
                               >
                                 {formatMoneyValue(o.amount)} SAR
@@ -1941,8 +1941,8 @@ export function StaffPage({
                                   <span
                                     className={
                                       entitlement.negative
-                                        ? "text-rose-700 dark:text-rose-400 font-bold"
-                                        : "text-emerald-700 dark:text-emerald-400 font-bold"
+                                        ? "text-rose-700 dark:text-rose-300 font-bold"
+                                        : "text-emerald-800 dark:text-emerald-300 font-bold"
                                     }
                                   >
                                     {entitlement.display} SAR
@@ -1955,13 +1955,13 @@ export function StaffPage({
                                 {hasCustodyDelta || hasAdvanceDelta ? (
                                   <div className="flex flex-col items-start gap-1">
                                     {hasCustodyDelta && (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 font-semibold whitespace-nowrap">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25 font-semibold whitespace-nowrap">
                                         <span>{ui("العهد")}:</span>
                                         <bdi dir="ltr">{custody.display}</bdi>
                                       </span>
                                     )}
                                     {hasAdvanceDelta && (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20 font-semibold whitespace-nowrap">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/12 text-rose-800 dark:text-rose-300 border border-rose-500/25 font-semibold whitespace-nowrap">
                                         <span>{ui("السلف")}:</span>
                                         <bdi dir="ltr">{advance.display}</bdi>
                                       </span>
@@ -1972,14 +1972,14 @@ export function StaffPage({
                                 )}
                               </TableCell>
                               {!readOnly && (
-                                <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors py-3.5 px-3 align-middle border-b theme-border border-s border-slate-200 dark:border-slate-800 text-end whitespace-nowrap">
+                                <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-subtle)] transition-colors py-3.5 px-3 align-middle border-b theme-border border-s theme-border text-end whitespace-nowrap">
                                   {canReverse ? (
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setReverseModalOp(o)}
-                                      className="h-8 px-2.5 gap-1 text-xs font-bold text-rose-700 dark:text-rose-400 border-slate-200 dark:border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/5"
+                                      className="h-8 px-2.5 gap-1 text-xs font-bold text-rose-700 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/60 hover:bg-rose-500/10"
                                       aria-label={`${ui("عكس موثق")}: ${o.description}`}
                                     >
                                       <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1994,17 +1994,17 @@ export function StaffPage({
                           );
                         })}
                       </TableBody>
-                      <TableFooter className="bg-slate-50/90 dark:bg-slate-900/80 text-xs">
+                      <TableFooter className="bg-[var(--table-header-bg)] text-xs">
                         <TableRow className="hover:bg-transparent">
                           <th
                             scope="row"
                             colSpan={3}
-                            className="py-3.5 px-3 text-start font-bold text-slate-900 dark:text-white border-t theme-border"
+                            className="py-3.5 px-3 text-start font-bold text-[var(--text-main)] border-t theme-border"
                           >
                             {ui("ملخص الحركات المصفاة")} ({filteredOps.length})
                           </th>
                           <TableCell
-                            className="py-3.5 px-3 text-end font-mono font-bold tabular-nums text-slate-900 dark:text-white border-t theme-border whitespace-nowrap"
+                            className="py-3.5 px-3 text-end font-mono font-bold tabular-nums text-[var(--text-main)] border-t theme-border whitespace-nowrap"
                             dir="ltr"
                           >
                             {formatMoneyValue(formatSignedMinor(opsAmountTotalMinor))} SAR
@@ -2017,8 +2017,8 @@ export function StaffPage({
                               <span
                                 className={
                                   opsEntitlementNetFormatted.negative
-                                    ? "text-rose-700 dark:text-rose-400"
-                                    : "text-emerald-700 dark:text-emerald-400"
+                                    ? "text-rose-700 dark:text-rose-300"
+                                    : "text-emerald-800 dark:text-emerald-300"
                                 }
                               >
                                 {opsEntitlementNetFormatted.display} SAR
@@ -2031,13 +2031,13 @@ export function StaffPage({
                             {opsCustodyNetMinor !== BigInt(0) || opsAdvanceNetMinor !== BigInt(0) ? (
                               <div className="flex flex-col items-start gap-1">
                                 {opsCustodyNetMinor !== BigInt(0) && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 font-semibold whitespace-nowrap">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25 font-semibold whitespace-nowrap">
                                     <span>{ui("العهد")}:</span>
                                     <bdi dir="ltr">{opsCustodyNetFormatted.display}</bdi>
                                   </span>
                                 )}
                                 {opsAdvanceNetMinor !== BigInt(0) && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20 font-semibold whitespace-nowrap">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/12 text-rose-800 dark:text-rose-300 border border-rose-500/25 font-semibold whitespace-nowrap">
                                     <span>{ui("السلف")}:</span>
                                     <bdi dir="ltr">{opsAdvanceNetFormatted.display}</bdi>
                                   </span>
@@ -2048,7 +2048,7 @@ export function StaffPage({
                             )}
                           </TableCell>
                           {!readOnly && (
-                            <TableCell className="sticky end-0 z-10 bg-slate-50 dark:bg-slate-900 py-3.5 px-3 border-t theme-border border-s border-slate-200 dark:border-slate-800" />
+                            <TableCell className="sticky end-0 z-10 bg-[var(--table-header-bg)] py-3.5 px-3 border-t theme-border border-s theme-border" />
                           )}
                         </TableRow>
                       </TableFooter>
@@ -2097,7 +2097,7 @@ export function StaffPage({
                                   size="sm"
                                   onClick={() => setReverseModalOp(o)}
                                   aria-label={`${ui("عكس موثق")}: ${o.description}`}
-                                  className="flex-1 min-h-11 gap-1.5 px-3 bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-400 hover:border-rose-500/40 text-xs font-bold"
+                                  className="flex-1 min-h-11 gap-1.5 px-3 bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/60 text-xs font-bold"
                                 >
                                   <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                                   <span>{ui("عكس موثق")}</span>
@@ -2121,8 +2121,8 @@ export function StaffPage({
                                   <span
                                     className={
                                       entitlement.negative
-                                        ? "text-rose-700 dark:text-rose-400"
-                                        : "text-emerald-700 dark:text-emerald-400"
+                                        ? "text-rose-700 dark:text-rose-300"
+                                        : "text-emerald-800 dark:text-emerald-300"
                                     }
                                     dir="ltr"
                                   >
@@ -2137,13 +2137,13 @@ export function StaffPage({
                           {(hasCustodyDelta || hasAdvanceDelta) && (
                             <div className="flex flex-wrap items-center gap-1.5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-3 py-2">
                               {hasCustodyDelta && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 text-xs font-mono tabular-nums font-semibold">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25 text-xs font-mono tabular-nums font-semibold">
                                   <span>{ui("العهد")}:</span>
                                   <bdi dir="ltr">{custody.display}</bdi>
                                 </span>
                               )}
                               {hasAdvanceDelta && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20 text-xs font-mono tabular-nums font-semibold">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/12 text-rose-800 dark:text-rose-300 border border-rose-500/25 text-xs font-mono tabular-nums font-semibold">
                                   <span>{ui("السلف")}:</span>
                                   <bdi dir="ltr">{advance.display}</bdi>
                                 </span>
@@ -2159,21 +2159,21 @@ export function StaffPage({
             </CardContent>
 
             {filteredOps.length > 0 && (
-              <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+              <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-[var(--bg-card-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
                 <span>
                   {ui("عرض")}{" "}
-                  <strong className="font-mono tabular-nums text-slate-900 dark:text-white">
+                  <strong className="font-mono tabular-nums text-[var(--text-main)]">
                     {filteredOps.length}
                   </strong>{" "}
                   {ui("من إجمالي")}{" "}
-                  <strong className="font-mono tabular-nums text-amber-700 dark:text-amber-400">
+                  <strong className="font-mono tabular-nums text-[var(--accent-gold)]">
                     {d.operations.length}
                   </strong>
                 </span>
                 <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tabular-nums">
                   <span>
                     {ui("إجمالي المبالغ")}:{" "}
-                    <bdi dir="ltr" className="font-bold text-slate-900 dark:text-white">
+                    <bdi dir="ltr" className="font-bold text-[var(--text-main)]">
                       {formatMoneyValue(formatSignedMinor(opsAmountTotalMinor))} SAR
                     </bdi>
                   </span>
@@ -2183,10 +2183,10 @@ export function StaffPage({
                       dir="ltr"
                       className={
                         opsEntitlementNetFormatted.negative
-                          ? "font-bold text-rose-700 dark:text-rose-400"
+                          ? "font-bold text-rose-700 dark:text-rose-300"
                           : opsEntitlementNetFormatted.positive
-                            ? "font-bold text-emerald-700 dark:text-emerald-400"
-                            : "font-bold text-slate-900 dark:text-white"
+                            ? "font-bold text-emerald-800 dark:text-emerald-300"
+                            : "font-bold text-[var(--text-main)]"
                       }
                     >
                       {opsEntitlementNetFormatted.display} SAR
@@ -2211,12 +2211,12 @@ export function StaffPage({
           <Card className="theme-card p-5 border theme-border shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Banknote className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>{ui("الراتب الساري")}</span>
                 </h2>
                 {d.salaryTerms.length > 0 ? (
-                  <p className="text-sm mt-1.5 text-slate-700 dark:text-slate-300">
+                  <p className="text-sm mt-1.5 text-[var(--text-main)]">
                     {ui("راتب ساري من")}:{" "}
                     <span className="font-mono font-bold tabular-nums" dir="ltr">
                       {d.salaryTerms[0].effectiveFrom.slice(0, 10)}
@@ -2224,7 +2224,7 @@ export function StaffPage({
                     ·{" "}
                     <b
                       dir="ltr"
-                      className="font-mono text-base tabular-nums text-amber-700 dark:text-amber-400"
+                      className="font-mono text-base tabular-nums text-[var(--accent-gold)]"
                     >
                       {formatMoneyValue(d.salaryTerms[0].amount)} SAR
                     </b>
@@ -2252,15 +2252,15 @@ export function StaffPage({
 
           {/* Monthly Payroll Drafts Card */}
           <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 flex-row flex-wrap items-center justify-between gap-3">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)] flex-row flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                   <Banknote className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2
                     id={payrollHeadingId}
-                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                    className="text-sm sm:text-base font-bold text-[var(--text-main)] leading-tight"
                   >
                     {ui("مسيرات الرواتب الشهرية")}
                   </h2>
@@ -2292,10 +2292,10 @@ export function StaffPage({
 
               {!d.payroll.length ? (
                 <div className="p-10 sm:p-12 text-center space-y-3">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center">
                     <Banknote className="w-6 h-6" aria-hidden="true" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  <p className="text-sm font-bold text-[var(--text-main)]">
                     {ui("لا توجد مسيرات رواتب مسجلة")}
                   </p>
                   {!readOnly && (
@@ -2325,7 +2325,7 @@ export function StaffPage({
                       <TableCaption className="sr-only">
                         {ui("مسيرات الرواتب الشهرية")}
                       </TableCaption>
-                      <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                      <TableHeader className="bg-[var(--table-header-bg)] text-xs font-bold text-[var(--text-main)]">
                         <TableRow className="hover:bg-transparent">
                           <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
                             {ui("شهر المسير")}
@@ -2340,7 +2340,7 @@ export function StaffPage({
                             {ui("المبلغ")}
                           </TableHead>
                           {!readOnly && (
-                            <TableHead className="sticky end-0 z-20 py-3.5 px-4 text-end border-b theme-border border-s border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 whitespace-nowrap">
+                            <TableHead className="sticky end-0 z-20 py-3.5 px-4 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                               {ui("الإجراءات")}
                             </TableHead>
                           )}
@@ -2350,11 +2350,11 @@ export function StaffPage({
                         {d.payroll.map((p) => (
                           <TableRow
                             key={`${p.id}:${p.version}`}
-                            className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                            className="group hover:bg-[var(--table-row-hover)] transition-colors"
                           >
                             <th
                               scope="row"
-                              className="py-3.5 px-4 text-start align-middle border-b theme-border font-mono font-bold text-sm tabular-nums whitespace-nowrap text-slate-900 dark:text-white"
+                              className="py-3.5 px-4 text-start align-middle border-b theme-border font-mono font-bold text-sm tabular-nums whitespace-nowrap text-[var(--text-main)]"
                             >
                               <bdi dir="ltr">{p.month}</bdi>
                             </th>
@@ -2368,7 +2368,7 @@ export function StaffPage({
                             </TableCell>
                             <TableCell className="py-3.5 px-4 align-middle border-b theme-border max-w-md whitespace-normal break-words">
                               {p.adjustmentReason ? (
-                                <span className="text-slate-700 dark:text-slate-300">
+                                <span className="text-[var(--text-main)]">
                                   {p.adjustmentReason}
                                 </span>
                               ) : (
@@ -2378,13 +2378,13 @@ export function StaffPage({
                               )}
                             </TableCell>
                             <TableCell
-                              className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums text-amber-700 dark:text-amber-400 whitespace-nowrap"
+                              className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums text-[var(--accent-gold)] whitespace-nowrap"
                               dir="ltr"
                             >
                               {formatMoneyValue(p.amount)} SAR
                             </TableCell>
                             {!readOnly && (
-                              <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors py-3.5 px-4 align-middle border-b theme-border border-s border-slate-200 dark:border-slate-800 text-end whitespace-nowrap">
+                              <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-subtle)] transition-colors py-3.5 px-4 align-middle border-b theme-border border-s theme-border text-end whitespace-nowrap">
                                 {p.status === "DRAFT" ? (
                                   <div className="inline-flex items-center justify-end gap-1.5">
                                     <Button
@@ -2487,7 +2487,7 @@ export function StaffPage({
                             label={ui("المبلغ")}
                             mono
                             value={
-                              <span dir="ltr" className="text-amber-700 dark:text-amber-400 font-bold">
+                              <span dir="ltr" className="text-[var(--accent-gold)] font-bold">
                                 {formatMoneyValue(p.amount)} SAR
                               </span>
                             }
@@ -2516,15 +2516,15 @@ export function StaffPage({
           aria-labelledby={`${tabIdPrefix}-tab-COMMISSIONS`}
         >
           <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 flex-row flex-wrap items-center justify-between gap-3">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)] flex-row flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/25 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                   <Sparkles className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2
                     id={commissionsHeadingId}
-                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                    className="text-sm sm:text-base font-bold text-[var(--text-main)] leading-tight"
                   >
                     {ui("عمولات الرحلات")}
                   </h2>
@@ -2549,10 +2549,10 @@ export function StaffPage({
             <CardContent className="p-0">
               {!d.commissions.length ? (
                 <div className="p-10 sm:p-12 text-center space-y-2">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/25 text-[var(--accent-gold)] flex items-center justify-center">
                     <Sparkles className="w-6 h-6" aria-hidden="true" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  <p className="text-sm font-bold text-[var(--text-main)]">
                     {ui("لا توجد عمولات رحلات مسجلة")}
                   </p>
                 </div>
@@ -2568,7 +2568,7 @@ export function StaffPage({
                       <TableCaption className="sr-only">
                         {ui("عمولات الرحلات")}
                       </TableCaption>
-                      <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                      <TableHeader className="bg-[var(--table-header-bg)] text-xs font-bold text-[var(--text-main)]">
                         <TableRow className="hover:bg-transparent">
                           <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
                             {ui("رقم العقد")}
@@ -2597,7 +2597,7 @@ export function StaffPage({
                           return (
                             <TableRow
                               key={c.contractId}
-                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                              className="hover:bg-[var(--table-row-hover)] transition-colors"
                             >
                               <th
                                 scope="row"
@@ -2606,10 +2606,10 @@ export function StaffPage({
                                 <div className="space-y-1">
                                   <Link
                                     href={href}
-                                    className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1.5"
+                                    className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline inline-flex items-center gap-1.5"
                                   >
                                     <span>{ref}</span>
-                                    <ExternalLink className="w-3 h-3 opacity-70" aria-hidden="true" />
+                                    <ExternalLink className="w-3 h-3 opacity-80" aria-hidden="true" />
                                   </Link>
                                   {c.contract?.tripDate && (
                                     <div className="text-[11px] text-[var(--text-muted)] font-mono tabular-nums">
@@ -2654,19 +2654,19 @@ export function StaffPage({
                                 </Badge>
                               </TableCell>
                               <TableCell
-                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap"
+                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap text-[var(--text-main)]"
                                 dir="ltr"
                               >
                                 {formatMoneyValue(c.amount)} SAR
                               </TableCell>
                               <TableCell
-                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-semibold tabular-nums text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
+                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-semibold tabular-nums text-emerald-800 dark:text-emerald-300 whitespace-nowrap"
                                 dir="ltr"
                               >
                                 {formatMoneyValue(c.paidAmount)} SAR
                               </TableCell>
                               <TableCell
-                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums text-amber-700 dark:text-amber-400 whitespace-nowrap"
+                                className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums text-[var(--accent-gold)] whitespace-nowrap"
                                 dir="ltr"
                               >
                                 {formatMoneyValue(c.remainingAmount)} SAR
@@ -2675,29 +2675,29 @@ export function StaffPage({
                           );
                         })}
                       </TableBody>
-                      <TableFooter className="bg-slate-50/90 dark:bg-slate-900/80 text-xs">
+                      <TableFooter className="bg-[var(--table-header-bg)] text-xs">
                         <TableRow className="hover:bg-transparent">
                           <th
                             scope="row"
                             colSpan={3}
-                            className="py-3.5 px-4 text-start font-bold text-slate-900 dark:text-white border-t theme-border"
+                            className="py-3.5 px-4 text-start font-bold text-[var(--text-main)] border-t theme-border"
                           >
                             {ui("إجمالي العمولات")} ({d.commissions.length})
                           </th>
                           <TableCell
-                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-slate-900 dark:text-white border-t theme-border whitespace-nowrap"
+                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-[var(--text-main)] border-t theme-border whitespace-nowrap"
                             dir="ltr"
                           >
                             {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
                           </TableCell>
                           <TableCell
-                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-emerald-700 dark:text-emerald-400 border-t theme-border whitespace-nowrap"
+                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-emerald-800 dark:text-emerald-300 border-t theme-border whitespace-nowrap"
                             dir="ltr"
                           >
                             {formatMoneyValue(formatSignedMinor(commPaidMinor))} SAR
                           </TableCell>
                           <TableCell
-                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-amber-700 dark:text-amber-400 border-t theme-border whitespace-nowrap"
+                            className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-[var(--accent-gold)] border-t theme-border whitespace-nowrap"
                             dir="ltr"
                           >
                             {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
@@ -2719,10 +2719,10 @@ export function StaffPage({
                           title={
                             <Link
                               href={href}
-                              className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1.5"
+                              className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline inline-flex items-center gap-1.5"
                             >
                               <span>{ref}</span>
-                              <ExternalLink className="w-3 h-3 opacity-70" aria-hidden="true" />
+                              <ExternalLink className="w-3 h-3 opacity-80" aria-hidden="true" />
                             </Link>
                           }
                           subtitle={
@@ -2778,7 +2778,7 @@ export function StaffPage({
                               label={ui("المدفوع من العمولة")}
                               mono
                               value={
-                                <span dir="ltr" className="text-emerald-700 dark:text-emerald-400">
+                                <span dir="ltr" className="text-emerald-800 dark:text-emerald-300 font-bold">
                                   {formatMoneyValue(c.paidAmount)} SAR
                                 </span>
                               }
@@ -2788,7 +2788,7 @@ export function StaffPage({
                               alignEnd
                               mono
                               value={
-                                <span dir="ltr" className="text-amber-700 dark:text-amber-400">
+                                <span dir="ltr" className="text-[var(--accent-gold)] font-bold">
                                   {formatMoneyValue(c.remainingAmount)} SAR
                                 </span>
                               }
@@ -2803,24 +2803,24 @@ export function StaffPage({
             </CardContent>
 
             {d.commissions.length > 0 && (
-              <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+              <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-[var(--bg-card-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
                 <span>{ui("إجمالي العمولات")}</span>
                 <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tabular-nums">
                   <span>
                     {ui("قيمة العمولة")}:{" "}
-                    <bdi dir="ltr" className="font-bold text-slate-900 dark:text-white">
+                    <bdi dir="ltr" className="font-bold text-[var(--text-main)]">
                       {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
                     </bdi>
                   </span>
                   <span>
                     {ui("المدفوع من العمولة")}:{" "}
-                    <bdi dir="ltr" className="font-bold text-emerald-700 dark:text-emerald-400">
+                    <bdi dir="ltr" className="font-bold text-emerald-800 dark:text-emerald-300">
                       {formatMoneyValue(formatSignedMinor(commPaidMinor))} SAR
                     </bdi>
                   </span>
                   <span>
                     {ui("المتبقي من العمولة")}:{" "}
-                    <bdi dir="ltr" className="font-bold text-amber-700 dark:text-amber-400">
+                    <bdi dir="ltr" className="font-bold text-[var(--accent-gold)]">
                       {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
                     </bdi>
                   </span>
@@ -2839,12 +2839,12 @@ export function StaffPage({
           aria-labelledby={`${tabIdPrefix}-tab-LEGACY`}
         >
           <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
+            <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)] space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <FileText className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
                 <h2
                   id={legacyHeadingId}
-                  className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight"
+                  className="text-sm sm:text-base font-bold text-[var(--text-main)] leading-tight"
                 >
                   {ui("أرشيف الحركات السابقة")}
                 </h2>
@@ -2869,7 +2869,7 @@ export function StaffPage({
                   <TableCaption className="sr-only">
                     {ui("أرشيف الحركات السابقة")}
                   </TableCaption>
-                  <TableHeader className="bg-slate-50/90 dark:bg-slate-900/80 text-xs font-bold text-[var(--text-muted)]">
+                  <TableHeader className="bg-[var(--table-header-bg)] text-xs font-bold text-[var(--text-main)]">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="py-3.5 px-4 border-b theme-border whitespace-nowrap">
                         {ui("التاريخ")}
@@ -2886,19 +2886,19 @@ export function StaffPage({
                     {d.legacy.map((l) => (
                       <TableRow
                         key={l.id}
-                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                        className="hover:bg-[var(--table-row-hover)] transition-colors"
                       >
                         <th
                           scope="row"
-                          className="py-3.5 px-4 text-start align-middle border-b theme-border font-mono font-semibold tabular-nums whitespace-nowrap text-slate-700 dark:text-slate-300"
+                          className="py-3.5 px-4 text-start align-middle border-b theme-border font-mono font-semibold tabular-nums whitespace-nowrap text-[var(--text-main)]"
                         >
                           <bdi dir="ltr">{l.effectiveDate.slice(0, 10)}</bdi>
                         </th>
-                        <TableCell className="py-3.5 px-4 align-middle border-b theme-border whitespace-normal break-words text-slate-800 dark:text-slate-200">
+                        <TableCell className="py-3.5 px-4 align-middle border-b theme-border whitespace-normal break-words text-[var(--text-main)]">
                           {l.description}
                         </TableCell>
                         <TableCell
-                          className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap"
+                          className="py-3.5 px-4 align-middle border-b theme-border text-end font-mono font-bold tabular-nums whitespace-nowrap text-[var(--text-main)]"
                           dir="ltr"
                         >
                           {l.direction} {formatMoneyValue(l.amount)} SAR
@@ -2921,7 +2921,7 @@ export function StaffPage({
                     }
                     subtitle={l.description}
                     badge={
-                      <span className="font-mono text-xs font-bold tabular-nums text-slate-900 dark:text-white" dir="ltr">
+                      <span className="font-mono text-xs font-bold tabular-nums text-[var(--text-main)]" dir="ltr">
                         {l.direction} {formatMoneyValue(l.amount)} SAR
                       </span>
                     }
@@ -2982,55 +2982,55 @@ function OperationBadge({ kind }: { kind: string }) {
 
   if (kind === "PAYOUT") {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 border border-emerald-600/25">
+        <CheckCircle2 className="w-3 h-3 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );
   }
   if (kind === "SALARY") {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
-        <Banknote className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-sky-500/12 text-sky-800 dark:text-sky-300 border border-sky-600/25">
+        <Banknote className="w-3 h-3 text-sky-700 dark:text-sky-300 shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );
   }
   if (kind === "COMMISSION" || kind === "COMMISSION_BILL") {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-        <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
+        <Sparkles className="w-3 h-3 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );
   }
   if (kind.startsWith("CUSTODY")) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20">
-        <Coins className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-indigo-500/12 text-indigo-800 dark:text-indigo-300 border border-indigo-600/25">
+        <Coins className="w-3 h-3 text-indigo-700 dark:text-indigo-300 shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );
   }
   if (kind.startsWith("ADVANCE")) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-500/20">
-        <HandCoins className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-orange-500/12 text-orange-800 dark:text-orange-300 border border-orange-600/25">
+        <HandCoins className="w-3 h-3 text-orange-700 dark:text-orange-300 shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );
   }
   if (kind === "REVERSAL") {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
-        <RotateCcw className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-rose-500/12 text-rose-800 dark:text-rose-300 border border-rose-600/25">
+        <RotateCcw className="w-3 h-3 text-rose-700 dark:text-rose-300 shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border theme-border">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-[var(--bg-card-subtle)] text-[var(--text-main)] border theme-border">
       {label}
     </span>
   );
@@ -3110,15 +3110,15 @@ function MovementModal({
     <Modal label="تسجيل حركة مالية" onClose={onClose} isBusy={m.busy}>
       <section className="mobile-dialog-panel theme-card w-full max-w-lg rounded-2xl p-5 sm:p-7 space-y-4">
         <div className="flex items-center justify-between border-b theme-border pb-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-amber-500" aria-hidden="true" />
+          <h2 className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("تسجيل حركة مالية")}</span>
           </h2>
           <button
             type="button"
             aria-label={ui("إغلاق")}
             onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -3274,7 +3274,7 @@ function MovementModal({
                   </select>
                 </Field>
                 <Link
-                  className="block underline text-xs font-bold text-amber-700 dark:text-amber-400"
+                  className="block underline text-xs font-bold text-[var(--accent-gold)]"
                   href="/admin/purchases"
                 >
                   {ui("تسجيل فاتورة مورد أولًا")}
@@ -3368,15 +3368,15 @@ function SalaryTermModal({
     <Modal label="الراتب الشهري" onClose={onClose} isBusy={m.busy}>
       <section className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between border-b theme-border pb-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Banknote className="w-5 h-5 text-amber-500" aria-hidden="true" />
+          <h2 className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("الراتب الشهري")}</span>
           </h2>
           <button
             type="button"
             aria-label={ui("إغلاق")}
             onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -3485,15 +3485,15 @@ function PayrollModal({
     >
       <section className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between border-b theme-border pb-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-500" aria-hidden="true" />
+          <h2 className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{editing ? ui("تعديل") : ui("إنشاء مسودة المسير")}</span>
           </h2>
           <button
             type="button"
             aria-label={ui("إغلاق")}
             onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -3596,21 +3596,21 @@ function ReverseModal({
     <Modal label="عكس موثق" onClose={onClose} isBusy={m.busy}>
       <section className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between border-b theme-border pb-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <RotateCcw className="w-5 h-5 text-rose-500" aria-hidden="true" />
+          <h2 className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 text-rose-700 dark:text-rose-300" aria-hidden="true" />
             <span>{ui("عكس موثق")}</span>
           </h2>
           <button
             type="button"
             aria-label={ui("إغلاق")}
             onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border theme-border text-xs space-y-1 font-mono">
+        <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border text-xs space-y-1 font-mono text-[var(--text-main)]">
           <div>
             <span className="text-[var(--text-muted)]">{ui("البيان")}:</span>{" "}
             {op.description}

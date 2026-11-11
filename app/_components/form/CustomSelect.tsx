@@ -156,10 +156,10 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
               pe-10
               ${
                 error
-                  ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                  : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20"
+                  : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] focus:border-[var(--accent-gold)] focus:ring-2 focus:ring-[var(--accent-gold)]/20"
               }
-              ${disabled ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}
+              ${disabled ? "opacity-55 cursor-not-allowed bg-[var(--bg-card-subtle)]" : ""}
               ${className}`}
           >
             {options.map((opt) => (
@@ -167,7 +167,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
                 key={opt.value}
                 value={opt.value}
                 disabled={opt.disabled}
-                className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5"
+                className="bg-[var(--input-bg)] text-[var(--text-main)] py-1.5"
               >
                 {ui(opt.label)}
               </option>

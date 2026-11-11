@@ -121,8 +121,8 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           </div>
         ) : (
           <>
-            <div className="w-10 h-10 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-            <p role="status" className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
+            <div className="w-10 h-10 border-3 border-[var(--accent-gold)]/25 border-t-[var(--accent-gold)] rounded-full animate-spin" />
+            <p role="status" className="text-xs font-bold text-[var(--text-muted)]">
               {ui("جارٍ تحميل الفاتورة…")}</p>
           </>
         )}
@@ -153,46 +153,46 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       {/* Breadcrumb & Top Bar (§4, §6) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] dark:text-slate-400 mb-1.5">
-            <Link href="/admin" className="hover:text-amber-600 transition">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-1.5">
+            <Link href="/admin" className="hover:text-[var(--accent-gold)] transition">
               {ui("لوحة الإدارة")}</Link>
             <span>/</span>
-            <Link href="/admin/invoices" className="text-amber-700 dark:text-amber-400 font-bold hover:underline">
+            <Link href="/admin/invoices" className="text-[var(--accent-gold)] font-bold hover:underline">
               {ui("الفواتير")}</Link>
             <span>/</span>
-            <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+            <span className="font-mono font-bold text-[var(--text-main)]" dir="ltr">
               {data.invoiceNumber}
             </span>
           </div>
 
           <header className="flex flex-wrap items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)] shrink-0">
               <ReceiptText className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-semibold font-mono text-slate-900 dark:text-white" dir="ltr">
+                <h1 className="text-xl sm:text-2xl font-semibold font-mono text-[var(--text-main)]" dir="ltr">
                   {data.invoiceNumber}
                 </h1>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                     isCredit
-                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"
                       : isDebit
-                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                        ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/35"
                         : isProforma
-                          ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
-                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                          ? "bg-sky-500/10 text-sky-800 dark:text-sky-300 border-sky-600/25"
+                          : "bg-emerald-500/12 text-emerald-800 border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35"
                   }`}
                 >
                   {ui(isCredit ? "إشعار دائن (خفض)" : isDebit ? "إشعار مدين (إضافة)" : invoiceTitle(data.snapshot.input))}
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300 border theme-border text-xs font-bold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--bg-card-subtle)] text-[var(--text-main)] border theme-border text-xs font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>{ui("محفوظة في النظام")}</span>
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 mt-0.5">
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
                 {buyer.name} {ui("· تاريخ الإصدار:")}{" "}
                 <span className="font-mono" dir="ltr">{dateLabel(data.invoiceDate, ui.language)}</span>
               </p>
@@ -204,18 +204,18 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           {data.contractId && (
             <Link
               href={`/admin/contracts/${encodeURIComponent(data.contractId)}`}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-200 transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition"
             >
-              <FileText className="w-4 h-4 text-amber-500" aria-hidden="true" />
+              <FileText className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("العقد المرتبط")}</span>
             </Link>
           )}
 
           <Link
             href="/admin/invoices/new"
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-200 transition"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition"
           >
-            <Plus className="w-4 h-4 text-amber-500" aria-hidden="true" />
+            <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("فاتورة جديدة")}</span>
           </Link>
 
@@ -223,9 +223,9 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             <button
               type="button"
               onClick={() => setShowPaymentModal(true)}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
             >
-              <CreditCard className="w-4 h-4 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+              <CreditCard className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("تسجيل دفعة")}</span>
             </button>
           )}
@@ -234,10 +234,10 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           <button
             type="button"
             onClick={() => setShowWhatsAppModal(true)}
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
             title={ui("إرسال الفاتورة للعميل عبر واتساب")}
           >
-            <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+            <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
             <span>{ui("إرسال عبر واتساب")}</span>
           </button>
           <button
@@ -268,38 +268,38 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
       {/* Prominent Financial Status Ribbon (§6: المبلغ المدفوع والمتبقي) */}
       {!isProforma && (
-        <section className="theme-card p-5 sm:p-6 rounded-2xl border theme-border shadow-2xs space-y-4">
+        <section className="theme-card p-5 sm:p-6 rounded-2xl border theme-border space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-3.5">
             <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-amber-500" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+              <CreditCard className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-[var(--text-main)]">
                 {ui("حالة السداد والتحصيل")}</h2>
             </div>
             <div>
               {isLoadingBalance ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)]">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" aria-hidden="true" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>{ui("تحديث الرصيد…")}</span>
                 </span>
               ) : !balanceData ? (
                 <span className="text-xs text-[var(--text-muted)]">
                   {ui.language === "ar" ? "الرصيد غير متاح؛ أعد المحاولة قبل تسجيل دفعة." : "Balance unavailable. Retry before recording a payment."}{" "}
-                  <button type="button" className="underline cursor-pointer" onClick={() => void loadBalance()}>
+                  <button type="button" className="underline text-[var(--accent-gold)] cursor-pointer" onClick={() => void loadBalance()}>
                     {ui("إعادة المحاولة")}
                   </button>
                 </span>
               ) : isRefundDue ? (
-                <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-400">
+                <span className="rounded-full bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 px-3 py-1 text-xs font-bold text-[var(--accent-gold)]">
                   {ui.language === "ar" ? "يوجد مبلغ مستحق للعميل" : "Customer refund due"}
                 </span>
               ) : isFullyPaid ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/12 text-emerald-800 border border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35 text-xs font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                   <span>{ui("مدفوع بالكامل (0.00 ر.س متبقي)")}</span>
                 </span>
               ) : isPartiallyPaid ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-semibold">
-                  <Clock className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/35 text-xs font-semibold">
+                  <Clock className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>
                     {ui.language === "en"
                       ? `Partially paid (${formatMoneyValue(remainingText)} SAR remaining)`
@@ -316,29 +316,29 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border">
+            <div className="p-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
               <span className="text-xs text-[var(--text-muted)] block">{ui("الإجمالي الشامل (15%)")}</span>
-              <strong className="mt-1 block font-mono text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
+              <strong className="mt-1 block font-mono text-lg sm:text-xl font-semibold text-[var(--text-main)]">
                 <bdi dir="ltr">{formatMoneyValue(data.snapshot.totals.gross)}</bdi>{" "}
-                <span className="text-xs text-amber-700 dark:text-amber-400 font-bold">{ui("ر.س")}</span>
+                <span className="text-xs text-[var(--accent-gold)] font-bold">{ui("ر.س")}</span>
               </strong>
             </div>
 
-            <div className="p-4 rounded-xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20">
-              <span className="text-xs text-emerald-700 dark:text-emerald-400 block font-bold">
+            <div className="p-4 rounded-xl bg-emerald-500/12 border border-emerald-600/35 dark:bg-emerald-950/45 dark:border-emerald-500/35">
+              <span className="text-xs text-emerald-800 dark:text-emerald-300 block font-bold">
                 {ui("المبلغ المدفوع (المحصل)")}</span>
-              <strong className="mt-1 block font-mono text-lg sm:text-xl font-semibold text-emerald-700 dark:text-emerald-400">
+              <strong className="mt-1 block font-mono text-lg sm:text-xl font-semibold text-emerald-800 dark:text-emerald-300">
                 <bdi dir="ltr">{balanceData ? formatMoneyValue(paidText) : "—"}</bdi>{" "}
                 <span className="text-xs font-bold">{ui("ر.س")}</span>
               </strong>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20">
-              <span className="text-xs text-amber-700 dark:text-amber-400 block font-bold">
+            <div className="p-4 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30">
+              <span className="text-xs text-[var(--accent-gold)] block font-bold">
                 {isRefundDue ? (ui.language==="ar"?"مبلغ مستحق للعميل":"Refund due to customer") : ui("المتبقي للمتابعة")}</span>
               <strong
                 className={`mt-1 block font-mono text-lg sm:text-xl font-semibold ${
-                  isFullyPaid ? "text-[var(--text-muted)]" : "text-amber-700 dark:text-amber-400"
+                  isFullyPaid ? "text-[var(--text-muted)]" : "text-[var(--accent-gold)]"
                 }`}
               >
                 <bdi dir="ltr">{balanceData ? formatMoneyValue(remainingText) : "—"}</bdi>{" "}
@@ -364,7 +364,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
               {!isCredit && (
                 <Link
                   href={`/admin/invoices/new?type=TAX&kind=CREDIT&originalInvoiceId=${encodeURIComponent(id)}`}
-                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-bold transition"
+                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:border-rose-500 text-rose-700 dark:text-rose-400 text-xs font-bold transition"
                   title={ui("إصدار إشعار دائن لخفض قيمة الفاتورة أو إلغائها")}
                 >
                   <FileMinus className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" aria-hidden="true" />
@@ -374,16 +374,16 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
               <Link
                 href={`/admin/invoices/new?type=TAX&kind=DEBIT&originalInvoiceId=${encodeURIComponent(id)}`}
-                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold transition"
+                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition"
                 title={ui("إصدار إشعار مدين لإضافة مبالغ إلى الفاتورة")}
               >
-                <FilePlus className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                <FilePlus className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                 <span>{ui("إضافة مبلغ (إشعار مدين)")}</span>
               </Link>
             </div>
 
             <div className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               {data.visibility?.isArchived&&<span className="text-xs">{ui.language==="ar"?"الفاتورة في قائمة المحذوفات؛ بياناتها المالية محفوظة.":"Invoice is in Removed invoices; its financial records are retained."}</span>}
             </div>
           </div>
@@ -399,23 +399,23 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         <section className="lg:col-span-8 theme-card p-5 sm:p-6 rounded-2xl border theme-border space-y-5 flex flex-col justify-between">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b theme-border pb-3">
-              <h2 className="font-semibold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-amber-500" aria-hidden="true" />
+              <h2 className="font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
                 <span>{ui("بيانات الفاتورة والأطراف")}</span>
               </h2>
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
-                <CreditCard className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-[var(--text-muted)]">
+                <CreditCard className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                 {ui(PAYMENT_LABELS[data.snapshot.input.paymentCode] || data.snapshot.input.paymentCode)}
               </span>
             </div>
 
             <dl className="grid gap-4 sm:grid-cols-2 text-xs sm:text-sm">
-              <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border theme-border">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <dt className="text-xs text-[var(--text-muted)] flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                  <Building2 className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>{ui("الشركة المصدرة")}</span>
                 </dt>
-                <dd className="mt-1 font-semibold text-slate-900 dark:text-white">
+                <dd className="mt-1 font-semibold text-[var(--text-main)]">
                   {issuer.legalName}
                 </dd>
                 {issuer.vatNumber && (
@@ -425,12 +425,12 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 )}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border theme-border">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <dt className="text-xs text-[var(--text-muted)] flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                  <User className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>{ui("فاتورة باسم (العميل)")}</span>
                 </dt>
-                <dd className="mt-1 font-semibold text-slate-900 dark:text-white">
+                <dd className="mt-1 font-semibold text-[var(--text-main)]">
                   {buyer.name}
                 </dd>
                 {buyer.vatNumber && (
@@ -442,14 +442,14 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
               <div>
                 <dt className="text-xs text-[var(--text-muted)]">{ui("تاريخ الفاتورة")}</dt>
-                <dd className="mt-1 font-bold font-mono text-slate-900 dark:text-white" dir="ltr">
+                <dd className="mt-1 font-bold font-mono text-[var(--text-main)]" dir="ltr">
                   {dateLabel(data.invoiceDate, ui.language)}
                 </dd>
               </div>
 
               <div>
                 <dt className="text-xs text-[var(--text-muted)]">{ui("طريقة استلام المبلغ")}</dt>
-                <dd className="mt-1 font-bold text-slate-900 dark:text-white">
+                <dd className="mt-1 font-bold text-[var(--text-main)]">
                   {ui(PAYMENT_LABELS[data.snapshot.input.paymentCode] || data.snapshot.input.paymentCode)}
                 </dd>
               </div>
@@ -459,28 +459,28 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           {/* Financial Breakdown Banner */}
           <div className="pt-4 border-t theme-border space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border theme-border">
+              <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <span className="text-xs text-[var(--text-muted)] block">{ui("قبل الضريبة")}</span>
-                <strong className="mt-1 block font-mono text-base font-semibold text-slate-900 dark:text-white">
+                <strong className="mt-1 block font-mono text-base font-semibold text-[var(--text-main)]">
                   <bdi dir="ltr">{data.snapshot.totals.net}</bdi> {ui("ر.س")}
                 </strong>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border theme-border">
+              <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                 <span className="text-xs text-[var(--text-muted)] block">{ui("ضريبة المبيعات (15%)")}</span>
-                <strong className="mt-1 block font-mono text-base font-semibold text-amber-700 dark:text-amber-400">
+                <strong className="mt-1 block font-mono text-base font-semibold text-[var(--accent-gold)]">
                   <bdi dir="ltr">{data.snapshot.totals.vat}</bdi> {ui("ر.س")}
                 </strong>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-slate-900 dark:bg-slate-800 px-5 py-4 text-white flex items-center justify-between gap-4">
+            <div className="rounded-2xl bg-slate-900 dark:bg-slate-800/95 border border-slate-700 px-5 py-4 text-white flex items-center justify-between gap-4 shadow-sm">
               <div>
-                <span className="text-xs text-slate-300 block">{ui("الإجمالي الشامل للضريبة")}</span>
+                <span className="text-xs text-slate-200 block">{ui("الإجمالي الشامل للضريبة")}</span>
                 <p className="text-xl sm:text-2xl font-semibold mt-0.5">
-                  {ui("الإجمالي:")} <bdi className="font-mono text-amber-400" dir="ltr">{data.snapshot.totals.gross}</bdi> {ui("ر.س")}
+                  {ui("الإجمالي:")} <bdi className="font-mono text-amber-300" dir="ltr">{data.snapshot.totals.gross}</bdi> {ui("ر.س")}
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-lg bg-white/10 text-xs font-mono text-slate-200">
+              <span className="px-3 py-1 rounded-lg bg-slate-800 dark:bg-slate-700/80 border border-slate-600 text-xs font-mono text-amber-300">
                 SAR
               </span>
             </div>
@@ -491,16 +491,16 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         <section className="lg:col-span-4 theme-card rounded-2xl border theme-border p-5 sm:p-6 flex flex-col justify-between gap-5">
           <div>
             <div className="flex items-center gap-2 border-b theme-border pb-3">
-              <QrCode className="w-4 h-4 text-amber-500" aria-hidden="true" />
-              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+              <QrCode className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-[var(--text-main)]">
                 {ui("رابط الفاتورة للعميل")}</h2>
             </div>
-            <p className="mt-2.5 text-xs leading-relaxed text-[var(--text-muted)] dark:text-slate-400">
+            <p className="mt-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
               {ui("امسح الرمز أو انسخ الرابط لمشاركته مع العميل لعرض الفاتورة والتحقق منها وتنزيل نسخة العميل الرسمية.")}</p>
           </div>
 
           <div className="flex justify-center py-2">
-            <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <div className="p-3 rounded-2xl bg-white border border-[var(--border-color)] shadow-xs">
               <InvoiceQr invoiceId={id} />
             </div>
           </div>
@@ -509,11 +509,11 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             <button
               type="button"
               onClick={copyVerificationUrl}
-              className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-4 py-2.5 text-xs font-bold text-amber-800 dark:text-amber-300 transition cursor-pointer"
+              className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-4 py-2.5 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
             >
               {copiedLink ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                  <Check className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                   <span>{ui("تم نسخ رابط العميل بنجاح!")}</span>
                 </>
               ) : (
@@ -528,9 +528,9 @@ export default function InvoicePage({ params }: InvoicePageProps) {
               href={data.verificationUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition"
+              className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-2.5 text-xs font-bold text-[var(--text-main)] transition"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+              <ExternalLink className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("فتح رابط الفاتورة")}</span>
             </a>
           </div>
@@ -540,36 +540,36 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       {/* Explanatory «ماذا يعني هذا؟» Box (§6, §7) */}
       <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
         <div className="flex items-center gap-2 border-b theme-border pb-3">
-          <HelpCircle className="w-4 h-4 text-amber-500" aria-hidden="true" />
-          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+          <HelpCircle className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+          <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
             {ui("ماذا يعني هذا؟ (شرح العمليات المالية لهذه الفاتورة)")}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs leading-relaxed">
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border space-y-1.5">
-            <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-              <Clock className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+          <div className="p-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold text-[var(--text-main)]">
+              <Clock className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("المبلغ المتبقي")}</span>
             </div>
-            <p className="text-[var(--text-muted)] dark:text-slate-400">
+            <p className="text-[var(--text-muted)]">
               {ui("يمثل الرصيد المعلق على ذمة العميل (1103) حتى يتم استلام حوالة بنكية أو نقدية وتسجيل سند قبض لتسوية الفاتورة.")}</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border space-y-1.5">
-            <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+          <div className="p-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold text-[var(--text-main)]">
               <FileMinus className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" aria-hidden="true" />
               <span>{ui("إشعار دائن (خفض القيمة)")}</span>
             </div>
-            <p className="text-[var(--text-muted)] dark:text-slate-400">
+            <p className="text-[var(--text-muted)]">
               {ui("يُستخدم عند إلغاء الرحلة أو رد جزء من المبلغ للعميل؛ لا يتم حذف الفاتورة الأصلية بل يصدر إشعار يخفض الإيراد والضريبة نظامياً.")}</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border space-y-1.5">
-            <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-              <FilePlus className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+          <div className="p-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold text-[var(--text-main)]">
+              <FilePlus className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("إشعار مدين (إضافة مبلغ)")}</span>
             </div>
-            <p className="text-[var(--text-muted)] dark:text-slate-400">
+            <p className="text-[var(--text-muted)]">
               {ui("يُستخدم عند تمديد مدة الإيجار أو إضافة خدمات ومسارات إضافية بعد صدور الفاتورة، فيضاف المبلغ للإقرار والذمم تلقائياً.")}</p>
           </div>
         </div>
@@ -583,8 +583,8 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       {/* Bank Details (for Proforma or when included) */}
       {data.snapshot.input.bankDetails && (
         <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6">
-          <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2 border-b theme-border pb-3">
-            <Landmark className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          <h2 className="mb-4 text-base font-semibold text-[var(--text-main)] flex items-center gap-2 border-b theme-border pb-3">
+            <Landmark className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("بيانات التحويل البنكي")}</span>
           </h2>
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs sm:text-sm">
@@ -599,10 +599,10 @@ export default function InvoicePage({ params }: InvoicePageProps) {
               .map(([label, value]) => (
                 <div
                   key={label}
-                  className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border theme-border"
+                  className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border"
                 >
                   <dt className="text-xs text-[var(--text-muted)]">{ui(label)}</dt>
-                  <dd dir="auto" className="mt-1 break-all font-bold font-mono text-slate-900 dark:text-white">
+                  <dd dir="auto" className="mt-1 break-all font-bold font-mono text-[var(--text-main)]">
                     {value}
                   </dd>
                 </div>
@@ -614,8 +614,8 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       {/* Services Line Items Table */}
       <section className="theme-card rounded-2xl border theme-border overflow-hidden">
         <div className="p-4 sm:p-5 border-b theme-border flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <ReceiptText className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          <h2 className="text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
+            <ReceiptText className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("بنود الخدمات والرسوم (")}{data.snapshot.input.lines.length})</span>
           </h2>
         </div>
@@ -626,7 +626,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
               key={index}
               title={line.description}
               badge={
-                <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-bold text-xs">
+                <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] font-mono font-bold text-xs">
                   {line.rate}%
                 </span>
               }
@@ -667,7 +667,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-start text-xs sm:text-sm border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 dark:bg-slate-900/50 border-b theme-border text-[var(--text-muted)] dark:text-slate-400 font-bold">
+              <tr className="bg-[var(--table-header-bg)] border-b theme-border text-[var(--text-muted)] font-bold">
                 {["البيان", "الكمية", "السعر", "الخصم", "الضريبة"].map((label) => (
                   <th key={label} className="p-3.5 whitespace-nowrap">
                     {ui(label)}
@@ -677,8 +677,8 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             </thead>
             <tbody className="divide-y theme-border">
               {data.snapshot.input.lines.map((line, index) => (
-                <tr key={index} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
-                  <td className="p-3.5 font-bold text-slate-900 dark:text-white">
+                <tr key={index} className="hover:bg-[var(--table-row-hover)] transition">
+                  <td className="p-3.5 font-bold text-[var(--text-main)]">
                     {line.description}
                   </td>
                   <td className="p-3.5 whitespace-nowrap font-semibold">
@@ -690,7 +690,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                   <td className="p-3.5 font-mono text-[var(--text-muted)] whitespace-nowrap" dir="ltr">
                     {line.discount} {ui("ر.س")}</td>
                   <td className="p-3.5 font-mono whitespace-nowrap">
-                    <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-xs">
+                    <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold text-xs">
                       {line.rate}%
                     </span>
                   </td>

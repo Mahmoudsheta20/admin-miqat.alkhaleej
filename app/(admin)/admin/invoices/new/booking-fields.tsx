@@ -33,7 +33,7 @@ interface BookingFieldsProps {
   onTransportChange: (change: Partial<TransportDetails>) => void;
 }
 const INLINE_INPUT =
-  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-amber-500/30";
+  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base";
 const ICONS = {
   ONE_WAY: ArrowLeft,
   ROUND_TRIP: ArrowLeftRight,
@@ -60,7 +60,7 @@ export default function BookingFields({
   return (
     <div>
       <fieldset>
-        <legend className="mb-3 text-sm sm:text-base font-semibold">
+        <legend className="mb-3 text-sm sm:text-base font-semibold text-[var(--text-main)]">
           {ui("نوع الرحلة")}
         </legend>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
@@ -71,7 +71,7 @@ export default function BookingFields({
             return (
               <label
                 key={key}
-                className={`relative flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-3 text-sm font-bold transition-all duration-200 has-focus-visible:ring-2 has-focus-visible:ring-amber-500 motion-reduce:transition-none ${isSelected ? "border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" : "theme-border text-[var(--text-muted)] hover:border-amber-400 dark:text-slate-400"}`}
+                className={`relative flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-3 text-sm font-bold transition-all duration-200 has-focus-visible:ring-2 has-focus-visible:ring-[var(--focus-color)] motion-reduce:transition-none ${isSelected ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
               >
                 <input
                   type="radio"
@@ -185,7 +185,7 @@ export default function BookingFields({
             <button
               type="button"
               disabled={booking.stops.length >= 5}
-              className="min-h-11 flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-bold text-amber-700 disabled:opacity-40 dark:text-amber-400 cursor-pointer"
+              className="min-h-11 flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-bold text-[var(--accent-gold)] hover:underline disabled:opacity-40 cursor-pointer"
               onClick={() => onBookingChange({ stops: [...booking.stops, ""] })}
             >
               <Plus className="size-4" aria-hidden="true" />
@@ -308,7 +308,7 @@ export default function BookingFields({
       {vehicleError && (
         <p
           role="status"
-          className="mt-3 text-sm text-amber-700 dark:text-amber-400"
+          className="mt-3 text-sm text-[var(--accent-gold)] font-medium"
         >
           {ui("تعذر تحميل الأسطول؛ يمكنك إدخال نوع المركبة يدويًا.")}
           <button

@@ -18,7 +18,7 @@ export default function DocumentPreview({ title, reference, url, downloadUrl, on
   return <Modal label={title} onClose={onClose}>
     <section className="mobile-dialog-panel document-preview theme-card flex flex-col">
       <header className="document-toolbar">
-        <FileText className="h-5 w-5 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
+        <FileText className="h-5 w-5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <h2 className="font-semibold text-sm sm:text-base truncate">{title}</h2>
           {reference && <p className="mt-0.5 break-words text-xs sm:text-sm text-[var(--text-muted)]"><bdi>{reference}</bdi></p>}
@@ -35,7 +35,7 @@ export default function DocumentPreview({ title, reference, url, downloadUrl, on
       {url && (
         <footer className="sm:hidden border-t theme-border px-3 py-2.5 bg-[var(--bg-card)] flex items-center gap-2 shrink-0">
           <a
-            className="flex-1 min-h-11 px-3 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-xs font-bold text-slate-800 dark:text-slate-100 inline-flex items-center justify-center gap-1.5"
+            className="flex-1 min-h-11 px-3 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5"
             href={url}
             target="_blank"
             rel="noopener noreferrer"

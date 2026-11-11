@@ -19,34 +19,34 @@ export interface StatCardProps {
 
 const VARIANT_STYLES = {
   default: {
-    iconBg: "bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300",
-    textVal: "text-slate-900 dark:text-white",
-    activeBorder: "border-slate-500/40 ring-1 ring-slate-500/30",
+    iconBg: "bg-[var(--bg-card-subtle)] text-[var(--text-main)]",
+    textVal: "text-[var(--text-main)]",
+    activeBorder: "bg-[var(--bg-card-subtle)] border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30",
   },
   amber: {
-    iconBg: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-    textVal: "text-amber-700 dark:text-amber-400",
-    activeBorder: "bg-amber-500/5 border-amber-500/40 ring-1 ring-amber-500/30",
+    iconBg: "bg-[var(--accent-surface)] text-[var(--accent-gold)]",
+    textVal: "text-[var(--accent-gold)]",
+    activeBorder: "bg-[var(--accent-surface)] border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30",
   },
   emerald: {
-    iconBg: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-    textVal: "text-emerald-700 dark:text-emerald-400",
-    activeBorder: "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30",
+    iconBg: "bg-emerald-500/12 text-emerald-800 dark:text-emerald-300",
+    textVal: "text-emerald-800 dark:text-emerald-300",
+    activeBorder: "bg-emerald-500/10 border-emerald-600/45 ring-1 ring-emerald-600/30",
   },
   blue: {
-    iconBg: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-    textVal: "text-blue-600 dark:text-blue-400",
-    activeBorder: "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30",
+    iconBg: "bg-sky-500/12 text-sky-800 dark:text-sky-300",
+    textVal: "text-sky-800 dark:text-sky-300",
+    activeBorder: "bg-sky-500/10 border-sky-600/45 ring-1 ring-sky-600/30",
   },
   purple: {
-    iconBg: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-    textVal: "text-purple-600 dark:text-purple-400",
-    activeBorder: "bg-purple-500/10 border-purple-500/40 ring-1 ring-purple-500/30",
+    iconBg: "bg-indigo-500/12 text-indigo-800 dark:text-indigo-300",
+    textVal: "text-indigo-800 dark:text-indigo-300",
+    activeBorder: "bg-indigo-500/10 border-indigo-600/45 ring-1 ring-indigo-600/30",
   },
   rose: {
-    iconBg: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
-    textVal: "text-rose-700 dark:text-rose-400",
-    activeBorder: "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30",
+    iconBg: "bg-rose-500/12 text-rose-800 dark:text-rose-300",
+    textVal: "text-rose-800 dark:text-rose-300",
+    activeBorder: "bg-rose-500/10 border-rose-600/45 ring-1 ring-rose-600/30",
   },
 };
 
@@ -75,11 +75,11 @@ export default function StatCard({
       } ${
         isActive
           ? styles.activeBorder
-          : "theme-card theme-border hover:border-amber-500/40"
+          : "theme-card theme-border hover:border-[var(--accent-gold)]/50"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400 truncate">
+        <span className="text-xs font-bold text-[var(--text-muted)] truncate">
           {ui(label)}
         </span>
         {Icon && (

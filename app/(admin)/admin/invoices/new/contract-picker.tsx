@@ -117,7 +117,7 @@ function ContractPickerModalBody({
               setIsSearching(true);
             }}
             className={cn(
-              "theme-input w-full border theme-border bg-white dark:bg-slate-900/80 font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500/20 focus:outline-hidden",
+              "theme-input w-full border-[var(--control-border)] font-medium text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-[var(--accent-gold)]/20 focus:outline-hidden",
               isFullscreen
                 ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
                 : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
@@ -154,7 +154,7 @@ function ContractPickerModalBody({
             )}
           >
             <Loader2
-              className="size-6 animate-spin text-amber-500"
+              className="size-6 animate-spin text-[var(--accent-gold)]"
               aria-hidden="true"
             />
             <span>{ui("جارٍ البحث…")}</span>
@@ -197,8 +197,8 @@ function ContractPickerModalBody({
                         ? "min-h-18 gap-4 rounded-2xl border-2 px-5 py-4 text-lg"
                         : "min-h-11 gap-3 rounded-xl border px-3.5 py-2.5 text-sm sm:text-base",
                       isSelected
-                        ? "border-amber-500 bg-amber-500/10 text-slate-900 dark:text-white shadow-xs"
-                        : "border theme-border bg-white dark:bg-slate-900 text-slate-900 dark:text-white hover:border-amber-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80",
+                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--text-main)] shadow-xs"
+                        : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
                     )}
                   >
                     <span className="min-w-0 flex-1 space-y-1">
@@ -208,15 +208,15 @@ function ContractPickerModalBody({
                             "font-bold",
                             isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
                             isSelected
-                              ? "text-amber-700 dark:text-amber-400"
-                              : "text-slate-900 dark:text-white",
+                              ? "text-[var(--accent-gold)]"
+                              : "text-[var(--text-main)]",
                           )}
                         >
                           {item.customerName}
                         </span>
                         <span
                           dir="ltr"
-                          className="rounded-lg border theme-border bg-slate-100 dark:bg-slate-800 px-2 py-0.5 font-mono text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300"
+                          className="rounded-lg border theme-border bg-[var(--bg-card-subtle)] px-2 py-0.5 font-mono text-xs sm:text-sm font-bold text-[var(--text-main)]"
                         >
                           {item.referenceNumber}
                         </span>
@@ -238,8 +238,8 @@ function ContractPickerModalBody({
                         "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
                         isFullscreen ? "h-8 w-8" : "h-6 w-6",
                         isSelected
-                          ? "border-amber-600 bg-amber-600 text-white"
-                          : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-transparent",
+                          ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
+                          : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-transparent",
                       )}
                     >
                       <Check className={isFullscreen ? "size-4" : "size-3.5"} />
@@ -312,7 +312,7 @@ export default function ContractPicker({
           onClick={toggleFromTrigger}
           className={`theme-input flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-start text-base font-medium cursor-pointer transition ${
             isOpen
-              ? "border-amber-500 ring-2 ring-amber-500/20"
+              ? "border-[var(--accent-gold)] ring-2 ring-[var(--accent-gold)]/20"
               : ""
           }`}
         >
@@ -322,11 +322,11 @@ export default function ContractPicker({
               aria-hidden="true"
             />
             {selected ? (
-              <span className="truncate font-semibold text-slate-900 dark:text-white">
+              <span className="truncate font-semibold text-[var(--text-main)]">
                 {selected.referenceNumber} · {selected.customerName}
               </span>
             ) : (
-              <span className="truncate text-slate-400 font-normal">
+              <span className="truncate text-[var(--text-placeholder)] font-normal">
                 {ui("ابحث برقم العقد أو اسم العميل")}
               </span>
             )}
@@ -335,13 +335,13 @@ export default function ContractPicker({
           <span className="flex shrink-0 items-center gap-2">
             {isLoading && (
               <Loader2
-                className="size-4 animate-spin text-amber-500"
+                className="size-4 animate-spin text-[var(--accent-gold)]"
                 aria-label={ui("جارٍ تحميل العقد")}
               />
             )}
             <ChevronDown
               className={`size-4 text-[var(--text-muted)] transition-transform duration-150 ${
-                isOpen ? "rotate-180 text-amber-500" : ""
+                isOpen ? "rotate-180 text-[var(--accent-gold)]" : ""
               }`}
               aria-hidden="true"
             />
@@ -354,7 +354,7 @@ export default function ContractPicker({
             aria-label={ui("إلغاء ربط العقد")}
             title={ui("إلغاء ربط العقد")}
             onClick={onClear}
-            className="min-h-12 min-w-12 shrink-0 inline-flex items-center justify-center rounded-xl border theme-border bg-white dark:bg-slate-900/80 text-[var(--text-muted)] hover:bg-[var(--table-row-hover)] hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
+            className="min-h-12 min-w-12 shrink-0 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)] cursor-pointer transition"
           >
             <X className="size-4" aria-hidden="true" />
           </button>

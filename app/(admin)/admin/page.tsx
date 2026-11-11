@@ -398,7 +398,7 @@ export default function AdminDashboardPage() {
       {/* Practical Compact Quick-Workflows Strip (Horizontal snap rail on mobile, 4-col grid on tablet/desktop) */}
       <section aria-labelledby="quick-workflows-heading" className="space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <h2 id="quick-workflows-heading" className="text-sm font-semibold text-slate-900 dark:text-white">
+          <h2 id="quick-workflows-heading" className="text-sm font-semibold text-[var(--text-main)]">
             {text("الوصول السريع للأقسام", "Quick navigation")}
           </h2>
           <span className="text-xs text-[var(--text-muted)]">
@@ -414,9 +414,9 @@ export default function AdminDashboardPage() {
                 <Link
                   key={sc.href}
                   href={sc.href}
-                  className="snap-start shrink-0 min-w-[144px] focus-visible:outline-2 focus-visible:outline-[var(--accent-gold)] rounded-xl"
+                  className="snap-start shrink-0 min-w-[144px] focus-visible:outline-2 focus-visible:outline-[var(--focus-color)] rounded-xl"
                 >
-                  <Card className="theme-card border theme-border shadow-none h-full min-h-[72px] p-3 flex flex-col justify-between gap-2 hover:border-amber-500/50 transition-colors">
+                  <Card className="theme-card border theme-border shadow-none h-full min-h-[72px] p-3 flex flex-col justify-between gap-2 hover:border-[var(--accent-gold)]/60 transition-colors">
                     <div className="flex items-center justify-between gap-2">
                       <div className="w-7 h-7 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                         <Icon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -425,7 +425,7 @@ export default function AdminDashboardPage() {
                         <bdi>{sc.pill}</bdi>
                       </Badge>
                     </div>
-                    <span className="block truncate text-xs font-semibold text-slate-900 dark:text-white">
+                    <span className="block truncate text-xs font-semibold text-[var(--text-main)]">
                       {sc.title}
                     </span>
                   </Card>
@@ -442,14 +442,14 @@ export default function AdminDashboardPage() {
               <Link
                 key={sc.href}
                 href={sc.href}
-                className="group min-w-0 min-h-[60px] flex items-center justify-between gap-2 rounded-xl border theme-border bg-[var(--bg-card)] px-3.5 py-2.5 hover:border-amber-500/50 hover:bg-[var(--bg-card-subtle)] transition focus-visible:outline-2 focus-visible:outline-[var(--accent-gold)]"
+                className="group min-w-0 min-h-[60px] flex items-center justify-between gap-2 rounded-xl border theme-border bg-[var(--bg-card)] px-3.5 py-2.5 hover:border-[var(--accent-gold)]/60 hover:bg-[var(--accent-surface)]/45 transition focus-visible:outline-2 focus-visible:outline-[var(--focus-color)]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] group-hover:bg-[var(--accent-btn-bg)] group-hover:text-[var(--accent-btn-fg)] flex items-center justify-center shrink-0 transition-colors">
                     <Icon className="w-4 h-4" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[var(--accent-gold)] transition-colors">
+                    <span className="block truncate text-sm font-semibold text-[var(--text-main)] group-hover:text-[var(--accent-gold)] transition-colors">
                       {sc.title}
                     </span>
                     <span className="block truncate text-[11px] text-[var(--text-muted)]">
@@ -550,11 +550,11 @@ export default function AdminDashboardPage() {
       />
 
       {/* Multi-View Live Operational Records Desk */}
-      <Card className="theme-card overflow-hidden rounded-2xl border theme-border shadow-xs">
+      <Card className="theme-card overflow-hidden rounded-2xl border theme-border shadow-none">
         <div className="border-b theme-border p-4 sm:p-5 space-y-3.5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 id="operational-feed-title" className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+              <h2 id="operational-feed-title" className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
                 {text("سجل العمليات والمتابعة اليومية", "Live operations & records desk")}
               </h2>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
@@ -624,14 +624,14 @@ export default function AdminDashboardPage() {
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`min-h-11 px-3.5 rounded-lg border text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center gap-2 transition cursor-pointer ${
+                    className={`min-h-11 px-3.5 rounded-lg border text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center gap-2 transition-none cursor-pointer ${
                       isSelected
-                        ? "bg-[var(--accent-surface)] border-amber-500/40 text-amber-800 dark:text-amber-300"
-                        : "bg-[var(--bg-card-subtle)] theme-border text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white"
+                        ? "bg-[var(--accent-btn-bg)] border-[var(--accent-btn-border)] text-[var(--accent-btn-fg)]"
+                        : "bg-[var(--bg-card-subtle)] border-[var(--control-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
                     }`}
                   >
                     <span>{tab.label}</span>
-                    <span className="font-mono text-xs tabular-nums opacity-85">
+                    <span className={`font-mono text-xs tabular-nums ${isSelected ? "opacity-90" : "opacity-85"}`}>
                       <bdi>{tab.count}</bdi>
                     </span>
                   </button>
@@ -651,14 +651,14 @@ export default function AdminDashboardPage() {
                 onChange={(e) => setFeedSearch(e.target.value)}
                 placeholder={text("بحث سريع بالمرجع، العميل، اللوحة...", "Filter by ref, customer, plate...")}
                 aria-label={text("بحث سريع في السجل", "Quick filter dashboard records")}
-                className="w-full min-h-11 rounded-lg border theme-border bg-[var(--input-bg)] ps-9 pe-9 text-sm text-slate-900 dark:text-white placeholder:text-[var(--text-muted)] focus:border-amber-500 focus:outline-hidden"
+                className="w-full min-h-11 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] ps-9 pe-9 text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden"
               />
               {feedSearch && (
                 <button
                   type="button"
                   onClick={() => setFeedSearch("")}
                   aria-label={text("مسح البحث", "Clear search")}
-                  className="absolute top-1/2 -translate-y-1/2 end-1.5 w-8 h-8 inline-flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                  className="absolute top-1/2 -translate-y-1/2 end-1.5 w-8 h-8 inline-flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -703,7 +703,7 @@ export default function AdminDashboardPage() {
                         <>
                           <Link
                             href={`/admin/contracts/${contract.id}`}
-                            className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                            className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline"
                           >
                             <bdi>{contract.referenceNumber}</bdi>
                           </Link>
@@ -714,12 +714,12 @@ export default function AdminDashboardPage() {
                       }
                       subtitle={
                         <div className="space-y-1">
-                          <span className="block font-medium text-slate-900 dark:text-slate-100">
+                          <span className="block font-medium text-[var(--text-main)]">
                             {contract.customerName}
                           </span>
                           {(contract.origin || contract.destination) && (
                             <span className="inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
-                              <MapPin className="w-3 h-3 shrink-0 text-emerald-500" aria-hidden="true" />
+                              <MapPin className="w-3 h-3 shrink-0 text-[var(--accent-gold)]" aria-hidden="true" />
                               <span className="break-words">
                                 {contract.origin} {language === "ar" ? "←" : "→"} {contract.destination}
                               </span>
@@ -857,12 +857,12 @@ export default function AdminDashboardPage() {
                         ? visibleRecentContracts
                         : visibleUpcomingTrips
                       ).map((contract) => (
-                        <TableRow key={contract.id} className="hover:bg-muted/40 transition-colors">
-                          <th scope="row" className="p-4 py-3.5 text-start align-middle font-medium text-slate-900 dark:text-white">
+                        <TableRow key={contract.id}>
+                          <th scope="row" className="p-4 py-3.5 text-start align-middle font-medium text-[var(--text-main)]">
                             <div className="flex flex-col gap-1.5 items-start">
                               <Link
                                 href={`/admin/contracts/${contract.id}`}
-                                className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-[var(--accent-gold)] whitespace-nowrap transition-colors"
+                                className="font-mono text-xs sm:text-sm font-bold text-[var(--text-main)] hover:text-[var(--accent-gold)] whitespace-nowrap transition-colors"
                               >
                                 <bdi>{contract.referenceNumber}</bdi>
                               </Link>
@@ -891,7 +891,7 @@ export default function AdminDashboardPage() {
                           </th>
                           <TableCell className="py-3.5">
                             <div className="space-y-0.5 max-w-[230px]">
-                              <span className="block text-xs sm:text-sm font-semibold text-slate-900 dark:text-white break-words">
+                              <span className="block text-xs sm:text-sm font-semibold text-[var(--text-main)] break-words">
                                 {contract.customerName}
                               </span>
                               {(contract.origin || contract.destination) && (
@@ -906,7 +906,7 @@ export default function AdminDashboardPage() {
                           </TableCell>
                           <TableCell className="py-3.5">
                             <div className="flex flex-col gap-1 text-xs">
-                              <span className="text-slate-900 dark:text-white font-medium whitespace-nowrap">
+                              <span className="text-[var(--text-main)] font-medium whitespace-nowrap">
                                 {contract.captainName}
                               </span>
                               <div>
@@ -918,7 +918,7 @@ export default function AdminDashboardPage() {
                           </TableCell>
                           <TableCell className="py-3.5">
                             <div className="flex flex-col gap-1 text-xs">
-                              <span className="font-mono font-medium text-slate-900 dark:text-white whitespace-nowrap" dir="ltr">
+                              <span className="font-mono font-medium text-[var(--text-main)] whitespace-nowrap" dir="ltr">
                                 <bdi>
                                   {contract.tripDate.slice(0, 10)}
                                   {contract.tripTime ? ` · ${contract.tripTime}` : ""}
@@ -1017,7 +1017,7 @@ export default function AdminDashboardPage() {
                       title={
                         <Link
                           href={`/admin/invoices/${inv.id}`}
-                          className="font-mono text-sm font-bold text-slate-900 dark:text-white hover:text-[var(--accent-gold)]"
+                          className="font-mono text-sm font-bold text-[var(--text-main)] hover:text-[var(--accent-gold)]"
                         >
                           <bdi>{inv.invoiceNumber}</bdi>
                         </Link>
@@ -1099,11 +1099,11 @@ export default function AdminDashboardPage() {
                     </TableHeader>
                     <TableBody>
                       {visibleInvoices.map((inv) => (
-                        <TableRow key={inv.id} className="hover:bg-muted/40 transition-colors">
-                          <th scope="row" className="p-4 py-3.5 text-start align-middle font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                        <TableRow key={inv.id}>
+                          <th scope="row" className="p-4 py-3.5 text-start align-middle font-mono text-xs sm:text-sm font-bold text-[var(--text-main)] whitespace-nowrap">
                             <Link
                               href={`/admin/invoices/${inv.id}`}
-                              className="text-slate-900 dark:text-white hover:text-[var(--accent-gold)] whitespace-nowrap"
+                              className="text-[var(--text-main)] hover:text-[var(--accent-gold)] whitespace-nowrap"
                             >
                               <bdi>{inv.invoiceNumber}</bdi>
                             </Link>
@@ -1113,7 +1113,7 @@ export default function AdminDashboardPage() {
                               {invoiceTitle(inv)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white">
+                          <TableCell className="py-3.5 text-xs sm:text-sm font-medium text-[var(--text-main)]">
                             {inv.customerName}
                           </TableCell>
                           <TableCell className="py-3.5 text-xs text-[var(--text-muted)] font-mono whitespace-nowrap">
@@ -1169,12 +1169,12 @@ export default function AdminDashboardPage() {
             {/* Captains Today Table */}
             <div className="space-y-3 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-sm font-semibold text-[var(--text-main)]">
                   {text("حالة فحص الكباتن اليوم", "Captain readiness today")}
                 </h3>
                 <Link
                   href="/admin/inspections"
-                  className="inline-flex items-center min-h-11 sm:min-h-0 px-1 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline"
+                  className="inline-flex items-center min-h-11 sm:min-h-0 px-1 text-xs font-semibold text-[var(--accent-gold)] hover:underline"
                 >
                   {text("فتح شاشة الفحوصات", "Open inspections")}
                 </Link>
@@ -1235,7 +1235,7 @@ export default function AdminDashboardPage() {
                     ) : (
                       visibleCaptains.slice(0, 8).map((cap) => (
                         <TableRow key={cap.id}>
-                          <th scope="row" className="px-4 py-2.5 text-start align-middle text-xs font-semibold text-slate-900 dark:text-white">
+                          <th scope="row" className="px-4 py-2.5 text-start align-middle text-xs font-semibold text-[var(--text-main)]">
                             {cap.name}
                           </th>
                           <TableCell className="py-2.5">
@@ -1265,12 +1265,12 @@ export default function AdminDashboardPage() {
             {/* Fleet Status & Expiry Table */}
             <div className="space-y-3 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-sm font-semibold text-[var(--text-main)]">
                   {text("حالة الأسطول والوثائق", "Fleet status & expiries")}
                 </h3>
                 <Link
                   href="/admin/fleet"
-                  className="inline-flex items-center min-h-11 sm:min-h-0 px-1 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline"
+                  className="inline-flex items-center min-h-11 sm:min-h-0 px-1 text-xs font-semibold text-[var(--accent-gold)] hover:underline"
                 >
                   {text("إدارة المركبات", "Open fleet")}
                 </Link>
@@ -1358,7 +1358,7 @@ export default function AdminDashboardPage() {
                           <TableRow key={veh.id}>
                             <th scope="row" className="px-4 py-2.5 text-start align-middle font-normal">
                               <div className="text-xs">
-                                <span className="font-mono font-bold text-slate-900 dark:text-white block">
+                                <span className="font-mono font-bold text-[var(--text-main)] block">
                                   <bdi>{veh.plateNumberAr || veh.plateNumberEn}</bdi>
                                 </span>
                                 <span className="text-[11px] text-[var(--text-muted)]">

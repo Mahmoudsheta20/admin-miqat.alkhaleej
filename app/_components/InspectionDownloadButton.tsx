@@ -33,7 +33,7 @@ export default function InspectionDownloadButton({ inspectionId }: InspectionDow
 
   return <div className="w-full sm:w-auto">
     <button type="button" onClick={handleDownload} disabled={isDownloading} aria-busy={isDownloading}
-      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border theme-border theme-card px-4 py-2.5 text-xs font-bold transition hover:border-amber-500 disabled:opacity-60 sm:w-auto">
+      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] theme-card px-4 py-2.5 text-xs font-bold text-[var(--text-main)] transition hover:border-[var(--accent-gold)] disabled:opacity-60 sm:w-auto cursor-pointer">
       {isDownloading ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Download aria-hidden="true" className="h-4 w-4" />}
       {ui(isDownloading ? "جاري تنزيل الفحص..." : "تنزيل الفحص PDF")}
     </button>

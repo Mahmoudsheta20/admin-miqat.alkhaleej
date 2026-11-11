@@ -153,9 +153,9 @@ export default function PurchasesPage() {
           <>
             <Link
               href="/admin/vat-returns"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
-              <Calculator className="size-4 text-amber-500" aria-hidden="true" />
+              <Calculator className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("nav.vatReturnsShort"))}</span>
             </Link>
 
@@ -189,7 +189,7 @@ export default function PurchasesPage() {
       {/* Filters Toolbar */}
       <div className="theme-card rounded-2xl border theme-border p-4 sm:p-5 space-y-4">
         <div className="flex flex-wrap items-end gap-3">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("السنة المالية")}<select
               aria-label={ui("السنة")}
               className={`${CONTROL} ms-2 font-mono`}
@@ -210,7 +210,7 @@ export default function PurchasesPage() {
             </select>
           </label>
 
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("الربع الضريبي")}<select
               className={`${CONTROL} ms-2`}
               value={quarter}
@@ -227,7 +227,7 @@ export default function PurchasesPage() {
             </select>
           </label>
 
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("تصنيف المصروف")}<select
               className={`${CONTROL} ms-2`}
               value={category}
@@ -263,7 +263,7 @@ export default function PurchasesPage() {
             />
             <button
               type="submit"
-              className="theme-card inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border theme-border hover:border-amber-500 px-3.5 cursor-pointer text-[var(--text-muted)] dark:text-slate-300 transition"
+              className="theme-card inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 cursor-pointer text-[var(--text-main)] transition"
               aria-label={ui("بحث")}
             >
               <Search className="size-4" aria-hidden="true" />
@@ -272,13 +272,13 @@ export default function PurchasesPage() {
 
           <button
             type="button"
-            className="theme-card inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border theme-border hover:border-amber-500 p-3 cursor-pointer text-[var(--text-muted)] dark:text-slate-300 transition"
+            className="theme-card inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] p-3 cursor-pointer text-[var(--text-main)] transition"
             aria-label={ui("تحديث السجل")}
             onClick={() => setReload((value) => value + 1)}
           >
             <RefreshCw
               className={`size-4 ${
-                isLoading ? "animate-spin text-amber-500" : ""
+                isLoading ? "animate-spin text-[var(--accent-gold)]" : ""
               }`}
               aria-hidden="true"
             />
@@ -286,7 +286,7 @@ export default function PurchasesPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t theme-border">
-          <label className="inline-flex min-h-11 items-center gap-2.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-400 cursor-pointer">
+          <label className="inline-flex min-h-11 items-center gap-2.5 text-xs font-bold text-[var(--text-muted)] cursor-pointer">
             <Checkbox
               checked={includeVoided}
               onChange={(e) => {
@@ -305,7 +305,7 @@ export default function PurchasesPage() {
       {message && (
         <p
           role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 dark:border-emerald-500/35 dark:bg-emerald-950/45 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300"
         >
           {ui(message)}
         </p>
@@ -356,8 +356,8 @@ export default function PurchasesPage() {
 
       {/* Purchases Table Container */}
       <div className="theme-card overflow-hidden rounded-2xl sm:rounded-3xl border theme-border shadow-xs">
-        <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-700 dark:text-slate-300">
+        <div className="px-4 sm:px-5 py-3.5 border-b theme-border bg-[var(--bg-card-subtle)] flex items-center justify-between text-xs">
+          <span className="font-bold text-[var(--text-main)]">
             {isRTL
               ? `قائمة فواتير المصروفات (${data?.items.length ?? 0} قيد)`
               : `Expense & purchase vouchers (${data?.items.length ?? 0})`}
@@ -371,7 +371,7 @@ export default function PurchasesPage() {
         <div className="hidden md:block overflow-x-auto">
           <table className={`w-full min-w-[900px] ${"text-start"} text-xs sm:text-sm border-collapse`}>
             <thead>
-              <tr className="border-b theme-border bg-slate-50/80 dark:bg-slate-900/50 text-[var(--text-muted)] dark:text-slate-400 font-bold whitespace-nowrap">
+              <tr className="border-b theme-border bg-[var(--table-header-bg)] text-[var(--text-muted)] font-bold whitespace-nowrap">
                 <th className="px-4 py-3.5">{ui(t("purchases.supplier"))}</th>
                 <th className="px-4 py-3.5">{ui(t("purchases.category"))}</th>
                 <th className="px-4 py-3.5">{ui(t("purchases.date"))}</th>
@@ -390,16 +390,16 @@ export default function PurchasesPage() {
                 return (
                   <tr
                     key={row.id}
-                    className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition duration-150 ${
+                    className={`hover:bg-[var(--table-row-hover)] transition duration-150 ${
                       isVoided
-                        ? "opacity-60 bg-rose-50/30 dark:bg-rose-950/20"
+                        ? "bg-rose-500/5 text-[var(--text-muted)]"
                         : ""
                     }`}
                   >
                     <td className="px-4 py-3.5">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-slate-900 dark:text-white font-bold">
+                          <strong className="text-[var(--text-main)] font-bold">
                             {row.supplierName}
                           </strong>
                           {isReturn && (
@@ -410,7 +410,7 @@ export default function PurchasesPage() {
                           )}
                         </div>
                         <p className="text-xs text-[var(--text-muted)] font-mono">
-                          <bdi className="text-amber-700 dark:text-amber-400 font-bold">
+                          <bdi className="text-[var(--accent-gold)] font-bold">
                             {row.voucher}
                           </bdi>{" "}
                           · <bdi>{row.invoiceNumber}</bdi>
@@ -431,19 +431,19 @@ export default function PurchasesPage() {
                     </td>
 
                     <td className="px-4 py-3.5 text-xs whitespace-nowrap">
-                      <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300">
+                      <span className="px-2 py-1 rounded-lg bg-[var(--bg-card-subtle)] border theme-border font-bold text-[var(--text-main)]">
                         {ui(EXPENSE_CATEGORIES[row.category])}
                       </span>
                       {row.vehiclePlate && (
                         <span className="mt-1 flex items-center gap-1 text-xs font-mono text-[var(--text-muted)]">
-                          <Truck className="w-3 h-3 text-amber-500" aria-hidden="true" />
+                          <Truck className="w-3 h-3 text-[var(--accent-gold)]" aria-hidden="true" />
                           <span>{row.vehiclePlate}</span>
                         </span>
                       )}
                     </td>
 
                     <td className="px-4 py-3.5 font-mono text-xs whitespace-nowrap">
-                      <bdi dir="ltr" className="text-slate-800 dark:text-slate-200 block">
+                      <bdi dir="ltr" className="text-[var(--text-main)] block">
                         {row.issueDate}
                       </bdi>
                       <span className="text-xs text-[var(--text-muted)]">
@@ -488,19 +488,19 @@ export default function PurchasesPage() {
                         {!row.voidedAt && (
                           <button
                             type="button"
-                            className="inline-flex min-h-11 lg:min-h-9 items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
+                            className="inline-flex min-h-11 lg:min-h-9 items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[var(--text-main)] font-bold transition cursor-pointer"
                             aria-label={isRTL ? `تعديل ${row.invoiceNumber}` : `Edit ${row.invoiceNumber}`}
                             onClick={() => setEditor(row)}
                             title={ui(t("common.edit"))}
                           >
-                            <Pencil className="size-3.5 text-amber-500" aria-hidden="true" />
+                            <Pencil className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                             <span>{ui(t("common.edit"))}</span>
                           </button>
                         )}
 
                         <button
                           type="button"
-                          className="inline-flex min-h-11 lg:min-h-9 items-center gap-1 px-2.5 py-1.5 rounded-xl border theme-card hover:border-amber-500 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
+                          className="inline-flex min-h-11 lg:min-h-9 items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[var(--text-main)] font-bold transition cursor-pointer"
                           aria-label={isRTL ? `سجل ومرفقات ${row.invoiceNumber}` : `History & attachments for ${row.invoiceNumber}`}
                           onClick={() => setHistory(row.id)}
                           title={ui(t("common.details"))}
@@ -530,7 +530,7 @@ export default function PurchasesPage() {
                 title={row.supplierName}
                 subtitle={
                   <span className="font-mono">
-                    <bdi className="text-amber-700 dark:text-amber-400 font-bold">
+                    <bdi className="text-[var(--accent-gold)] font-bold">
                       {row.voucher}
                     </bdi>{" "}
                     · <bdi>{row.invoiceNumber}</bdi> · <bdi dir="ltr">{row.issueDate}</bdi>
@@ -558,7 +558,7 @@ export default function PurchasesPage() {
                         className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
                         onClick={() => setEditor(row)}
                       >
-                        <Pencil className="size-3.5 text-amber-500" aria-hidden="true" />
+                        <Pencil className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                         <span>{ui("تعديل")}</span>
                       </Button>
                     )}
@@ -610,7 +610,7 @@ export default function PurchasesPage() {
 
                 {row.vehiclePlate && (
                   <p className="flex items-center gap-1 text-xs font-mono text-[var(--text-muted)]">
-                    <Truck className="w-3 h-3 text-amber-500 shrink-0" aria-hidden="true" />
+                    <Truck className="w-3 h-3 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <span>
                       {ui("المركبة:")} {row.vehiclePlate}
                     </span>
@@ -644,12 +644,12 @@ export default function PurchasesPage() {
 
         {data?.items.length === 0 && !isLoading && (
           <div className="py-16 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center mx-auto">
               <ShoppingBag className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-sm font-semibold text-[var(--text-main)]">
               {ui("لا توجد فواتير موردين مسجلة لهذه الفترة")}</h3>
-            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
               {ui("سجّل مصروفات الوقود والصيانة وتكاليف الأسطول لاحتساب ضريبة المدخلات تلقائياً في الإقرار الضريبي.")}</p>
             <button
               type="button"
@@ -666,26 +666,26 @@ export default function PurchasesPage() {
         )}
 
         {/* Pagination Footer */}
-        <div className="px-4 sm:px-6 py-3.5 border-t theme-border bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between gap-4 text-xs">
+        <div className="px-4 sm:px-6 py-3.5 border-t theme-border bg-[var(--bg-card-subtle)] flex items-center justify-between gap-4 text-xs">
           <button
             type="button"
             disabled={isLoading || page === 1}
             onClick={() => setPage((v) => v - 1)}
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] font-bold text-[var(--text-main)] disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
           >
             {ui(t("common.back"))}
           </button>
 
-          <span className="font-bold text-[var(--text-muted)] dark:text-slate-300">
+          <span className="font-bold text-[var(--text-muted)]">
             {data?.total ?? 0} · {ui(t("common.page"))}{" "}
-            <span className="font-mono">{page}</span>
+            <span className="font-mono text-[var(--text-main)]">{page}</span>
           </span>
 
           <button
             type="button"
             disabled={isLoading || !data || page * 30 >= data.total}
             onClick={() => setPage((v) => v + 1)}
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card font-bold disabled:opacity-40 hover:border-amber-500 transition cursor-pointer"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] font-bold text-[var(--text-main)] disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
           >
             {ui(t("common.next"))}
           </button>

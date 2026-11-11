@@ -153,7 +153,7 @@ export function CustomerEditor({
       <div className="mobile-dialog-panel mx-auto my-auto max-w-2xl rounded-2xl theme-card border theme-border p-5 sm:p-6 shadow-xl space-y-5">
         <div className="flex items-center justify-between border-b theme-border pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-700 dark:text-amber-400">
+            <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)]">
               {form.type === "COMPANY" ? (
                 <Building2 className="w-5 h-5" aria-hidden="true" />
               ) : (
@@ -184,7 +184,7 @@ export function CustomerEditor({
         <form onSubmit={submit} className="space-y-4">
           {/* Basic Info */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-[var(--accent-gold)] uppercase tracking-wider">
               {ui("البيانات الأساسية")}
             </h3>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -235,7 +235,7 @@ export function CustomerEditor({
 
           {/* Tax & Registration */}
           <div className="space-y-3 pt-3 border-t theme-border">
-            <h3 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-[var(--accent-gold)] uppercase tracking-wider">
               {ui("البيانات الضريبية والتسجيل")}
             </h3>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -250,7 +250,7 @@ export function CustomerEditor({
                 />
               </Field>
               <div className="flex flex-col justify-end">
-                <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium p-2.5 rounded-lg border theme-border bg-muted/20 cursor-pointer">
+                <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium p-2.5 rounded-lg border theme-border bg-[var(--bg-card-subtle)] text-[var(--text-main)] cursor-pointer">
                   <Checkbox
                     checked={form.vatRegistered}
                     onChange={(e) =>
@@ -280,7 +280,7 @@ export function CustomerEditor({
 
           {/* National Address */}
           <div className="space-y-3 pt-3 border-t theme-border">
-            <h3 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-[var(--accent-gold)] uppercase tracking-wider">
               {ui("العنوان الوطني")}
             </h3>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -611,7 +611,7 @@ export function CustomersPage() {
                     title={
                       <Link
                         href={`/admin/customers/${c.id}`}
-                        className="font-bold text-sm text-foreground hover:text-amber-600 dark:hover:text-amber-400 hover:underline"
+                        className="font-bold text-sm text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:underline"
                       >
                         {c.name}
                       </Link>
@@ -709,12 +709,12 @@ export function CustomersPage() {
                 </TableHeader>
                 <TableBody>
                   {list.data.items.map((c) => (
-                    <TableRow key={c.id} className="hover:bg-muted/40 transition-colors">
+                    <TableRow key={c.id} className="hover:bg-[var(--table-row-hover)] transition-colors">
                       <TableCell className="font-medium py-3.5">
                         <div className="flex flex-col gap-1 items-start">
                           <Link
                             href={`/admin/customers/${c.id}`}
-                            className="font-bold text-sm text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition hover:underline"
+                            className="font-bold text-sm text-[var(--text-main)] hover:text-[var(--accent-gold)] transition hover:underline"
                           >
                             {c.name}
                           </Link>
@@ -742,16 +742,16 @@ export function CustomersPage() {
                       <TableCell className="py-3.5">
                         <div className="space-y-1 text-xs">
                           {c.phone ? (
-                            <div className="flex items-center gap-1.5 text-foreground font-mono">
-                              <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div className="flex items-center gap-1.5 text-[var(--text-main)] font-mono">
+                              <Phone className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                               <bdi>{c.phone}</bdi>
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-[var(--text-muted)]">—</span>
                           )}
                           {c.email && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+                              <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                               <span className="truncate max-w-[170px]">{c.email}</span>
                             </div>
                           )}
@@ -762,7 +762,7 @@ export function CustomersPage() {
                           {c.vatRegistered ? (
                             <Badge
                               variant="outline"
-                              className="text-[10px] font-mono border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 gap-1 px-1.5 py-0"
+                              className="text-[10px] font-mono border-emerald-500/35 text-emerald-800 dark:text-emerald-300 gap-1 px-1.5 py-0"
                             >
                               <ShieldCheck className="w-3 h-3" />
                               <span>{c.vatNumber || ui("مسجل ضريبياً")}</span>
@@ -770,13 +770,13 @@ export function CustomersPage() {
                           ) : (
                             <Badge
                               variant="secondary"
-                              className="text-[10px] text-muted-foreground px-1.5 py-0"
+                              className="text-[10px] text-[var(--text-muted)] px-1.5 py-0"
                             >
                               {ui("غير مسجل ضريبياً")}
                             </Badge>
                           )}
                           {c.identification && (
-                            <p className="text-[11px] font-mono text-muted-foreground">
+                            <p className="text-[11px] font-mono text-[var(--text-muted)]">
                               {c.identification}
                             </p>
                           )}
@@ -784,25 +784,25 @@ export function CustomersPage() {
                       </TableCell>
                       <TableCell className="py-3.5">
                         {c.address?.city || c.address?.district ? (
-                          <div className="text-xs text-foreground">
+                          <div className="text-xs text-[var(--text-main)]">
                             <div className="flex items-center gap-1 font-medium">
-                              <MapPin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                              <MapPin className="w-3.5 h-3.5 text-[var(--accent-gold)]" />
                               <span>{c.address.city}</span>
                               {c.address.district && (
-                                <span className="text-muted-foreground font-normal">
+                                <span className="text-[var(--text-muted)] font-normal">
                                   {" "}
                                   · {c.address.district}
                                 </span>
                               )}
                             </div>
                             {c.address.street && (
-                              <p className="text-[11px] text-muted-foreground mt-0.5 truncate max-w-[180px]">
+                              <p className="text-[11px] text-[var(--text-muted)] mt-0.5 truncate max-w-[180px]">
                                 {c.address.street}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-[var(--text-muted)] text-xs">
                             {ui("لا يوجد عنوان مسجل")}
                           </span>
                         )}
@@ -823,7 +823,7 @@ export function CustomersPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                            className="h-9 w-9 p-0 text-[var(--text-muted)] hover:text-[var(--text-main)]"
                             onClick={() => setEditing(c)}
                             aria-label={`${ui("تعديل العميل")} ${c.name}`}
                             title={ui("تعديل العميل")}
@@ -844,7 +844,7 @@ export function CustomersPage() {
 
       {/* Pagination */}
       <div className="flex items-center justify-between border-t theme-border pt-4">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-[var(--text-muted)]">
           {list.data?.total
             ? `${list.data.total} ${ui("عميل")}`
             : null}
@@ -859,7 +859,7 @@ export function CustomersPage() {
           >
             {ui("السابق")}
           </Button>
-          <span className="px-3 py-1 text-xs font-bold font-mono rounded-md bg-muted text-foreground">
+          <span className="px-3 py-1 text-xs font-bold font-mono rounded-md border theme-border bg-[var(--bg-card-subtle)] text-[var(--text-main)]">
             {page}
           </span>
           <Button
@@ -1052,7 +1052,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
     <div className="space-y-6">
       <Link
         href="/admin/customers"
-        className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline"
+        className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 text-xs font-semibold text-[var(--accent-gold)] hover:underline"
       >
         <ArrowRight className="w-3.5 h-3.5 ltr:rotate-180" aria-hidden="true" />
         <span>{ui("العودة للعملاء")}</span>
@@ -1128,11 +1128,11 @@ export function CustomerDetailPage({ id }: { id: string }) {
 
       {/* Section 1: Customer Trips & Invoicing */}
       <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-muted/20">
+        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Truck className="w-4 h-4 text-amber-500" />
+                <Truck className="w-4 h-4 text-[var(--accent-gold)]" />
                 <span>{ui("رحلات العميل وإصدار الفاتورة")}</span>
               </CardTitle>
               <CardDescription className="text-xs">
@@ -1159,7 +1159,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
           <form onSubmit={issue} className="space-y-4">
             {!d.contracts.length ? (
               <div className="rounded-xl border theme-border">
-                <p className="p-6 text-center text-sm text-muted-foreground">
+                <p className="p-6 text-center text-sm text-[var(--text-muted)]">
                   {ui("اربط العميل بالعقد لتظهر الرحلات هنا.")}
                 </p>
               </div>
@@ -1172,7 +1172,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                       <Card
                         key={t.id}
                         className={`theme-card border shadow-none p-3.5 transition-colors ${
-                          isChecked ? "border-amber-500/50 bg-amber-500/10" : "theme-border"
+                          isChecked ? "border-[var(--accent-gold)]/55 bg-[var(--accent-surface)]/55" : "theme-border"
                         }`}
                       >
                         <label className="flex items-start gap-3 cursor-pointer">
@@ -1190,7 +1190,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           <div className="min-w-0 flex-1 space-y-2">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <Link
-                                className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                                className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline"
                                 href={`/admin/contracts/${t.id}`}
                               >
                                 <bdi>{t.referenceNumber}</bdi>
@@ -1214,14 +1214,14 @@ export function CustomerDetailPage({ id }: { id: string }) {
                                 )}
                               </Badge>
                             </div>
-                            <div className="text-xs font-medium text-foreground">
+                            <div className="text-xs font-medium text-[var(--text-main)]">
                               {t.origin} — {t.destination}
                             </div>
-                            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                            <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
                               <span className="font-mono">
                                 {t.tripDate} {t.tripTime && `· ${t.tripTime}`}
                               </span>
-                              <strong dir="ltr" className="font-mono text-sm font-bold text-foreground">
+                              <strong dir="ltr" className="font-mono text-sm font-bold text-[var(--text-main)]">
                                 {t.commercial.netAmount} SAR
                               </strong>
                             </div>
@@ -1257,7 +1257,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                         <TableRow
                           key={t.id}
                           className={`transition-colors ${
-                            isChecked ? "bg-amber-500/10" : "hover:bg-muted/40"
+                            isChecked ? "bg-[var(--accent-surface)]/55" : "hover:bg-[var(--table-row-hover)]"
                           }`}
                         >
                           <TableCell className="text-center py-3">
@@ -1276,21 +1276,21 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           </TableCell>
                           <TableCell className="font-medium py-3">
                             <Link
-                              className="font-mono text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                              className="font-mono text-xs sm:text-sm font-bold text-[var(--accent-gold)] hover:underline"
                               href={`/admin/contracts/${t.id}`}
                             >
                               <bdi>{t.referenceNumber}</bdi>
                             </Link>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5">
                               {t.customerName}
                             </p>
                           </TableCell>
                           <TableCell className="py-3 text-xs">
                             <label htmlFor={tripCheckboxId} className="block cursor-pointer">
-                              <span className="font-medium text-foreground">
+                              <span className="font-medium text-[var(--text-main)]">
                                 {t.origin} — {t.destination}
                               </span>
-                              <span className="block text-muted-foreground font-mono mt-0.5">
+                              <span className="block text-[var(--text-muted)] font-mono mt-0.5">
                                 {t.tripDate} {t.tripTime && `· ${t.tripTime}`}
                               </span>
                             </label>
@@ -1318,7 +1318,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           <TableCell className="text-end py-3">
                             <strong
                               dir="ltr"
-                              className="font-mono text-sm font-bold text-foreground"
+                              className="font-mono text-sm font-bold text-[var(--text-main)]"
                             >
                               {t.commercial.netAmount} SAR
                             </strong>
@@ -1333,11 +1333,11 @@ export function CustomerDetailPage({ id }: { id: string }) {
             )}
 
             {selected.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--text-main)]">
                 <span className="text-xs font-bold">
                   {ui("عدد الرحلات المختارة")}: {selected.length}
                 </span>
-                <span className="text-sm font-bold font-mono" dir="ltr">
+                <span className="text-sm font-bold font-mono text-[var(--accent-gold)]" dir="ltr">
                   {ui("إجمالي الصافي")}:{" "}
                   {sumTrips(d.contracts.filter((t) => selected.includes(t.id)))} SAR
                 </span>
@@ -1366,7 +1366,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
               </Field>
             </div>
 
-            <label className="flex min-h-11 items-start gap-2.5 text-xs text-muted-foreground cursor-pointer">
+            <label className="flex min-h-11 items-start gap-2.5 text-xs font-medium text-[var(--text-main)] cursor-pointer">
               <Checkbox
                 required
                 checked={reviewed}
@@ -1384,7 +1384,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
             <Notice message={mutation.message} />
 
             {receipt && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300">
+              <div className="p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300">
                 <Link
                   className="font-bold underline text-sm inline-flex min-h-11 sm:min-h-9 items-center gap-1.5"
                   href={`/admin/invoices/${receipt}`}
@@ -1410,10 +1410,10 @@ export function CustomerDetailPage({ id }: { id: string }) {
 
       {/* Section 2: Invoices & Credit Notes */}
       <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-muted/20">
+        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)]">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold flex items-center gap-2">
-              <ReceiptText className="w-4 h-4 text-amber-500" />
+              <ReceiptText className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("الفواتير والإشعارات")}</span>
             </CardTitle>
             <Badge variant="outline" className="font-mono text-xs">
@@ -1423,7 +1423,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
         </CardHeader>
         <CardContent className="p-0">
           {!d.invoices.length ? (
-            <p className="p-8 text-center text-sm text-muted-foreground">
+            <p className="p-8 text-center text-sm text-[var(--text-muted)]">
               {ui("لا توجد فواتير لهذا العميل")}
             </p>
           ) : (
@@ -1446,7 +1446,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                       title={
                         <Link
                           href={`/admin/invoices/${i.id}`}
-                          className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                          className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline"
                         >
                           #{i.number}
                         </Link>
@@ -1507,7 +1507,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           mono
                           value={
                             !isFullyPaid ? (
-                              <span className="text-rose-700 dark:text-rose-400" dir="ltr">
+                              <span className="text-rose-700 dark:text-rose-300 font-bold" dir="ltr">
                                 {remainingDisplay} SAR
                               </span>
                             ) : (
@@ -1546,12 +1546,12 @@ export function CustomerDetailPage({ id }: { id: string }) {
                     const remainingDisplay = formatSignedMinor(remainingMinor);
 
                     return (
-                      <TableRow key={i.id} className="hover:bg-muted/40 transition-colors">
+                      <TableRow key={i.id} className="hover:bg-[var(--table-row-hover)] transition-colors">
                         <TableCell className="font-medium py-3.5">
                           <div className="flex flex-col gap-1 items-start">
                             <Link
                               href={`/admin/invoices/${i.id}`}
-                              className="font-mono text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                              className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline"
                             >
                               #{i.number}
                             </Link>
@@ -1561,7 +1561,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                             </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="py-3.5 text-xs font-mono text-muted-foreground">
+                        <TableCell className="py-3.5 text-xs font-mono text-[var(--text-muted)]">
                           {i.invoiceDate.slice(0, 10)}
                         </TableCell>
                         <TableCell className="py-3.5">
@@ -1582,7 +1582,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                         <TableCell className="text-end py-3.5">
                           <strong
                             dir="ltr"
-                            className="font-mono tabular-nums text-sm font-bold text-foreground"
+                            className="font-mono tabular-nums text-sm font-bold text-[var(--text-main)]"
                           >
                             {i.totalAmount} SAR
                           </strong>
@@ -1591,12 +1591,12 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           {!isFullyPaid ? (
                             <strong
                               dir="ltr"
-                              className="font-mono tabular-nums text-sm font-bold text-rose-700 dark:text-rose-400"
+                              className="font-mono tabular-nums text-sm font-bold text-rose-700 dark:text-rose-300"
                             >
                               {remainingDisplay} SAR
                             </strong>
                           ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
+                            <span className="text-xs text-[var(--text-muted)]">—</span>
                           )}
                         </TableCell>
                         <TableCell className="text-end py-3.5">
@@ -1618,7 +1618,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                                 className="h-8 gap-1 text-xs"
                                 onClick={() => setPayingInvoice(i)}
                               >
-                                <ArrowDownLeft className="h-3.5 w-3.5" />
+                                <ArrowDownLeft className="h-3.5 w-3.5" aria-hidden="true" />
                                 <span>{ui("تسجيل سند قبض")}</span>
                               </Button>
                             )}
@@ -1637,10 +1637,10 @@ export function CustomerDetailPage({ id }: { id: string }) {
 
       {/* Section 3: Payments & Collections */}
       <Card className="theme-card border theme-border overflow-hidden shadow-xs">
-        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-muted/20">
+        <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)]">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-amber-500" />
+              <Wallet className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("التحصيلات والاستردادات")}</span>
             </CardTitle>
             <Badge variant="outline" className="font-mono text-xs">
@@ -1650,7 +1650,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
         </CardHeader>
         <CardContent className="p-0">
           {!d.payments.length ? (
-            <p className="p-8 text-center text-sm text-muted-foreground">
+            <p className="p-8 text-center text-sm text-[var(--text-muted)]">
               {ui("لا توجد تحصيلات مسجلة")}
             </p>
           ) : (
@@ -1683,8 +1683,8 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           dir="ltr"
                           className={`font-mono tabular-nums text-sm font-bold ${
                             isReceipt
-                              ? "text-emerald-700 dark:text-emerald-400"
-                              : "text-rose-700 dark:text-rose-400"
+                              ? "text-emerald-800 dark:text-emerald-300"
+                              : "text-rose-700 dark:text-rose-300"
                           }`}
                         >
                           {isReceipt ? "+" : "−"}
@@ -1710,7 +1710,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                   {d.payments.map((p) => {
                     const isReceipt = p.direction === "RECEIPT";
                     return (
-                      <TableRow key={p.id} className="hover:bg-muted/40 transition-colors">
+                      <TableRow key={p.id} className="hover:bg-[var(--table-row-hover)] transition-colors">
                         <TableCell className="py-3">
                           <Badge
                             variant={isReceipt ? "success" : "destructive"}
@@ -1724,10 +1724,10 @@ export function CustomerDetailPage({ id }: { id: string }) {
                             <span>{ui(isReceipt ? "سند قبض" : "سند صرف")}</span>
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-3 text-xs font-medium text-foreground">
+                        <TableCell className="py-3 text-xs font-medium text-[var(--text-main)]">
                           {p.reference}
                         </TableCell>
-                        <TableCell className="py-3 text-xs font-mono text-muted-foreground">
+                        <TableCell className="py-3 text-xs font-mono text-[var(--text-muted)]">
                           {p.paymentDate.slice(0, 10)}
                         </TableCell>
                         <TableCell className="text-end py-3">
@@ -1735,8 +1735,8 @@ export function CustomerDetailPage({ id }: { id: string }) {
                             dir="ltr"
                             className={`font-mono tabular-nums text-sm font-bold ${
                               isReceipt
-                                ? "text-emerald-700 dark:text-emerald-400"
-                                : "text-rose-700 dark:text-rose-400"
+                                ? "text-emerald-800 dark:text-emerald-300"
+                                : "text-rose-700 dark:text-rose-300"
                             }`}
                           >
                             {isReceipt ? "+" : "−"}

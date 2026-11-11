@@ -278,7 +278,7 @@ function SelectModalBody({
               aria-label={`${text("بحث في:", "Search:")} ${title}`}
               placeholder={searchPlaceholder}
               className={cn(
-                "theme-input w-full border theme-border bg-white dark:bg-slate-900/80 font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500/20 focus:outline-hidden",
+                "theme-input w-full border border-[var(--control-border)] bg-[var(--input-bg)] font-medium text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-[var(--accent-gold)]/20 focus:outline-hidden",
                 isFullscreen
                   ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
                   : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
@@ -323,7 +323,7 @@ function SelectModalBody({
             )}
           >
             <Loader2
-              className="h-6 w-6 animate-spin text-amber-500"
+              className="h-6 w-6 animate-spin text-[var(--accent-gold)]"
               aria-hidden="true"
             />
             <span>{text("جارٍ التحميل…", "Loading options…")}</span>
@@ -347,7 +347,7 @@ function SelectModalBody({
               <button
                 type="button"
                 onClick={() => handleSearchUpdate("")}
-                className="mt-1 inline-flex min-h-10 items-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-3.5 py-1.5 text-sm font-semibold text-[var(--text-main)] hover:border-amber-500/40 cursor-pointer transition"
+                className="mt-1 inline-flex min-h-10 items-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-1.5 text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition"
               >
                 {text("إظهار جميع الخيارات", "Show all options")}
               </button>
@@ -404,10 +404,10 @@ function SelectModalBody({
                         ? "min-h-18 gap-4 rounded-2xl border-2 px-5 py-4 text-lg"
                         : "min-h-10 gap-2.5 rounded-xl border px-3 py-2 text-sm",
                       isSelected
-                        ? "border-amber-500 bg-amber-500/10 text-slate-900 dark:text-white shadow-xs"
+                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--text-main)] shadow-xs"
                         : isHighlighted
-                          ? "border-amber-500/40 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white"
-                          : "border theme-border bg-white dark:bg-slate-900 text-slate-900 dark:text-white hover:border-amber-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80",
+                          ? "border-[var(--accent-gold)]/55 bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
+                          : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
                     )}
                   >
                     <span className="min-w-0 flex-1 space-y-0.5">
@@ -419,14 +419,14 @@ function SelectModalBody({
                               ? "text-lg sm:text-xl font-bold"
                               : "text-sm font-bold",
                             isSelected
-                              ? "text-amber-700 dark:text-amber-400"
-                              : "text-slate-900 dark:text-white",
+                              ? "text-[var(--accent-gold)]"
+                              : "text-[var(--text-main)]",
                           )}
                         >
                           {option.label}
                         </span>
                         {option.badge && (
-                          <span className="rounded-lg border theme-border bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                          <span className="rounded-lg border theme-border bg-[var(--bg-card-subtle)] px-2 py-0.5 text-xs font-mono font-bold text-[var(--text-main)]">
                             {option.badge}
                           </span>
                         )}
@@ -449,8 +449,8 @@ function SelectModalBody({
                         "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
                         isFullscreen ? "h-8 w-8" : "h-6 w-6",
                         isSelected
-                          ? "border-amber-600 bg-amber-600 text-white"
-                          : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-transparent",
+                          ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
+                          : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-transparent",
                       )}
                     >
                       <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
@@ -477,7 +477,7 @@ function SelectModalBody({
                 type="button"
                 onClick={handleClear}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-xl border theme-border bg-[var(--bg-card-subtle)] font-semibold text-[var(--text-main)] hover:border-amber-500/40 cursor-pointer transition",
+                  "inline-flex items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition",
                   isFullscreen
                     ? "min-h-12 px-4 py-2.5 text-sm sm:text-base"
                     : "min-h-9 px-3 py-1.5 text-xs sm:text-sm",
@@ -658,9 +658,9 @@ export function FullscreenSelect({
         className={cn(
           "min-w-0 w-full min-h-12 px-4 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-medium leading-normal flex items-center justify-between gap-2.5 text-start cursor-pointer",
           error || ariaInvalid === true || ariaInvalid === "true"
-            ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus-visible:border-rose-500 focus-visible:ring-2 focus-visible:ring-rose-500/20"
-            : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20",
-          disabled && "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800",
+            ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus-visible:border-rose-600 focus-visible:ring-2 focus-visible:ring-rose-500/20"
+            : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] focus-visible:border-[var(--accent-gold)] focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)]/20",
+          disabled && "opacity-55 cursor-not-allowed bg-[var(--bg-card-subtle)]",
           triggerClassName,
         )}
       >
@@ -676,13 +676,13 @@ export function FullscreenSelect({
           <span
             className={cn(
               "min-w-0 truncate",
-              isShowingPlaceholder && "text-slate-400 font-normal",
+              isShowingPlaceholder && "text-[var(--text-placeholder)] font-normal",
             )}
           >
             {visibleTriggerText}
           </span>
           {selectedOption?.badge && !displayValue && (
-            <span className="hidden sm:inline-flex shrink-0 rounded-md border theme-border bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+            <span className="hidden sm:inline-flex shrink-0 rounded-md border theme-border bg-[var(--bg-card-subtle)] px-2 py-0.5 text-xs font-mono font-bold text-[var(--text-main)]">
               {selectedOption.badge}
             </span>
           )}
@@ -692,7 +692,7 @@ export function FullscreenSelect({
           aria-hidden="true"
           className={cn(
             "h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform duration-150",
-            open && "rotate-180 text-amber-500",
+            open && "rotate-180 text-[var(--accent-gold)]",
           )}
         />
       </button>
@@ -703,7 +703,7 @@ export function FullscreenSelect({
           onClick={() => onChange("", undefined)}
           aria-label={clearLabel || text("مسح التحديد", "Clear selection")}
           title={clearLabel || text("مسح التحديد", "Clear selection")}
-          className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-xl border theme-border bg-white dark:bg-slate-900/80 text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
+          className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>

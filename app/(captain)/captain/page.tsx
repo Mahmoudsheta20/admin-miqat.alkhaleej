@@ -169,7 +169,7 @@ export default function CaptainHomePage() {
               onClick={() => setIsProfileOpen(true)}
               aria-label={ui("تعديل الصورة والملف الشخصي")}
               title={ui("تعديل الصورة والملف الشخصي")}
-              className="relative group cursor-pointer w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold text-lg sm:text-xl flex items-center justify-center border border-amber-500/30 shrink-0 shadow-xs"
+              className="relative group cursor-pointer w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold text-lg sm:text-xl flex items-center justify-center border border-[var(--accent-gold)]/35 shrink-0 shadow-xs"
             >
               {user.avatarUrl ? (
                 <Image
@@ -188,14 +188,14 @@ export default function CaptainHomePage() {
             </button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 dark:text-white truncate">
+                <h1 className="text-lg sm:text-2xl font-semibold text-[var(--text-main)] truncate">
                   {ui("مرحباً بك، كابتن")} {user.name}
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-500/20 shrink-0">
+                <span className="px-2 py-0.5 rounded-full bg-[var(--accent-surface)] text-[var(--accent-gold)] text-xs font-bold border border-[var(--accent-gold)]/35 shrink-0">
                   {ui("كابتن معتمد")}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 mt-1 truncate">
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1 truncate">
                 {ui(
                   "بوابة الميدان • منظومة ميقات الخليج لإدارة الرحلات والعقود",
                 )}
@@ -207,7 +207,7 @@ export default function CaptainHomePage() {
             type="button"
             onClick={() => loadData(true)}
             disabled={isLoading}
-            className="self-start sm:self-center inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300 disabled:opacity-50 cursor-pointer"
+            className="self-start sm:self-center inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] disabled:opacity-50 cursor-pointer transition-colors"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
@@ -223,9 +223,9 @@ export default function CaptainHomePage() {
             <span className="text-[var(--text-muted)] text-xs block">
               {ui("المركبة المسندة")}
             </span>
-            <span className="font-bold text-slate-900 dark:text-white font-mono flex items-center gap-1 mt-0.5">
+            <span className="font-bold text-[var(--text-main)] font-mono flex items-center gap-1 mt-0.5">
               <Car
-                className="w-3.5 h-3.5 text-amber-500 shrink-0"
+                className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0"
                 aria-hidden="true"
               />
               <bdi>{user.assignedVehiclePlate || ui("لم تُسند مركبة")}</bdi>
@@ -237,7 +237,7 @@ export default function CaptainHomePage() {
               {ui("رقم الهوية")}
             </span>
             <span
-              className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block"
+              className="font-bold text-[var(--text-main)] font-mono mt-0.5 block"
               dir="ltr"
             >
               <bdi>{user.nationalId || "—"}</bdi>
@@ -249,7 +249,7 @@ export default function CaptainHomePage() {
               {ui("رقم الجوال")}
             </span>
             <span
-              className="font-bold text-slate-900 dark:text-white font-mono mt-0.5 block"
+              className="font-bold text-[var(--text-main)] font-mono mt-0.5 block"
               dir="ltr"
             >
               <bdi>{user.phone || "—"}</bdi>
@@ -260,7 +260,7 @@ export default function CaptainHomePage() {
             <span className="text-[var(--text-muted)] text-xs block">
               {ui("إجمالي العقود المنفذة")}
             </span>
-            <span className="font-bold text-slate-900 dark:text-white font-mono text-sm mt-0.5 block">
+            <span className="font-bold text-[var(--text-main)] font-mono text-sm mt-0.5 block">
               {contracts.length} {ui("عقد")}
             </span>
           </div>
@@ -271,8 +271,8 @@ export default function CaptainHomePage() {
       <Card
         className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border shadow-none transition-all duration-200 ${
           hasInspectionToday
-            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100"
-            : "bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-100"
+            ? "bg-emerald-500/10 dark:bg-emerald-950/35 border-emerald-600/35 dark:border-emerald-500/35 text-[var(--text-main)]"
+            : "bg-[var(--accent-surface)] border-amber-600/35 text-[var(--text-main)]"
         }`}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -280,8 +280,8 @@ export default function CaptainHomePage() {
             <div
               className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border ${
                 hasInspectionToday
-                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
-                  : "bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-400"
+                  ? "bg-emerald-500/15 border-emerald-600/35 text-emerald-700 dark:border-emerald-500/35 dark:text-emerald-300"
+                  : "bg-amber-500/20 border-amber-600/35 text-[var(--accent-gold)]"
               }`}
             >
               {hasInspectionToday ? (
@@ -297,14 +297,14 @@ export default function CaptainHomePage() {
               )}
             </div>
             <div>
-              <h2 className="text-sm sm:text-lg font-semibold flex items-center gap-2">
+              <h2 className="text-sm sm:text-lg font-semibold text-[var(--text-main)] flex items-center gap-2">
                 {ui(
                   hasInspectionToday
                     ? "تم اعتماد الفحص التشغيلي للمركبة بنجاح"
                     : "فحص المركبة التشغيلي غير مسجل حتى الآن",
                 )}
               </h2>
-              <p className="text-xs sm:text-sm mt-1 opacity-80 leading-relaxed max-w-2xl">
+              <p className="text-xs sm:text-sm mt-1 text-[var(--text-muted)] leading-relaxed max-w-2xl">
                 {hasInspectionToday
                   ? isRTL
                     ? `أكملت بنود الفحص الميداني الـ 16 للمركبة (${inspection?.vehiclePlate || "—"}) بتاريخ ${formatOfficialDate(inspection?.inspectionDate || "")}. حافلتك جاهزة للتشغيل، ويمكنك الآن إصدار وتوثيق عقود النقل البري الرسمية.`
@@ -328,7 +328,7 @@ export default function CaptainHomePage() {
                 <button
                   type="button"
                   onClick={() => setIsCreateFullscreen(true)}
-                  className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl sm:rounded-2xl border border-amber-500/30 bg-white dark:bg-slate-900 text-sm font-bold text-amber-700 dark:text-amber-400 hover:border-amber-500 transition cursor-pointer"
+                  className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl sm:rounded-2xl border border-[var(--control-border)] bg-[var(--bg-card)] text-sm font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
                 >
                   <Maximize2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{text("إنشاء بملء الشاشة", "Full-screen create")}</span>
@@ -360,13 +360,13 @@ export default function CaptainHomePage() {
       {/* Quick Action Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link href="/captain/inspection" className="group block">
-          <Card className="theme-card p-5 rounded-2xl border theme-border shadow-none hover:border-amber-500 transition flex items-center justify-between gap-3 h-full">
+          <Card className="theme-card p-5 rounded-2xl border theme-border shadow-none hover:border-[var(--accent-gold)] transition flex items-center justify-between gap-3 h-full">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                 <ClipboardCheck className="w-5 h-5" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <h2 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition">
+                <h2 className="font-bold text-sm text-[var(--text-main)] group-hover:text-[var(--accent-gold)] transition">
                   {ui("فحص المركبة اليومي")}
                 </h2>
                 <p className="text-xs text-[var(--text-muted)]">
@@ -376,12 +376,12 @@ export default function CaptainHomePage() {
             </div>
             {isRTL ? (
               <ArrowUpLeft
-                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-gold)] transition shrink-0"
                 aria-hidden="true"
               />
             ) : (
               <ArrowUpRight
-                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-gold)] transition shrink-0"
                 aria-hidden="true"
               />
             )}
@@ -389,13 +389,13 @@ export default function CaptainHomePage() {
         </Link>
 
         <Link href="/captain/contract" className="group block">
-          <Card className="theme-card p-5 rounded-2xl border theme-border shadow-none hover:border-amber-500 transition flex items-center justify-between gap-3 h-full">
+          <Card className="theme-card p-5 rounded-2xl border theme-border shadow-none hover:border-[var(--accent-gold)] transition flex items-center justify-between gap-3 h-full">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent-surface)] border border-amber-600/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
                 <FilePlus2 className="w-5 h-5" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <h2 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition">
+                <h2 className="font-bold text-sm text-[var(--text-main)] group-hover:text-[var(--accent-gold)] transition">
                   {ui("إنشاء عقد رحلة جديد")}
                 </h2>
                 <p className="text-xs text-[var(--text-muted)]">
@@ -405,12 +405,12 @@ export default function CaptainHomePage() {
             </div>
             {isRTL ? (
               <ArrowUpLeft
-                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-gold)] transition shrink-0"
                 aria-hidden="true"
               />
             ) : (
               <ArrowUpRight
-                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-500 transition shrink-0"
+                className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-gold)] transition shrink-0"
                 aria-hidden="true"
               />
             )}
@@ -422,7 +422,7 @@ export default function CaptainHomePage() {
       <div className="theme-card rounded-2xl border theme-border overflow-hidden">
         <div className="p-4 sm:p-5 border-b theme-border flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-base font-semibold text-[var(--text-main)]">
               {ui("عقودي الأخيرة")}
             </h2>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">
@@ -431,7 +431,7 @@ export default function CaptainHomePage() {
           </div>
           <Link
             href="/captain/contract"
-            className="min-h-10 inline-flex items-center text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline px-2"
+            className="min-h-10 inline-flex items-center text-xs font-bold text-[var(--accent-gold)] hover:underline px-2"
           >
             {ui("+ عقد جديد")}
           </Link>
@@ -439,7 +439,7 @@ export default function CaptainHomePage() {
 
         {isLoading ? (
           <div className="p-10 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
+            <div className="w-8 h-8 border-2 border-[var(--border-color)] border-t-[var(--accent-gold)] rounded-full animate-spin mb-3" />
             <p className="text-xs text-[var(--text-muted)]">
               {ui("جاري تحميل البيانات...")}
             </p>
@@ -462,7 +462,7 @@ export default function CaptainHomePage() {
                     key={c.id}
                     titleAs="h3"
                     title={
-                      <span className="font-mono font-bold text-amber-700 dark:text-amber-400 text-sm">
+                      <span className="font-mono font-bold text-[var(--accent-gold)] text-sm">
                         <bdi>{c.referenceNumber}</bdi>
                       </span>
                     }
@@ -484,12 +484,12 @@ export default function CaptainHomePage() {
                         <a
                           href={pdfDownloadHref}
                           download={`Contract_${c.referenceNumber}.pdf`}
-                          className="min-h-11 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border theme-border hover:border-amber-500 text-xs font-bold transition text-slate-700 dark:text-slate-200"
+                          className="min-h-11 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold transition text-[var(--text-main)]"
                           aria-label={`${ui("تحميل العقد PDF")} ${c.referenceNumber}`}
                           title={ui("تحميل العقد PDF")}
                         >
                           <Download
-                            className="w-3.5 h-3.5 text-amber-500"
+                            className="w-3.5 h-3.5 text-[var(--accent-gold)]"
                             aria-hidden="true"
                           />
                           <span>{ui("تحميل")}</span>
@@ -515,7 +515,7 @@ export default function CaptainHomePage() {
                         label={
                           <span className="inline-flex items-center gap-1">
                             <MapPin
-                              className="w-3 h-3 text-emerald-500"
+                              className="w-3 h-3 text-[var(--accent-gold)]"
                               aria-hidden="true"
                             />
                             <span>{ui("مسار الرحلة")}</span>
@@ -526,12 +526,12 @@ export default function CaptainHomePage() {
                             <bdi>{c.origin}</bdi>
                             {isRTL ? (
                               <ArrowLeft
-                                className="w-3.5 h-3.5 text-amber-500 shrink-0"
+                                className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0"
                                 aria-hidden="true"
                               />
                             ) : (
                               <ArrowRight
-                                className="w-3.5 h-3.5 text-amber-500 shrink-0"
+                                className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0"
                                 aria-hidden="true"
                               />
                             )}
@@ -543,7 +543,7 @@ export default function CaptainHomePage() {
                         label={
                           <span className="inline-flex items-center gap-1">
                             <Calendar
-                              className="w-3 h-3 text-amber-500"
+                              className="w-3 h-3 text-[var(--accent-gold)]"
                               aria-hidden="true"
                             />
                             <span>{ui("موعد الرحلة")}</span>
@@ -561,7 +561,7 @@ export default function CaptainHomePage() {
                         label={
                           <span className="inline-flex items-center gap-1">
                             <Users
-                              className="w-3 h-3 text-amber-500"
+                              className="w-3 h-3 text-[var(--accent-gold)]"
                               aria-hidden="true"
                             />
                             <span>{ui("الركاب")}</span>
@@ -585,11 +585,11 @@ export default function CaptainHomePage() {
                 return (
                   <div
                     key={c.id}
-                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[var(--table-row-hover)] transition"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-amber-700 dark:text-amber-400 text-sm">
+                        <span className="font-mono font-bold text-[var(--accent-gold)] text-sm">
                           <bdi>{c.referenceNumber}</bdi>
                         </span>
                         <StatusBadge
@@ -598,7 +598,7 @@ export default function CaptainHomePage() {
                           size="sm"
                         />
                       </div>
-                      <div className="font-bold text-slate-900 dark:text-white text-sm">
+                      <div className="font-bold text-[var(--text-main)] text-sm">
                         {ui("العميل:")} {c.customerName}
                       </div>
                       <div className="text-xs text-[var(--text-muted)] flex flex-wrap items-center gap-3">
@@ -616,7 +616,7 @@ export default function CaptainHomePage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border-color)]">
                       <span className="text-xs text-[var(--text-muted)] font-mono">
                         {c.passengers?.length || 0} {ui("ركاب")}
                       </span>
@@ -624,12 +624,12 @@ export default function CaptainHomePage() {
                       <a
                         href={pdfDownloadHref}
                         download={`Contract_${c.referenceNumber}.pdf`}
-                        className="inline-flex min-h-10 items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-border hover:border-amber-500 text-xs font-bold transition text-slate-700 dark:text-slate-200"
+                        className="inline-flex min-h-10 items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold transition text-[var(--text-main)]"
                         aria-label={`${ui("تحميل العقد PDF")} ${c.referenceNumber}`}
                         title={ui("تحميل العقد PDF")}
                       >
                         <Download
-                          className="w-3.5 h-3.5 text-amber-500"
+                          className="w-3.5 h-3.5 text-[var(--accent-gold)]"
                           aria-hidden="true"
                         />
                         {ui("تحميل")}

@@ -37,13 +37,13 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
 
   return (
     <section className="theme-card p-5 sm:p-6 rounded-2xl border theme-border space-y-4">
-      <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2 border-b theme-border pb-3">
-        <Truck className="w-4 h-4 text-amber-500" aria-hidden="true" />
+      <h2 className="text-base font-semibold text-[var(--text-main)] flex items-center gap-2 border-b theme-border pb-3">
+        <Truck className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
         <span>{ui("تفاصيل خدمة النقل والرحلة")}</span>
       </h2>
 
-      <div className="theme-card-subtle rounded-xl p-4 flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-        <MapPin className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+      <div className="theme-card-subtle rounded-xl p-4 flex items-center gap-2.5 text-sm font-semibold text-[var(--text-main)]">
+        <MapPin className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
         <span>
           {ui("من")} {value.origin} {ui("إلى")} {value.destination}
         </span>
@@ -57,8 +57,8 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
               key={label}
               className="flex justify-between gap-4 border-b theme-border pb-2.5"
             >
-              <dt className="text-[var(--text-muted)] dark:text-slate-400">{ui(label)}</dt>
-              <dd className="font-bold text-end break-words text-slate-900 dark:text-white" dir="auto">
+              <dt className="text-[var(--text-muted)]">{ui(label)}</dt>
+              <dd className="font-bold text-end break-words text-[var(--text-main)]" dir="auto">
                 {field}
               </dd>
             </div>
@@ -67,8 +67,8 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
 
       {passengers.length > 0 && (
         <div className="pt-2 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <Users className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-1.5">
+            <Users className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>
               {ui("أسماء الركاب المسجلة (")}
               {passengers.length})
@@ -81,7 +81,7 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
                   <span className="w-6 h-6 rounded-md bg-[var(--bg-card-subtle)] border theme-border font-mono font-bold text-[11px] flex items-center justify-center shrink-0 text-[var(--text-muted)]">
                     {index + 1}
                   </span>
-                  <span className="font-bold text-slate-900 dark:text-white truncate">
+                  <span className="font-bold text-[var(--text-main)] truncate">
                     {passenger.name}
                   </span>
                 </div>
@@ -94,7 +94,7 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
 
           <div className="hidden md:block overflow-x-auto rounded-xl border theme-border">
             <table className="w-full text-start text-xs sm:text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-[var(--text-muted)] font-bold">
+              <thead className="bg-[var(--table-header-bg)] text-[var(--text-muted)] font-bold">
                 <tr>
                   <th className="p-2.5 whitespace-nowrap">{ui("م")}</th>
                   <th className="p-2.5 whitespace-nowrap">{ui("الاسم")}</th>
@@ -103,9 +103,9 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
               </thead>
               <tbody className="divide-y theme-border">
                 {passengers.map((passenger, index) => (
-                  <tr key={index}>
+                  <tr key={index} className="hover:bg-[var(--table-row-hover)] transition">
                     <td className="p-2.5 font-mono text-[var(--text-muted)]">{index + 1}</td>
-                    <td className="p-2.5 font-bold">{passenger.name}</td>
+                    <td className="p-2.5 font-bold text-[var(--text-main)]">{passenger.name}</td>
                     <td className="p-2.5 text-[var(--text-muted)]">{passenger.nationality || "—"}</td>
                   </tr>
                 ))}
@@ -116,8 +116,8 @@ export default function InvoiceTransportDetails({ value }: TransportDetailsProps
       )}
 
       {value.notes && (
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border theme-border text-xs sm:text-sm whitespace-pre-wrap break-words">
-          <strong className="text-amber-700 dark:text-amber-400 block mb-1">{ui("ملاحظات النقل:")}</strong>
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border text-xs sm:text-sm text-[var(--text-main)] whitespace-pre-wrap break-words">
+          <strong className="text-[var(--accent-gold)] block mb-1">{ui("ملاحظات النقل:")}</strong>
           {value.notes}
         </div>
       )}

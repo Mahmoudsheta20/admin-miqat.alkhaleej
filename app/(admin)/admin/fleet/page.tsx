@@ -289,7 +289,7 @@ export default function FleetManagementPage() {
       {seedMessage && (
         <p
           role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300"
         >
           {ui(seedMessage)}
         </p>
@@ -313,7 +313,7 @@ export default function FleetManagementPage() {
       {/* Vehicles Grid */}
       {isLoading ? (
         <div className="p-12 flex flex-col items-center justify-center theme-card rounded-2xl border theme-border">
-          <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
+          <div className="w-8 h-8 border-2 border-[var(--accent-gold)]/20 border-t-[var(--accent-gold)] rounded-full animate-spin mb-3" />
           <p className="text-xs text-[var(--text-muted)]">{ui("جاري تحميل أسطول المركبات...")}</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -324,11 +324,11 @@ export default function FleetManagementPage() {
           {filtered.map((v) => (
             <Card
               key={v.id}
-              className="theme-card border theme-border shadow-none flex flex-col justify-between hover:border-amber-500/40 transition-colors"
+              className="theme-card border theme-border shadow-none flex flex-col justify-between hover:border-[var(--accent-gold)]/50 transition-colors"
             >
               <CardHeader className="p-5 pb-3 space-y-0 flex-row items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1">
-                  <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
+                  <CardTitle className="text-base font-bold text-[var(--text-main)]">
                     {v.make} {v.model}
                   </CardTitle>
                   <CardDescription className="text-xs text-[var(--text-muted)] mt-0">
@@ -356,33 +356,33 @@ export default function FleetManagementPage() {
                 </MobileCardMetaGrid>
 
                 {/* Specs */}
-                <div className="space-y-2 text-xs text-[var(--text-muted)] dark:text-slate-400">
+                <div className="space-y-2 text-xs text-[var(--text-muted)]">
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
-                      <Gauge className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                      <Gauge className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                       {ui("العداد الحالي")}
                     </span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                    <span className="font-mono font-bold text-[var(--text-main)]">
                       {(v.currentMileage ?? 0).toLocaleString()} {ui("كم")}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
-                      <Calendar className="w-3.5 h-3.5 text-blue-500" aria-hidden="true" />
+                      <Calendar className="w-3.5 h-3.5 text-sky-700 dark:text-sky-400" aria-hidden="true" />
                       {ui("انتهاء الاستمارة")}
                     </span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200" dir="ltr">
+                    <span className="font-mono text-[var(--text-main)]" dir="ltr">
                       {v.registrationExpiry}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
-                      <Calendar className="w-3.5 h-3.5 text-emerald-500" aria-hidden="true" />
+                      <Calendar className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                       {ui("انتهاء التأمين")}
                     </span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200" dir="ltr">
+                    <span className="font-mono text-[var(--text-main)]" dir="ltr">
                       {v.insuranceExpiry}
                     </span>
                   </div>
@@ -428,7 +428,7 @@ export default function FleetManagementPage() {
         >
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                 {ui(editingVehicle
                   ? "تعديل بيانات المركبة"
                   : "إضافة مركبة جديدة للأسطول")}
@@ -440,7 +440,7 @@ export default function FleetManagementPage() {
                   setIsAddModalOpen(false);
                   setEditingVehicle(null);
                 }}
-                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] transition cursor-pointer"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
@@ -453,7 +453,7 @@ export default function FleetManagementPage() {
               {formError && (
                 <div
                   role="alert"
-                  className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-bold"
+                  className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-bold"
                 >
                   {ui(formError)}
                 </div>
@@ -461,7 +461,7 @@ export default function FleetManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-plateAr`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-plateAr`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("رقم اللوحة (عربي) *")}</label>
                   <input
                     id={`${formId}-plateAr`}
@@ -475,12 +475,12 @@ export default function FleetManagementPage() {
                       })
                     }
                     placeholder={ui("ا ص ل 7223")}
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-plateEn`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-plateEn`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("رقم اللوحة (إنجليزي) *")}</label>
                   <input
                     id={`${formId}-plateEn`}
@@ -495,12 +495,12 @@ export default function FleetManagementPage() {
                     }
                     placeholder="ASL 7223"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-make`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-make`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("الشركة المصنعة *")}</label>
                   <input
                     id={`${formId}-make`}
@@ -511,12 +511,12 @@ export default function FleetManagementPage() {
                       setFormData({ ...formData, make: e.target.value })
                     }
                     placeholder="GMC"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-model`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-model`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("الموديل والطراز *")}</label>
                   <input
                     id={`${formId}-model`}
@@ -527,12 +527,12 @@ export default function FleetManagementPage() {
                       setFormData({ ...formData, model: e.target.value })
                     }
                     placeholder="Yukon XL VIP"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-category`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-category`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("فئة المركبة")}</label>
                   <select
                     id={`${formId}-category`}
@@ -540,7 +540,7 @@ export default function FleetManagementPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   >
                     <option value="VIP_VAN">{ui("فان VIP")}</option>
                     <option value="SUV_VIP">{ui("دفع رباعي VIP")}</option>
@@ -555,7 +555,7 @@ export default function FleetManagementPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-status`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-status`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("حالة المركبة")}</label>
                   <select
                     id={`${formId}-status`}
@@ -566,7 +566,7 @@ export default function FleetManagementPage() {
                         status: e.target.value as VehicleStatus,
                       })
                     }
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   >
                     <option value="AVAILABLE">{ui("جاهزة")}</option>
                     <option value="ON_TRIP">{ui("في رحلة")}</option>
@@ -575,7 +575,7 @@ export default function FleetManagementPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-year`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-year`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("سنة الصنع")}</label>
                   <input
                     id={`${formId}-year`}
@@ -584,12 +584,12 @@ export default function FleetManagementPage() {
                     value={yearInput}
                     onChange={(e) => setYearInput(e.target.value.replace(/[^\d]/g, "").slice(0, 4))}
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-capacity`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-capacity`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("سعة الركاب")}</label>
                   <input
                     id={`${formId}-capacity`}
@@ -598,12 +598,12 @@ export default function FleetManagementPage() {
                     value={capacityInput}
                     onChange={(e) => setCapacityInput(e.target.value.replace(/[^\d]/g, "").slice(0, 3))}
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1 sm:col-span-2">
-                  <label htmlFor={`${formId}-mileage`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-mileage`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("العداد الحالي (كم)")}</label>
                   <input
                     id={`${formId}-mileage`}
@@ -612,12 +612,12 @@ export default function FleetManagementPage() {
                     value={mileageInput}
                     onChange={(e) => setMileageInput(e.target.value.replace(/[^\d]/g, ""))}
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-regExpiry`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-regExpiry`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("تاريخ انتهاء الاستمارة")}</label>
                   <input
                     id={`${formId}-regExpiry`}
@@ -631,12 +631,12 @@ export default function FleetManagementPage() {
                     }
                     placeholder="2027-05-14"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-insExpiry`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-insExpiry`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("تاريخ انتهاء التأمين")}</label>
                   <input
                     id={`${formId}-insExpiry`}
@@ -650,7 +650,7 @@ export default function FleetManagementPage() {
                     }
                     placeholder="2027-01-20"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
               </div>
@@ -662,7 +662,7 @@ export default function FleetManagementPage() {
                     setIsAddModalOpen(false);
                     setEditingVehicle(null);
                   }}
-                  className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  className="secondary-btn min-h-11 px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
                 >
                   {ui("إلغاء")}</button>
                 <button

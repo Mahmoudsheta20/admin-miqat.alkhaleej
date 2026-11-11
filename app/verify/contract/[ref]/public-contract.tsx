@@ -140,7 +140,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
 
   return (
     <main
-      className="grid min-h-dvh place-items-center bg-slate-50 px-4 py-10 dark:bg-[#080c14]"
+      className="grid min-h-dvh place-items-center bg-[var(--bg-main)] px-4 py-10"
       dir={ui.dir}
     >
       <section className="theme-card w-full max-w-xl rounded-2xl p-6 sm:p-8 border theme-border shadow-lg">
@@ -158,29 +158,29 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
             role="status"
             className="flex items-center justify-center gap-2 py-8 text-sm text-[var(--text-muted)]"
           >
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            <Loader2 className="size-4 animate-spin text-[var(--accent-gold)]" aria-hidden="true" />
             {ui("جارٍ التحقق من العقد…")}
           </p>
         ) : contract ? (
           <>
-            <div className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300 border border-emerald-500/20">
+            <div className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-500/12 px-4 py-3 text-sm font-bold text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300 border border-emerald-600/35 dark:border-emerald-500/35">
               <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
               {ui("عقد رسمي مسجل في نظام الشركة")}
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-b theme-border pb-4">
               <div>
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h1 className="text-xl font-bold text-[var(--text-main)]">
                   {ui("توثيق عقد ميقات الخليج")}
                 </h1>
                 <p
-                  className="mt-1 font-mono text-lg font-semibold text-amber-700 dark:text-amber-400"
+                  className="mt-1 font-mono text-lg font-semibold text-[var(--accent-gold)]"
                   dir="ltr"
                 >
                   {contract.referenceNumber}
                 </p>
               </div>
-              <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300">
+              <span className="rounded-full bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 px-3 py-1 text-xs font-bold text-[var(--accent-gold)]">
                 {ui(STATUS_LABELS[contract.status])}
               </span>
             </div>
@@ -205,9 +205,9 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                 href={pdfViewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border theme-border bg-white/60 dark:bg-slate-900/60 hover:border-amber-500 px-5 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 transition-all duration-200"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] px-5 py-3 text-sm font-bold text-[var(--text-main)] transition-all duration-200"
               >
-                <ExternalLink className="size-4 text-amber-500" aria-hidden="true" />
+                <ExternalLink className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
                 {ui("معاينة العقد PDF")}
               </a>
             </div>
@@ -215,12 +215,12 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
             {/* Operational Details */}
             <dl className="mt-6 space-y-3.5 text-sm">
               {contract.origin && contract.destination && (
-                <div className="flex items-start justify-between gap-4 rounded-xl bg-slate-100/70 dark:bg-slate-800/40 p-3.5">
+                <div className="flex items-start justify-between gap-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border p-3.5">
                   <dt className="flex items-center gap-2 text-[var(--text-muted)] font-medium shrink-0">
-                    <MapPin className="size-4 text-amber-500" aria-hidden="true" />
+                    <MapPin className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
                     {ui("خط السير")}
                   </dt>
-                  <dd className="font-bold text-slate-900 dark:text-white text-end">
+                  <dd className="font-bold text-[var(--text-main)] text-end">
                     {contract.origin} {ui.dir === "rtl" ? "⟵" : "→"} {contract.destination}
                   </dd>
                 </div>
@@ -232,7 +232,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                     <Calendar className="size-4 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("موعد الرحلة")}
                   </dt>
-                  <dd className="font-mono font-bold" dir="ltr">
+                  <dd className="font-mono font-bold text-[var(--text-main)]" dir="ltr">
                     {contract.tripDate} {contract.tripTime || ""}
                   </dd>
                 </div>
@@ -244,7 +244,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                     <Plane className="size-4 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("رحلة الطيران")}
                   </dt>
-                  <dd className="font-bold">
+                  <dd className="font-bold text-[var(--text-main)]">
                     {contract.flightCarrier}{" "}
                     <span className="font-mono">{contract.flightNumber || ""}</span>
                   </dd>
@@ -254,7 +254,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
               {contract.captain?.name && (
                 <div className="flex justify-between gap-4 border-b theme-border pb-3">
                   <dt className="text-[var(--text-muted)]">{ui("الكابتن المسؤول")}</dt>
-                  <dd className="font-bold">{contract.captain.name}</dd>
+                  <dd className="font-bold text-[var(--text-main)]">{contract.captain.name}</dd>
                 </div>
               )}
 
@@ -264,21 +264,21 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                     <Car className="size-4 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("رقم اللوحة")}
                   </dt>
-                  <dd className="font-mono font-bold">{contract.vehiclePlate}</dd>
+                  <dd className="font-mono font-bold text-[var(--text-main)]">{contract.vehiclePlate}</dd>
                 </div>
               )}
 
               {contract.customerName && (
                 <div className="flex justify-between gap-4 border-b theme-border pb-3">
                   <dt className="text-[var(--text-muted)]">{ui("الضيف الرئيسي")}</dt>
-                  <dd className="font-bold">{contract.customerName}</dd>
+                  <dd className="font-bold text-[var(--text-main)]">{contract.customerName}</dd>
                 </div>
               )}
 
               {contract.issueDate && (
                 <div className="flex justify-between gap-4 pb-1">
                   <dt className="text-[var(--text-muted)]">{ui("تاريخ الإصدار")}</dt>
-                  <dd className="font-mono" dir="ltr">
+                  <dd className="font-mono text-[var(--text-main)]" dir="ltr">
                     {contract.issueDate}
                   </dd>
                 </div>
@@ -288,12 +288,12 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
             {/* Passenger Manifest */}
             {contract.passengers && contract.passengers.length > 0 && (
               <div className="mt-6 rounded-xl border theme-border overflow-hidden">
-                <div className="bg-slate-100/80 dark:bg-slate-800/60 px-4 py-2.5 flex items-center justify-between border-b theme-border">
-                  <span className="text-xs font-bold flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
-                    <Users className="size-3.5 text-amber-500" aria-hidden="true" />
+                <div className="bg-[var(--bg-card-subtle)] px-4 py-2.5 flex items-center justify-between border-b theme-border">
+                  <span className="text-xs font-bold flex items-center gap-1.5 text-[var(--text-main)]">
+                    <Users className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                     {ui("كشف الركاب المعتمد")}
                   </span>
-                  <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400">
+                  <span className="text-xs font-mono font-bold text-[var(--accent-gold)]">
                     {`${contract.passengers.length} ${ui("راكب")}`}
                   </span>
                 </div>
@@ -303,7 +303,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                       key={idx}
                       className="px-4 py-2.5 flex items-center justify-between gap-2"
                     >
-                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                      <span className="font-bold text-[var(--text-main)]">
                         <span className="font-mono text-[var(--text-muted)] me-2">
                           {idx + 1}.
                         </span>
@@ -321,14 +321,14 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
         ) : (
           <div className="py-6 text-center">
             <FileText className="mx-auto mb-4 size-8 text-[var(--text-muted)]" aria-hidden="true" />
-            <h1 className="text-lg font-bold">{ui("العقد غير متاح")}</h1>
+            <h1 className="text-lg font-bold text-[var(--text-main)]">{ui("العقد غير متاح")}</h1>
           </div>
         )}
 
         {error && (
           <p
             role="alert"
-            className="mt-5 text-center text-sm leading-relaxed text-rose-700 dark:text-rose-400"
+            className="mt-5 text-center text-sm leading-relaxed text-rose-700 dark:text-rose-300"
           >
             {ui(error)}
           </p>
@@ -338,7 +338,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-4 min-h-11 w-full rounded-xl border theme-border px-4 py-3 text-sm font-bold cursor-pointer"
+            className="mt-4 min-h-11 w-full rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] px-4 py-3 text-sm font-bold cursor-pointer transition"
           >
             {ui("إعادة المحاولة")}
           </button>

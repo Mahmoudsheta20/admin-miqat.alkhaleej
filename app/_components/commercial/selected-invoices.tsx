@@ -411,15 +411,15 @@ export default function SelectedInvoices() {
 
         <div className="divide-y theme-border rounded-xl border overflow-hidden">
           {visible.map((r) => (
-            <label key={`${r.id}:${r.number}`} className="flex flex-wrap items-center gap-3 p-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition cursor-pointer">
+            <label key={`${r.id}:${r.number}`} className="flex flex-wrap items-center gap-3 p-3.5 hover:bg-[var(--table-row-hover)] transition cursor-pointer">
               <Checkbox checked={ids.includes(r.id)} onChange={(e) => toggle(r.id, e.target.checked)} />
               <span className="min-w-0 flex-1">
-                <b className="font-mono text-sm text-slate-900 dark:text-white">{r.number}</b>
+                <b className="font-mono text-sm text-[var(--text-main)]">{r.number}</b>
                 <small className="block text-[var(--text-muted)] mt-0.5">
                   {r.customerName} · {r.date} · {ui(r.kind === "CREDIT" ? "إشعار دائن" : r.kind === "DEBIT" ? "إشعار مدين" : "فاتورة")}
                 </small>
               </span>
-              <b dir="ltr" className="font-mono text-sm text-amber-700 dark:text-amber-400">
+              <b dir="ltr" className="font-mono text-sm text-[var(--accent-gold)]">
                 {r.vat} SAR
               </b>
             </label>

@@ -162,7 +162,7 @@ export default function TransportFields({
         <span className="mt-1 block text-end font-mono text-sm font-normal text-[var(--text-muted)]">{value.notes?.length || 0} / 350</span>
       </div>
     )}
-    <button type="button" aria-expanded={expanded} onClick={() => setIsExpanded(!isExpanded)} className="mt-5 flex min-h-11 items-center gap-2 rounded-lg py-1 text-sm font-bold text-[var(--text-muted)] hover:text-amber-600 cursor-pointer transition-colors">{ui("تفاصيل إضافية للنقل")}<ChevronDown className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" /></button>
+    <button type="button" aria-expanded={expanded} onClick={() => setIsExpanded(!isExpanded)} className="mt-5 flex min-h-11 items-center gap-2 rounded-lg py-1 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer transition-colors">{ui("تفاصيل إضافية للنقل")}<ChevronDown className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" /></button>
     {expanded && (
       <div className="mt-4 space-y-5 border-t theme-border pt-5">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -190,8 +190,8 @@ export default function TransportFields({
           <input type="number" min={1} max={100} className={INLINE_INPUT} value={value.vehicleCapacity ?? ""} onChange={event => update({ vehicleCapacity: event.target.value ? Number(event.target.value) : undefined })} />
         </ExpandableField>
       </div>
-          <div className="rounded-xl border theme-border bg-amber-500/[0.03] p-4">
-            <h3 className="mb-3 text-base font-bold">
+          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card-subtle)] p-4">
+            <h3 className="mb-3 text-base font-bold text-[var(--text-main)]">
               {ui("قراءات العداد (")}
               {ui(unit)})
             </h3>
@@ -252,7 +252,7 @@ export default function TransportFields({
               type="button"
               aria-expanded={hasNames || hasValidationError}
               onClick={() => setHasNames(!hasNames)}
-              className="flex min-h-11 items-center gap-2 rounded-lg text-sm font-bold text-[var(--text-muted)] hover:text-amber-600 cursor-pointer"
+              className="flex min-h-11 items-center gap-2 rounded-lg text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer transition-colors"
             >
               {ui("أسماء الركاب المسجلة (")}
               {value.passengers.length})
@@ -333,7 +333,7 @@ export default function TransportFields({
                     <button
                       type="button"
                       aria-label={ui(`حذف الراكب ${index + 1}`)}
-                      className="min-h-12 inline-flex items-center justify-center rounded-xl border border-transparent px-4 text-sm font-bold text-rose-700 hover:bg-rose-500/10 hover:border-rose-500/30 cursor-pointer"
+                      className="min-h-12 inline-flex items-center justify-center rounded-xl border border-transparent px-4 text-sm font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 hover:border-rose-500/30 cursor-pointer"
                       onClick={() =>
                         update({
                           passengers: value.passengers.filter(
@@ -349,7 +349,7 @@ export default function TransportFields({
                 <button
                   type="button"
                   disabled={value.passengers.length >= 100}
-                  className="min-h-12 rounded-xl border theme-border px-4 py-2 text-sm font-bold disabled:opacity-40 cursor-pointer"
+                  className="min-h-12 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-4 py-2 text-sm font-bold disabled:opacity-40 cursor-pointer transition"
                   onClick={() =>
                     update({ passengers: [...value.passengers, { name: "" }] })
                   }

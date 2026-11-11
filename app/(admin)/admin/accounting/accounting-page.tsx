@@ -61,8 +61,8 @@ function LegacyReview({
   }
 
   return report.unpostedInvoices.length ? (
-    <section className="rounded-2xl border border-amber-300 bg-amber-500/5 p-5">
-      <h2 className="font-bold">
+    <section className="rounded-2xl border border-amber-600/35 bg-[var(--accent-surface)]/75 p-5">
+      <h2 className="font-bold text-[var(--text-main)]">
         {ui("مستندات حتى نهاية الفترة تحتاج مراجعة محاسبية (")}{ui(report.unpostedInvoices.length)})
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
@@ -112,7 +112,7 @@ function LegacyReview({
           {ui("اعتماد ترحيل الفاتورة")}</button>
       </form>
       {error && (
-        <p role="alert" className="mt-3 text-sm font-bold text-rose-700 dark:text-rose-400">
+        <p role="alert" className="mt-3 text-sm font-bold text-rose-700 dark:text-rose-300">
           {ui(error)}
         </p>
       )}
@@ -164,23 +164,23 @@ function PeriodArchive({
   return (
     <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
+        <h2 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">
           {ui("حفظ الفترة ومنع تعديلها (إقفال الفترة)")}</h2>
-        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)] dark:text-slate-400">
+        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)]">
           {ui("تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة الأرباح. بعد الإقفال تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ نهاية الفترة لضمان مطابقة الدفاتر مع إقرارات هيئة الزكاة؛ تُسجل أي تسويات لاحقة في فترة جديدة مفتوحة.")}</p>
       </div>
       <form onSubmit={close} className="mt-5 space-y-4">
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border theme-border text-xs font-bold text-slate-700 dark:text-slate-300">
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border text-xs font-bold text-[var(--text-main)]">
           {ui("نطاق الفترة المطلوب إقفالها:")}{" "}
-          <bdi dir="ltr" className="font-mono text-amber-700 dark:text-amber-400">
+          <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
             {report.range.start}
           </bdi>{" "}
           {ui("إلى")}{" "}
-          <bdi dir="ltr" className="font-mono text-amber-700 dark:text-amber-400">
+          <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
             {report.range.endInclusive}
           </bdi>
         </div>
-        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+        <label className="block text-xs font-bold text-[var(--text-main)]">
           {ui("مرجع المراجعة وسبب الإقفال *")}<input
             required
             minLength={5}
@@ -191,7 +191,7 @@ function PeriodArchive({
             placeholder={ui("مثال: تمت مطابقة السجل والمستندات وتقديم الإقرار الضريبي")}
           />
         </label>
-        <label className="flex min-h-11 items-start gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
+        <label className="flex min-h-11 items-start gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer">
           <Checkbox
             required
             checked={confirmed}
@@ -210,7 +210,7 @@ function PeriodArchive({
         </button>
       </form>
       {(error || closed.error) && (
-        <p role="alert" className="mt-4 text-sm font-bold text-rose-700 dark:text-rose-400">
+        <p role="alert" className="mt-4 text-sm font-bold text-rose-700 dark:text-rose-300">
           {ui(error || closed.error)}
         </p>
       )}
@@ -222,7 +222,7 @@ function PeriodArchive({
           >
             <div>
               <p>
-                <bdi dir="ltr" className="font-mono">
+                <bdi dir="ltr" className="font-mono text-[var(--text-main)]">
                   {v.startDate.slice(0, 10)} — {v.endDate.slice(0, 10)}
                 </bdi>
               </p>
@@ -230,7 +230,7 @@ function PeriodArchive({
             </div>
             <button
               type="button"
-              className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-3 py-2 text-xs font-bold cursor-pointer"
+              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-2 text-xs font-bold text-[var(--text-main)] cursor-pointer transition-colors"
               onClick={() =>
                 void downloadAccounting(
                   `/periods/${v.id}`,
@@ -379,17 +379,17 @@ export default function AccountingPage() {
           <>
             <Link
               href="/admin/accounts"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
-              <BookOpen className="size-4 text-amber-500" aria-hidden="true" />
+              <BookOpen className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("nav.accounts"))}</span>
             </Link>
 
             <Link
               href="/admin/vat-returns"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
-              <Calculator className="size-4 text-amber-500" aria-hidden="true" />
+              <Calculator className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("nav.vatReturns"))}</span>
             </Link>
           </>
@@ -399,7 +399,7 @@ export default function AccountingPage() {
       {seedMessage && (
         <p
           role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-400"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 dark:border-emerald-500/35 dark:bg-emerald-950/45 px-4 py-3 text-sm font-bold text-emerald-800 dark:text-emerald-300"
         >
           {ui(seedMessage)}
         </p>
@@ -422,10 +422,10 @@ export default function AccountingPage() {
             type="button"
             aria-pressed={tab === key}
             onClick={() => setTab(key)}
-            className={`min-h-11 sm:min-h-10 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition cursor-pointer ${
+            className={`min-h-11 sm:min-h-10 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold border transition-none cursor-pointer ${
               tab === key
-                ? "bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950"
-                : "theme-card border theme-border hover:border-amber-500/40"
+                ? "bg-[var(--accent-btn-bg)] border-[var(--accent-btn-border)] text-[var(--accent-btn-fg)]"
+                : "theme-card border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
             }`}
           >
             {ui(label)}
@@ -439,7 +439,7 @@ export default function AccountingPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="theme-card min-h-11 rounded-xl border theme-border hover:border-amber-500 px-4 py-3 text-sm font-bold cursor-pointer"
+              className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-3 text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
               onClick={changed}
             >
               {ui(t("common.refresh"))}
@@ -462,7 +462,7 @@ export default function AccountingPage() {
       )}
 
       {(error || failure) && (
-        <p role="alert" className="theme-card rounded-xl border border-rose-500/30 p-4 text-sm font-bold text-rose-700 dark:text-rose-400">
+        <p role="alert" className="theme-card rounded-xl border border-rose-600/35 bg-rose-500/10 p-4 text-sm font-bold text-rose-800 dark:text-rose-200">
           {ui(error || failure)}
         </p>
       )}
@@ -507,29 +507,29 @@ export default function AccountingPage() {
                 key={label}
                 className={
                   i === 3
-                    ? "rounded-2xl bg-slate-900 p-5 text-white"
+                    ? "rounded-2xl bg-slate-900 dark:bg-slate-800/95 border border-slate-700 p-5 text-white shadow-sm"
                     : "theme-card rounded-2xl border theme-border p-5"
                 }
               >
                 <p
-                  className={`text-xs font-bold ${i === 3 ? "text-slate-300" : "text-[var(--text-muted)]"}`}
+                  className={`text-xs font-bold ${i === 3 ? "text-slate-200" : "text-[var(--text-muted)]"}`}
                 >
                   {ui(label)}
                 </p>
                 <p className="mt-4 font-mono text-2xl font-semibold" dir="ltr">
                   {amountLabel(value)}{" "}
-                  <span className="text-xs font-normal opacity-60">SAR</span>
+                  <span className={`text-xs font-normal ${i === 3 ? "text-amber-300" : "text-[var(--text-muted)]"}`}>SAR</span>
                 </p>
               </div>
             ))}
           </section>
 
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm leading-relaxed text-amber-900 dark:text-amber-200 space-y-1">
-            <strong className="font-semibold text-slate-900 dark:text-white block">
+          <div className="p-4 rounded-2xl bg-[var(--accent-surface)]/80 border border-amber-600/35 text-xs sm:text-sm leading-relaxed text-[var(--text-main)] space-y-1">
+            <strong className="font-semibold text-[var(--accent-gold)] block">
               {ui("💡 إيضاح مالي هام بشأن حساب الأرباح وضريبة القيمة المضافة:")}</strong>
             <p>
               {ui("ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول والإدارة.")}</p>
-            <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 font-mono pt-1">
+            <p className="text-xs text-[var(--text-muted)] font-mono pt-1">
               {ui("مصروف الزكاة / ضريبة الدخل التقديري المسجل:")}{" "}
               <bdi dir="ltr">{amountLabel(data.profit.taxExpense)}</bdi> {ui("ر.س (لا يُحسب تلقائياً من ضريبة القيمة المضافة).")}
             </p>
@@ -578,7 +578,7 @@ export default function AccountingPage() {
                 <MobileRecordCard
                   key={a.code}
                   title={
-                    <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                    <span className="font-mono font-bold text-[var(--accent-gold)]">
                       <bdi>{a.code}</bdi>
                     </span>
                   }
@@ -621,7 +621,7 @@ export default function AccountingPage() {
 
               <Card className="theme-card-subtle border theme-border shadow-none p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ui("الإجمالي")}</span>
+                  <span className="text-sm font-bold text-[var(--text-main)]">{ui("الإجمالي")}</span>
                   <Badge variant="gold" className="text-[11px]">{ui("ميزان المراجعة")}</Badge>
                 </div>
                 <MobileCardMetaGrid columns={2} className="bg-[var(--bg-card)]">
@@ -651,7 +651,7 @@ export default function AccountingPage() {
 
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full min-w-[980px] text-start text-sm">
-                <thead className="theme-card-subtle text-xs text-[var(--text-muted)]">
+                <thead className="bg-[var(--table-header-bg)] text-xs text-[var(--text-muted)]">
                   <tr>
                     {[
                       "الحساب",
@@ -670,9 +670,9 @@ export default function AccountingPage() {
                 </thead>
                 <tbody>
                   {data.trial.map((a) => (
-                    <tr key={a.code} className="border-t theme-border">
+                    <tr key={a.code} className="border-t theme-border hover:bg-[var(--table-row-hover)] transition-colors">
                       <td className="px-4 py-3">
-                        <bdi className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                        <bdi className="font-mono font-bold text-[var(--accent-gold)]">
                           {a.code}
                         </bdi>{" "}
                         · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}

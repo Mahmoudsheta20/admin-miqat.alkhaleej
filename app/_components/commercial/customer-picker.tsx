@@ -17,7 +17,7 @@ export default function CustomerPicker({
   const fieldId = React.useId();
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-2">
+    <div className="mb-4 rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 space-y-2">
       <Label htmlFor={fieldId}>{ui("ربط الفاتورة بملف عميل")}</Label>
       <CustomerCombobox
         id={fieldId}

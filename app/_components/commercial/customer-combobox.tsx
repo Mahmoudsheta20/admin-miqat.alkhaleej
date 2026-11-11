@@ -126,7 +126,7 @@ function CustomerModalBody({
             autoCapitalize="off"
             spellCheck={false}
             className={cn(
-              "theme-input w-full border theme-border bg-white dark:bg-slate-900/80 font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500/20 focus:outline-hidden",
+              "theme-input w-full border border-[var(--control-border)] bg-[var(--input-bg)] font-medium text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-[var(--accent-gold)]/20 focus:outline-hidden",
               isFullscreen
                 ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
                 : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
@@ -169,8 +169,8 @@ function CustomerModalBody({
               ? "min-h-14 rounded-2xl border-2 px-5 py-3.5 text-base"
               : "min-h-10 rounded-xl border px-3.5 py-2 text-sm sm:text-base",
             !value
-              ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-              : "border theme-border bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-amber-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white",
+              ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+              : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
           )}
         >
           <span>{ui(emptyLabel)}</span>
@@ -180,8 +180,8 @@ function CustomerModalBody({
               "flex shrink-0 items-center justify-center rounded-full border transition-colors",
               isFullscreen ? "h-7 w-7" : "h-6 w-6",
               !value
-                ? "border-amber-600 bg-amber-600 text-white"
-                : "border-slate-300 dark:border-slate-600 text-transparent",
+                ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
+                : "border-[var(--control-border)] text-transparent",
             )}
           >
             <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
@@ -206,7 +206,7 @@ function CustomerModalBody({
             )}
           >
             <Loader2
-              className="h-6 w-6 animate-spin text-amber-500"
+              className="h-6 w-6 animate-spin text-[var(--accent-gold)]"
               aria-hidden="true"
             />
             <span>{ui("جارٍ التحميل…")}</span>
@@ -242,14 +242,14 @@ function CustomerModalBody({
                         ? "min-h-18 rounded-2xl border-2 px-5 py-4 text-lg"
                         : "min-h-11 rounded-xl border px-3.5 py-2.5 text-sm sm:text-base",
                       isSelected
-                        ? "border-amber-500 bg-amber-500/10 text-slate-900 dark:text-white shadow-xs"
-                        : "border theme-border bg-white dark:bg-slate-900 text-slate-900 dark:text-white hover:border-amber-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80",
+                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--text-main)] shadow-xs"
+                        : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
                     )}
                   >
                     <span className="flex min-w-0 items-start gap-2.5">
                       <span
                         className={cn(
-                          "mt-0.5 flex shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400",
+                          "mt-0.5 flex shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)]",
                           isFullscreen ? "h-9 w-9" : "h-7 w-7 rounded-lg",
                         )}
                       >
@@ -266,8 +266,8 @@ function CustomerModalBody({
                               "font-bold",
                               isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
                               isSelected
-                                ? "text-amber-700 dark:text-amber-400"
-                                : "text-slate-900 dark:text-white",
+                                ? "text-[var(--accent-gold)]"
+                                : "text-[var(--text-main)]",
                             )}
                           >
                             {customer.name}
@@ -299,8 +299,8 @@ function CustomerModalBody({
                         "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
                         isFullscreen ? "h-8 w-8" : "h-6 w-6",
                         isSelected
-                          ? "border-amber-600 bg-amber-600 text-white"
-                          : "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-transparent",
+                          ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
+                          : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-transparent",
                       )}
                     >
                       <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
@@ -325,7 +325,7 @@ function CustomerModalBody({
           rel="noopener noreferrer"
           onClick={() => void requestDialogClose?.()}
           className={cn(
-            "inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 font-semibold text-amber-700 dark:text-amber-400 hover:border-amber-500 transition",
+            "inline-flex items-center gap-2 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] font-semibold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition",
             isFullscreen
               ? "min-h-12 px-4 py-2.5 text-sm sm:text-base"
               : "min-h-9 px-3 py-1.5 text-xs sm:text-sm",
@@ -408,15 +408,15 @@ export function CustomerCombobox({
           aria-controls={!isMobile && open ? overlayId : undefined}
           onClick={toggleFromTrigger}
           className={cn(
-            "flex min-h-12 w-full items-center justify-between gap-2.5 rounded-xl border theme-border bg-white dark:bg-slate-900/80 px-4 py-2.5 text-start text-base text-slate-900 dark:text-white transition-colors outline-none hover:border-amber-500/50 focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20 disabled:cursor-not-allowed disabled:opacity-55 cursor-pointer",
+            "flex min-h-12 w-full items-center justify-between gap-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] px-4 py-2.5 text-start text-base text-[var(--text-main)] transition-colors outline-none hover:border-[var(--accent-gold)] focus-visible:border-[var(--accent-gold)] focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-55 cursor-pointer",
             open &&
-              "border-amber-500 ring-2 ring-amber-500/20",
+              "border-[var(--accent-gold)] ring-2 ring-[var(--accent-gold)]/20",
           )}
         >
           <span className="flex min-w-0 items-center gap-2.5">
             {selectedCustomer ? (
               <>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)]">
                   {selectedCustomer.type === "COMPANY" ? (
                     <Building2 className="h-4 w-4" aria-hidden="true" />
                   ) : (
@@ -446,7 +446,7 @@ export function CustomerCombobox({
                 {ui("العميل المحدد")}
               </span>
             ) : (
-              <span className="truncate text-slate-400">
+              <span className="truncate text-[var(--text-placeholder)]">
                 {ui(placeholder)}
               </span>
             )}
@@ -455,7 +455,7 @@ export function CustomerCombobox({
           <ChevronDown
             className={cn(
               "h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform duration-150",
-              open && "rotate-180 text-amber-500",
+              open && "rotate-180 text-[var(--accent-gold)]",
             )}
             aria-hidden="true"
           />
@@ -467,7 +467,7 @@ export function CustomerCombobox({
             onClick={() => handleChoose(null)}
             aria-label={ui("مسح التحديد")}
             title={ui("مسح التحديد")}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border theme-border bg-white dark:bg-slate-900/80 text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:border-amber-500/40 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>

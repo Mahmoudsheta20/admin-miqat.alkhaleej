@@ -82,7 +82,7 @@ export default function FinanceSummary({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                <CardTitle className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
                   {text("الملخص المالي والأرباح", "Financial summary & profitability")}
                 </CardTitle>
                 {profitStats && (
@@ -123,8 +123,8 @@ export default function FinanceSummary({
                     onClick={() => setPeriodMode(item.id)}
                     className={`min-h-11 sm:min-h-9 px-3 rounded-md text-xs font-semibold transition cursor-pointer ${
                       active
-                        ? "bg-[var(--bg-card)] text-amber-800 dark:text-amber-300 border theme-border"
-                        : "text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white"
+                        ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                        : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                     }`}
                   >
                     {item.label}
@@ -134,7 +134,7 @@ export default function FinanceSummary({
             </div>
 
             <Link
-              className="inline-flex items-center gap-1.5 min-h-10 px-3 rounded-lg border theme-border bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-semibold text-amber-800 dark:text-amber-300 hover:border-amber-500/40 transition"
+              className="inline-flex items-center gap-1.5 min-h-10 px-3 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-semibold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 transition"
               href="/admin/accounting"
             >
               <Wallet className="w-3.5 h-3.5" aria-hidden="true" />
@@ -233,8 +233,8 @@ export default function FinanceSummary({
                       onClick={() => setChartTab("overview")}
                       className={`min-h-11 sm:min-h-9 px-3 rounded-md text-xs font-semibold transition cursor-pointer ${
                         chartTab === "overview"
-                          ? "bg-[var(--bg-card)] text-amber-800 dark:text-amber-300 border theme-border"
-                          : "text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white"
+                          ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                       }`}
                     >
                       {text("مقارنة الإيرادات والمصروفات", "Revenue vs Expenses")}
@@ -245,8 +245,8 @@ export default function FinanceSummary({
                       onClick={() => setChartTab("vehicles")}
                       className={`min-h-11 sm:min-h-9 px-3 rounded-md text-xs font-semibold transition cursor-pointer ${
                         chartTab === "vehicles"
-                          ? "bg-[var(--bg-card)] text-amber-800 dark:text-amber-300 border theme-border"
-                          : "text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white"
+                          ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                       }`}
                     >
                       {text("ربحية المركبات", "Vehicle P&L")} ({report.data.vehicles.length})
@@ -265,13 +265,13 @@ export default function FinanceSummary({
                         label: text("إجمالي الإيرادات", "Total revenue"),
                         amount: report.data.profit.revenue,
                         pct: ratioPercent(profitStats.revenueMinor, maxFinancialBar),
-                        bar: "bg-emerald-600 dark:bg-emerald-400",
+                        bar: "bg-emerald-700 dark:bg-emerald-400",
                       },
                       {
                         label: text("إجمالي المصروفات", "Total expenses"),
                         amount: report.data.profit.expenses,
                         pct: ratioPercent(profitStats.expensesMinor, maxFinancialBar),
-                        bar: "bg-rose-600 dark:bg-rose-400",
+                        bar: "bg-rose-700 dark:bg-rose-400",
                       },
                       {
                         label: text("صافي الربح بعد الضريبة", "Net profit after tax"),
@@ -285,12 +285,12 @@ export default function FinanceSummary({
                     ].map((row) => (
                       <div key={row.label} className="space-y-1.5">
                         <div className="flex items-center justify-between gap-2 text-xs">
-                          <span className="font-medium text-slate-900 dark:text-slate-100">
+                          <span className="font-medium text-[var(--text-main)]">
                             {row.label}
                           </span>
                           <Money amount={row.amount} size="sm" />
                         </div>
-                        <div className="h-3 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div className="h-3 w-full rounded-full bg-[var(--bg-card-subtle)] overflow-hidden">
                           <div
                             style={{ width: `${row.pct}%` }}
                             className={`h-full rounded-full transition-all duration-300 ${row.bar}`}
@@ -336,16 +336,16 @@ export default function FinanceSummary({
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                            <div className="h-2 w-full rounded-full bg-[var(--bg-card-subtle)] overflow-hidden">
                               <div
                                 style={{ width: `${ratioPercent(rev, maxVehicleAmount)}%` }}
-                                className="h-full rounded-full bg-emerald-600 dark:bg-emerald-400"
+                                className="h-full rounded-full bg-emerald-700 dark:bg-emerald-400"
                               />
                             </div>
-                            <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                            <div className="h-1.5 w-full rounded-full bg-[var(--bg-card-subtle)] overflow-hidden">
                               <div
                                 style={{ width: `${ratioPercent(cost, maxVehicleAmount)}%` }}
-                                className="h-full rounded-full bg-rose-600 dark:bg-rose-400"
+                                className="h-full rounded-full bg-rose-700 dark:bg-rose-400"
                               />
                             </div>
                           </div>
@@ -359,7 +359,7 @@ export default function FinanceSummary({
               {report.data.unpostedInvoices.length > 0 && (
                 <Link
                   href="/admin/accounting"
-                  className="flex flex-wrap items-center justify-between gap-2 min-h-11 rounded-xl border border-amber-500/30 bg-[var(--accent-surface)]/40 px-4 py-3 text-xs sm:text-sm font-semibold text-amber-800 dark:text-amber-300 hover:underline"
+                  className="flex flex-wrap items-center justify-between gap-2 min-h-11 rounded-xl border border-amber-600/35 bg-[var(--accent-surface)]/75 px-4 py-3 text-xs sm:text-sm font-semibold text-[var(--accent-gold)] hover:underline"
                 >
                   <span className="inline-flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />

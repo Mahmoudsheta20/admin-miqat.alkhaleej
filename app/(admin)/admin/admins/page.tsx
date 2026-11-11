@@ -242,16 +242,16 @@ export default function AdminManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold">
-              <Crown className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] text-xs font-bold">
+              <Crown className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("خاصية المدير العام الأساسي (Super Admin)")}</span>
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-amber-500" aria-hidden="true" />
+          <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("إدارة فريق المسؤولين")}</span>
           </h1>
-          <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-1">
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             {ui("التحكم في حسابات الإدارة وإضافة مسؤولين جدد بصلاحيات كاملة على النظام.")}</p>
         </div>
 
@@ -277,8 +277,8 @@ export default function AdminManagementPage() {
           role={actionBanner.type === "error" ? "alert" : "status"}
           className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 ${
             actionBanner.type === "success"
-              ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300"
-              : "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300"
+              ? "bg-emerald-500/12 border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200"
           }`}
         >
           <div className="flex items-center gap-2 font-semibold">
@@ -302,12 +302,12 @@ export default function AdminManagementPage() {
 
       {/* Access Guard Notice for regular admins */}
       {!isSuper && !loading && (
-        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--text-main)] text-xs flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-[var(--accent-gold)] shrink-0 mt-0.5" aria-hidden="true" />
           <div className="space-y-1">
-            <p className="font-bold">{ui("تنبيه الصلاحية:")}</p>
-            <p className="leading-relaxed">
-              {ui("أنت مسجل بصلاحية مسؤول. خاصية إضافة وتعديل المسؤولين الآخرين محصورة بالمدير العام الأساسي (")}<bdi className="font-mono font-bold" dir="ltr">
+            <p className="font-bold text-[var(--accent-gold)]">{ui("تنبيه الصلاحية:")}</p>
+            <p className="leading-relaxed text-[var(--text-muted)]">
+              {ui("أنت مسجل بصلاحية مسؤول. خاصية إضافة وتعديل المسؤولين الآخرين محصورة بالمدير العام الأساسي (")}<bdi className="font-mono font-bold text-[var(--text-main)]" dir="ltr">
                 {SUPER_ADMIN_EMAIL}
               </bdi>
               ).
@@ -318,37 +318,37 @@ export default function AdminManagementPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
+        <div className="p-4 rounded-2xl theme-card shadow-xs flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)]">
             <Users className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
             <p className="text-xs text-[var(--text-muted)] font-medium">{ui("إجمالي المسؤولين")}</p>
-            <p className="text-xl font-semibold text-slate-900 dark:text-white font-mono">
+            <p className="text-xl font-semibold text-[var(--text-main)] font-mono">
               {admins.length}
             </p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+        <div className="p-4 rounded-2xl theme-card shadow-xs flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-emerald-500/12 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300">
             <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
             <p className="text-xs text-[var(--text-muted)] font-medium">{ui("المسؤولون النشطون")}</p>
-            <p className="text-xl font-semibold text-slate-900 dark:text-white font-mono">
+            <p className="text-xl font-semibold text-[var(--text-main)] font-mono">
               {admins.filter((a) => a.active).length}
             </p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-            <Crown className="w-5 h-5 text-amber-500" aria-hidden="true" />
+        <div className="p-4 rounded-2xl theme-card shadow-xs flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)]">
+            <Crown className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
             <p className="text-xs text-[var(--text-muted)] font-medium">{ui("المدير العام الأساسي")}</p>
-            <p className="text-xs font-bold text-slate-900 dark:text-white font-mono truncate max-w-[150px]" dir="ltr">
+            <p className="text-xs font-bold text-[var(--text-main)] font-mono truncate max-w-[150px]" dir="ltr">
               {SUPER_ADMIN_EMAIL}
             </p>
           </div>
@@ -356,10 +356,10 @@ export default function AdminManagementPage() {
       </div>
 
       {/* Admins Table Card */}
-      <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-amber-500" aria-hidden="true" />
+      <div className="theme-card rounded-2xl shadow-sm overflow-hidden">
+        <div className="p-4 sm:p-5 border-b theme-border flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("سجل مسؤولي النظام المعتمدين")}</span>
           </h2>
           <span className="text-xs font-mono font-bold text-[var(--text-muted)]">{admins.length} {ui("مسؤول")}</span>
@@ -367,7 +367,7 @@ export default function AdminManagementPage() {
 
         {loading ? (
           <div role="status" className="py-16 text-center text-[var(--text-muted)] space-y-2">
-            <div className="w-8 h-8 mx-auto border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" aria-hidden="true" />
+            <div className="w-8 h-8 mx-auto border-3 border-[var(--accent-gold)]/20 border-t-[var(--accent-gold)] rounded-full animate-spin" aria-hidden="true" />
             <p className="text-xs font-semibold">{ui("جاري تحميل قائمة المسؤولين...")}</p>
           </div>
         ) : error ? (
@@ -377,7 +377,7 @@ export default function AdminManagementPage() {
             <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-start text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-[var(--text-muted)] dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50">
+                <tr className="border-b theme-border text-[var(--text-muted)] bg-[var(--table-header-bg)]">
                   <th className="py-3 px-4 font-bold">{ui("المسؤول")}</th>
                   <th className="py-3 px-4 font-bold">{ui("البريد الإلكتروني")}</th>
                   <th className="py-3 px-4 font-bold">{ui("رقم الهاتف")}</th>
@@ -386,62 +386,62 @@ export default function AdminManagementPage() {
                   <th className="py-3 px-4 font-bold text-end">{ui("الإجراءات")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className="divide-y divide-[var(--border-color)]">
                 {admins.map((adm) => (
                   <tr
                     key={adm.id}
-                    className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition"
+                    className="hover:bg-[var(--table-row-hover)] transition"
                   >
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                        <div className="w-8 h-8 rounded-xl bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs">
                           {adm.name.slice(0, 1)}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <p className="font-bold text-[var(--text-main)] flex items-center gap-1.5">
                             <span>{adm.name}</span>
                             {adm.isSuperAdmin && (
                               <span title={ui("المدير العام الأساسي")}>
-                                <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                                <Crown className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                               </span>
                             )}
                           </p>
                           {adm.mustChangePassword && (
-                            <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
+                            <span className="text-xs text-[var(--accent-gold)] font-semibold">
                               {ui("(بانتظار تغيير كلمة المرور المؤقتة)")}</span>
                           )}
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-3 px-4 font-mono text-[var(--text-muted)] dark:text-slate-300" dir="ltr">
+                    <td className="py-3 px-4 font-mono text-[var(--text-main)]" dir="ltr">
                       {adm.email}
                     </td>
 
-                    <td className="py-3 px-4 font-mono text-[var(--text-muted)] dark:text-slate-300" dir="ltr">
+                    <td className="py-3 px-4 font-mono text-[var(--text-muted)]" dir="ltr">
                       {adm.phone || "—"}
                     </td>
 
                     <td className="py-3 px-4">
                       {adm.isSuperAdmin ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-bold">
-                          <Crown className="w-3 h-3 text-amber-500" aria-hidden="true" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/35 text-xs font-bold">
+                          <Crown className="w-3 h-3 text-[var(--accent-gold)]" aria-hidden="true" />
                           <span>{ui("المدير الأساسي")}</span>
                         </span>
                       ) : (
-                        <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-400 text-xs font-bold">
+                        <span className="inline-block px-2 py-0.5 rounded-md bg-[var(--bg-card-subtle)] text-[var(--text-main)] border theme-border text-xs font-bold">
                           {ui("مسؤول نظام")}</span>
                       )}
                     </td>
 
                     <td className="py-3 px-4">
                       {adm.active ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                        <span className="inline-flex items-center gap-1 text-emerald-800 dark:text-emerald-300 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden="true" />
                           <span>{ui("نشط")}</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-bold">
+                        <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300 font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
                           <span>{ui("معطل")}</span>
                         </span>
@@ -455,11 +455,11 @@ export default function AdminManagementPage() {
                             type="button"
                             onClick={() => setResetTarget(adm)}
                             disabled={resetLoadingAdminId === adm.id}
-                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:text-amber-700 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition cursor-pointer"
+                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
                             title={ui("إعادة تعيين كلمة المرور المؤقتة")}
                             aria-label={`${ui("إعادة تعيين كلمة المرور المؤقتة")} — ${adm.name}`}
                           >
-                            <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                            <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
 
                           <button
@@ -467,8 +467,8 @@ export default function AdminManagementPage() {
                             onClick={() => handleToggleStatus(adm)}
                             className={`min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border text-xs transition cursor-pointer ${
                               adm.active
-                                ? "border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:text-amber-700 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-                                : "border-emerald-200 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                ? "border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]"
+                                : "border-emerald-600/40 text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 hover:bg-emerald-500/20"
                             }`}
                             title={ui(adm.active ? "تعطيل الحساب" : "تفعيل الحساب")}
                             aria-label={`${ui(adm.active ? "تعطيل الحساب" : "تفعيل الحساب")} — ${adm.name}`}
@@ -479,7 +479,7 @@ export default function AdminManagementPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(adm)}
-                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:border-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
                             title={ui("حذف المسؤول")}
                             aria-label={`${ui("حذف المسؤول")} — ${adm.name}`}
                           >
@@ -503,13 +503,13 @@ export default function AdminManagementPage() {
                 key={adm.id}
                 title={
                   <span className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-9 h-9 rounded-xl bg-amber-700 text-white dark:bg-amber-400 dark:text-slate-950 font-semibold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                    <span className="w-9 h-9 rounded-xl bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] font-semibold text-sm flex items-center justify-center shrink-0 shadow-xs">
                       {adm.name.slice(0, 1)}
                     </span>
                     <span className="truncate">{adm.name}</span>
                     {adm.isSuperAdmin && (
                       <span title={ui("المدير العام الأساسي")} className="shrink-0">
-                        <Crown className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                        <Crown className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
                       </span>
                     )}
                   </span>
@@ -520,14 +520,14 @@ export default function AdminManagementPage() {
                       variant="outline"
                       className={
                         adm.isSuperAdmin
-                          ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20 text-xs"
+                          ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/35 text-xs"
                           : "text-xs"
                       }
                     >
                       {ui(adm.isSuperAdmin ? "المدير الأساسي" : "مسؤول نظام")}
                     </Badge>
                     {adm.mustChangePassword && (
-                      <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
+                      <span className="text-xs text-[var(--accent-gold)] font-semibold">
                         {ui("(كلمة مرور مؤقتة)")}
                       </span>
                     )}
@@ -545,9 +545,9 @@ export default function AdminManagementPage() {
                         type="button"
                         onClick={() => setResetTarget(adm)}
                         disabled={resetLoadingAdminId === adm.id}
-                        className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border theme-border bg-[var(--bg-card-subtle)] text-slate-700 dark:text-slate-200 hover:border-amber-500/40 text-xs font-bold transition cursor-pointer"
+                        className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
                       >
-                        <KeyRound className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                        <KeyRound className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                         <span>{ui("إعادة كلمة المرور")}</span>
                       </button>
 
@@ -556,8 +556,8 @@ export default function AdminManagementPage() {
                         onClick={() => handleToggleStatus(adm)}
                         className={`flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-bold transition cursor-pointer ${
                           adm.active
-                            ? "theme-border bg-[var(--bg-card-subtle)] text-slate-700 dark:text-slate-200 hover:border-amber-500/40"
-                            : "border-emerald-300 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20"
+                            ? "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
+                            : "border-emerald-600/40 text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 hover:bg-emerald-500/20"
                         }`}
                       >
                         <Power className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
@@ -567,7 +567,7 @@ export default function AdminManagementPage() {
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(adm)}
-                        className="min-h-11 min-w-11 inline-flex items-center justify-center px-3 rounded-xl border theme-border text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer shrink-0"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center px-3 rounded-xl border border-[var(--control-border)] text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500 transition cursor-pointer shrink-0"
                         title={ui("حذف المسؤول")}
                         aria-label={`${ui("حذف المسؤول")} — ${adm.name}`}
                       >
@@ -611,15 +611,15 @@ export default function AdminManagementPage() {
           onClose={() => setModalOpen(false)}
           isBusy={formLoading}
         >
-          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-md bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-md theme-card rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b theme-border pb-3">
               <div className="flex items-center gap-2">
                 {createdAdmin ? (
-                  <KeyRound className="w-5 h-5 text-amber-500" aria-hidden="true" />
+                  <KeyRound className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
                 ) : (
-                  <UserPlus className="w-5 h-5 text-amber-500" aria-hidden="true" />
+                  <UserPlus className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
                 )}
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                <h2 className="text-sm font-semibold text-[var(--text-main)]">
                   {createdAdmin ? ui("بيانات الدخول المؤقتة") : ui("إضافة مسؤول جديد للنظام")}
                 </h2>
               </div>
@@ -627,14 +627,14 @@ export default function AdminManagementPage() {
                 type="button"
                 aria-label={ui("إغلاق")}
                 onClick={() => setModalOpen(false)}
-                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             {formError && (
-              <div role="alert" className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-700 dark:text-rose-400" aria-hidden="true" />
                 <span>{formError}</span>
               </div>
@@ -643,42 +643,42 @@ export default function AdminManagementPage() {
             {createdAdmin ? (
               /* Success Card with Temporary Password */
               <div className="space-y-4 py-2 animate-in zoom-in-95">
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-center space-y-2">
-                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                <div className="p-4 rounded-2xl bg-emerald-500/12 border border-emerald-600/35 dark:bg-emerald-950/45 dark:border-emerald-500/35 text-center space-y-2">
+                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+                  <h3 className="text-sm font-bold text-[var(--text-main)]">
                     {ui(
                       createdAdmin.isReset
                         ? "تم إصدار كلمة مرور مؤقتة جديدة بنجاح!"
                         : "تم إنشاء حساب المسؤول بنجاح!"
                     )}</h3>
-                  <p className="text-xs text-[var(--text-muted)] dark:text-slate-300">
+                  <p className="text-xs text-[var(--text-muted)]">
                     {ui("احفظ بيانات الدخول وشاركها مع المسؤول الجديد بطريقة آمنة. لن يتم إرسالها بالبريد الإلكتروني.")}</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="p-4 rounded-2xl theme-card-subtle space-y-3">
                   <div>
                     <span className="text-[var(--text-muted)] text-xs block">{ui("اسم المسؤول:")}</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-xs">
+                    <span className="font-bold text-[var(--text-main)] text-xs">
                       {createdAdmin.admin.name}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-[var(--text-muted)] text-xs block">{ui("البريد الإلكتروني:")}</span>
-                    <bdi className="font-mono font-bold text-amber-700 dark:text-amber-400 text-xs" dir="ltr">
+                    <bdi className="font-mono font-bold text-[var(--accent-gold)] text-xs" dir="ltr">
                       {createdAdmin.admin.email}
                     </bdi>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="pt-2 border-t theme-border">
                     <span className="text-[var(--text-muted)] text-xs block mb-1">
                       {ui("كلمة المرور المؤقتة (Temporary Password):")}</span>
-                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 font-mono font-semibold text-amber-800 dark:text-amber-300 text-sm">
+                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 font-mono font-semibold text-[var(--accent-gold)] text-sm">
                       <bdi dir="ltr">{createdAdmin.temporaryPassword}</bdi>
                       <button
                         type="button"
                         onClick={() => void handleCopy(createdAdmin.temporaryPassword)}
-                        className="min-h-10 sm:min-h-9 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold hover:bg-amber-300 transition flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
+                        className="min-h-10 sm:min-h-9 px-3 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
                       >
                         {copiedPass ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}
                         <span>{ui(copiedPass ? "تم النسخ" : "نسخ")}</span>
@@ -705,11 +705,11 @@ export default function AdminManagementPage() {
                 <div>
                   <label
                     htmlFor={nameFieldId}
-                    className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1"
+                    className="text-xs font-bold text-[var(--text-main)] block mb-1"
                   >
                     {ui("اسم المسؤول بالكامل")}<span className="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span>
                   </label>
-                  <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus-within:border-amber-500">
+                  <div className="relative flex items-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
                     <div className="ps-3 text-[var(--text-muted)]">
                       <User className="w-4 h-4" aria-hidden="true" />
                     </div>
@@ -721,7 +721,7 @@ export default function AdminManagementPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={ui("مثال: م. عبد الله الشمري")}
-                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden"
+                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden"
                     />
                   </div>
                 </div>
@@ -729,11 +729,11 @@ export default function AdminManagementPage() {
                 <div>
                   <label
                     htmlFor={emailFieldId}
-                    className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1"
+                    className="text-xs font-bold text-[var(--text-main)] block mb-1"
                   >
                     {ui("البريد الإلكتروني المعتمد")}<span className="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span>
                   </label>
-                  <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus-within:border-amber-500">
+                  <div className="relative flex items-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
                     <div className="ps-3 text-[var(--text-muted)]">
                       <Mail className="w-4 h-4" aria-hidden="true" />
                     </div>
@@ -749,7 +749,7 @@ export default function AdminManagementPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="admin@example.com"
-                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-start"
+                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                   </div>
                 </div>
@@ -757,10 +757,10 @@ export default function AdminManagementPage() {
                 <div>
                   <label
                     htmlFor={phoneFieldId}
-                    className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1"
+                    className="text-xs font-bold text-[var(--text-main)] block mb-1"
                   >
                     {ui("رقم الهاتف (اختياري)")}</label>
-                  <div className="relative flex items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus-within:border-amber-500">
+                  <div className="relative flex items-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
                     <div className="ps-3 text-[var(--text-muted)]">
                       <Phone className="w-4 h-4" aria-hidden="true" />
                     </div>
@@ -772,14 +772,14 @@ export default function AdminManagementPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+9665XXXXXXXX"
-                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-start"
+                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-[var(--text-muted)] space-y-1">
-                  <p className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300">
-                    <Lock className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                <div className="p-3 rounded-xl theme-card-subtle text-xs text-[var(--text-muted)] space-y-1">
+                  <p className="flex items-center gap-1 font-bold text-[var(--text-main)]">
+                    <Lock className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                     <span>{ui("آلية الأمان وتعيين كلمة المرور:")}</span>
                   </p>
                   <p>
@@ -790,7 +790,7 @@ export default function AdminManagementPage() {
                   <button
                     type="button"
                     onClick={() => setModalOpen(false)}
-                    className="min-h-11 sm:min-h-10 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-[var(--text-muted)] hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
+                    className="min-h-11 sm:min-h-10 px-4 py-2 rounded-xl secondary-btn text-xs cursor-pointer"
                   >
                     {ui("إلغاء")}</button>
 
@@ -839,16 +839,16 @@ export default function AdminManagementPage() {
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <Modal label={ui("تأكيد حذف المسؤول")} onClose={() => setDeleteTarget(null)} isBusy={deleteLoading}>
-          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto">
+          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-sm theme-card rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" aria-hidden="true" />
             </div>
 
             <div className="text-center space-y-1">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-sm font-semibold text-[var(--text-main)]">
                 {ui("تأكيد حذف حساب المسؤول")}</h2>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400">
-                {ui("هل أنت متأكد من رغبتك في حذف حساب المسؤول (")}<span className="font-bold text-slate-900 dark:text-white">{deleteTarget.name}</span>
+              <p className="text-xs text-[var(--text-muted)]">
+                {ui("هل أنت متأكد من رغبتك في حذف حساب المسؤول (")}<span className="font-bold text-[var(--text-main)]">{deleteTarget.name}</span>
                 {ui(")؟ لن يتمكن من الدخول للنظام بعد الآن.")}</p>
             </div>
 
@@ -858,7 +858,7 @@ export default function AdminManagementPage() {
                 autoFocus
                 disabled={deleteLoading}
                 onClick={() => setDeleteTarget(null)}
-                className="min-h-11 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-[var(--text-muted)] hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
+                className="min-h-11 px-4 py-2 rounded-xl secondary-btn text-xs cursor-pointer"
               >
                 {ui("تراجع")}</button>
 

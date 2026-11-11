@@ -131,17 +131,17 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
       <div className="mobile-dialog-panel mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-2xl border theme-border theme-card shadow-2xl">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b theme-border p-4 sm:px-6">
           <div className="min-w-0">
-            <h2 id="return-trip-title" className="flex items-center gap-2 text-lg font-bold"><ArrowLeftRight aria-hidden="true" className="h-5 w-5 text-amber-500" />{ui(isRTL ? "رحلة عودة" : "Return Trip")}</h2>
+            <h2 id="return-trip-title" className="flex items-center gap-2 text-lg font-bold"><ArrowLeftRight aria-hidden="true" className="h-5 w-5 text-[var(--accent-gold)]" />{ui(isRTL ? "رحلة عودة" : "Return Trip")}</h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">{ui(isRTL ? "من العقد " : "From Contract ")}<span className="font-mono" dir="ltr">{contract.referenceNumber}</span></p>
           </div>
           <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={ui(t("common.close"))} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] cursor-pointer"><X aria-hidden="true" className="h-5 w-5" /></button>
         </header>
         {createdContract ? (
           <div className="space-y-4 p-6 text-center" role="status">
-            <CheckCircle2 aria-hidden="true" className="mx-auto h-12 w-12 text-emerald-500" />
+            <CheckCircle2 aria-hidden="true" className="mx-auto h-12 w-12 text-emerald-700 dark:text-emerald-300" />
             <h3 className="text-lg font-bold">{ui(isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully")}</h3>
             <p className="font-mono text-[var(--text-muted)]" dir="ltr">{createdContract.referenceNumber}</p>
-            {!createdContract.pdfPath && <p className="text-sm text-amber-700 dark:text-amber-400">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
+            {!createdContract.pdfPath && <p className="text-sm text-[var(--accent-gold)]">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
             <button type="button" onClick={() => { onClose(); router.push(`/admin/contracts/${createdContract.id}/edit`); }} className="min-h-12 w-full rounded-xl gold-gradient-btn px-4 font-bold cursor-pointer">{ui(isRTL ? "عرض وتعديل عقد العودة" : "View & Edit Return Contract")}</button>
           </div>
         ) : (
@@ -213,7 +213,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
                     })),
                   ]}
                 />
-                {!isLoading && !isOriginalCaptainActive && <p className="text-sm text-amber-700 dark:text-amber-400">{ui(isRTL ? "الكابتن الأصلي غير نشط. اختر كابتناً بديلاً." : "Original captain is inactive. Please choose a replacement captain.")}</p>}
+                {!isLoading && !isOriginalCaptainActive && <p className="text-sm text-[var(--accent-gold)]">{ui(isRTL ? "الكابتن الأصلي غير نشط. اختر كابتناً بديلاً." : "Original captain is inactive. Please choose a replacement captain.")}</p>}
                 <FullscreenSelect
                   label={ui(isRTL ? "المركبة" : "Vehicle")}
                   required

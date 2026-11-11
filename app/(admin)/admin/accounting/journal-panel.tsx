@@ -170,10 +170,10 @@ export default function JournalPanel({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)]">
               <Scale className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight">{ui("دفتر اليومية")}</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[var(--text-main)]">{ui("دفتر اليومية")}</h2>
           </div>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             {ui("القيود المعتمدة محفوظة. التصحيح بقيد عكسي؛ وتصحيح المستند من شاشته الأصلية.")}
@@ -183,7 +183,7 @@ export default function JournalPanel({
           <button
             type="button"
             disabled={saving}
-            className="theme-card inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3.5 py-2.5 text-xs font-bold text-amber-800 dark:text-amber-300 disabled:opacity-50 cursor-pointer transition-colors"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-600/35 bg-[var(--accent-surface)] hover:border-amber-600 px-3.5 py-2.5 text-xs font-bold text-[var(--accent-gold)] disabled:opacity-50 cursor-pointer transition-colors"
             onClick={() => void fillCapitalPreset()}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -203,7 +203,7 @@ export default function JournalPanel({
       {(error || journals.error || accounts.error) && (
         <div
           role="alert"
-          className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
+          className="flex items-center gap-2 rounded-xl border border-rose-600/35 bg-rose-500/10 p-3.5 text-xs font-semibold text-rose-800 dark:text-rose-200"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <p>{ui(error || journals.error || accounts.error)}</p>
@@ -218,8 +218,8 @@ export default function JournalPanel({
         >
           <div className="flex items-center justify-between border-b theme-border pb-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500" />
-              <h3 className="text-sm font-bold">{ui("سند قيد اليومية")}</h3>
+              <span className="flex h-2.5 w-2.5 rounded-full bg-[var(--accent-gold)]" />
+              <h3 className="text-sm font-bold text-[var(--text-main)]">{ui("سند قيد اليومية")}</h3>
             </div>
             <span className="text-xs text-[var(--text-muted)] font-mono">
               {ui("سند قيد مزدوج متوازن")}
@@ -228,7 +228,7 @@ export default function JournalPanel({
 
           <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
             <label className="text-xs font-bold">
-              <span className="flex items-center gap-1.5 text-[var(--text-muted)] dark:text-slate-400">
+              <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                 <Calendar className="h-3.5 w-3.5" />
                 {ui("تاريخ القيد")}
               </span>
@@ -244,7 +244,7 @@ export default function JournalPanel({
               />
             </label>
             <label className="text-xs font-bold">
-              <span className="flex items-center gap-1.5 text-[var(--text-muted)] dark:text-slate-400">
+              <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                 <FileText className="h-3.5 w-3.5" />
                 {ui("البيان")}
               </span>
@@ -264,17 +264,17 @@ export default function JournalPanel({
 
           {/* Responsive Double-Entry Grid (stacked cards on mobile, table grid on md+) */}
           <div className="rounded-xl border theme-border overflow-hidden">
-            <div className="hidden md:grid md:grid-cols-[minmax(200px,1.5fr)_8.5rem_8.5rem_minmax(180px,1.2fr)_3rem] gap-2.5 bg-slate-50 dark:bg-slate-900/60 border-b theme-border px-3 py-3 text-xs">
-              <span className="font-bold text-slate-700 dark:text-slate-300 text-start">
+            <div className="hidden md:grid md:grid-cols-[minmax(200px,1.5fr)_8.5rem_8.5rem_minmax(180px,1.2fr)_3rem] gap-2.5 bg-[var(--table-header-bg)] border-b theme-border px-3 py-3 text-xs">
+              <span className="font-bold text-[var(--text-main)] text-start">
                 {ui("الحساب")}
               </span>
-              <span className="font-bold text-rose-700 dark:text-rose-400 text-end">
+              <span className="font-bold text-rose-700 dark:text-rose-300 text-end">
                 {ui("مدين")} (Debit)
               </span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400 text-end">
+              <span className="font-bold text-emerald-700 dark:text-emerald-300 text-end">
                 {ui("دائن")} (Credit)
               </span>
-              <span className="font-bold text-slate-700 dark:text-slate-300 text-start">
+              <span className="font-bold text-[var(--text-main)] text-start">
                 {ui("البيان / لوحة المركبة")}
               </span>
               <span className="sr-only">{ui("حذف سطر")}</span>
@@ -284,11 +284,11 @@ export default function JournalPanel({
               {lines.map((l, lineIdx) => (
                 <div
                   key={l.key}
-                  className="p-3.5 md:p-2.5 space-y-3 md:space-y-0 md:grid md:grid-cols-[minmax(200px,1.5fr)_8.5rem_8.5rem_minmax(180px,1.2fr)_3rem] md:gap-2.5 md:items-start hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors"
+                  className="p-3.5 md:p-2.5 space-y-3 md:space-y-0 md:grid md:grid-cols-[minmax(200px,1.5fr)_8.5rem_8.5rem_minmax(180px,1.2fr)_3rem] md:gap-2.5 md:items-start hover:bg-[var(--table-row-hover)] transition-colors"
                 >
                   <div>
                     <div className="flex items-center justify-between md:hidden mb-1">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <span className="text-xs font-bold text-[var(--text-main)]">
                         {ui("الحساب")} #{lineIdx + 1}
                       </span>
                     </div>
@@ -312,7 +312,7 @@ export default function JournalPanel({
 
                   <div className="grid grid-cols-2 gap-2.5 md:contents">
                     <div>
-                      <span className="block text-xs font-bold text-rose-700 dark:text-rose-400 mb-1 md:hidden">
+                      <span className="block text-xs font-bold text-rose-700 dark:text-rose-300 mb-1 md:hidden">
                         {ui("مدين")} (Debit)
                       </span>
                       <input
@@ -327,7 +327,7 @@ export default function JournalPanel({
                       />
                     </div>
                     <div>
-                      <span className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1 md:hidden">
+                      <span className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-1 md:hidden">
                         {ui("دائن")} (Credit)
                       </span>
                       <input
@@ -336,7 +336,7 @@ export default function JournalPanel({
                         type="text"
                         inputMode="decimal"
                         dir="ltr"
-                        className={`${INPUT} text-end font-mono tabular-nums text-emerald-700 dark:text-emerald-300 font-semibold focus:border-emerald-500`}
+                        className={`${INPUT} text-end font-mono tabular-nums text-emerald-800 dark:text-emerald-300 font-semibold focus:border-[var(--accent-gold)]`}
                         value={l.credit}
                         onChange={(e) => update(l.key, { credit: e.target.value })}
                       />
@@ -367,7 +367,7 @@ export default function JournalPanel({
                       type="button"
                       aria-label={ui("حذف سطر")}
                       disabled={lines.length <= 2}
-                      className="inline-flex min-h-11 min-w-11 md:min-h-9 md:min-w-9 items-center justify-center gap-1.5 px-3 md:px-1.5 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg disabled:opacity-20 cursor-pointer transition-colors"
+                      className="inline-flex min-h-11 min-w-11 md:min-h-9 md:min-w-9 items-center justify-center gap-1.5 px-3 md:px-1.5 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 rounded-lg disabled:opacity-20 cursor-pointer transition-colors"
                       onClick={() => {
                         setLines((v) => v.filter((x) => x.key !== l.key));
                         key.current = "";
@@ -382,24 +382,24 @@ export default function JournalPanel({
             </div>
 
             {/* Accounting Totals Footer */}
-            <div className="border-t-2 border-b-4 border-double border-slate-300 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/50 px-3.5 py-3 text-xs md:grid md:grid-cols-[minmax(200px,1.5fr)_8.5rem_8.5rem_1fr] md:gap-2.5 md:items-center space-y-2 md:space-y-0">
-              <div className="font-bold text-slate-700 dark:text-slate-300">
+            <div className="border-t-2 border-b-4 border-double border-[var(--control-border)] bg-[var(--table-header-bg)] px-3.5 py-3 text-xs md:grid md:grid-cols-[minmax(200px,1.5fr)_8.5rem_8.5rem_1fr] md:gap-2.5 md:items-center space-y-2 md:space-y-0">
+              <div className="font-bold text-[var(--text-main)]">
                 {ui("إجمالي القيد")}
               </div>
-              <div className="flex items-center justify-between md:block md:text-end font-mono tabular-nums font-bold text-rose-700 dark:text-rose-400">
-                <span className="md:hidden font-sans text-slate-600 dark:text-slate-400">{ui("مدين")}:</span>
+              <div className="flex items-center justify-between md:block md:text-end font-mono tabular-nums font-bold text-rose-700 dark:text-rose-300">
+                <span className="md:hidden font-sans text-[var(--text-muted)]">{ui("مدين")}:</span>
                 <bdi dir="ltr">{amountLabel(moneyDecimal(totals.debit))} SAR</bdi>
               </div>
-              <div className="flex items-center justify-between md:block md:text-end font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">
-                <span className="md:hidden font-sans text-slate-600 dark:text-slate-400">{ui("دائن")}:</span>
+              <div className="flex items-center justify-between md:block md:text-end font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-300">
+                <span className="md:hidden font-sans text-[var(--text-muted)]">{ui("دائن")}:</span>
                 <bdi dir="ltr">{amountLabel(moneyDecimal(totals.credit))} SAR</bdi>
               </div>
               <div className="text-start">
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
                     isBalanced
-                      ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
-                      : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
+                      ? "bg-emerald-500/12 text-emerald-800 border border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35"
+                      : "bg-rose-500/15 text-rose-800 dark:text-rose-200 border border-rose-600/30"
                   }`}
                 >
                   {isBalanced ? (
@@ -425,7 +425,7 @@ export default function JournalPanel({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
             <button
               type="button"
-              className="theme-card inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border theme-border px-4 py-2.5 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2.5 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition-colors"
               onClick={() => setLines((v) => [...v, empty(crypto.randomUUID())])}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
@@ -436,13 +436,13 @@ export default function JournalPanel({
             <div
               className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-xs font-medium transition-all ${
                 isBalanced
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-                  : "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
+                  ? "border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300"
+                  : "border-rose-600/35 bg-rose-500/10 text-rose-800 dark:text-rose-200"
               }`}
             >
               {isBalanced ? (
                 <>
-                  <CheckCircle2 className="h-5 w-5 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
                   <div>
                     <span className="font-bold">{ui("قيد متزن")}</span>
                     <bdi className="ms-2 font-mono tabular-nums" dir="ltr">
@@ -452,7 +452,7 @@ export default function JournalPanel({
                 </>
               ) : (
                 <>
-                  <AlertCircle className="h-5 w-5 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
+                  <AlertCircle className="h-5 w-5 text-rose-700 dark:text-rose-300 shrink-0" aria-hidden="true" />
                   <div>
                     <span className="font-bold">{ui("قيد غير متزن")}</span>
                     <span className="ms-2">
@@ -486,13 +486,13 @@ export default function JournalPanel({
       {reverseId && (
         <form
           onSubmit={reverse}
-          className="theme-card flex flex-wrap items-end gap-3 rounded-2xl border border-rose-300/50 bg-rose-50/20 dark:bg-rose-950/10 p-5"
+          className="theme-card flex flex-wrap items-end gap-3 rounded-2xl border border-rose-600/35 bg-rose-500/5 p-5"
         >
-          <div className="w-full flex items-center gap-2 pb-2 text-rose-700 dark:text-rose-400 font-bold text-sm">
+          <div className="w-full flex items-center gap-2 pb-2 text-rose-700 dark:text-rose-300 font-bold text-sm">
             <RotateCcw className="h-4 w-4" />
             <span>{ui("عكس القيد اليدوي")}</span>
           </div>
-          <label className="text-xs font-bold">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("تاريخ العكس")}
             <input
               type="date"
@@ -502,7 +502,7 @@ export default function JournalPanel({
               onChange={(e) => setReverseDate(e.target.value)}
             />
           </label>
-          <label className="flex-1 min-w-[260px] text-xs font-bold">
+          <label className="flex-1 min-w-[260px] text-xs font-bold text-[var(--text-main)]">
             {ui("سبب عكس القيد")}
             <input
               required
@@ -522,7 +522,7 @@ export default function JournalPanel({
           </button>
           <button
             type="button"
-            className="theme-card min-h-11 rounded-xl border theme-border px-4 py-3 text-xs sm:text-sm cursor-pointer"
+            className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-3 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
             onClick={() => setReverseId(null)}
           >
             {ui("إلغاء")}
@@ -543,48 +543,48 @@ export default function JournalPanel({
               key={j.id}
               className="theme-card group rounded-2xl border theme-border overflow-hidden transition-all duration-200 open:shadow-sm"
             >
-              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 p-4 hover:bg-slate-50/60 dark:hover:bg-slate-900/30 transition-colors text-sm">
+              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 p-4 hover:bg-[var(--table-row-hover)] transition-colors text-sm">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 font-mono text-xs font-bold text-amber-700 dark:text-amber-400">
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-[var(--accent-surface)] border border-amber-600/30 px-2.5 py-1 font-mono text-xs font-bold text-[var(--accent-gold)]">
                     <Hash className="h-3.5 w-3.5" aria-hidden="true" />
                     JE-{String(j.number).padStart(6, "0")}
                   </span>
 
                   {/* Source Type Badges */}
                   {j.sourceType === "MANUAL" && (
-                    <span className="rounded-md bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/50 px-2 py-0.5 text-2xs font-bold text-sky-700 dark:text-sky-300">
+                    <span className="rounded-md bg-sky-500/10 border border-sky-600/30 px-2 py-0.5 text-2xs font-bold text-sky-800 dark:text-sky-300">
                       {ui.language === "en" ? "Manual entry" : "قيد يدوي"}
                     </span>
                   )}
                   {j.sourceType === "TRIP_COMMISSION" && (
-                    <span className="rounded-md bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/50 px-2 py-0.5 text-2xs font-bold text-violet-700 dark:text-violet-300">
+                    <span className="rounded-md bg-indigo-500/10 border border-indigo-600/30 px-2 py-0.5 text-2xs font-bold text-indigo-800 dark:text-indigo-300">
                       {ui.language === "en" ? "Trip commission" : "عمولة رحلة"}
                     </span>
                   )}
                   {j.sourceType === "SALARY" && (
-                    <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 px-2 py-0.5 text-2xs font-bold text-emerald-700 dark:text-emerald-300">
+                    <span className="rounded-md bg-emerald-500/12 border border-emerald-600/35 px-2 py-0.5 text-2xs font-bold text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300">
                       {ui.language === "en" ? "Payroll" : "مسير رواتب"}
                     </span>
                   )}
                   {j.sourceType === "PURCHASE" && (
-                    <span className="rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 px-2 py-0.5 text-2xs font-bold text-rose-700 dark:text-rose-300">
+                    <span className="rounded-md bg-rose-500/10 border border-rose-600/30 px-2 py-0.5 text-2xs font-bold text-rose-800 dark:text-rose-300">
                       {ui.language === "en" ? "Purchase invoice" : "فاتورة مشتريات"}
                     </span>
                   )}
 
                   {/* Reversal Indicators */}
                   {j.reversal && (
-                    <span className="rounded-md bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 px-2 py-0.5 text-2xs font-bold text-rose-700 dark:text-rose-300">
+                    <span className="rounded-md bg-rose-500/15 border border-rose-600/35 px-2 py-0.5 text-2xs font-bold text-rose-800 dark:text-rose-200">
                       {ui("· تم عكسه")}
                     </span>
                   )}
                   {j.reversesId && (
-                    <span className="rounded-md bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 px-2 py-0.5 text-2xs font-bold text-amber-700 dark:text-amber-300">
+                    <span className="rounded-md bg-[var(--accent-surface)] border border-amber-600/35 px-2 py-0.5 text-2xs font-bold text-[var(--accent-gold)]">
                       {ui("· قيد عكسي")}
                     </span>
                   )}
 
-                  <span className="font-medium text-slate-800 dark:text-slate-200">
+                  <span className="font-medium text-[var(--text-main)]">
                     {j.description}
                   </span>
 
@@ -599,7 +599,7 @@ export default function JournalPanel({
                     <span className="text-2xs text-[var(--text-muted)] block font-sans">
                       {ui("إجمالي القيد")}
                     </span>
-                    <bdi className="font-mono font-bold text-emerald-700 dark:text-emerald-400 tabular-nums text-sm" dir="ltr">
+                    <bdi className="font-mono font-bold text-[var(--accent-gold)] tabular-nums text-sm" dir="ltr">
                       {totalDebitText} SAR
                     </bdi>
                   </div>
@@ -607,13 +607,13 @@ export default function JournalPanel({
               </summary>
 
               {/* Expanded Lines Table & Mobile Cards */}
-              <div className="border-t theme-border bg-slate-50/30 dark:bg-slate-900/20 p-4 space-y-3">
+              <div className="border-t theme-border bg-[var(--bg-card-subtle)]/55 p-4 space-y-3">
                 <div className="md:hidden space-y-2.5">
                   {j.lines.map((l) => (
                     <MobileRecordCard
                       key={l.id}
                       title={
-                        <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                        <span className="font-mono font-bold text-[var(--accent-gold)]">
                           <bdi>{l.accountCode}</bdi>
                         </span>
                       }
@@ -631,7 +631,7 @@ export default function JournalPanel({
                           label={ui("مدين (Debit)")}
                           mono
                           value={
-                            <span className="text-rose-700 dark:text-rose-400" dir="ltr">
+                            <span className="text-rose-700 dark:text-rose-300" dir="ltr">
                               {signedMoneyMinor(l.debit) > BigInt(0) ? `${amountLabel(l.debit)} SAR` : "—"}
                             </span>
                           }
@@ -640,7 +640,7 @@ export default function JournalPanel({
                           label={ui("دائن (Credit)")}
                           mono
                           value={
-                            <span className="text-emerald-700 dark:text-emerald-400" dir="ltr">
+                            <span className="text-emerald-700 dark:text-emerald-300" dir="ltr">
                               {signedMoneyMinor(l.credit) > BigInt(0) ? `${amountLabel(l.credit)} SAR` : "—"}
                             </span>
                           }
@@ -651,7 +651,7 @@ export default function JournalPanel({
 
                   <Card className="theme-card-subtle border theme-border shadow-none p-3.5 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">{ui("المجموع")}</span>
+                      <span className="text-xs font-bold text-[var(--text-main)]">{ui("المجموع")}</span>
                       <Badge variant="success" className="text-[10px] gap-1">
                         <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                         <span>{ui("متزن")}</span>
@@ -662,7 +662,7 @@ export default function JournalPanel({
                         label={ui("إجمالي مدين")}
                         mono
                         value={
-                          <span className="text-rose-700 dark:text-rose-400" dir="ltr">
+                          <span className="text-rose-700 dark:text-rose-300" dir="ltr">
                             {totalDebitText} SAR
                           </span>
                         }
@@ -671,7 +671,7 @@ export default function JournalPanel({
                         label={ui("إجمالي دائن")}
                         mono
                         value={
-                          <span className="text-emerald-700 dark:text-emerald-400" dir="ltr">
+                          <span className="text-emerald-700 dark:text-emerald-300" dir="ltr">
                             {totalCreditText} SAR
                           </span>
                         }
@@ -680,15 +680,15 @@ export default function JournalPanel({
                   </Card>
                 </div>
 
-                <div className="hidden md:block overflow-x-auto rounded-xl border theme-border bg-white dark:bg-slate-900/60">
+                <div className="hidden md:block overflow-x-auto rounded-xl border theme-border bg-[var(--bg-card)]">
                   <table className="w-full min-w-[540px] text-start text-xs">
-                    <thead className="border-b theme-border bg-slate-50 dark:bg-slate-900 text-[var(--text-muted)] font-bold">
+                    <thead className="border-b theme-border bg-[var(--table-header-bg)] text-[var(--text-muted)] font-bold">
                       <tr>
                         <th className="py-2.5 px-3 text-start">{ui("الحساب")}</th>
-                        <th className="py-2.5 px-3 text-end text-rose-700 dark:text-rose-400 w-36">
+                        <th className="py-2.5 px-3 text-end text-rose-700 dark:text-rose-300 w-36">
                           {ui("مدين")} (Debit)
                         </th>
-                        <th className="py-2.5 px-3 text-end text-emerald-700 dark:text-emerald-400 w-36">
+                        <th className="py-2.5 px-3 text-end text-emerald-700 dark:text-emerald-300 w-36">
                           {ui("دائن")} (Credit)
                         </th>
                         <th className="py-2.5 px-3 text-start">{ui("بيان السطر")}</th>
@@ -696,19 +696,19 @@ export default function JournalPanel({
                     </thead>
                     <tbody className="divide-y theme-border">
                       {j.lines.map((l) => (
-                        <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <tr key={l.id} className="hover:bg-[var(--table-row-hover)] transition-colors">
                           <td className="py-2.5 px-3">
-                            <span className="font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded text-2xs me-2">
+                            <span className="font-mono font-bold text-[var(--accent-gold)] bg-[var(--accent-surface)] border border-amber-600/30 px-1.5 py-0.5 rounded text-2xs me-2">
                               {l.accountCode}
                             </span>
-                            <span className="font-medium">
+                            <span className="font-medium text-[var(--text-main)]">
                               {ui.language === "en" && l.account.nameEn ? l.account.nameEn : ui(l.account.nameAr)}
                             </span>
                           </td>
-                          <td className="py-2.5 px-3 text-end font-mono tabular-nums text-rose-700 dark:text-rose-400 font-medium" dir="ltr">
+                          <td className="py-2.5 px-3 text-end font-mono tabular-nums text-rose-700 dark:text-rose-300 font-medium" dir="ltr">
                             {signedMoneyMinor(l.debit) > BigInt(0) ? `${amountLabel(l.debit)} SAR` : "-"}
                           </td>
-                          <td className="py-2.5 px-3 text-end font-mono tabular-nums text-emerald-700 dark:text-emerald-400 font-medium" dir="ltr">
+                          <td className="py-2.5 px-3 text-end font-mono tabular-nums text-emerald-700 dark:text-emerald-300 font-medium" dir="ltr">
                             {signedMoneyMinor(l.credit) > BigInt(0) ? `${amountLabel(l.credit)} SAR` : "-"}
                           </td>
                           <td className="py-2.5 px-3 text-[var(--text-muted)]">
@@ -718,19 +718,19 @@ export default function JournalPanel({
                       ))}
                     </tbody>
                     {/* Double Underline Verification Total */}
-                    <tfoot className="border-t-2 border-b-4 border-double border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40">
+                    <tfoot className="border-t-2 border-b-4 border-double border-[var(--control-border)] bg-[var(--table-header-bg)]">
                       <tr>
-                        <td className="py-2 px-3 font-bold text-slate-700 dark:text-slate-300">
+                        <td className="py-2 px-3 font-bold text-[var(--text-main)]">
                           {ui("المجموع")}
                         </td>
-                        <td className="py-2 px-3 text-end font-mono tabular-nums font-bold text-rose-700 dark:text-rose-400" dir="ltr">
+                        <td className="py-2 px-3 text-end font-mono tabular-nums font-bold text-rose-700 dark:text-rose-300" dir="ltr">
                           {totalDebitText} SAR
                         </td>
-                        <td className="py-2 px-3 text-end font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400" dir="ltr">
+                        <td className="py-2 px-3 text-end font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-300" dir="ltr">
                           {totalCreditText} SAR
                         </td>
                         <td className="py-2 px-3 text-start">
-                          <span className="inline-flex items-center gap-1 text-2xs text-emerald-700 dark:text-emerald-400 font-bold">
+                          <span className="inline-flex items-center gap-1 text-2xs text-emerald-800 dark:text-emerald-300 font-bold">
                             <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                             {ui("متزن")}
                           </span>
@@ -744,7 +744,7 @@ export default function JournalPanel({
                   <div className="mt-3 flex justify-end">
                     <button
                       type="button"
-                      className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-300 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors shadow-2xs"
+                      className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-600/35 bg-[var(--bg-card)] px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors shadow-2xs"
                       onClick={() => {
                         setReverseId(j.id);
                         setReverseReason("");
@@ -763,7 +763,7 @@ export default function JournalPanel({
 
       {journals.isLoading && (
         <div role="status" className="flex items-center justify-center gap-2 py-12 text-sm text-[var(--text-muted)]">
-          <Scale className="h-5 w-5 animate-spin text-amber-500" aria-hidden="true" />
+          <Scale className="h-5 w-5 animate-spin text-[var(--accent-gold)]" aria-hidden="true" />
           <span>{ui("جارٍ تحميل القيود…")}</span>
         </div>
       )}
@@ -772,7 +772,7 @@ export default function JournalPanel({
       <div className="flex items-center justify-between text-xs sm:text-sm font-medium pt-2">
         <button
           type="button"
-          className="theme-card min-h-11 sm:min-h-9 rounded-xl border theme-border px-4 py-2 disabled:opacity-40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="min-h-11 sm:min-h-9 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-[var(--text-main)] disabled:opacity-40 cursor-pointer hover:border-[var(--accent-gold)] transition-colors"
           disabled={page === 1}
           onClick={() => setPage((v) => v - 1)}
         >
@@ -783,7 +783,7 @@ export default function JournalPanel({
         </p>
         <button
           type="button"
-          className="theme-card min-h-11 sm:min-h-9 rounded-xl border theme-border px-4 py-2 disabled:opacity-40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="min-h-11 sm:min-h-9 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-[var(--text-main)] disabled:opacity-40 cursor-pointer hover:border-[var(--accent-gold)] transition-colors"
           disabled={!journals.data || page * 30 >= journals.data.total}
           onClick={() => setPage((v) => v + 1)}
         >

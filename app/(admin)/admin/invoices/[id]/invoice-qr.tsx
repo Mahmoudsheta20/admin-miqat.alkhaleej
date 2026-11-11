@@ -27,7 +27,7 @@ export default function InvoiceQr({ invoiceId, isTax = false }: InvoiceQrProps) 
         className="mx-auto rounded-lg"
       />
       {isTax && (
-        <figcaption className="mt-2 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
+        <figcaption className="mt-2 text-xs font-bold text-slate-700">
           {ui.language === "en" ? "Tax Invoice QR" : "رمز الفاتورة الضريبية | Tax Invoice QR"}
         </figcaption>
       )}

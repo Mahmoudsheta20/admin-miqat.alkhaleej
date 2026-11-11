@@ -58,11 +58,11 @@ export function MobileCollapsibleSection({
                   className={cn(
                     "w-8 h-8 rounded-lg text-sm font-mono font-bold flex items-center justify-center shrink-0 border",
                     hasError
-                      ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
+                      ? "bg-rose-500/12 border-rose-600/35 text-rose-800 dark:text-rose-300"
                       : isComplete
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                        ? "bg-emerald-500/12 border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300"
                         : isOpen
-                          ? "bg-[var(--accent-surface)] border-amber-500/40 text-amber-800 dark:text-amber-300"
+                          ? "bg-[var(--accent-surface)] border-[var(--accent-gold)]/45 text-[var(--accent-gold)]"
                           : "bg-[var(--bg-card-subtle)] theme-border text-[var(--text-muted)]"
                   )}
                 >
@@ -78,7 +78,7 @@ export function MobileCollapsibleSection({
                 icon
               )}
               <div className="min-w-0">
-                <span className="block text-base font-semibold text-slate-900 dark:text-white truncate">
+                <span className="block text-base font-semibold text-[var(--text-main)] truncate">
                   {title}
                 </span>
                 {summary && !isOpen && (

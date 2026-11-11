@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 import { useLanguage } from "@/lib/languageContext";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { type Ref, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import {
   AlertCircle,
   Calendar as CalendarIcon,
@@ -18,6 +18,8 @@ import ResponsivePickerOverlay, {
 } from "./ResponsivePickerOverlay";
 
 export interface CustomDatePickerProps {
+  id?: string;
+  buttonRef?: Ref<HTMLButtonElement>;
   label?: string;
   value: string; // YYYY/MM/DD or YYYY-MM-DD
   onChange: (val: string) => void;
@@ -190,7 +192,7 @@ function DatePickerModalBody({
           onClick={() => selectQuickDate(0)}
           disabled={isBeforeMinDate(quickDate(0))}
           className={cn(
-            "bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold transition text-center cursor-pointer disabled:opacity-40",
+            "bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 hover:bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] font-bold transition text-center cursor-pointer disabled:opacity-40",
             isFullscreen
               ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
               : "min-h-8 py-1 px-2 rounded-lg text-xs sm:text-sm",
@@ -351,7 +353,7 @@ function DatePickerModalBody({
                       ? "border-2 border-[var(--accent-gold)] text-[var(--accent-gold)] hover:bg-[var(--accent-surface)]"
                       : isDisabled
                         ? "opacity-40 cursor-not-allowed text-[var(--text-muted)]"
-                        : "border theme-border bg-slate-50 dark:bg-slate-800/50 hover:border-amber-500/50 hover:bg-amber-500/10 text-slate-800 dark:text-slate-200",
+                        : "border theme-border bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)]/55 hover:bg-[var(--accent-surface)] text-[var(--text-main)]",
                 )}
               >
                 {day}
@@ -410,6 +412,8 @@ function DatePickerModalBody({
 }
 
 export function CustomDatePicker({
+  id,
+  buttonRef,
   label,
   value,
   onChange,
@@ -423,7 +427,8 @@ export function CustomDatePicker({
   const { language } = useLanguage();
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
-  const controlId = useId();
+  const generatedId = useId();
+  const controlId = id || generatedId;
   const overlayId = `${controlId}-date-picker`;
   const {
     isMobile,
@@ -435,6 +440,12 @@ export function CustomDatePicker({
     toggleFromTrigger,
     closeOverlay,
   } = usePickerDisclosure();
+
+  useImperativeHandle<HTMLButtonElement | null, HTMLButtonElement | null>(
+    buttonRef,
+    () => triggerRef.current,
+    [triggerRef],
+  );
 
   const formattedArabicDate = () => {
     const p = parseDateStr(value);
@@ -462,18 +473,18 @@ export function CustomDatePicker({
         <div className="flex items-center justify-between gap-2 min-w-0">
           <label
             htmlFor={controlId}
-            className="text-sm sm:text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0"
+            className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] flex items-center gap-1 shrink-0"
           >
             <span>{ui(label)}</span>
             {required && (
-              <span className="text-rose-700 font-semibold" aria-hidden="true">
+              <span className="text-rose-700 dark:text-rose-400 font-semibold" aria-hidden="true">
                 *
               </span>
             )}
           </label>
           {value && (
             <span
-              className="text-sm text-amber-700 dark:text-amber-400 font-medium truncate text-end"
+              className="text-sm text-[var(--accent-gold)] font-medium truncate text-end"
               title={formattedArabicDate()}
             >
               {formattedArabicDate()}
@@ -506,16 +517,16 @@ export function CustomDatePicker({
         className={`w-full min-h-12 px-3.5 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
           ${
             error
-              ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
+              ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
               : isOpen
-                ? "bg-white dark:bg-slate-900 border border-amber-500 ring-2 ring-amber-500/20 text-slate-900 dark:text-white"
-                : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white hover:border-amber-500/50"
+                ? "bg-[var(--input-bg)] border border-[var(--accent-gold)] ring-2 ring-[var(--accent-gold)]/20 text-[var(--text-main)]"
+                : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
           }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
             aria-hidden="true"
-            className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0"
+            className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0"
           >
             <CalendarIcon className="w-4 h-4" />
           </div>
@@ -527,7 +538,7 @@ export function CustomDatePicker({
         <div aria-hidden="true" className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-amber-500" : ""
+              isOpen ? "rotate-180 text-[var(--accent-gold)]" : ""
             }`}
           />
         </div>

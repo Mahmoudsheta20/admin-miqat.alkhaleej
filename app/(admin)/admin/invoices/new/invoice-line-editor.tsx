@@ -25,7 +25,7 @@ interface InvoiceLineEditorProps {
 }
 
 const INLINE_INPUT =
-  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-amber-500/30";
+  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base";
 
 const COMPONENTS: Record<string, string> = {
   OWN_SUPPLY: "توريد المنشأة المباشر",
@@ -142,10 +142,10 @@ export default function InvoiceLineEditor({
   const hasExemption = Boolean(value.category && value.category !== "S");
 
   return (
-    <fieldset className="rounded-2xl border theme-border bg-slate-50/50 p-4 sm:p-6 dark:bg-slate-900/30 space-y-5">
+    <fieldset className="rounded-2xl border theme-border bg-[var(--bg-card-subtle)] p-4 sm:p-6 space-y-5">
       <div className="flex items-center justify-between gap-3 border-b theme-border pb-3.5">
-        <legend className="px-1 text-base font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-          <span className="rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 font-mono text-sm font-bold">
+        <legend className="px-1 text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
+          <span className="rounded-md bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] px-2.5 py-0.5 font-mono text-sm font-bold">
             #{index + 1}
           </span>
           <span>
@@ -160,7 +160,7 @@ export default function InvoiceLineEditor({
             type="button"
             onClick={onRemove}
             aria-label={ui(`حذف الخدمة ${index + 1}`)}
-            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl p-2 text-[var(--text-muted)] transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-500/10 cursor-pointer"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl p-2 text-[var(--text-muted)] transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 cursor-pointer"
           >
             <Trash2 className="size-4" aria-hidden="true" />
           </button>
@@ -237,17 +237,17 @@ export default function InvoiceLineEditor({
 
         {/* Unit Price with Mode Toggle */}
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-1.5 text-sm sm:text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
             <span>{ui("السعر (ر.س) *")}</span>
-            <div className="inline-flex rounded-lg border theme-border p-0.5 bg-slate-100 dark:bg-slate-800 text-sm shrink-0">
+            <div className="inline-flex rounded-lg border border-[var(--control-border)] p-0.5 bg-[var(--bg-card)] text-sm shrink-0">
               <button
                 type="button"
                 aria-pressed={priceEntryMode === "EXCL"}
                 onClick={() => setPriceEntryMode("EXCL")}
                 className={`min-h-10 sm:min-h-8 px-2.5 py-0.5 rounded transition cursor-pointer ${
                   priceEntryMode === "EXCL"
-                    ? "bg-white dark:bg-slate-700 font-semibold text-amber-700 dark:text-amber-400 shadow-2xs"
-                    : "text-[var(--text-muted)]"
+                    ? "bg-[var(--accent-btn-bg)] font-semibold text-[var(--accent-btn-fg)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                 }`}
                 title={ui("إدخال السعر قبل احتساب الضريبة")}
               >
@@ -269,8 +269,8 @@ export default function InvoiceLineEditor({
                 }}
                 className={`min-h-10 sm:min-h-8 px-2.5 py-0.5 rounded transition cursor-pointer ${
                   priceEntryMode === "INCL"
-                    ? "bg-white dark:bg-slate-700 font-semibold text-amber-700 dark:text-amber-400 shadow-2xs"
-                    : "text-[var(--text-muted)]"
+                    ? "bg-[var(--accent-btn-bg)] font-semibold text-[var(--accent-btn-fg)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                 }`}
                 title={ui("إدخال السعر النهائي شامل ضريبة 15%")}
               >
@@ -368,7 +368,7 @@ export default function InvoiceLineEditor({
 
       {/* Exemption Fields if Zero or Exempt */}
       {hasExemption && (
-        <div className="grid gap-4 rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-4 sm:grid-cols-2">
+        <div className="grid gap-4 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] p-4 sm:grid-cols-2">
           <ExpandableField
             label={ui("رمز الإعفاء الضريبي الرسمي *")}
             dir="ltr"
@@ -413,7 +413,7 @@ export default function InvoiceLineEditor({
           type="button"
           aria-expanded={expanded}
           onClick={() => setIsExpanded(!isExpanded)}
-          className="min-h-11 flex items-center gap-1.5 rounded-lg py-1.5 text-sm font-bold text-[var(--text-muted)] hover:text-amber-700 dark:hover:text-amber-400 cursor-pointer"
+          className="min-h-11 flex items-center gap-1.5 rounded-lg py-1.5 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer transition-colors"
         >
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>{ui("تطبيق خصم أو تفاصيل توريد إضافية")}</span>
@@ -423,15 +423,15 @@ export default function InvoiceLineEditor({
           />
         </button>
 
-        <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+        <p className="text-sm font-bold text-[var(--text-main)]">
           {ui("إجمالي هذا البند (شامل الضريبة):")}{" "}
           <b
-            className="ms-1 font-mono text-base text-slate-900 dark:text-white"
+            className="ms-1 font-mono text-base text-[var(--text-main)]"
             dir="ltr"
           >
             {amount || "—"}
           </b>{" "}
-          <span className="text-amber-700 dark:text-amber-400">
+          <span className="text-[var(--accent-gold)]">
             {ui("ر.س")}
           </span>
         </p>
@@ -460,7 +460,7 @@ export default function InvoiceLineEditor({
 
           {/* Discount */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 text-sm sm:text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-200">
+            <div className="flex items-center justify-between gap-2 text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
               <span>{ui("الخصم")}</span>
               <FullscreenSelect
                 ariaLabel={ui(`نوع الخصم للخدمة ${index + 1}`)}

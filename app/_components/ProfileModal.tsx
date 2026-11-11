@@ -156,7 +156,7 @@ function ProfileModalContent({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] flex items-center justify-center font-bold shrink-0">
               {activeTab === "profile" ? (
                 <User className="w-5 h-5" />
               ) : (
@@ -164,10 +164,10 @@ function ProfileModalContent({
               )}
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                 {ui(activeTab === "profile" ? "الملف الشخصي" : "تغيير كلمة المرور")}
               </h3>
-              <p className="text-xs sm:text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-[var(--text-muted)]">
                 {ui(activeTab === "profile"
                   ? "تحديث الصورة الشخصية والبيانات الأساسية"
                   : "تعيين كلمة مرور جديدة وآمنة لحسابك")}
@@ -177,7 +177,7 @@ function ProfileModalContent({
           <button
             type="button"
             disabled={isSubmitting || isChangingPass} onClick={onClose}
-            className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
             aria-label={ui("إغلاق")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
@@ -185,7 +185,7 @@ function ProfileModalContent({
         </div>
 
         {/* Tab Navigation */}
-        <div role="tablist" aria-label={ui("أقسام الملف الشخصي")} className="flex border-b theme-border px-5 gap-2 pt-1 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+        <div role="tablist" aria-label={ui("أقسام الملف الشخصي")} className="flex border-b theme-border px-5 gap-2 pt-1 bg-[var(--bg-card-subtle)] shrink-0">
           <button
             type="button"
             role="tab"
@@ -197,8 +197,8 @@ function ProfileModalContent({
             }}
             className={`min-h-11 px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
               activeTab === "profile"
-                ? "border-amber-500 text-amber-700 dark:text-amber-400 font-semibold"
-                : "border-transparent text-[var(--text-muted)] hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-[var(--accent-gold)] text-[var(--accent-gold)] font-semibold"
+                : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >
             <User className="w-3.5 h-3.5" aria-hidden="true" />
@@ -215,8 +215,8 @@ function ProfileModalContent({
             }}
             className={`min-h-11 px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
               activeTab === "password"
-                ? "border-amber-500 text-amber-700 dark:text-amber-400 font-semibold"
-                : "border-transparent text-[var(--text-muted)] hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-[var(--accent-gold)] text-[var(--accent-gold)] font-semibold"
+                : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >
             <Lock className="w-3.5 h-3.5" aria-hidden="true" />
@@ -238,14 +238,14 @@ function ProfileModalContent({
             )}
 
             {successMsg && (
-              <div role="status" className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+              <div role="status" className="p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{ui(successMsg)}</span>
               </div>
             )}
 
             {/* Profile Picture Upload */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border">
+            <div className="p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border">
               <ImageUpload
                 value={avatarUrl}
                 onChange={(url) => setAvatarUrl(url)}
@@ -259,7 +259,7 @@ function ProfileModalContent({
             {/* Name & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor={nameId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label htmlFor={nameId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                   {ui("الاسم الكامل *")}</label>
                 <div className="relative">
                   <input
@@ -270,13 +270,13 @@ function ProfileModalContent({
                     onChange={(e) => setName(e.target.value)}
                     placeholder={ui("اسم المستخدم")}
                     required
-                    className="w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-bold"
+                    className="theme-input w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor={phoneId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label htmlFor={phoneId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                   {ui("رقم الجوال")}</label>
                 <div className="relative">
                   <input
@@ -288,19 +288,19 @@ function ProfileModalContent({
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="05xxxxxxxx"
                     dir="ltr"
-                    className="w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                    className="theme-input w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
                   />
                 </div>
               </div>
             </div>
 
             {/* Read-Only System Info */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border theme-border space-y-2 text-xs text-[var(--text-muted)]">
+            <div className="p-3.5 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border space-y-2 text-xs text-[var(--text-muted)]">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                   {ui("البريد الإلكتروني:")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold truncate" dir="ltr">
+                <span className="font-mono text-[var(--text-main)] font-bold truncate" dir="ltr">
                   {user.email}
                 </span>
               </div>
@@ -309,7 +309,7 @@ function ProfileModalContent({
                 <span className="flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                   {ui("نوع الحساب:")}</span>
-                <span className="font-bold text-amber-700 dark:text-amber-400">
+                <span className="font-bold text-[var(--accent-gold)]">
                   {ui(user.role === "ADMIN" ? "المدير العام (Admin)" : "كابتن ميداني (Captain)")}
                 </span>
               </div>
@@ -319,7 +319,7 @@ function ProfileModalContent({
                   <span className="flex items-center gap-1.5">
                     <CreditCard className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("رقم الهوية:")}</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300 font-bold" dir="ltr">
+                  <span className="font-mono text-[var(--text-main)] font-bold" dir="ltr">
                     {user.nationalId}
                   </span>
                 </div>
@@ -330,7 +330,7 @@ function ProfileModalContent({
                   <span className="flex items-center gap-1.5">
                     <Car className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                     {ui("المركبة المسندة:")}</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
+                  <span className="font-mono text-[var(--text-main)] font-bold">
                     {user.assignedVehiclePlate}
                   </span>
                 </div>
@@ -342,7 +342,7 @@ function ProfileModalContent({
               <button
                 type="button"
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
-                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}</button>
               <button
@@ -370,14 +370,14 @@ function ProfileModalContent({
             )}
 
             {passSuccess && (
-              <div role="status" className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+              <div role="status" className="p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{ui(passSuccess)}</span>
               </div>
             )}
 
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 space-y-1">
-              <p className="font-bold flex items-center gap-1.5">
+            <div className="p-3.5 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-main)] space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-[var(--accent-gold)]">
                 <Shield className="w-4 h-4" aria-hidden="true" />
                 <span>{ui("أمان الحساب:")}</span>
               </p>
@@ -387,7 +387,7 @@ function ProfileModalContent({
 
             {/* Current Password */}
             <div>
-              <label htmlFor={curPassId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={curPassId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("كلمة المرور الحالية *")}</label>
               <div dir="ltr" className="relative flex items-center">
                 <input
@@ -399,14 +399,14 @@ function ProfileModalContent({
                   placeholder={ui("أدخل كلمة المرور الحالية")}
                   required
                   dir="ltr"
-                  className="w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                  className="theme-input w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPass(!showCurrentPass)}
                   aria-label={ui(showCurrentPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                   aria-pressed={showCurrentPass}
-                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   {showCurrentPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
@@ -415,7 +415,7 @@ function ProfileModalContent({
 
             {/* New Password */}
             <div>
-              <label htmlFor={newPassId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={newPassId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("كلمة المرور الجديدة *")}</label>
               <div dir="ltr" className="relative flex items-center">
                 <input
@@ -427,14 +427,14 @@ function ProfileModalContent({
                   placeholder={ui("كلمة مرور جديدة (8 خانات على الأقل)")}
                   required
                   dir="ltr"
-                  className="w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                  className="theme-input w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPass(!showNewPass)}
                   aria-label={ui(showNewPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                   aria-pressed={showNewPass}
-                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   {showNewPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
@@ -443,7 +443,7 @@ function ProfileModalContent({
 
             {/* Confirm New Password */}
             <div>
-              <label htmlFor={confirmPassId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor={confirmPassId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("تأكيد كلمة المرور الجديدة *")}</label>
               <div dir="ltr" className="relative flex items-center">
                 <input
@@ -455,14 +455,14 @@ function ProfileModalContent({
                   placeholder={ui("أعد إدخال كلمة المرور الجديدة للتأكيد")}
                   required
                   dir="ltr"
-                  className="w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden font-mono text-start"
+                  className="theme-input w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPass(!showConfirmPass)}
                   aria-label={ui(showConfirmPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                   aria-pressed={showConfirmPass}
-                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   {showConfirmPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
@@ -474,7 +474,7 @@ function ProfileModalContent({
               <button
                 type="button"
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
-                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}</button>
               <button

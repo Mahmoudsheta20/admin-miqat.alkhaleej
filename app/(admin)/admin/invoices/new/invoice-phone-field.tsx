@@ -35,9 +35,9 @@ export default function InvoicePhoneField({ value, onChange }: InvoicePhoneField
 
   return (
     <fieldset className="min-w-0">
-      <legend className="text-sm sm:text-[0.9375rem] font-semibold">
+      <legend className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
         {ui("رقم الجوال")}
-        <span className="ms-0.5 text-amber-700" aria-hidden="true">
+        <span className="ms-0.5 text-rose-700 dark:text-rose-400" aria-hidden="true">
           *
         </span>
       </legend>

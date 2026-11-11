@@ -46,13 +46,13 @@ export default function ContractActions({
     >
       <Link
         href={detailHref}
-        className={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 hover:border-amber-500/60 hover:bg-amber-500/5 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors ${
+        className={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--text-main)] text-xs font-semibold transition-colors ${
           isFullWidth ? "flex-1 min-h-11 px-3" : "h-9 px-2.5"
         }`}
         title={ui("التفاصيل")}
       >
         <Eye
-          className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400"
+          className="h-3.5 w-3.5 text-[var(--text-muted)]"
           aria-hidden="true"
         />
         <span>{ui("التفاصيل")}</span>

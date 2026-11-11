@@ -44,24 +44,24 @@ export default function SectionGuide({
   return (
     <section
       aria-label={ui(title)}
-      className="theme-card rounded-2xl border border-amber-500/25 bg-amber-500/[0.03] dark:bg-amber-500/[0.04] overflow-hidden transition-all"
+      className="theme-card rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card-subtle)] overflow-hidden transition-all"
       dir={dir}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
         <div className="flex items-start sm:items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)] shrink-0">
             <BookOpen className="w-4 h-4" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300 border border-amber-500/25">
+              <span className="inline-flex items-center rounded-md bg-[var(--accent-surface)] px-2 py-0.5 text-xs font-semibold text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
                 {ui(isAr ? "دليل المعرفة وشرح القسم" : "Section Guide & Knowledge")}
               </span>
-              <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                 {ui(title)}
               </h2>
             </div>
-            <p className="text-xs text-[var(--text-muted)] dark:text-slate-300 mt-0.5 leading-relaxed">
+            <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">
               {ui(summary)}
             </p>
           </div>
@@ -71,7 +71,7 @@ export default function SectionGuide({
           type="button"
           aria-expanded={isOpen}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-white/80 dark:bg-slate-900/70 hover:border-amber-500 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 transition shrink-0 cursor-pointer"
+          className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--accent-gold)] transition shrink-0 cursor-pointer"
         >
           <span>
             {ui(isOpen
@@ -91,20 +91,20 @@ export default function SectionGuide({
       </div>
 
       {isOpen && (
-        <div className="border-t border-amber-500/15 px-4 py-4 sm:px-5 space-y-3 bg-white/50 dark:bg-slate-950/30">
+        <div className="border-t theme-border px-4 py-4 sm:px-5 space-y-3 bg-[var(--bg-card)]">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {cards.map((card) => (
               <div
                 key={card.title}
-                className="theme-card rounded-xl border theme-border p-3.5 space-y-2.5"
+                className="theme-card-subtle rounded-xl border theme-border p-3.5 space-y-2.5"
               >
                 <div className="flex items-center justify-between gap-2 border-b theme-border pb-2">
-                  <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <h3 className="text-xs sm:text-sm font-semibold text-[var(--text-main)] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" />
                     <span>{ui(card.title)}</span>
                   </h3>
                   {card.badge && (
-                    <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
+                    <span className="rounded-md bg-[var(--bg-card)] border theme-border px-2 py-0.5 font-mono text-xs font-bold text-[var(--text-muted)]">
                       {ui(card.badge)}
                     </span>
                   )}
@@ -114,16 +114,16 @@ export default function SectionGuide({
                   {card.items.map((item) => (
                     <li key={item.label} className="leading-relaxed">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-bold text-slate-800 dark:text-slate-100">
+                        <span className="font-bold text-[var(--text-main)]">
                           {ui(item.label)}:
                         </span>
                         {item.code && (
-                          <code className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-xs font-bold text-amber-700 dark:text-amber-300">
+                          <code className="rounded bg-[var(--accent-surface)] px-1.5 py-0.5 font-mono text-xs font-bold text-[var(--accent-gold)]">
                             {ui(item.code)}
                           </code>
                         )}
                       </div>
-                      <p className="text-[var(--text-muted)] dark:text-slate-400 mt-0.5">
+                      <p className="text-[var(--text-muted)] mt-0.5">
                         {ui(item.description)}
                       </p>
                     </li>
@@ -134,16 +134,16 @@ export default function SectionGuide({
           </div>
 
           {(formula || tip) && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] px-3.5 py-2.5 text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-[var(--accent-gold)]/30 bg-[var(--accent-surface)] px-3.5 py-2.5 text-xs">
               {tip && (
-                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
-                  <Info className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                <div className="flex items-center gap-2 text-[var(--text-main)] font-medium">
+                  <Info className="w-4 h-4 text-[var(--accent-gold)] shrink-0" />
                   <span>{ui(tip)}</span>
                 </div>
               )}
               {formula && (
                 <div
-                  className="font-mono text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg shrink-0"
+                  className="font-mono text-xs font-bold text-[var(--accent-gold)] bg-[var(--bg-card)] border theme-border px-2.5 py-1 rounded-lg shrink-0"
                   dir="ltr"
                 >
                   {ui(formula)}

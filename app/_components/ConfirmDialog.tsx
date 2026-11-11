@@ -48,16 +48,16 @@ export default function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
-      btn: "bg-rose-600 hover:bg-rose-700 text-white",
+      icon: "bg-rose-500/15 text-rose-700 dark:text-rose-300",
+      btn: "bg-rose-700 hover:bg-rose-800 text-white",
     },
     warning: {
-      icon: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-      btn: "bg-amber-600 hover:bg-amber-700 text-white",
+      icon: "bg-amber-500/15 text-amber-800 dark:text-amber-300",
+      btn: "bg-amber-700 hover:bg-amber-800 text-white",
     },
     info: {
-      icon: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-      btn: "bg-blue-600 hover:bg-blue-700 text-white",
+      icon: "bg-emerald-500/12 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300",
+      btn: "bg-emerald-800 hover:bg-emerald-700 text-white",
     },
   };
 
@@ -71,7 +71,7 @@ export default function ConfirmDialog({
         <button
           type="button" disabled={isBusy} onClick={onCancel}
           aria-label={ui(t("common.close"))}
-          className="absolute top-2 end-2 min-w-11 min-h-11 flex items-center justify-center text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition"
+          className="absolute top-2 end-2 min-w-11 min-h-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
         >
           <X className="w-4 h-4" aria-hidden="true" />
         </button>
@@ -81,11 +81,11 @@ export default function ConfirmDialog({
           <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center ${styles.icon}`}>
             <AlertTriangle className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
-          <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">{ui(title)}</h2>
-          <p className="text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400 leading-relaxed">{ui(message)}</p>
+          <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">{ui(title)}</h2>
+          <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">{ui(message)}</p>
         </div>
 
-        {error && <p role="alert" className="mt-3 text-center text-sm text-rose-700 dark:text-rose-400">{ui(error)}</p>}
+        {error && <p role="alert" className="mt-3 text-center text-sm text-rose-700 dark:text-rose-300">{ui(error)}</p>}
         {/* Buttons (DOM order matches visual order: Cancel safe action first, Confirm second) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2.5 sm:gap-3 mt-5 sm:mt-6">
           <button
@@ -93,7 +93,7 @@ export default function ConfirmDialog({
             autoFocus={variant !== "info"}
             disabled={isBusy}
             onClick={onCancel}
-            className="w-full min-h-11 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="w-full min-h-11 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--border-hover)] transition cursor-pointer"
           >
             {ui(cancelBtnLabel)}
           </button>

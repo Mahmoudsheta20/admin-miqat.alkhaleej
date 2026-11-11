@@ -2,8 +2,8 @@
 import { useUiText } from "@/lib/ui-text";
 import { useLanguage } from "@/lib/languageContext";
 
-import { useEffect, useId, useRef } from "react";
-import { AlertCircle, ChevronDown, Clock } from "lucide-react";
+import { type Ref, useEffect, useId, useImperativeHandle, useRef } from "react";
+import { AlertCircle, ChevronDown, Clock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFullscreenDialogClose } from "./FullscreenDialog";
 import ResponsivePickerOverlay, {
@@ -12,6 +12,9 @@ import ResponsivePickerOverlay, {
 } from "./ResponsivePickerOverlay";
 
 export interface CustomTimePickerProps {
+  id?: string;
+  buttonRef?: Ref<HTMLButtonElement>;
+  clearable?: boolean;
   label?: string;
   value: string; // HH:mm (24-hour format)
   onChange: (val: string) => void;
@@ -126,7 +129,7 @@ function TimePickerModalBody({
           type="button"
           onClick={setNow}
           className={cn(
-            "bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold transition text-center cursor-pointer",
+            "bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 hover:bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] font-bold transition text-center cursor-pointer",
             isFullscreen
               ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
               : "min-h-9 py-1.5 px-2 rounded-lg text-xs sm:text-sm",
@@ -178,7 +181,7 @@ function TimePickerModalBody({
           </p>
           <div
             className={cn(
-              "overflow-y-auto overscroll-contain border theme-border bg-slate-50 dark:bg-slate-900/50",
+              "overflow-y-auto overscroll-contain border theme-border bg-[var(--bg-card-subtle)]",
               isFullscreen
                 ? "min-h-48 flex-1 rounded-2xl p-2 space-y-1.5"
                 : "h-44 min-h-0 rounded-xl p-1.5 space-y-1",
@@ -199,7 +202,7 @@ function TimePickerModalBody({
                       : "min-h-9 py-1 text-sm rounded-lg",
                     isSelected
                       ? "gold-gradient-btn shadow-xs"
-                      : "bg-white dark:bg-slate-800/70 hover:bg-amber-500/10 text-slate-800 dark:text-slate-200",
+                      : "bg-[var(--input-bg)] hover:bg-[var(--accent-surface)] text-[var(--text-main)]",
                   )}
                 >
                   <span>{String(i).padStart(2, "0")}</span>
@@ -228,7 +231,7 @@ function TimePickerModalBody({
           </p>
           <div
             className={cn(
-              "overflow-y-auto overscroll-contain border theme-border bg-slate-50 dark:bg-slate-900/50",
+              "overflow-y-auto overscroll-contain border theme-border bg-[var(--bg-card-subtle)]",
               isFullscreen
                 ? "min-h-48 flex-1 rounded-2xl p-2 space-y-1.5"
                 : "h-44 min-h-0 rounded-xl p-1.5 space-y-1",
@@ -249,7 +252,7 @@ function TimePickerModalBody({
                       : "min-h-9 py-1 text-sm rounded-lg",
                     isSelected
                       ? "gold-gradient-btn shadow-xs"
-                      : "bg-white dark:bg-slate-800/70 hover:bg-amber-500/10 text-slate-800 dark:text-slate-200",
+                      : "bg-[var(--input-bg)] hover:bg-[var(--accent-surface)] text-[var(--text-main)]",
                   )}
                 >
                   :{String(m).padStart(2, "0")}
@@ -289,7 +292,7 @@ function TimePickerModalBody({
               type="button"
               onClick={() => setSpecificTime(slot.h, slot.m)}
               className={cn(
-                "border theme-border bg-slate-100 dark:bg-slate-800/80 hover:bg-amber-500/15 hover:border-amber-500/40 text-slate-700 dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-300 font-mono font-bold transition text-center cursor-pointer",
+                "border theme-border bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-surface)] hover:border-[var(--accent-gold)]/45 text-[var(--text-main)] hover:text-[var(--accent-gold)] font-mono font-bold transition text-center cursor-pointer",
                 isFullscreen
                   ? "min-h-11 py-2 px-3 rounded-xl text-base"
                   : "min-h-8 py-1 px-1.5 rounded-lg text-xs",
@@ -335,6 +338,9 @@ function TimePickerModalBody({
 }
 
 export function CustomTimePicker({
+  id,
+  buttonRef,
+  clearable = false,
   label,
   value,
   onChange,
@@ -347,7 +353,8 @@ export function CustomTimePicker({
   const { language } = useLanguage();
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
-  const controlId = useId();
+  const generatedId = useId();
+  const controlId = id || generatedId;
   const overlayId = `${controlId}-time-picker`;
   const {
     isMobile,
@@ -360,6 +367,12 @@ export function CustomTimePicker({
     closeOverlay,
   } = usePickerDisclosure();
 
+  useImperativeHandle<HTMLButtonElement | null, HTMLButtonElement | null>(
+    buttonRef,
+    () => triggerRef.current,
+    [triggerRef],
+  );
+
   const modalTitle =
     (label ? ui(label).replace(/\s*\*$/, "") : "") || ui("حدد الوقت");
 
@@ -369,17 +382,17 @@ export function CustomTimePicker({
         <div className="flex items-center justify-between gap-2 min-w-0">
           <label
             htmlFor={controlId}
-            className="text-sm sm:text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0"
+            className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] flex items-center gap-1 shrink-0"
           >
             <span>{ui(label)}</span>
             {required && (
-              <span className="text-rose-700 font-semibold" aria-hidden="true">
+              <span className="text-rose-700 dark:text-rose-400 font-semibold" aria-hidden="true">
                 *
               </span>
             )}
           </label>
           {value && (
-            <span className="text-sm text-amber-700 dark:text-amber-400 font-medium font-mono shrink-0" dir="ltr">
+            <span className="text-sm text-[var(--accent-gold)] font-medium font-mono shrink-0" dir="ltr">
               ({formatTimeDisplay12h(value, ui.language)})
             </span>
           )}
@@ -387,55 +400,69 @@ export function CustomTimePicker({
       )}
 
       {/* Trigger Button */}
-      <button
-        ref={triggerRef}
-        aria-label={ui(label || "حدد الوقت")}
-        aria-haspopup={isMobile ? "dialog" : undefined}
-        aria-expanded={isOpen}
-        aria-controls={!isMobile && isOpen ? overlayId : undefined}
-        id={controlId}
-        aria-describedby={error || hint ? `${controlId}-description` : undefined}
-        type="button"
-        onClick={toggleFromTrigger}
-        onKeyDown={(event) => {
-          if (
-            event.key === "ArrowDown" ||
-            event.key === "ArrowUp" ||
-            event.key === "F2"
-          ) {
-            event.preventDefault();
-            openOverlay();
-          }
-        }}
-        className={`w-full min-h-12 px-3.5 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
-          ${
-            error
-              ? "bg-rose-500/5 border border-rose-500/50 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
-              : isOpen
-                ? "bg-white dark:bg-slate-900 border border-amber-500 ring-2 ring-amber-500/20 text-slate-900 dark:text-white"
-                : "bg-white dark:bg-slate-900/80 border theme-border text-slate-900 dark:text-white hover:border-amber-500/50"
-          }`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div
-            aria-hidden="true"
-            className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0"
-          >
-            <Clock className="w-4 h-4" />
-          </div>
-          <span className="text-base font-bold font-mono tracking-wider truncate">
-            {value || ui("حدد الوقت")}
-          </span>
-        </div>
-
-        <div aria-hidden="true" className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2">
-          <ChevronDown
-            className={`w-4 h-4 transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-amber-500" : ""
+      <div className="flex items-stretch gap-1.5">
+        <button
+          ref={triggerRef}
+          aria-label={ui(label || "حدد الوقت")}
+          aria-haspopup={isMobile ? "dialog" : undefined}
+          aria-expanded={isOpen}
+          aria-controls={!isMobile && isOpen ? overlayId : undefined}
+          id={controlId}
+          aria-describedby={error || hint ? `${controlId}-description` : undefined}
+          type="button"
+          onClick={toggleFromTrigger}
+          onKeyDown={(event) => {
+            if (
+              event.key === "ArrowDown" ||
+              event.key === "ArrowUp" ||
+              event.key === "F2"
+            ) {
+              event.preventDefault();
+              openOverlay();
+            }
+          }}
+          className={`flex-1 min-w-0 min-h-12 px-3.5 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
+            ${
+              error
+                ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
+                : isOpen
+                  ? "bg-[var(--input-bg)] border border-[var(--accent-gold)] ring-2 ring-[var(--accent-gold)]/20 text-[var(--text-main)]"
+                  : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
             }`}
-          />
-        </div>
-      </button>
+        >
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div
+              aria-hidden="true"
+              className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0"
+            >
+              <Clock className="w-4 h-4" />
+            </div>
+            <span className="text-base font-bold font-mono tracking-wider truncate">
+              {value || ui("حدد الوقت")}
+            </span>
+          </div>
+
+          <div aria-hidden="true" className="flex items-center gap-1 shrink-0 text-[var(--text-muted)] ms-2">
+            <ChevronDown
+              className={`w-4 h-4 transition-transform duration-200 ${
+                isOpen ? "rotate-180 text-[var(--accent-gold)]" : ""
+              }`}
+            />
+          </div>
+        </button>
+
+        {clearable && value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            aria-label={ui("مسح الحقل")}
+            title={ui("مسح الحقل")}
+            className="min-h-12 min-w-11 px-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-500/5 flex items-center justify-center shrink-0 transition cursor-pointer"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       <ResponsivePickerOverlay
         open={isOpen}

@@ -129,12 +129,12 @@ function FullscreenFieldBody({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <label
             htmlFor={inputId}
-            className="text-base sm:text-lg font-semibold text-slate-700 dark:text-slate-300"
+            className="text-base sm:text-lg font-semibold text-[var(--text-main)]"
           >
             {title}
           </label>
           {typeof maxLength === "number" && (
-            <span className="font-mono text-sm font-semibold text-amber-700 dark:text-amber-400">
+            <span className="font-mono text-sm font-semibold text-[var(--accent-gold)]">
               {draft.length} / {maxLength}
             </span>
           )}
@@ -154,7 +154,7 @@ function FullscreenFieldBody({
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="fullscreen-focus-control w-full min-h-60 rounded-2xl border-2 theme-border bg-white dark:bg-slate-900/80 px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-3 focus:ring-amber-500/20 focus:outline-hidden resize-y"
+            className="fullscreen-focus-control w-full min-h-60 rounded-2xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-5 py-4 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-3 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden resize-y"
           />
         ) : (
           <input
@@ -176,7 +176,7 @@ function FullscreenFieldBody({
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="fullscreen-focus-control w-full min-h-16 rounded-2xl border-2 theme-border bg-white dark:bg-slate-900/80 px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-3 focus:ring-amber-500/20 focus:outline-hidden"
+            className="fullscreen-focus-control w-full min-h-16 rounded-2xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-5 py-4 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-3 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden"
           />
         )}
 
@@ -402,13 +402,13 @@ export function ExpandableField({
           id={labelId}
           htmlFor={fieldId}
           className={cn(
-            "text-sm sm:text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1",
+            "text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] flex items-center gap-1",
             labelClassName,
           )}
         >
           <span>{displayLabel}</span>
           {required && (
-            <span aria-hidden="true" className="text-amber-700">
+            <span aria-hidden="true" className="text-rose-700 dark:text-rose-400">
               *
             </span>
           )}

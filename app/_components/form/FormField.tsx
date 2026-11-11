@@ -40,13 +40,13 @@ export default function FormField({
             <label
               id={`${id}-label`}
               htmlFor={id}
-              className="flex items-center gap-1 text-sm sm:text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-300 leading-snug"
+              className="flex items-center gap-1 text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] leading-snug"
             >
               <span>{displayLabel}</span>
               {required && (
                 <span
                   aria-hidden="true"
-                  className="text-rose-700"
+                  className="text-rose-700 dark:text-rose-400"
                 >
                   *
                 </span>
@@ -59,7 +59,7 @@ export default function FormField({
           {(badge || labelEnd) && (
             <div className="flex items-center gap-2 shrink-0">
               {badge && (
-                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                <span className="text-sm font-medium text-[var(--accent-gold)]">
                   {typeof badge === "string" ? ui(badge) : badge}
                 </span>
               )}
@@ -75,8 +75,8 @@ export default function FormField({
           role={error ? "alert" : undefined}
           className={`flex items-start gap-1.5 text-sm leading-relaxed ${
             error
-              ? "text-rose-700 dark:text-rose-400 font-medium"
-              : "text-[var(--text-muted)] dark:text-slate-400"
+              ? "text-rose-700 dark:text-rose-300 font-medium"
+              : "text-[var(--text-muted)]"
           }`}
         >
           {error && (

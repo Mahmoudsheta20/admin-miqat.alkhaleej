@@ -47,7 +47,7 @@ export function MobileRecordCard({
     <Card
       className={cn(
         "theme-card border theme-border shadow-none transition-colors",
-        muted && "bg-slate-50/80 dark:bg-slate-900/60 border-dashed",
+        muted && "bg-[var(--bg-card-subtle)] border-dashed",
         className
       )}
     >
@@ -56,7 +56,7 @@ export function MobileRecordCard({
           <div className="min-w-0 flex-1 space-y-1">
             <TitleTag
               data-slot="card-title"
-              className="text-sm font-semibold leading-snug text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5"
+              className="text-sm font-semibold leading-snug text-[var(--text-main)] flex flex-wrap items-center gap-1.5"
             >
               {title}
             </TitleTag>
@@ -144,7 +144,7 @@ export function MobileCardField({
       <dt className="text-[11px] font-medium text-[var(--text-muted)] truncate">{label}</dt>
       <dd
         className={cn(
-          "text-xs font-semibold text-slate-900 dark:text-white break-words",
+          "text-xs font-semibold text-[var(--text-main)] break-words",
           mono && "font-mono tabular-nums"
         )}
       >

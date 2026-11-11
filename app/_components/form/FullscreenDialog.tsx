@@ -249,11 +249,11 @@ export default function FullscreenDialog({
             <header className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b theme-border bg-[var(--bg-card)] px-4 py-3.5 sm:px-6 sm:py-4">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 {icon ? (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)]">
                     {icon}
                   </div>
                 ) : (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)]">
                     <Maximize2 className="h-5 w-5" aria-hidden="true" />
                   </div>
                 )}
@@ -283,7 +283,7 @@ export default function FullscreenDialog({
                   disabled={isBusy}
                   onClick={() => void performAnimatedClose()}
                   aria-label={defaultCloseText}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-3.5 py-2 text-sm font-semibold text-[var(--text-main)] hover:border-amber-500/40 hover:bg-[var(--bg-card)] transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-2 text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card)] transition cursor-pointer disabled:opacity-50"
                 >
                   {variant === "workspace" ? (
                     <>

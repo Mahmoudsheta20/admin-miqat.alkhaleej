@@ -66,8 +66,8 @@ export default function ForgotPasswordPage() {
 
             {/* Error Message Alert */}
             {errorMessage && (
-              <div role="alert" className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2 animate-in fade-in-50">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-700 dark:text-rose-400" aria-hidden="true" />
+              <div role="alert" className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/35 text-rose-800 dark:text-rose-200 text-xs flex items-start gap-2 animate-in fade-in-50">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-700 dark:text-rose-300" aria-hidden="true" />
                 <span className="font-semibold">{ui(errorMessage)}</span>
               </div>
             )}
@@ -75,21 +75,21 @@ export default function ForgotPasswordPage() {
             {/* Success State */}
             {submitted ? (
               <div role="status" className="text-center py-4 space-y-4 animate-in zoom-in-95">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shadow-xs">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/12 border border-emerald-600/35 flex items-center justify-center text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300 shadow-xs">
                   <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
                 </div>
 
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-base font-bold text-[var(--text-main)]">
                     {ui("تم إرسال رمز ورابط إعادة التعيين بنجاح!")}</h2>
-                  <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-2 leading-relaxed">
-                    {ui("يُرجى فحص صندوق الوارد (أو مجلد الرسائل غير المرغوب فيها) في بريدك الإلكتروني")}<bdi className="font-mono font-bold text-amber-700 dark:text-amber-400 mx-1" dir="ltr">
+                  <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
+                    {ui("يُرجى فحص صندوق الوارد (أو مجلد الرسائل غير المرغوب فيها) في بريدك الإلكتروني")}<bdi className="font-mono font-bold text-[var(--accent-gold)] mx-1" dir="ltr">
                       {email}
                     </bdi>
                     {ui("يمكنك إما الضغط على الرابط في البريد، أو إدخال رمز التحقق المكون من 6 أرقام مباشرة.")}</p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                <div className="pt-3 border-t theme-border space-y-2.5">
                   <Link
                     href={`/reset-password?email=${encodeURIComponent(email.trim().toLowerCase())}`}
                     className="w-full min-h-11 py-2.5 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-xs font-bold shadow-xs"
@@ -105,13 +105,13 @@ export default function ForgotPasswordPage() {
                         setSubmitted(false);
                         setErrorMessage("");
                       }}
-                      className="min-h-10 text-[var(--text-muted)] hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition cursor-pointer"
+                      className="min-h-10 text-[var(--text-muted)] hover:text-[var(--text-main)] font-medium transition cursor-pointer"
                     >
                       {ui("إعادة إرسال لبريد آخر")}</button>
 
                     <Link
                       href="/login"
-                      className="min-h-10 inline-flex items-center text-[var(--text-muted)] hover:text-amber-700 dark:text-slate-400 dark:hover:text-amber-400 transition"
+                      className="min-h-10 inline-flex items-center font-semibold text-[var(--accent-gold)] hover:underline transition"
                     >
                       {ui("العودة لشاشة الدخول")}</Link>
                   </div>
@@ -123,15 +123,15 @@ export default function ForgotPasswordPage() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1.5"
+                    className="text-xs font-bold text-[var(--text-main)] block mb-1.5"
                   >
                     {ui("البريد الإلكتروني المعتمد")}</label>
 
                   <div
                     className={`relative flex items-center rounded-xl border transition-all duration-200 ${
                       emailError
-                        ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/20"
-                        : "border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-50 focus-within:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900 focus-within:border-amber-500"
+                        ? "border-rose-500 bg-rose-500/8"
+                        : "border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)]"
                     }`}
                   >
                     <div className="ps-3 text-[var(--text-muted)]">
@@ -157,12 +157,12 @@ export default function ForgotPasswordPage() {
                       }}
                       onBlur={() => setEmailTouched(true)}
                       placeholder="example@miqat.com"
-                      className="w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden font-mono text-start"
+                      className="w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                   </div>
 
                   {emailError && (
-                    <p id="forgot-email-error" role="alert" className="text-xs text-rose-700 dark:text-rose-400 flex items-center gap-1 mt-1.5 font-semibold">
+                    <p id="forgot-email-error" role="alert" className="text-xs text-rose-700 dark:text-rose-300 flex items-center gap-1 mt-1.5 font-semibold">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <span>{ui(emailError)}</span>
                     </p>
@@ -190,7 +190,7 @@ export default function ForgotPasswordPage() {
                 <div className="text-center pt-2">
                   <Link
                     href="/login"
-                    className="inline-flex min-h-10 items-center text-xs font-bold text-[var(--text-muted)] hover:text-amber-700 dark:text-slate-400 dark:hover:text-amber-400 transition"
+                    className="inline-flex min-h-10 items-center text-xs font-bold text-[var(--accent-gold)] hover:underline transition"
                   >
                     {ui("تذكرت كلمة المرور؟ تسجيل الدخول")}</Link>
                 </div>

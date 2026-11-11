@@ -59,7 +59,7 @@ export default function InvoiceTaxFields({
 
   return (
     <section className="theme-card rounded-2xl p-5 sm:p-6">
-      <h2 className="text-base sm:text-lg font-bold">
+      <h2 className="text-base sm:text-lg font-bold text-[var(--text-main)]">
         {ui("نوع المستند الضريبي")}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">

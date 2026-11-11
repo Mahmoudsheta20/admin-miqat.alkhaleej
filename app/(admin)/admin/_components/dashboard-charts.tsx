@@ -50,7 +50,7 @@ export function ContractsActivityChart({
               <BarChart3 className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">
+              <CardTitle className="text-base font-semibold text-[var(--text-main)]">
                 {text("حركة العقود والرحلات", "Trips & contracts activity")}
               </CardTitle>
               <CardDescription className="text-xs text-[var(--text-muted)] mt-0.5">
@@ -80,8 +80,8 @@ export function ContractsActivityChart({
                   }}
                   className={`min-h-11 sm:min-h-9 px-3 rounded-md text-xs font-semibold transition cursor-pointer ${
                     active
-                      ? "bg-[var(--bg-card)] text-amber-800 dark:text-amber-300 border theme-border"
-                      : "text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white"
+                      ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                   }`}
                 >
                   {days === 7 ? text("7 أيام", "7d") : text("14 يوم", "14d")}
@@ -106,7 +106,7 @@ export function ContractsActivityChart({
                 <span className="block text-[11px] font-medium text-[var(--text-muted)] truncate">
                   {text("إجمالي الفترة", "Window total")}
                 </span>
-                <strong className="mt-0.5 block text-base sm:text-lg font-mono font-semibold tabular-nums text-slate-900 dark:text-white">
+                <strong className="mt-0.5 block text-base sm:text-lg font-mono font-semibold tabular-nums text-[var(--text-main)]">
                   {totalContracts}
                 </strong>
               </div>
@@ -114,7 +114,7 @@ export function ContractsActivityChart({
                 <span className="block text-[11px] font-medium text-[var(--text-muted)] truncate">
                   {text("رحلات اليوم", "Today trips")}
                 </span>
-                <strong className="mt-0.5 block text-base sm:text-lg font-mono font-semibold tabular-nums text-amber-800 dark:text-amber-300">
+                <strong className="mt-0.5 block text-base sm:text-lg font-mono font-semibold tabular-nums text-[var(--accent-gold)]">
                   {todayContracts}
                 </strong>
               </div>
@@ -122,7 +122,7 @@ export function ContractsActivityChart({
                 <span className="block text-[11px] font-medium text-[var(--text-muted)] truncate">
                   {text("الركاب", "Passengers")}
                 </span>
-                <strong className="mt-0.5 flex flex-wrap items-baseline gap-1 text-base sm:text-lg font-mono font-semibold tabular-nums text-slate-900 dark:text-white">
+                <strong className="mt-0.5 flex flex-wrap items-baseline gap-1 text-base sm:text-lg font-mono font-semibold tabular-nums text-[var(--text-main)]">
                   <span>{totalPassengers}</span>
                   <span className="text-[10px] sm:text-[11px] font-sans font-normal text-[var(--text-muted)]">
                     ({todayPassengers} {text("اليوم", "today")})
@@ -133,7 +133,7 @@ export function ContractsActivityChart({
 
             {/* Interactive Responsive Column Chart (horizontally scrollable for 14d on narrow phones) */}
             <div
-              className="relative rounded-xl border theme-border bg-[var(--bg-main)]/60 dark:bg-[var(--bg-card-subtle)] p-3 sm:p-4"
+              className="relative rounded-xl border theme-border bg-[var(--bg-card-subtle)]/55 p-3 sm:p-4"
               aria-label={text("مخطط الأعمدة اليومي للعقود", "Daily contracts bar chart")}
             >
               <div className="overflow-x-auto no-scrollbar touch-pan-x touch-pan-y">
@@ -150,7 +150,7 @@ export function ContractsActivityChart({
                   {[0, 1, 2].map((line) => (
                     <div
                       key={line}
-                      className="w-full border-b border-dashed border-slate-200 dark:border-slate-800/80"
+                      className="w-full border-b border-dashed border-[var(--border-color)]"
                     />
                   ))}
                 </div>
@@ -173,14 +173,14 @@ export function ContractsActivityChart({
                       onFocus={() => setActiveIndex(index)}
                       onClick={() => setActiveIndex(index)}
                       aria-label={`${point.date}: ${point.contracts} ${text("عقود", "contracts")}, ${point.passengers} ${text("ركاب", "passengers")}`}
-                      className="group relative z-10 flex-1 h-full flex flex-col justify-end items-center gap-1.5 min-w-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[var(--accent-gold)] rounded-md"
+                      className="group relative z-10 flex-1 h-full flex flex-col justify-end items-center gap-1.5 min-w-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[var(--focus-color)] rounded-md"
                     >
                       <span
                         className={`text-[10px] font-mono tabular-nums font-semibold transition-opacity ${
                           point.contracts > 0
                             ? isSelected
-                              ? "text-amber-800 dark:text-amber-300 opacity-100"
-                              : "text-[var(--text-muted)] opacity-85"
+                              ? "text-[var(--accent-gold)] opacity-100"
+                              : "text-[var(--text-muted)] opacity-90"
                             : "text-transparent"
                         }`}
                       >
@@ -192,10 +192,10 @@ export function ContractsActivityChart({
                           style={{ height: `${pct}%` }}
                           className={`w-full max-w-[34px] rounded-t-md transition-all duration-200 ${
                             point.contracts === 0
-                              ? "bg-slate-200/70 dark:bg-slate-800/70"
+                              ? "bg-[var(--border-color)]"
                               : isSelected
-                                ? "bg-amber-700 dark:bg-amber-400"
-                                : "bg-amber-600/45 dark:bg-amber-400/35 group-hover:bg-amber-700/80 dark:group-hover:bg-amber-400/75"
+                                ? "bg-[var(--accent-btn-bg)]"
+                                : "bg-[var(--accent-btn-bg)]/40 dark:bg-[var(--accent-gold)]/35 group-hover:bg-[var(--accent-btn-bg)]"
                           }`}
                         />
                       </div>
@@ -204,7 +204,7 @@ export function ContractsActivityChart({
                         className={`text-[10px] font-mono tabular-nums truncate max-w-full ${
                           showXLabel
                             ? isSelected
-                              ? "text-slate-900 dark:text-white font-semibold"
+                              ? "text-[var(--text-main)] font-semibold"
                               : "text-[var(--text-muted)]"
                             : "opacity-0 select-none"
                         }`}
@@ -221,8 +221,8 @@ export function ContractsActivityChart({
               {focusedPoint && (
                 <div className="mt-3 pt-2.5 border-t theme-border flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="inline-block w-2.5 h-2.5 rounded-xs bg-amber-700 dark:bg-amber-400" aria-hidden="true" />
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                    <span className="inline-block w-2.5 h-2.5 rounded-xs bg-[var(--accent-btn-bg)]" aria-hidden="true" />
+                    <span className="font-semibold text-[var(--text-main)]">
                       {focusedPoint.label}
                     </span>
                     <span className="font-mono text-[var(--text-muted)]" dir="ltr">
@@ -231,14 +231,14 @@ export function ContractsActivityChart({
                   </div>
                   <div className="flex items-center gap-3 text-[var(--text-muted)]">
                     <span>
-                      <strong className="font-mono text-slate-900 dark:text-white">
+                      <strong className="font-mono text-[var(--text-main)]">
                         {focusedPoint.contracts}
                       </strong>{" "}
                       {text("عقود / رحلات", "contracts")}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Users className="w-3.5 h-3.5" aria-hidden="true" />
-                      <strong className="font-mono text-slate-900 dark:text-white">
+                      <strong className="font-mono text-[var(--text-main)]">
                         {focusedPoint.passengers}
                       </strong>{" "}
                       {text("ركاب", "passengers")}
@@ -287,7 +287,7 @@ function RadialGauge({
           r={r}
           fill="none"
           strokeWidth="7"
-          className="stroke-slate-200 dark:stroke-slate-800"
+          className="stroke-[var(--border-color)]"
         />
         <circle
           cx="36"
@@ -302,7 +302,7 @@ function RadialGauge({
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-sm font-mono font-bold tabular-nums text-slate-900 dark:text-white">
+        <span className="text-sm font-mono font-bold tabular-nums text-[var(--text-main)]">
           <bdi>{clamped}%</bdi>
         </span>
       </div>
@@ -331,7 +331,7 @@ export function OperationsMixCard({
   const operationMeta: Record<OperationType, { label: string; bar: string }> = {
     AIRPORT_TRANSFER: {
       label: text("نقل مطار", "Airport transfer"),
-      bar: "bg-amber-700 dark:bg-amber-400",
+      bar: "bg-[var(--accent-btn-bg)] dark:bg-[var(--accent-gold)]",
     },
     CITY_TOUR: {
       label: text("جولة داخل المدينة", "City tour"),
@@ -356,7 +356,7 @@ export function OperationsMixCard({
               <PieChart className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">
+              <CardTitle className="text-base font-semibold text-[var(--text-main)]">
                 {text("مؤشرات الجاهزية والعمليات", "Readiness & operations mix")}
               </CardTitle>
               <CardDescription className="text-xs text-[var(--text-muted)] mt-0.5">
@@ -382,13 +382,13 @@ export function OperationsMixCard({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-main)]">
                     <ClipboardCheck className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <span>{text("فحص الكباتن", "Captain checks")}</span>
                   </span>
                   <Link
                     href="/admin/inspections"
-                    className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-1 text-[11px] font-semibold text-amber-800 dark:text-amber-300 hover:underline shrink-0"
+                    className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-1 text-[11px] font-semibold text-[var(--accent-gold)] hover:underline shrink-0"
                   >
                     <span>{text("مراجعة", "Review")}</span>
                     <Arrow className="w-3 h-3" aria-hidden="true" />
@@ -399,13 +399,13 @@ export function OperationsMixCard({
                     percent={inspectionRate}
                     colorClass={
                       pendingToday === 0
-                        ? "stroke-emerald-600 dark:stroke-emerald-400"
-                        : "stroke-amber-600 dark:stroke-amber-400"
+                        ? "stroke-emerald-700 dark:stroke-emerald-400"
+                        : "stroke-amber-700 dark:stroke-amber-400"
                     }
                     label={`${text("نسبة فحص اليوم", "Today inspection rate")}: ${inspectionRate}%`}
                   />
                   <div className="min-w-0 flex-1 space-y-1 text-xs">
-                    <div className="font-mono font-semibold text-slate-900 dark:text-white tabular-nums">
+                    <div className="font-mono font-semibold text-[var(--text-main)] tabular-nums">
                       {inspectedToday}/{totalCaptains}{" "}
                       <span className="font-sans font-normal text-[var(--text-muted)]">
                         {text("مكتمل", "ready")}
@@ -414,8 +414,8 @@ export function OperationsMixCard({
                     <div
                       className={
                         pendingToday > 0
-                          ? "text-amber-800 dark:text-amber-300 font-semibold tabular-nums"
-                          : "text-emerald-700 dark:text-emerald-400 font-semibold tabular-nums"
+                          ? "text-[var(--accent-gold)] font-semibold tabular-nums"
+                          : "text-emerald-800 dark:text-emerald-300 font-semibold tabular-nums"
                       }
                     >
                       {pendingToday} {text("بانتظار الفحص", "pending")}
@@ -426,13 +426,13 @@ export function OperationsMixCard({
 
               <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-main)]">
                     <Car className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <span>{text("توفر الأسطول", "Fleet ready")}</span>
                   </span>
                   <Link
                     href="/admin/fleet"
-                    className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-1 text-[11px] font-semibold text-amber-800 dark:text-amber-300 hover:underline shrink-0"
+                    className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-1 text-[11px] font-semibold text-[var(--accent-gold)] hover:underline shrink-0"
                   >
                     <span>
                       {fleet.totalSeats} {text("مقعد", "seats")}
@@ -443,11 +443,11 @@ export function OperationsMixCard({
                 <div className="flex items-center gap-3">
                   <RadialGauge
                     percent={fleetReadyRate}
-                    colorClass="stroke-amber-600 dark:stroke-amber-400"
+                    colorClass="stroke-emerald-700 dark:stroke-emerald-400"
                     label={`${text("جاهزية الأسطول", "Fleet availability")}: ${fleetReadyRate}%`}
                   />
                   <div className="min-w-0 flex-1 space-y-1 text-xs tabular-nums">
-                    <div className="font-mono font-semibold text-slate-900 dark:text-white">
+                    <div className="font-mono font-semibold text-[var(--text-main)]">
                       {fleet.available}/{fleet.total}{" "}
                       <span className="font-sans font-normal text-[var(--text-muted)]">
                         {text("متاح", "avail")}
@@ -464,7 +464,7 @@ export function OperationsMixCard({
             {/* Operation Type Horizontal Distribution */}
             <div className="space-y-2.5 rounded-xl border theme-border p-3.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                <span className="text-xs font-semibold text-[var(--text-main)]">
                   {text("توزيع أنواع الرحلات", "Operations mix")}
                 </span>
                 <Badge variant="outline" className="text-[11px] font-mono tabular-nums">
@@ -477,15 +477,15 @@ export function OperationsMixCard({
                   return (
                     <div key={item.type} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-800 dark:text-slate-200 font-medium">
+                        <span className="text-[var(--text-main)] font-medium">
                           {meta.label}
                         </span>
                         <span className="font-mono tabular-nums text-[var(--text-muted)]">
-                          <strong className="text-slate-900 dark:text-white">{item.count}</strong>{" "}
+                          <strong className="text-[var(--text-main)]">{item.count}</strong>{" "}
                           ({item.percentage}%)
                         </span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div className="h-2 w-full rounded-full bg-[var(--bg-card-subtle)] overflow-hidden">
                         <div
                           style={{ width: `${item.count > 0 ? Math.max(4, item.percentage) : 0}%` }}
                           className={`h-full rounded-full ${meta.bar}`}

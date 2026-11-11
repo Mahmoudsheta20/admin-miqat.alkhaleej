@@ -32,30 +32,30 @@ const TYPES: Record<
   ASSET: {
     label: "الأصول",
     codePrefix: "1xxx",
-    color: "text-blue-700 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
+    color: "text-sky-800 dark:text-sky-300 bg-sky-500/10 border-sky-600/30",
   },
   LIABILITY: {
     label: "الالتزامات",
     codePrefix: "2xxx",
     color:
-      "text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
+      "text-[var(--accent-gold)] bg-[var(--accent-surface)] border-amber-600/30",
   },
   EQUITY: {
     label: "حقوق الملكية",
     codePrefix: "3xxx",
     color:
-      "text-indigo-700 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+      "text-indigo-800 dark:text-indigo-300 bg-indigo-500/10 border-indigo-600/30",
   },
   REVENUE: {
     label: "الإيرادات",
     codePrefix: "4xxx",
     color:
-      "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+      "text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 border-emerald-600/35 dark:bg-emerald-950/45 dark:border-emerald-500/35",
   },
   EXPENSE: {
     label: "المصروفات والتكاليف",
     codePrefix: "5xxx",
-    color: "text-rose-700 dark:text-rose-400 bg-rose-500/10 border-rose-500/20",
+    color: "text-rose-800 dark:text-rose-300 bg-rose-500/10 border-rose-600/30",
   },
 };
 
@@ -210,14 +210,14 @@ function Editor({
       }}
       onClose={onClose}
       aria-labelledby="account-editor-title"
-      className="theme-card mobile-dialog-panel m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-2xl rounded-2xl p-6 text-[var(--text-main)] shadow-2xl backdrop:bg-slate-950/70 border theme-border overflow-y-auto"
+      className="theme-card mobile-dialog-panel m-auto max-h-[92dvh] w-[calc(100%_-_24px)] max-w-2xl rounded-2xl p-6 text-[var(--text-main)] shadow-2xl backdrop:bg-black/60 border theme-border overflow-y-auto"
       dir={ui.dir}
     >
       <form onSubmit={save}>
         <div className="flex items-start justify-between gap-4 border-b theme-border pb-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              <span className="rounded-md bg-[var(--accent-surface)] px-2 py-0.5 text-xs font-semibold text-[var(--accent-gold)] border border-[var(--accent-gold)]/35">
                 {isEditing
                   ? ui.language === "en"
                     ? `Edit Account #${account.code}`
@@ -232,7 +232,7 @@ function Editor({
                 </span>
               )}
             </div>
-            <h2 id="account-editor-title" className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
+            <h2 id="account-editor-title" className="mt-1 text-xl font-semibold text-[var(--text-main)]">
               {isEditing
                 ? ui.language === "en" && account.nameEn
                   ? account.nameEn
@@ -245,7 +245,7 @@ function Editor({
             disabled={saving}
             onClick={onClose}
             aria-label={ui("إغلاق")}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--text-muted)] hover:text-slate-600 transition cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-xl p-2 hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
           >
             <X className="size-5" aria-hidden="true" />
           </button>
@@ -253,13 +253,13 @@ function Editor({
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {/* Code */}
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("رمز الحساب (من 4 إلى 8 أرقام) *")}<input
               required
               readOnly={isEditing}
               pattern="[0-9]{4,8}"
               placeholder={ui("مثال: 1105 أو 5107")}
-              className={`${INPUT} font-mono ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
+              className={`${INPUT} font-mono ${isEditing ? "opacity-75 cursor-not-allowed bg-[var(--bg-card-subtle)]" : ""}`}
               value={form.code}
               onChange={(e) => update({ code: e.target.value })}
             />
@@ -271,10 +271,10 @@ function Editor({
           </label>
 
           {/* Type */}
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("نوع الحساب *")}<select
               disabled={isEditing}
-              className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
+              className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-[var(--bg-card-subtle)]" : ""}`}
               value={form.type}
               onChange={(e) => {
                 const newType = e.target.value as AccountForm["type"];
@@ -298,7 +298,7 @@ function Editor({
           </label>
 
           {/* Arabic Name */}
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("الاسم العربي للحساب *")}<input
               required
               maxLength={300}
@@ -310,7 +310,7 @@ function Editor({
           </label>
 
           {/* English Name */}
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("الاسم الإنجليزي للحساب *")}<input
               required
               maxLength={300}
@@ -323,10 +323,10 @@ function Editor({
           </label>
 
           {/* Parent Account */}
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("الحساب الرئيسي الأب (التجميعي)")}<select
               disabled={isEditing}
-              className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
+              className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-[var(--bg-card-subtle)]" : ""}`}
               value={form.parentId || ""}
               onChange={(e) => update({ parentId: e.target.value || null })}
             >
@@ -345,10 +345,10 @@ function Editor({
           </label>
 
           {/* Normal Balance */}
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          <label className="text-xs font-bold text-[var(--text-main)]">
             {ui("طبيعة الرصيد *")}<select
               disabled={isEditing}
-              className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
+              className={`${INPUT} ${isEditing ? "opacity-75 cursor-not-allowed bg-[var(--bg-card-subtle)]" : ""}`}
               value={form.normalBalance}
               onChange={(e) =>
                 update({
@@ -365,7 +365,7 @@ function Editor({
 
           {/* Profit Section (Only for Expenses) */}
           {form.type === "EXPENSE" && (
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-200 sm:col-span-2">
+            <label className="text-xs font-bold text-[var(--text-main)] sm:col-span-2">
               {ui("تصنيف قائمة الدخل")}<select
                 className={INPUT}
                 value={form.profitSection}
@@ -386,7 +386,7 @@ function Editor({
         </div>
 
         {/* Posting & Active Switches with Clear Educational Explanations */}
-        <div className="mt-5 rounded-xl border theme-border bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
+        <div className="mt-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 space-y-3">
           <label className="flex min-h-11 items-start gap-3 cursor-pointer">
             <Checkbox
               disabled={isEditing}
@@ -395,9 +395,9 @@ function Editor({
               onChange={(e) => update({ isPosting: e.target.checked })}
             />
             <div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
+              <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                 {ui("حساب فرعي يقبل الترحيل المباشر (Posting Sub-Account)")}</span>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">
                 {ui("إذا تم تفعيل هذا الخيار، سيظهر هذا الحساب في شاشات تسجيل الفواتير والمشتريات ومصروفات الأسطول وسندات القبض وقيود اليومية. إذا عطلته، سيصبح حساباً تجميعياً لحساب مجاميع الفروع فقط.")}</p>
             </div>
           </label>
@@ -410,9 +410,9 @@ function Editor({
               onChange={(e) => update({ isActive: e.target.checked })}
             />
             <div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
+              <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                 {ui("الحساب نشط وجاهز للاستخدام")}</span>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 mt-0.5 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">
                 {ui("الحسابات النشطة فقط هي التي تظهر في القوائم المنسدلة للعمليات المحاسبية. الحسابات النظامية الأساسية تظل نشطة دائماً.")}</p>
             </div>
           </label>
@@ -421,7 +421,7 @@ function Editor({
         {error && (
           <div
             role="alert"
-            className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2"
+            className="mt-4 rounded-xl border border-rose-600/35 bg-rose-500/10 p-3 text-xs sm:text-sm font-bold text-rose-800 dark:text-rose-200 flex items-center gap-2"
           >
             <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
             <span>{ui(error)}</span>
@@ -432,7 +432,7 @@ function Editor({
           <button
             type="button"
             disabled={saving}
-            className="theme-card min-h-11 rounded-xl border theme-border hover:border-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold cursor-pointer transition disabled:opacity-50"
+            className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-2.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition disabled:opacity-50"
             onClick={onClose}
           >
             {ui("إلغاء")}</button>
@@ -668,9 +668,9 @@ export default function AccountsPage() {
           <>
             <Link
               href="/admin/accounting"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-amber-500 px-3.5 py-2 text-xs font-bold transition shadow-2xs text-slate-700 dark:text-slate-200"
+              className="inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
-              <Landmark className="size-4 text-amber-500" aria-hidden="true" />
+              <Landmark className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("accounting.title"))}</span>
             </Link>
 
@@ -690,17 +690,17 @@ export default function AccountsPage() {
       {seedMessage && (
         <div
           role="status"
-          className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-3 shadow-xs"
+          className="rounded-2xl border border-emerald-600/35 bg-emerald-500/12 dark:border-emerald-500/35 dark:bg-emerald-950/45 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-3 shadow-xs"
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+            <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
             <span>{ui(seedMessage)}</span>
           </div>
           <button
             type="button"
             aria-label={ui("إغلاق")}
             onClick={() => setSeedMessage("")}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-emerald-700 dark:text-emerald-300 hover:opacity-75 cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-emerald-800 dark:text-emerald-300 hover:opacity-75 cursor-pointer"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -709,10 +709,10 @@ export default function AccountsPage() {
       {seedError && (
         <div
           role="alert"
-          className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-rose-800 dark:text-rose-300 flex items-center justify-between gap-3 shadow-xs"
+          className="rounded-2xl border border-rose-600/35 bg-rose-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-rose-800 dark:text-rose-200 flex items-center justify-between gap-3 shadow-xs"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
+            <AlertCircle className="size-4 text-rose-700 dark:text-rose-300 shrink-0" aria-hidden="true" />
             <span>{ui(seedError)}</span>
           </div>
           <button
@@ -730,40 +730,40 @@ export default function AccountsPage() {
       {showFaqGuide && (
         <section
           aria-label={ui("تنبيه حل المشكلة")}
-          className="theme-card rounded-2xl border border-blue-500/30 bg-blue-500/[0.04] p-4 sm:p-5 flex flex-col sm:flex-row items-start justify-between gap-4"
+          className="theme-card rounded-2xl border border-sky-600/35 bg-sky-500/[0.06] p-4 sm:p-5 flex flex-col sm:flex-row items-start justify-between gap-4"
         >
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/15 text-sky-800 dark:text-sky-300 flex items-center justify-center shrink-0 mt-0.5">
               <HelpCircle className="size-5" aria-hidden="true" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--text-main)] flex flex-wrap items-center gap-2">
                 <span>
                   {ui("لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟")}</span>
-                <span className="rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-bold px-2 py-0.5 border border-blue-500/20">
+                <span className="rounded-md bg-sky-500/15 text-sky-800 dark:text-sky-300 text-xs font-bold px-2 py-0.5 border border-sky-600/30">
                   {ui("حل فوري")}</span>
               </h3>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-300 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                 {ui("يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل")}{" "}
-                <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                <code className="font-mono font-bold text-[var(--accent-gold)]">
                   1000
                 </code>{" "}
                 {ui("أو")}{" "}
-                <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                <code className="font-mono font-bold text-[var(--accent-gold)]">
                   2000
                 </code>{" "}
                 {ui("أو")}{" "}
-                <code className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                <code className="font-mono font-bold text-[var(--accent-gold)]">
                   5000
                 </code>{" "}
                 {ui("في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط التابع له (مثل")}{" "}
-                <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                <code className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
                   {ui("1102 البنك")}</code>
                 {ui("،")}{" "}
-                <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                <code className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
                   {ui("4101 الإيرادات")}</code>
                 {ui("، أو")}{" "}
-                <code className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                <code className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
                   {ui("5101 الوقود")}</code>
                 ).
               </p>
@@ -771,7 +771,7 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setPostingFilter("POSTING")}
-                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-bold transition cursor-pointer"
+                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg bg-[var(--accent-btn-bg)] hover:bg-[var(--accent-btn-hover)] text-[var(--accent-btn-fg)] px-3 py-1.5 text-xs font-bold transition cursor-pointer"
                 >
                   <CheckCircle2 className="size-3.5" aria-hidden="true" />
                   <span>{ui("تصفية الحسابات الفرعية القابلة للترحيل الآن")}</span>
@@ -783,7 +783,7 @@ export default function AccountsPage() {
                     setTypeFilter("ALL");
                     setSearch("");
                   }}
-                  className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-3 py-1.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300 hover:border-amber-500 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
                 >
                   {ui("إلغاء الفلترة وعرض الكل")}</button>
               </div>
@@ -792,7 +792,7 @@ export default function AccountsPage() {
           <button
             type="button"
             onClick={() => setShowFaqGuide(false)}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center p-1 rounded-lg text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition shrink-0 cursor-pointer"
+            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition shrink-0 cursor-pointer"
             aria-label={ui("إخفاء التنبيه")}
             title={ui("إخفاء التنبيه")}
           >
@@ -812,13 +812,13 @@ export default function AccountsPage() {
           }}
           className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "ALL" && postingFilter === "ALL"
-              ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30"
-              : "theme-card theme-border hover:border-amber-500/30"
+              ? "bg-[var(--accent-surface)] border-[var(--accent-gold)] ring-1 ring-[var(--accent-gold)]/30"
+              : "theme-card theme-border hover:border-[var(--accent-gold)]/50"
           }`}
         >
           <span className="text-xs font-bold text-[var(--text-muted)]">
             {ui("إجمالي الحسابات")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-slate-900 dark:text-white mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-[var(--text-main)] mt-1">
             {isLoading ? "—" : stats.total}
           </div>
           <span className="text-xs text-[var(--text-muted)]">{ui("شاملة الفئات الـ 5")}</span>
@@ -832,19 +832,19 @@ export default function AccountsPage() {
           }
           className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             postingFilter === "POSTING"
-              ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
-              : "theme-card theme-border hover:border-emerald-500/30"
+              ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
+              : "theme-card theme-border hover:border-emerald-600/50"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
               {ui("يقبل الترحيل (فرعي)")}</span>
-            <CheckCircle2 className="size-3.5 text-emerald-500" aria-hidden="true" />
+            <CheckCircle2 className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
           </div>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-700 dark:text-emerald-400 mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-800 dark:text-emerald-300 mt-1">
             {isLoading ? "—" : stats.posting}
           </div>
-          <span className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
+          <span className="text-xs text-[var(--text-muted)]">
             {ui("صالحة للقيود والفواتير")}</span>
         </button>
 
@@ -856,19 +856,19 @@ export default function AccountsPage() {
           }
           className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             postingFilter === "GROUP"
-              ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30"
-              : "theme-card theme-border hover:border-amber-500/30"
+              ? "bg-[var(--accent-surface)] border-amber-600 ring-1 ring-amber-600/30"
+              : "theme-card theme-border hover:border-amber-600/50"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+            <span className="text-xs font-bold text-[var(--accent-gold)]">
               {ui("تجميعي (رئيسي)")}</span>
-            <Folder className="size-3.5 text-amber-500" aria-hidden="true" />
+            <Folder className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
           </div>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-amber-700 dark:text-amber-400 mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-[var(--accent-gold)] mt-1">
             {isLoading ? "—" : stats.group}
           </div>
-          <span className="text-xs text-amber-700/80 dark:text-amber-400/80">
+          <span className="text-xs text-[var(--text-muted)]">
             {ui("لحساب مجاميع الفروع")}</span>
         </button>
 
@@ -880,13 +880,13 @@ export default function AccountsPage() {
           }
           className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "ASSET"
-              ? "bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/30"
-              : "theme-card theme-border hover:border-blue-500/30"
+              ? "bg-sky-500/10 border-sky-600 ring-1 ring-sky-600/30"
+              : "theme-card theme-border hover:border-sky-600/50"
           }`}
         >
-          <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
+          <span className="text-xs font-bold text-sky-800 dark:text-sky-300">
             {ui("1000 الأصول")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-blue-700 dark:text-blue-400 mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-sky-800 dark:text-sky-300 mt-1">
             {isLoading ? "—" : stats.assets}
           </div>
           <span className="text-xs text-[var(--text-muted)]">
@@ -901,13 +901,13 @@ export default function AccountsPage() {
           }
           className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "REVENUE"
-              ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30"
-              : "theme-card theme-border hover:border-emerald-500/30"
+              ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
+              : "theme-card theme-border hover:border-emerald-600/50"
           }`}
         >
-          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+          <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
             {ui("4000 الإيرادات")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-700 dark:text-emerald-400 mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-800 dark:text-emerald-300 mt-1">
             {isLoading ? "—" : stats.revenues}
           </div>
           <span className="text-xs text-[var(--text-muted)]">
@@ -922,13 +922,13 @@ export default function AccountsPage() {
           }
           className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
             typeFilter === "EXPENSE"
-              ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30"
-              : "theme-card theme-border hover:border-rose-500/30"
+              ? "bg-rose-500/10 border-rose-600 ring-1 ring-rose-600/30"
+              : "theme-card theme-border hover:border-rose-600/50"
           }`}
         >
-          <span className="text-xs font-bold text-rose-700 dark:text-rose-400">
+          <span className="text-xs font-bold text-rose-800 dark:text-rose-300">
             {ui("5000 المصروفات")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-rose-700 dark:text-rose-400 mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-rose-800 dark:text-rose-300 mt-1">
             {isLoading ? "—" : stats.expenses}
           </div>
           <span className="text-xs text-[var(--text-muted)]">
@@ -952,7 +952,7 @@ export default function AccountsPage() {
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute end-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-slate-600 cursor-pointer"
+              className="absolute end-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
               aria-label={ui("مسح البحث")}
             >
               <X className="size-3.5" aria-hidden="true" />
@@ -965,7 +965,7 @@ export default function AccountsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="theme-input h-11 rounded-xl px-3 text-xs font-bold border theme-border"
+            className="theme-input h-11 rounded-xl px-3 text-xs font-bold"
             aria-label={ui("فلترة بنوع الحساب")}
           >
             <option value="ALL">{ui("جميع الأبواب الرئيسية")}</option>
@@ -981,7 +981,7 @@ export default function AccountsPage() {
             onChange={(e) =>
               setPostingFilter(e.target.value as "ALL" | "POSTING" | "GROUP")
             }
-            className="theme-input h-11 rounded-xl px-3 text-xs font-bold border theme-border"
+            className="theme-input h-11 rounded-xl px-3 text-xs font-bold"
             aria-label={ui("فلترة بطبيعة الترحيل")}
           >
             <option value="ALL">{ui("كافة الحسابات (فرعي ورئيسي)")}</option>
@@ -990,18 +990,18 @@ export default function AccountsPage() {
           </select>
 
           {/* View Mode Toggle */}
-          <div className="inline-flex rounded-xl border theme-border p-1 bg-slate-100 dark:bg-slate-900/60">
+          <div className="inline-flex rounded-xl border theme-border p-1 bg-[var(--bg-card-subtle)] gap-1">
             <button
               type="button"
               aria-pressed={viewMode === "TREE"}
               onClick={() => setViewMode("TREE")}
               className={`inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 viewMode === "TREE"
-                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                  : "text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300"
+                  ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
-              <FolderTree className="size-3.5 text-amber-500" aria-hidden="true" />
+              <FolderTree className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("شجرة هرمية")}</span>
             </button>
             <button
@@ -1010,11 +1010,11 @@ export default function AccountsPage() {
               onClick={() => setViewMode("TABLE")}
               className={`inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 viewMode === "TABLE"
-                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                  : "text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-slate-300"
+                  ? "bg-[var(--bg-card)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
-              <Layers className="size-3.5 text-amber-500" aria-hidden="true" />
+              <Layers className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("جدول منبسط")}</span>
             </button>
           </div>
@@ -1023,7 +1023,7 @@ export default function AccountsPage() {
 
       {/* Error & Loading Indicators */}
       {error && (
-        <p role="alert" className="text-sm font-bold text-rose-700 dark:text-rose-400">
+        <p role="alert" className="text-sm font-bold text-rose-700 dark:text-rose-300">
           {ui(error)}
         </p>
       )}
@@ -1033,7 +1033,7 @@ export default function AccountsPage() {
           className="theme-card h-64 animate-pulse rounded-2xl flex items-center justify-center"
         >
           <div className="flex flex-col items-center gap-2 text-[var(--text-muted)]">
-            <RefreshCw className="size-6 animate-spin text-amber-500" aria-hidden="true" />
+            <RefreshCw className="size-6 animate-spin text-[var(--accent-gold)]" aria-hidden="true" />
             <span className="text-xs font-bold">{ui("جارٍ تحميل شجرة الحسابات…")}</span>
           </div>
         </div>
@@ -1059,7 +1059,7 @@ export default function AccountsPage() {
                 className="theme-card rounded-2xl border theme-border overflow-hidden transition-all shadow-xs"
               >
                 {/* Category Header (sibling buttons, never nested interactive controls) */}
-                <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-slate-50/70 dark:bg-slate-900/50 border-b theme-border">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-[var(--table-header-bg)] border-b theme-border">
                   <button
                     type="button"
                     aria-expanded={!isCollapsed}
@@ -1067,12 +1067,12 @@ export default function AccountsPage() {
                     className="flex flex-1 min-w-0 min-h-11 items-center justify-between gap-3 text-start cursor-pointer hover:opacity-80 transition"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] border border-amber-600/30 text-[var(--accent-gold)] flex items-center justify-center font-mono font-bold text-xs shrink-0">
                         {typeInfo.codePrefix.charAt(0)}
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                          <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                             {ui(typeInfo.label)}
                           </h2>
                           <span className="font-mono text-xs font-bold text-[var(--text-muted)]">
@@ -1106,9 +1106,9 @@ export default function AccountsPage() {
                         prefillParent: rootParent,
                       });
                     }}
-                    className="inline-flex min-h-11 sm:min-h-9 shrink-0 items-center gap-1 rounded-lg border theme-border bg-white dark:bg-slate-800 hover:border-amber-500 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs cursor-pointer"
+                    className="inline-flex min-h-11 sm:min-h-9 shrink-0 items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
                   >
-                    <Plus className="size-3.5 text-amber-500" aria-hidden="true" />
+                    <Plus className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                     <span>{ui("+ حساب فرعي")}</span>
                   </button>
                 </div>
@@ -1127,9 +1127,9 @@ export default function AccountsPage() {
                         return (
                           <div
                             key={a.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5 transition hover:bg-slate-50/60 dark:hover:bg-slate-800/40 ${
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5 transition hover:bg-[var(--table-row-hover)] ${
                               isMain
-                                ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold"
+                                ? "bg-[var(--bg-card-subtle)]/55 font-bold"
                                 : ""
                             }`}
                           >
@@ -1143,7 +1143,7 @@ export default function AccountsPage() {
                                   }}
                                   className="shrink-0 flex items-center justify-end sm:hidden"
                                 >
-                                  <span className="text-slate-400 dark:text-slate-600 font-mono text-xs select-none">
+                                  <span className="text-[var(--control-border)] font-mono text-xs select-none">
                                     └─
                                   </span>
                                 </div>
@@ -1153,7 +1153,7 @@ export default function AccountsPage() {
                                 className="hidden sm:flex shrink-0 items-center justify-end"
                               >
                                 {accountDepth > 0 && (
-                                  <span className="text-slate-400 dark:text-slate-600 font-mono text-xs select-none">
+                                  <span className="text-[var(--control-border)] font-mono text-xs select-none">
                                     └─
                                   </span>
                                 )}
@@ -1162,26 +1162,26 @@ export default function AccountsPage() {
                               {/* Branch Icon */}
                               <div className="mt-0.5 sm:mt-0 shrink-0">
                                 {isMain ? (
-                                  <Folder className="size-4 text-amber-500" aria-hidden="true" />
+                                  <Folder className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
                                 ) : (
-                                  <FileSpreadsheet className="size-4 text-emerald-500" aria-hidden="true" />
+                                  <FileSpreadsheet className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
                                 )}
                               </div>
 
                               {/* Code with Copy Button */}
                               <div className="flex items-center gap-1 shrink-0">
-                                <code className="font-mono text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                <code className="font-mono text-xs font-semibold text-[var(--accent-gold)] bg-[var(--accent-surface)] px-2 py-0.5 rounded-md border border-amber-600/30">
                                   {a.code}
                                 </code>
                                 <button
                                   type="button"
                                   onClick={(e) => handleCopyCode(a.code, e)}
-                                  className="inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                                  className="inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
                                   aria-label={`${ui("نسخ رمز الحساب")} ${a.code}`}
                                   title={ui("نسخ رمز الحساب")}
                                 >
                                   {copiedCode === a.code ? (
-                                    <Check className="size-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                                    <Check className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                                   ) : (
                                     <Copy className="size-3.5" aria-hidden="true" />
                                   )}
@@ -1190,11 +1190,11 @@ export default function AccountsPage() {
 
                               {/* Name & English Subtitle */}
                               <div className="min-w-0">
-                                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                                <p className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">
                                   {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                                 </p>
                                 <p
-                                  className="text-xs text-[var(--text-muted)] dark:text-slate-400 truncate"
+                                  className="text-xs text-[var(--text-muted)] truncate"
                                   dir={ui.language === "en" ? "rtl" : "ltr"}
                                 >
                                   {ui.language === "en" ? a.nameAr : a.nameEn}
@@ -1206,19 +1206,19 @@ export default function AccountsPage() {
                             <div className="flex flex-wrap items-center gap-2 shrink-0 sm:justify-end">
                               {/* Posting Capability Badge */}
                               {a.isPosting ? (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/12 px-2 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35">
                                   <CheckCircle2 className="size-3" aria-hidden="true" />
                                   <span>{ui("يقبل القيود (فرعي)")}</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-[var(--accent-surface)] px-2 py-0.5 text-xs font-bold text-[var(--accent-gold)] border border-amber-600/30">
                                   <Folder className="size-3" aria-hidden="true" />
                                   <span>{ui("تجميعي (رئيسي)")}</span>
                                 </span>
                               )}
 
                               {/* Balance Nature */}
-                              <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
+                              <span className="rounded-md bg-[var(--bg-card-subtle)] px-2 py-0.5 text-xs font-bold text-[var(--text-muted)] border border-[var(--border-color)]">
                                 {ui(a.normalBalance === "DEBIT"
                                   ? "طبيعة: مدين"
                                   : "طبيعة: دائن")}
@@ -1228,8 +1228,8 @@ export default function AccountsPage() {
                               <span
                                 className={`rounded-md px-2 py-0.5 text-xs font-bold ${
                                   a.isActive
-                                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                    : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                                    ? "bg-emerald-500/12 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300"
+                                    : "bg-rose-500/10 text-rose-800 dark:text-rose-300"
                                 }`}
                               >
                                 {ui(a.isActive ? "نشط" : "معطل")}
@@ -1237,7 +1237,7 @@ export default function AccountsPage() {
 
                               {/* System Badge */}
                               {a.isSystem && (
-                                <span className="rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
+                                <span className="rounded-md bg-[var(--bg-card-subtle)] border border-[var(--border-color)] px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)]">
                                   {ui("نظامي")}</span>
                               )}
 
@@ -1251,7 +1251,7 @@ export default function AccountsPage() {
                                       prefillParent: a,
                                     })
                                   }
-                                  className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-400 transition cursor-pointer"
+                                  className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-2.5 py-1 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
                                   title={
                                     ui.language === "en"
                                       ? `Add sub-account under ${a.code}`
@@ -1266,7 +1266,7 @@ export default function AccountsPage() {
                               {/* Edit Button */}
                               <button
                                 type="button"
-                                className="theme-card min-h-11 sm:min-h-8 rounded-lg border theme-border hover:border-amber-500 px-3 py-1 text-xs font-bold cursor-pointer transition shadow-2xs"
+                                className="min-h-11 sm:min-h-8 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
                                 onClick={() => setEditor({ account: a })}
                               >
                                 {ui("تعديل")}</button>
@@ -1297,18 +1297,18 @@ export default function AccountsPage() {
                   key={a.id}
                   title={
                     <div className="flex items-center gap-1.5">
-                      <code className="font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 text-xs">
+                      <code className="font-mono font-bold text-[var(--accent-gold)] bg-[var(--accent-surface)] px-2 py-0.5 rounded-md border border-amber-600/30 text-xs">
                         {a.code}
                       </code>
                       <button
                         type="button"
                         onClick={(e) => handleCopyCode(a.code, e)}
-                        className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                        className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
                         aria-label={`${ui("نسخ رمز الحساب")} ${a.code}`}
                         title={ui("نسخ رمز الحساب")}
                       >
                         {copiedCode === a.code ? (
-                          <Check className="size-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                          <Check className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                         ) : (
                           <Copy className="size-3.5" aria-hidden="true" />
                         )}
@@ -1317,7 +1317,7 @@ export default function AccountsPage() {
                   }
                   subtitle={
                     <div className="space-y-0.5">
-                      <p className="font-bold text-slate-900 dark:text-white">
+                      <p className="font-bold text-[var(--text-main)]">
                         {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
                       </p>
                       <p className="text-xs text-[var(--text-muted)]" dir={ui.language === "en" ? "rtl" : "ltr"}>
@@ -1345,7 +1345,7 @@ export default function AccountsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => setEditor({ account: "NEW", prefillParent: a })}
-                          className="flex-1 min-h-11 gap-1 text-xs font-bold text-amber-700 dark:text-amber-400"
+                          className="flex-1 min-h-11 gap-1 text-xs font-bold text-[var(--accent-gold)]"
                           title={
                             ui.language === "en"
                               ? `Add sub-account under ${a.code}`
@@ -1385,7 +1385,7 @@ export default function AccountsPage() {
 
           <div className="hidden md:block theme-card overflow-x-auto rounded-2xl border theme-border shadow-xs">
             <table className="w-full min-w-[760px] text-start text-xs sm:text-sm">
-            <thead className="theme-card-subtle text-xs text-[var(--text-muted)] font-bold border-b theme-border">
+            <thead className="bg-[var(--table-header-bg)] text-xs text-[var(--text-muted)] font-bold border-b theme-border">
               <tr>
                 <th className="px-5 py-3.5">{ui("الرمز")}</th>
                 <th className="px-5 py-3.5">{ui("اسم الحساب")}</th>
@@ -1395,7 +1395,7 @@ export default function AccountsPage() {
                 <th className="px-5 py-3.5 text-end">{ui("الإجراءات")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y theme-border text-slate-800 dark:text-slate-200">
+            <tbody className="divide-y theme-border text-[var(--text-main)]">
               {filteredAccounts.length === 0 ? (
                 <tr>
                   <td
@@ -1408,27 +1408,27 @@ export default function AccountsPage() {
                 filteredAccounts.map((a) => (
                   <tr
                     key={a.id}
-                    className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition ${
+                    className={`hover:bg-[var(--table-row-hover)] transition ${
                       !a.isPosting
-                        ? "bg-slate-50/30 dark:bg-slate-900/20 font-bold"
+                        ? "bg-[var(--bg-card-subtle)]/55 font-bold"
                         : ""
                     }`}
                   >
                     {/* Code with Copy */}
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <code className="font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                        <code className="font-mono font-bold text-[var(--accent-gold)] bg-[var(--accent-surface)] px-2 py-0.5 rounded-md border border-amber-600/30">
                           {a.code}
                         </code>
                         <button
                           type="button"
                           onClick={(e) => handleCopyCode(a.code, e)}
-                          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--text-muted)] hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                          className="p-1 rounded hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
                           aria-label={`${ui("نسخ رمز الحساب")} ${a.code}`}
                           title={ui("نسخ رمز الحساب")}
                         >
                           {copiedCode === a.code ? (
-                            <Check className="size-3 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                            <Check className="size-3 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                           ) : (
                             <Copy className="size-3" aria-hidden="true" />
                           )}
@@ -1439,7 +1439,7 @@ export default function AccountsPage() {
                     {/* Name */}
                     <td className="px-5 py-3.5">
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 dark:text-white">
+                        <p className="font-bold text-[var(--text-main)]">
                           {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
                         </p>
                         <p className="text-xs text-[var(--text-muted)]" dir={ui.language === "en" ? "rtl" : "ltr"}>
@@ -1463,12 +1463,12 @@ export default function AccountsPage() {
                     {/* Posting Capability */}
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       {a.isPosting ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/12 px-2 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35">
                           <CheckCircle2 className="size-3" />
                           <span>{ui("فرعي (يقبل القيود)")}</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[var(--accent-surface)] px-2 py-0.5 text-xs font-bold text-[var(--accent-gold)] border border-amber-600/30">
                           <Folder className="size-3" />
                           <span>{ui("تجميعي (رئيسي)")}</span>
                         </span>
@@ -1480,14 +1480,14 @@ export default function AccountsPage() {
                       <span
                         className={`rounded-md px-2 py-0.5 text-xs font-bold ${
                           a.isActive
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                            : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                            ? "bg-emerald-500/12 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300"
+                            : "bg-rose-500/10 text-rose-800 dark:text-rose-300"
                         }`}
                       >
                         {ui(a.isActive ? "نشط" : "معطل")}
                       </span>
                       {a.isSystem && (
-                        <span className="ms-1.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)] dark:text-slate-300">
+                        <span className="ms-1.5 rounded-md bg-[var(--bg-card-subtle)] border border-[var(--border-color)] px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)]">
                           {ui("نظامي")}</span>
                       )}
                     </td>
@@ -1501,7 +1501,7 @@ export default function AccountsPage() {
                             onClick={() =>
                               setEditor({ account: "NEW", prefillParent: a })
                             }
-                            className="inline-flex items-center gap-1 rounded-lg border theme-border hover:border-amber-500 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-2.5 py-1.5 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
                             title={
                               ui.language === "en"
                                 ? `Add sub-account under ${a.code}`
@@ -1514,7 +1514,7 @@ export default function AccountsPage() {
                         )}
                         <button
                           type="button"
-                          className="theme-card min-h-9 rounded-lg border theme-border hover:border-amber-500 px-3 py-1.5 text-xs font-bold cursor-pointer transition shadow-2xs"
+                          className="min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
                           onClick={() => setEditor({ account: a })}
                         >
                           {ui("تعديل")}</button>

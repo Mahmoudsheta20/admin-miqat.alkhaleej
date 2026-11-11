@@ -10,7 +10,7 @@ import InvoiceBankFields, { EMPTY_BANK } from "@/app/_components/InvoiceBankFiel
 import { invoiceRequest, type InvoiceSettings } from "@/lib/invoices";
 
 const INPUT =
-  "theme-input mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30";
+  "theme-input mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm";
 
 interface CompanyForm {
   legalName: string;
@@ -137,7 +137,7 @@ export default function InvoiceSettingsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/invoices"
-          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-amber-700 dark:hover:text-amber-400 transition"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] transition"
         >
           <ArrowRight className="w-4 h-4 ltr:rotate-180" aria-hidden="true" />
           <span>{ui("العودة للفواتير")}</span>
@@ -145,7 +145,7 @@ export default function InvoiceSettingsPage() {
 
         <Link
           href="/admin/invoices/new"
-          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-amber-700 dark:text-amber-400 transition"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--accent-gold)] transition"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{ui("إنشاء فاتورة")}</span>
@@ -153,13 +153,13 @@ export default function InvoiceSettingsPage() {
       </div>
 
       <header className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+        <div className="w-11 h-11 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)] shrink-0">
           <Building2 className="w-5 h-5" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-semibold text-[var(--text-main)]">
             {ui("بيانات الشركة والحساب البنكي")}</h1>
-          <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)] dark:text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)]">
             {ui("تُدرج هذه البيانات تلقائياً في ترويسة الفواتير الرسمية والفواتير المبدئية الجديدة")}</p>
         </div>
       </header>
@@ -188,16 +188,16 @@ export default function InvoiceSettingsPage() {
       {message && (
         <div
           role="status"
-          className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
+          className="p-4 rounded-2xl border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
         >
-          <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-300 shrink-0" />
           <span>{ui(message)}</span>
         </div>
       )}
 
       {isLoading ? (
         <div role="status" className="theme-card rounded-2xl p-12 flex flex-col items-center justify-center gap-3">
-          <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+          <div className="w-9 h-9 border-3 border-[var(--accent-gold)]/25 border-t-[var(--accent-gold)] rounded-full animate-spin" />
           <p className="text-xs font-bold text-[var(--text-muted)]">{ui("جارٍ التحميل…")}</p>
         </div>
       ) : (
@@ -207,14 +207,14 @@ export default function InvoiceSettingsPage() {
               {/* Legal & Tax Identity */}
               <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
                 <div className="flex items-center gap-2 border-b theme-border pb-3">
-                  <Building2 className="w-4 h-4 text-amber-500" />
-                  <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  <Building2 className="w-4 h-4 text-[var(--accent-gold)]" />
+                  <h2 className="text-sm font-semibold text-[var(--text-main)]">
                     {ui("البيانات القانونية والضريبية للمنشأة")}</h2>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-xs sm:text-sm font-bold sm:col-span-2">
-                    {ui("اسم الشركة القانوني")}<span className="text-rose-700">*</span>
+                    {ui("اسم الشركة القانوني")}<span className="text-rose-700 dark:text-rose-400">*</span>
                     <input
                       required
                       maxLength={200}
@@ -267,8 +267,8 @@ export default function InvoiceSettingsPage() {
               <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between border-b theme-border pb-3">
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-amber-500" />
-                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                    <MapPin className="w-4 h-4 text-[var(--accent-gold)]" />
+                    <h2 className="text-sm font-semibold text-[var(--text-main)]">
                       {ui("العنوان الوطني للمنشأة (اختياري)")}</h2>
                   </div>
                   <span className="text-xs text-[var(--text-muted)]">

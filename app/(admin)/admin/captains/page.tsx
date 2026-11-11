@@ -414,7 +414,7 @@ export default function CaptainsManagementPage() {
       {seedMessage && (
         <p
           role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300"
         >
           {ui(seedMessage)}
         </p>
@@ -439,7 +439,7 @@ export default function CaptainsManagementPage() {
       <div className="theme-card rounded-2xl overflow-hidden border theme-border">
         {isLoading ? (
           <div className="p-12 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-3" />
+            <div className="w-8 h-8 border-2 border-[var(--accent-gold)]/20 border-t-[var(--accent-gold)] rounded-full animate-spin mb-3" />
             <p className="text-xs text-[var(--text-muted)]">
               {ui("جاري تحميل قائمة الكباتن...")}</p>
           </div>
@@ -467,7 +467,7 @@ export default function CaptainsManagementPage() {
                     <TableRow key={c.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-bold flex items-center justify-center text-xs shrink-0">
+                          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] font-bold flex items-center justify-center text-xs shrink-0">
                             {c.avatarUrl ? (
                               <Image
                                 src={c.avatarUrl}
@@ -482,7 +482,7 @@ export default function CaptainsManagementPage() {
                             )}
                           </div>
                           <div>
-                            <div className="font-bold text-slate-900 dark:text-white text-sm">
+                            <div className="font-bold text-[var(--text-main)] text-sm">
                               {c.name}
                             </div>
                             <div className="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-0.5">
@@ -501,7 +501,7 @@ export default function CaptainsManagementPage() {
                       </TableCell>
                       <TableCell>
                         <div className="space-y-0.5">
-                          <div className="font-mono font-bold text-slate-700 dark:text-slate-300" dir="ltr">
+                          <div className="font-mono font-bold text-[var(--text-main)]" dir="ltr">
                             {c.nationalId || "—"}
                           </div>
                           {c.licenseNumber && (
@@ -520,8 +520,8 @@ export default function CaptainsManagementPage() {
                       </TableCell>
                       <TableCell>
                         {c.assignedVehiclePlate ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200">
-                            <Car className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-card-subtle)] border theme-border font-mono font-bold text-[var(--text-main)]">
+                            <Car className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                             <bdi>{c.assignedVehiclePlate}</bdi>
                           </span>
                         ) : (
@@ -531,17 +531,17 @@ export default function CaptainsManagementPage() {
                       </TableCell>
                       <TableCell>
                         {c.hasTodayInspection ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/12 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-300 border border-emerald-600/35 dark:border-emerald-500/35">
                             <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                             {ui("تم الفحص")}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/35">
                             <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                             {ui("بانتظار الفحص")}</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                        <span className="font-mono font-bold text-sm text-[var(--text-main)]">
                           {c.contractCount}
                         </span>
                         <span className="text-xs text-[var(--text-muted)] ms-1">
@@ -552,7 +552,7 @@ export default function CaptainsManagementPage() {
                           type="button"
                           onClick={() => handleToggleStatus(c)}
                           disabled={isTogglingId === c.id}
-                          className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
                           aria-label={`${c.name} — ${ui(c.active ? "انقر لتعطيل الحساب" : "انقر لتفعيل وتنشيط الحساب")}`}
                           title={ui(c.active
                               ? "انقر لتعطيل الحساب"
@@ -565,8 +565,8 @@ export default function CaptainsManagementPage() {
                           <span
                             className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs transition border ${
                               c.active
-                                ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 group-hover:border-rose-500/30 group-hover:text-rose-700 dark:group-hover:text-rose-400 group-hover:bg-rose-500/10"
-                                : "border-slate-300 dark:border-slate-700 text-[var(--text-muted)] group-hover:border-emerald-500/30 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 group-hover:bg-emerald-500/10"
+                                ? "border-emerald-600/35 text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 group-hover:border-rose-500/35 group-hover:text-rose-700 dark:group-hover:text-rose-300 group-hover:bg-rose-500/10"
+                                : "border-[var(--control-border)] text-[var(--text-muted)] group-hover:border-emerald-600/35 group-hover:text-emerald-800 dark:group-hover:text-emerald-300 group-hover:bg-emerald-500/12"
                             }`}
                           >
                             <Power
@@ -579,10 +579,10 @@ export default function CaptainsManagementPage() {
                       <TableCell className="text-end">
                         <div className="flex flex-wrap items-center justify-end gap-1.5">
                           <Link
-                            className="inline-flex items-center gap-1 min-h-9 rounded-lg border theme-border px-2.5 py-1 text-xs font-bold hover:border-amber-500 hover:bg-amber-500/5 transition whitespace-nowrap"
+                            className="inline-flex items-center gap-1 min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 transition whitespace-nowrap"
                             href={`/admin/captains/${c.id}/account`}
                           >
-                            <Wallet className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                            <Wallet className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                             <span>{ui("حساب السائق والمستحقات")}</span>
                           </Link>
                           <button
@@ -592,8 +592,8 @@ export default function CaptainsManagementPage() {
                             aria-label={`${ui(c.active ? "تعطيل حساب الكابتن مؤقتاً" : "تنشيط وتفعيل حساب الكابتن")} — ${c.name}`}
                             className={`min-h-9 min-w-9 p-2 rounded-lg border inline-flex items-center justify-center transition ${
                               c.active
-                                ? "theme-card hover:border-rose-500 text-[var(--text-muted)] dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
+                                ? "border-[var(--control-border)] bg-[var(--bg-card)] hover:border-rose-500 text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10"
+                                : "border-emerald-600/40 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"
                             }`}
                             title={ui(c.active
                                 ? "تعطيل حساب الكابتن مؤقتاً"
@@ -609,7 +609,7 @@ export default function CaptainsManagementPage() {
                             onClick={() => handleResetPassword(c)}
                             disabled={isResettingId === c.id}
                             aria-label={`${ui("توليد كلمة مرور مؤقتة جديدة للكابتن")} — ${c.name}`}
-                            className="min-h-9 min-w-9 p-2 rounded-lg border theme-card hover:border-amber-500 text-amber-700 dark:text-amber-400 inline-flex items-center justify-center transition"
+                            className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--accent-gold)] inline-flex items-center justify-center transition"
                             title={ui("توليد كلمة مرور مؤقتة جديدة للكابتن")}
                           >
                             <KeyRound
@@ -621,7 +621,7 @@ export default function CaptainsManagementPage() {
                             type="button"
                             onClick={() => openEditModal(c)}
                             aria-label={`${ui("تعديل بيانات الكابتن وحالته")} — ${c.name}`}
-                            className="min-h-9 min-w-9 p-2 rounded-lg border theme-card hover:border-amber-500 text-[var(--text-muted)] dark:text-slate-400 inline-flex items-center justify-center transition"
+                            className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition"
                             title={ui("تعديل بيانات الكابتن وحالته")}
                           >
                             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -630,7 +630,7 @@ export default function CaptainsManagementPage() {
                             type="button"
                             onClick={() => setDeleteId(c.id)}
                             aria-label={`${ui("حذف / تعطيل الكابتن")} — ${c.name}`}
-                            className="min-h-9 min-w-9 p-2 rounded-lg border theme-card hover:border-rose-500 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 inline-flex items-center justify-center transition"
+                            className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-rose-500 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 inline-flex items-center justify-center transition"
                             title={ui("حذف / تعطيل الكابتن")}
                           >
                             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -650,7 +650,7 @@ export default function CaptainsManagementPage() {
                   key={c.id}
                   title={
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-bold flex items-center justify-center text-sm shrink-0">
+                      <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] font-bold flex items-center justify-center text-sm shrink-0">
                         {c.avatarUrl ? (
                           <Image
                             src={c.avatarUrl}
@@ -691,9 +691,9 @@ export default function CaptainsManagementPage() {
                     <>
                       <Link
                         href={`/admin/captains/${c.id}/account`}
-                        className="inline-flex items-center justify-center gap-1.5 flex-1 min-h-11 px-3 rounded-xl border theme-border bg-[var(--bg-card)] hover:border-amber-500 text-xs font-bold transition"
+                        className="inline-flex items-center justify-center gap-1.5 flex-1 min-h-11 px-3 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-xs font-bold text-[var(--text-main)] transition"
                       >
-                        <Wallet className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                        <Wallet className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                         <span>{ui("حساب السائق")}</span>
                       </Link>
 
@@ -704,7 +704,7 @@ export default function CaptainsManagementPage() {
                         onClick={() => openEditModal(c)}
                         className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
                       >
-                        <Edit2 className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                        <Edit2 className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                         <span>{ui("تعديل البيانات")}</span>
                       </Button>
 
@@ -763,12 +763,12 @@ export default function CaptainsManagementPage() {
                       label={ui("فحص اليوم")}
                       value={
                         c.hasTodayInspection ? (
-                          <span className="text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
+                          <span className="text-emerald-800 dark:text-emerald-300 inline-flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
                             <span>{ui("تم الفحص")}</span>
                           </span>
                         ) : (
-                          <span className="text-amber-700 dark:text-amber-400 inline-flex items-center gap-1">
+                          <span className="text-[var(--accent-gold)] inline-flex items-center gap-1">
                             <XCircle className="w-3 h-3" aria-hidden="true" />
                             <span>{ui("بانتظار الفحص")}</span>
                           </span>
@@ -800,7 +800,7 @@ export default function CaptainsManagementPage() {
         >
           <div className="mobile-dialog-panel relative w-full max-w-lg flex flex-col theme-card rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border theme-border">
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b theme-border theme-card-subtle shrink-0">
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                 {ui(editingCaptain
                   ? "تعديل بيانات الكابتن"
                   : "إضافة كابتن جديد للنظام")}
@@ -812,7 +812,7 @@ export default function CaptainsManagementPage() {
                   setIsAddModalOpen(false);
                   setEditingCaptain(null);
                 }}
-                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-700 dark:hover:text-white transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)] transition"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
@@ -832,7 +832,7 @@ export default function CaptainsManagementPage() {
               )}
 
               {/* Captain Photo Upload */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border theme-border">
+              <div className="p-3.5 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border">
                 <ImageUpload
                   value={formData.avatarUrl}
                   onChange={(url) =>
@@ -847,7 +847,7 @@ export default function CaptainsManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1 sm:col-span-2">
-                  <label htmlFor={`${formId}-name`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-name`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("اسم الكابتن بالكامل *")}</label>
                   <input
                     id={`${formId}-name`}
@@ -858,12 +858,12 @@ export default function CaptainsManagementPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder={ui("مثال: علي أحمد غلام أحمد")}
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-email`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-email`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("البريد الإلكتروني *")}</label>
                   <input
                     id={`${formId}-email`}
@@ -875,12 +875,12 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="captain@miqat.com"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-phone`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-phone`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("رقم الجوال")}</label>
                   <input
                     id={`${formId}-phone`}
@@ -892,12 +892,12 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="0542273515"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-nationalId`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-nationalId`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("رقم الهوية الوطنية / الإقامة")}</label>
                   <input
                     id={`${formId}-nationalId`}
@@ -909,12 +909,12 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2553660073"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-licenseNumber`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-licenseNumber`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("رقم رخصة القيادة")}</label>
                   <input
                     id={`${formId}-licenseNumber`}
@@ -928,12 +928,12 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="SA-39482910"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-licenseExpiry`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-licenseExpiry`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("تاريخ انتهاء الرخصة")}</label>
                   <input
                     id={`${formId}-licenseExpiry`}
@@ -947,12 +947,12 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2028/04/22"
                     dir="ltr"
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor={`${formId}-plate`} className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label htmlFor={`${formId}-plate`} className="block text-xs font-bold text-[var(--text-main)]">
                     {ui("لوحة المركبة المسندة")}</label>
                   <input
                     id={`${formId}-plate`}
@@ -965,13 +965,13 @@ export default function CaptainsManagementPage() {
                       })
                     }
                     placeholder={ui("ا ص ل 7223")}
-                    className="w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl border theme-card focus:border-amber-500 focus:outline-hidden"
+                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
                   />
                 </div>
 
                 {/* Account Status */}
                 <div className="space-y-1.5 col-span-full pt-1">
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  <p className="text-xs font-bold text-[var(--text-main)] block">
                     {ui("حالة الحساب والتشغيل")}</p>
                   <div className="grid grid-cols-2 gap-3">
                     <button
@@ -980,11 +980,11 @@ export default function CaptainsManagementPage() {
                       onClick={() => setFormData({ ...formData, active: true })}
                       className={`min-h-11 p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active !== false
-                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20"
-                          : "border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:border-slate-300 dark:hover:border-slate-700"
+                          ? "border-emerald-600 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-500/20"
+                          : "border-[var(--control-border)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
                       }`}
                     >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" aria-hidden="true" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
                       <span>{ui("حساب نشط (مفعل)")}</span>
                     </button>
                     <button
@@ -995,11 +995,11 @@ export default function CaptainsManagementPage() {
                       }
                       className={`min-h-11 p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active === false
-                          ? "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20"
-                          : "border-slate-200 dark:border-slate-800 text-[var(--text-muted)] hover:border-slate-300 dark:hover:border-slate-700"
+                          ? "border-rose-500 bg-rose-500/10 text-rose-800 dark:text-rose-300 ring-2 ring-rose-500/20"
+                          : "border-[var(--control-border)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
                       }`}
                     >
-                      <XCircle className="w-4 h-4 text-rose-700 shrink-0" aria-hidden="true" />
+                      <XCircle className="w-4 h-4 text-rose-700 dark:text-rose-400 shrink-0" aria-hidden="true" />
                       <span>{ui("حساب معطل (موقوف)")}</span>
                     </button>
                   </div>
@@ -1013,7 +1013,7 @@ export default function CaptainsManagementPage() {
                     setIsAddModalOpen(false);
                     setEditingCaptain(null);
                   }}
-                  className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border theme-card hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  className="secondary-btn min-h-11 px-4 py-2 text-xs rounded-xl cursor-pointer"
                 >
                   {ui("إلغاء")}</button>
                 <button
@@ -1054,11 +1054,11 @@ export default function CaptainsManagementPage() {
           <div className="mobile-dialog-panel overflow-y-auto theme-card w-full max-w-md rounded-3xl border theme-border shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b theme-border pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center">
                   <KeyRound className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-semibold text-[var(--text-main)]">
                     {ui("كلمة المرور المؤقتة للحساب")}</h3>
                   <p className="text-xs text-[var(--text-muted)]">
                     {tempPasswordModal.captainName}
@@ -1072,37 +1072,37 @@ export default function CaptainsManagementPage() {
                   setTempPasswordModal(null);
                   setCopied(false);
                 }}
-                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-slate-600 transition"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+            <div className="p-3.5 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-xs text-[var(--text-main)] space-y-1">
               <p className="font-bold">
                 {ui("يرجى تزويد الكابتن ببيانات الدخول التالية:")}</p>
-              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                 {ui("سيتوجب على الكابتن إدخال كلمة المرور المؤقتة لتسجيل الدخول، ثم تغييرها وتعيين كلمة سر خاصة به فور دخوله الأول.")}</p>
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border theme-border flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border flex items-center justify-between">
                 <span className="text-[var(--text-muted)] text-xs">
                   {ui("البريد الإلكتروني:")}</span>
                 <span
-                  className="font-mono font-bold text-slate-900 dark:text-white"
+                  className="font-mono font-bold text-[var(--text-main)]"
                   dir="ltr"
                 >
                   {tempPasswordModal.email}
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-amber-500/40 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border-2 border-[var(--accent-gold)]/45 flex items-center justify-between">
                 <div>
                   <span className="text-[var(--text-muted)] text-xs block font-bold">
                     {ui("كلمة المرور المؤقتة:")}</span>
                   <span
-                    className="font-mono text-xl font-semibold text-amber-700 dark:text-amber-400 tracking-wider select-all"
+                    className="font-mono text-xl font-semibold text-[var(--accent-gold)] tracking-wider select-all"
                     dir="ltr"
                   >
                     {tempPasswordModal.tempPassword}
@@ -1120,7 +1120,7 @@ export default function CaptainsManagementPage() {
                   }}
                   className={`min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                     copied
-                      ? "bg-emerald-700 text-white shadow-xs"
+                      ? "bg-emerald-800 text-white shadow-xs"
                       : "gold-gradient-btn font-semibold shadow-xs hover:shadow-md"
                   }`}
                 >
@@ -1144,7 +1144,7 @@ export default function CaptainsManagementPage() {
                   setTempPasswordModal(null);
                   setCopied(false);
                 }}
-                className="w-full min-h-11 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
+                className="gold-gradient-btn w-full min-h-11 py-2.5 rounded-xl text-xs font-bold shadow-xs cursor-pointer"
               >
                 {ui("تم، إغلاق النافذة")}</button>
             </div>

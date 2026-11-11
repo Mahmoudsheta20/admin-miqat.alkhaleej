@@ -362,8 +362,8 @@ export default function EditContractPage({ params }: PageProps) {
     return (
       <div className="flex items-center justify-center p-24">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-9 h-9 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-xs font-bold text-[var(--text-muted)] dark:text-slate-400">
+          <div className="w-9 h-9 border-3 border-[var(--accent-gold)]/20 border-t-[var(--accent-gold)] rounded-full animate-spin" />
+          <p className="text-xs font-bold text-[var(--text-muted)]">
             {ui("جاري تحميل بيانات العقد والأسطول...")}</p>
         </div>
       </div>
@@ -376,7 +376,7 @@ export default function EditContractPage({ params }: PageProps) {
         <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-center justify-center">
           <AlertCircle className="w-7 h-7" aria-hidden="true" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-[var(--text-main)]">
           {ui(serverError)}
         </h2>
         <p className="text-xs text-[var(--text-muted)]">
@@ -400,28 +400,28 @@ export default function EditContractPage({ params }: PageProps) {
           <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)]">
             <Link
               href="/admin/contracts"
-              className="hover:text-amber-600 dark:hover:text-amber-400 transition"
+              className="hover:text-[var(--accent-gold)] transition"
             >
               {ui("سجل العقود")}</Link>
             <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
-            <span className="font-mono text-slate-700 dark:text-slate-300">
+            <span className="font-mono text-[var(--text-main)]">
               <bdi>{contract?.referenceNumber}</bdi>
             </span>
             <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
-            <span className="text-amber-700 dark:text-amber-400">{ui("تعديل")}</span>
+            <span className="text-[var(--accent-gold)]">{ui("تعديل")}</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/25 flex items-center justify-center text-[var(--accent-gold)] font-bold shrink-0">
               <FileText className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
-              <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+              <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] flex flex-wrap items-center gap-2">
                 <span>{ui("تعديل العقد الرسمي")}</span>
-                <span className="font-mono text-amber-700 dark:text-amber-400 text-sm sm:text-lg break-all">
+                <span className="font-mono text-[var(--accent-gold)] text-sm sm:text-lg break-all">
                   <bdi>{contract?.referenceNumber}</bdi>
                 </span>
               </h1>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 {ui("تحديث بيانات الرحلة، الركاب، والتوجيه التشغيلي مع إعادة توليد الـ PDF تلقائياً")}</p>
             </div>
           </div>
@@ -433,16 +433,16 @@ export default function EditContractPage({ params }: PageProps) {
             type="button"
             onClick={() => setIsPdfOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
           >
-            <Eye className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+            <Eye className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("معاينة")}</span>
           </button>
           <button
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
             title={ui("حذف هذا العقد نهائياً")}
           >
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -452,9 +452,9 @@ export default function EditContractPage({ params }: PageProps) {
             type="button"
             onClick={() => setIsReverseOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border theme-card hover:border-amber-500 text-xs font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
           >
-            <ArrowLeftRight className="w-4 h-4 text-amber-500" aria-hidden="true" />
+            <ArrowLeftRight className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("رحلة عودة")}</span>
           </button>
         </div>
@@ -462,23 +462,23 @@ export default function EditContractPage({ params }: PageProps) {
 
       {/* Success Alert Banner */}
       {successMessage && (
-        <div role="status" className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div role="status" className="p-4 rounded-2xl bg-emerald-500/12 dark:bg-emerald-950/45 border border-emerald-600/35 dark:border-emerald-500/35 text-[var(--text-main)] text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
             <span>{ui(successMessage)}</span>
           </div>
           <div className="flex items-center gap-2 ms-auto sm:ms-0">
             <button
               type="button"
               onClick={() => setIsPdfOpen(true)}
-              className="min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              className="min-h-11 sm:min-h-9 px-3 py-1.5 rounded-xl bg-emerald-800 text-white hover:bg-emerald-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
             >
               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{ui("معاينة العقد المحدث")}</span>
             </button>
             <Link
               href="/admin/contracts"
-              className="min-h-11 sm:min-h-9 inline-flex items-center px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition hover:bg-slate-100 dark:hover:bg-slate-700 border theme-border"
+              className="min-h-11 sm:min-h-9 inline-flex items-center px-3 py-1.5 rounded-xl bg-[var(--bg-card)] text-[var(--text-main)] text-xs font-bold transition hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] border border-[var(--control-border)]"
             >
               {ui("سجل العقود")}</Link>
           </div>
@@ -501,17 +501,17 @@ export default function EditContractPage({ params }: PageProps) {
         <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center font-bold shrink-0">
                 <Sparkles className="w-4 h-4" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                   {ui("بيانات العملية والعميل (الطرف الثاني)")}</h2>
                 <p className="text-xs text-[var(--text-muted)]">
                   {ui("نوع الخدمة التشغيلية واسم الضيف ورقم التواصل")}</p>
               </div>
             </div>
-            <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-300">
+            <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-[var(--bg-card-subtle)] text-[var(--text-main)] border theme-border">
               {ui("مرجع:")} <bdi>{contract?.referenceNumber}</bdi>
             </span>
           </div>
@@ -558,11 +558,11 @@ export default function EditContractPage({ params }: PageProps) {
         {/* Section 2: Route, Schedule & Release Date */}
         <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex items-center gap-2 border-b theme-border pb-4">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 flex items-center justify-center font-bold">
               <MapPin className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                 {ui("مسار الرحلة والجدول الزمني وتاريخ الإصدار")}</h2>
               <p className="text-xs text-[var(--text-muted)]">
                 {ui("محطات الانطلاق والوصول، موعد الرحلة، وتاريخ إصدار العقد")}</p>
@@ -591,11 +591,11 @@ export default function EditContractPage({ params }: PageProps) {
         {/* Section 3: Captain & Vehicle Assignment */}
         <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
           <div className="flex items-center gap-2 border-b theme-border pb-4">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center font-bold">
               <Car className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                 {ui("تعيين الكابتن والمركبة")}</h2>
               <p className="text-xs text-[var(--text-muted)]">
                 {ui("اختيار الكابتن المعتمد وتحديد لوحة المركبة المنفذة للرحلة")}</p>
@@ -655,15 +655,15 @@ export default function EditContractPage({ params }: PageProps) {
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b theme-border pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/12 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300 flex items-center justify-center font-bold shrink-0">
                 <ClipboardCheck className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                     {ui("الفحص الفني والإقرار التشغيلي للمركبة")}</h2>
                   {(contract?.inspection?.id || contract?.inspectionId) && (
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[var(--text-muted)] dark:text-slate-400 border theme-border" dir="ltr">
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-[var(--bg-card-subtle)] text-[var(--text-muted)] border theme-border" dir="ltr">
                       #{((contract.inspection?.id || contract.inspectionId) as string).slice(0, 8)}
                     </span>
                   )}
@@ -678,8 +678,8 @@ export default function EditContractPage({ params }: PageProps) {
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border ${
                   passedChecksCount === 16
-                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                    ? "bg-emerald-500/12 text-emerald-800 border-emerald-600/35 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-500/35"
+                    : "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/30"
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -695,7 +695,7 @@ export default function EditContractPage({ params }: PageProps) {
                   );
                   setChecks(allPassed);
                 }}
-                className="min-h-11 sm:min-h-9 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition border theme-border cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-3 py-1.5 rounded-full bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] text-[var(--text-main)] text-xs font-bold transition border border-[var(--control-border)] cursor-pointer"
                 title={ui("تحديد كافة البنود الـ 16 كسليمة ومطابقة")}
               >
                 {ui("تحديد الكل سليم (100%)")}</button>
@@ -703,7 +703,7 @@ export default function EditContractPage({ params }: PageProps) {
           </div>
 
           {/* Date Picker & Vehicle Context */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end bg-slate-50/60 dark:bg-slate-900/40 p-4 rounded-2xl border theme-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end bg-[var(--bg-card-subtle)] p-4 rounded-2xl border theme-border">
             <div>
               <CustomDatePicker
                 label={ui("تاريخ الفحص التشغيلي المعتمد")}
@@ -714,10 +714,10 @@ export default function EditContractPage({ params }: PageProps) {
             </div>
 
             <div className="sm:col-span-1 lg:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <div className="text-xs text-[var(--text-muted)] dark:text-slate-400 space-y-0.5">
-                <p className="font-semibold text-slate-700 dark:text-slate-300">
+              <div className="text-xs text-[var(--text-muted)] space-y-0.5">
+                <p className="font-semibold text-[var(--text-main)]">
                   {ui("لوحة المركبة المفحوصة:")}{" "}
-                  <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                  <span className="font-mono font-bold text-[var(--accent-gold)]">
                     {selectedVehiclePlate || ui("غير محددة")}
                   </span>
                 </p>
@@ -728,16 +728,16 @@ export default function EditContractPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowDetailedChecks(!showDetailedChecks)}
-                className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl border theme-border bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer self-stretch sm:self-auto justify-center"
+                className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer self-stretch sm:self-auto justify-center"
               >
                 {showDetailedChecks ? (
                   <>
-                    <ChevronUp className="w-4 h-4 text-amber-500" />
+                    <ChevronUp className="w-4 h-4 text-[var(--accent-gold)]" />
                     <span>{ui("طي بنود الفحص")}</span>
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="w-4 h-4 text-amber-500" />
+                    <ChevronDown className="w-4 h-4 text-[var(--accent-gold)]" />
                     <span>{ui("تعديل بنود الفحص (16 بنداً)")}</span>
                   </>
                 )}
@@ -765,16 +765,16 @@ export default function EditContractPage({ params }: PageProps) {
           </div>
 
           {/* Driver Declaration Checkbox */}
-          <label className="flex min-h-11 items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border theme-border cursor-pointer hover:border-amber-500/50 transition">
+          <label className="flex min-h-11 items-start gap-3 p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border cursor-pointer hover:border-[var(--accent-gold)] transition">
             <Checkbox
               checked={driverDeclared}
               onChange={(e) => setDriverDeclared(e.target.checked)}
               className="mt-0.5"
             />
             <div className="space-y-0.5">
-              <span className="text-xs font-bold text-slate-900 dark:text-white block">
+              <span className="text-xs font-bold text-[var(--text-main)] block">
                 {ui("إقرار وتأكيد الفحص التشغيلي المعتمد للعقد")}</span>
-              <p className="text-xs text-[var(--text-muted)] dark:text-slate-400 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                 {ui("أقر وأؤكد بأن الفحص الفني للمركبة معتمد ومكتمل وفق الشروط والمعايير المحددة أعلاه، والمركبة جاهزة تماماً للتشغيل لنقل الركاب.")}</p>
             </div>
           </label>
@@ -783,7 +783,7 @@ export default function EditContractPage({ params }: PageProps) {
         {/* Inline submit bar on mobile/tablet so form fields stay clear; sticky on desktop lg+. */}
         <div className="contract-submit-bar">
           <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
-          <Link href="/admin/contracts" className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl border theme-border px-4 text-sm font-bold">{ui("إلغاء")}</Link>
+          <Link href="/admin/contracts" className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl secondary-btn px-4 text-sm font-bold">{ui("إلغاء")}</Link>
           <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50 cursor-pointer">
             <Save className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>

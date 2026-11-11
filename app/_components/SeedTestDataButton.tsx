@@ -54,13 +54,13 @@ export default function SeedTestDataButton({
       type="button"
       disabled={isSeeding}
       onClick={() => void handleSeed()}
-      className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3.5 py-2 text-xs font-bold text-amber-800 dark:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+      className="inline-flex items-center gap-2 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--accent-gold)] transition disabled:opacity-50 cursor-pointer shadow-2xs"
       title={ui(isRTL ? "تعبئة بيانات تجريبية للتطوير" : "Seed test data for development")}
     >
       {isSeeding ? (
         <Loader2 className="size-3.5 animate-spin" />
       ) : (
-        <Sparkles className="size-3.5 text-amber-500" />
+        <Sparkles className="size-3.5 text-[var(--accent-gold)]" />
       )}
       <span>
         {ui(isSeeding
