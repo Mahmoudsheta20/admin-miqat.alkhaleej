@@ -197,8 +197,10 @@ export function ActionMenu({
           title={label}
           onClick={handleTriggerClick}
           className={cn(
+            "inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors h-11 w-11 sm:h-9 sm:w-9 cursor-pointer",
+            open && "bg-slate-100 dark:bg-slate-800 border-amber-500/60 text-amber-700 dark:text-amber-300",
             "inline-flex items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition-colors h-11 w-11 sm:h-9 sm:w-9 cursor-pointer",
-            open && "bg-[var(--accent-surface)] border-[var(--accent-gold)] text-[var(--accent-gold)]",
+            open && "bg-[var(--brand-green-surface)] border-[var(--brand-green)] text-[var(--brand-green)]",
             triggerClassName
           )}
         >
@@ -229,6 +231,7 @@ export function ActionMenu({
           }}
           style={coords ? { top: `${coords.top}px`, left: `${coords.left}px` } : undefined}
           className={cn(
+            "action-popover fixed inset-auto m-0 z-50 w-52 max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl text-slate-800 dark:text-slate-100",
             "action-popover fixed inset-auto m-0 z-50 w-52 max-w-[calc(100vw-1rem)] rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] p-1.5 shadow-xl text-[var(--text-main)]",
             className
           )}
@@ -251,14 +254,18 @@ export interface ActionMenuItemProps {
 
 const TONE_CLASSES: Record<NonNullable<ActionMenuItemProps["tone"]>, string> = {
   default:
+    "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80",
     "text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)]",
   gold:
+    "text-amber-700 dark:text-amber-300 hover:bg-amber-500/10",
     "text-[var(--accent-gold)] hover:bg-[var(--accent-surface)]",
   blue:
     "text-blue-700 dark:text-blue-300 hover:bg-blue-500/10",
   emerald:
-    "text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/10",
+    "text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10",
+    "text-[var(--brand-green)] hover:bg-[var(--brand-green-surface)]",
   danger:
+    "text-rose-700 dark:text-rose-400 hover:bg-rose-500/10",
     "text-rose-700 dark:text-rose-300 hover:bg-rose-500/10",
 };
 
@@ -306,5 +313,6 @@ export function ActionMenuItem({
 }
 
 export function ActionMenuSeparator() {
+  return <hr className="my-1 border-0 border-t border-slate-200 dark:border-slate-800" />;
   return <hr className="my-1 border-0 border-t border-[var(--border-color)]" />;
 }

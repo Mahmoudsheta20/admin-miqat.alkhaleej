@@ -137,6 +137,7 @@ const SidebarProvider = React.forwardRef<
             } as React.CSSProperties
           }
           className={cn(
+            "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-slate-50 dark:has-data-[variant=inset]:bg-slate-950",
             "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-[var(--bg-main)]",
             className
           )}
@@ -178,6 +179,7 @@ const Sidebar = React.forwardRef<
           ref={ref}
           data-slot="sidebar"
           className={cn(
+            "flex h-full w-[var(--sidebar-width)] flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100",
             "flex h-full w-[var(--sidebar-width)] flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] text-[var(--text-main)]",
             className
           )}
@@ -193,6 +195,7 @@ const Sidebar = React.forwardRef<
         <>
           {openMobile && (
             <div
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity lg:hidden"
               className="fixed inset-0 z-50 bg-black/60 transition-opacity lg:hidden"
               onClick={() => setOpenMobile(false)}
               aria-hidden="true"
@@ -205,6 +208,7 @@ const Sidebar = React.forwardRef<
             aria-modal="true"
             role="dialog"
             className={cn(
+              "fixed inset-y-0 z-50 flex h-full w-[var(--sidebar-width-mobile,18rem)] flex-col bg-white dark:bg-slate-900 p-4 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-2xl transition-transform duration-300 ease-in-out lg:hidden",
               "fixed inset-y-0 z-50 flex h-full w-[var(--sidebar-width-mobile,18rem)] flex-col bg-[var(--bg-card)] p-4 border-[var(--border-color)] text-[var(--text-main)] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden",
               side === "left"
                 ? openMobile
@@ -220,6 +224,7 @@ const Sidebar = React.forwardRef<
             <button
               type="button"
               onClick={() => setOpenMobile(false)}
+              className="absolute end-3 top-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
               className="absolute end-3 top-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)]"
               aria-label="Close"
             >
@@ -240,6 +245,7 @@ const Sidebar = React.forwardRef<
         data-variant={variant}
         data-side={side}
         className={cn(
+          "group peer hidden lg:block text-slate-900 dark:text-slate-100",
           "group peer hidden lg:block text-[var(--text-main)]",
           className
         )}
@@ -254,6 +260,7 @@ const Sidebar = React.forwardRef<
         />
         <div
           className={cn(
+            "duration-200 fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] ease-linear lg:flex flex-col bg-white dark:bg-slate-900/95 border-r border-slate-200/80 dark:border-slate-800/80",
             "duration-200 fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] ease-linear lg:flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)]",
             side === "left"
               ? "start-0"
@@ -264,6 +271,7 @@ const Sidebar = React.forwardRef<
             variant === "floating" &&
               "m-2 rounded-2xl border shadow-lg h-[calc(100svh-1rem)]",
             variant === "inset" &&
+              "m-0 border-none bg-slate-50 dark:bg-slate-950",
               "m-0 border-none bg-[var(--bg-main)]",
             className
           )}
@@ -289,6 +297,7 @@ const SidebarTrigger = React.forwardRef<
       data-slot="sidebar-trigger"
       type="button"
       className={cn(
+        "inline-flex items-center justify-center rounded-xl p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer",
         "inline-flex items-center justify-center rounded-xl p-2 text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition cursor-pointer",
         className
       )}
@@ -321,7 +330,8 @@ const SidebarRail = React.forwardRef<
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-[var(--accent-gold)]/55 group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
+        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-amber-500/50 group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
+        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-emerald-600/50 group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         className
       )}
       {...props}
@@ -339,6 +349,7 @@ const SidebarInset = React.forwardRef<
       ref={ref}
       data-slot="sidebar-inset"
       className={cn(
+        "relative flex min-h-svh flex-1 flex-col bg-white dark:bg-slate-950",
         "relative flex min-h-svh flex-1 flex-col bg-[var(--bg-main)]",
         className
       )}
@@ -357,6 +368,7 @@ const SidebarInput = React.forwardRef<
       ref={ref}
       data-slot="sidebar-input"
       className={cn(
+        "h-9 w-full bg-slate-50 dark:bg-slate-800/50 shadow-none border-slate-200 dark:border-slate-800",
         "h-9 w-full bg-[var(--input-bg)] shadow-none border-[var(--control-border)]",
         className
       )}
@@ -389,6 +401,7 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       data-slot="sidebar-footer"
+      className={cn("flex flex-col gap-2 p-3 sm:p-4 mt-auto border-t border-slate-100 dark:border-slate-800/80", className)}
       className={cn("flex flex-col gap-2 p-3 sm:p-4 mt-auto border-t border-[var(--border-color)]", className)}
       {...props}
     />
@@ -404,6 +417,7 @@ const SidebarSeparator = React.forwardRef<
     <Separator
       ref={ref}
       data-slot="sidebar-separator"
+      className={cn("mx-2 w-auto bg-slate-200/80 dark:bg-slate-800/80", className)}
       className={cn("mx-2 w-auto bg-[var(--border-color)]", className)}
       {...props}
     />
@@ -453,6 +467,7 @@ const SidebarGroupLabel = React.forwardRef<
       ref={ref}
       data-slot="sidebar-group-label"
       className={cn(
+        "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-bold text-slate-600 dark:text-slate-400 tracking-wider uppercase",
         "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-bold text-[var(--text-muted)] tracking-wider uppercase",
         className
       )}
@@ -508,12 +523,15 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem";
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-xl p-2.5 text-start text-sm font-semibold outline-none ring-amber-600/50 dark:ring-amber-400/50 transition-colors hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-[var(--accent-surface)] data-[active=true]:font-bold data-[active=true]:text-[var(--accent-gold)]",
+  "peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-xl p-2.5 text-start text-sm font-semibold outline-none ring-amber-500/50 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-amber-500/10 data-[active=true]:font-bold data-[active=true]:text-amber-700 dark:data-[active=true]:text-amber-400",
+  "peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-xl p-2.5 text-start text-sm font-semibold outline-none ring-emerald-600/50 dark:ring-emerald-400/50 transition-colors hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-[var(--brand-green-surface)] data-[active=true]:font-bold data-[active=true]:text-[var(--brand-green)]",
   {
     variants: {
       variant: {
+        default: "hover:bg-slate-100 dark:hover:bg-slate-800",
         default: "hover:bg-[var(--bg-card-subtle)]",
         outline:
+          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800",
           "bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-card-subtle)]",
       },
       size: {
@@ -596,7 +614,8 @@ const SidebarMenuBadge = React.forwardRef<
       ref={ref}
       data-slot="sidebar-menu-badge"
       className={cn(
-        "ms-auto flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-bold font-mono bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-amber-600/30 dark:border-amber-400/30",
+        "ms-auto flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-bold font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        "ms-auto flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-bold font-mono bg-[var(--brand-green-surface)] text-[var(--brand-green)] border border-emerald-600/25 dark:border-emerald-400/25",
         className
       )}
       {...props}
@@ -640,6 +659,7 @@ function SidebarGroupAction({
     <button
       data-slot="sidebar-group-action"
       className={cn(
+        "absolute end-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
         "absolute end-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-[var(--text-muted)] hover:text-[var(--text-main)]",
         className
       )}
@@ -656,6 +676,7 @@ function SidebarMenuAction({
     <button
       data-slot="sidebar-menu-action"
       className={cn(
+        "absolute end-1.5 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
         "absolute end-1.5 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-[var(--text-muted)] hover:text-[var(--text-main)]",
         className
       )}
@@ -671,6 +692,7 @@ function SidebarMenuSkeleton({
   return (
     <div
       data-slot="sidebar-menu-skeleton"
+      className={cn("h-8 w-full animate-pulse rounded-md bg-slate-200 dark:bg-slate-800", className)}
       className={cn("h-8 w-full animate-pulse rounded-md bg-[var(--bg-card-subtle)]", className)}
       {...props}
     />
@@ -685,6 +707,7 @@ function SidebarMenuSub({
     <ul
       data-slot="sidebar-menu-sub"
       className={cn(
+        "ms-3.5 flex min-w-0 flex-col gap-1 border-s border-slate-200 dark:border-slate-800 px-2.5 py-0.5",
         "ms-3.5 flex min-w-0 flex-col gap-1 border-s border-[var(--border-color)] px-2.5 py-0.5",
         className
       )}
@@ -709,7 +732,8 @@ function SidebarMenuSubButton({
       data-slot="sidebar-menu-sub-button"
       data-active={isActive}
       className={cn(
-        "flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] data-[active=true]:font-bold data-[active=true]:text-[var(--accent-gold)]",
+        "flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 data-[active=true]:font-bold data-[active=true]:text-amber-700 dark:data-[active=true]:text-amber-400",
+        "flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] data-[active=true]:font-bold data-[active=true]:text-[var(--brand-green)]",
         className
       )}
       {...props}
