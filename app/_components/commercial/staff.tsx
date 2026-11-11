@@ -575,7 +575,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
               />
               <input
                 type="search"
-                className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-xs outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
+                className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-[0.8125rem] outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
                 aria-label={ui("بحث بالاسم، الجوال، الضريبي أو الآيبان...")}
                 placeholder={ui("بحث بالاسم، الجوال، الضريبي أو الآيبان...")}
                 value={search}
@@ -1798,7 +1798,7 @@ export function StaffPage({
                     placeholder={ui("بحث في الحركات...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-xs outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
+                    className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-[0.8125rem] outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
                   />
                   {searchQuery && (
                     <button

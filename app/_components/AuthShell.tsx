@@ -12,7 +12,7 @@ export default function AuthShell({ title, description, children, hasBackLink }:
   const { theme, toggleTheme } = useTheme();
   return <div className="auth-page auth-shell">
     <header className="auth-toolbar"><Link href="/login" className="text-sm text-[var(--text-muted)]">{hasBackLink ? language === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in" : language === "ar" ? "ميقات الخليج" : "Miqat Al Khaleej"}</Link><div className="flex items-center gap-2"><LanguageSwitcher /><button type="button" className="icon-button" onClick={toggleTheme} aria-label={language === "ar" ? "تبديل المظهر" : "Toggle theme"}>{theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}</button></div></header>
-    <main className="auth-main"><section className="auth-form-panel theme-card"><Image src="/logo.svg" alt="ميقات الخليج" width={148} height={55} loading="eager" className="mb-8 h-auto w-[148px] object-contain" /><h1 className="text-2xl font-semibold">{title}</h1>{description && <p className="page-description mb-7">{description}</p>}{children}</section></main>
+    <main className="auth-main"><section className="auth-form-panel theme-card"><Image src="/logo.svg" alt="ميقات الخليج" width={132} height={49} loading="eager" className="mb-6 h-auto w-[132px] object-contain" /><h1 className="text-xl sm:text-[1.375rem] font-semibold">{title}</h1>{description && <p className="page-description mb-5">{description}</p>}{children}</section></main>
     <footer className="auth-footer">© {new Date().getFullYear()} {language === "ar" ? "شركة ميقات الخليج للنقل البري" : "Miqat Al Khaleej Land Transport"}</footer>
   </div>;
 }

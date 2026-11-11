@@ -99,7 +99,7 @@ function ContractPickerModalBody({
           <Search
             className={cn(
               "pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--text-muted)]",
-              isFullscreen ? "start-4 size-5" : "start-3 size-4",
+              isFullscreen ? "start-3.5 size-4" : "start-2.5 size-3.5",
             )}
             aria-hidden="true"
           />
@@ -119,8 +119,8 @@ function ContractPickerModalBody({
             className={cn(
               "theme-input w-full border-[var(--control-border)] font-medium text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-[var(--accent-gold)]/20 focus:outline-hidden",
               isFullscreen
-                ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
-                : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
+                ? "min-h-11 rounded-xl border-2 py-2.5 ps-11 pe-11 text-base focus:ring-2"
+                : "min-h-9 rounded-lg border py-1.5 ps-8 pe-8 text-xs sm:text-[0.8125rem] focus:ring-2",
             )}
           />
           {query && (
@@ -134,8 +134,8 @@ function ContractPickerModalBody({
               className={cn(
                 "absolute top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition",
                 isFullscreen
-                  ? "end-2 min-h-10 min-w-10 rounded-xl"
-                  : "end-1.5 min-h-8 min-w-8",
+                  ? "end-1 min-h-9 min-w-9 rounded-lg"
+                  : "end-1 min-h-7 min-w-7",
               )}
             >
               <X className="size-4" aria-hidden="true" />
@@ -180,7 +180,7 @@ function ContractPickerModalBody({
             role="list"
             className={cn(
               "grid",
-              isFullscreen ? "gap-3 grid-cols-1 md:grid-cols-2" : "gap-1.5 grid-cols-1",
+              isFullscreen ? "gap-2.5 grid-cols-1 md:grid-cols-2" : "gap-1.5 grid-cols-1",
             )}
           >
             {items.map((item) => {
@@ -194,19 +194,19 @@ function ContractPickerModalBody({
                     className={cn(
                       "fullscreen-select-option flex w-full items-start justify-between text-start transition cursor-pointer",
                       isFullscreen
-                        ? "min-h-18 gap-4 rounded-2xl border-2 px-5 py-4 text-lg"
-                        : "min-h-11 gap-3 rounded-xl border px-3.5 py-2.5 text-sm sm:text-base",
+                        ? "min-h-12 gap-3 rounded-xl border px-3.5 py-2.5 text-base"
+                        : "min-h-9 gap-2 rounded-lg border px-2.5 py-1.5 text-xs sm:text-[0.8125rem]",
                       isSelected
                         ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--text-main)] shadow-xs"
                         : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
                     )}
                   >
-                    <span className="min-w-0 flex-1 space-y-1">
+                    <span className="min-w-0 flex-1 space-y-0.5">
                       <span className="flex flex-wrap items-center gap-2">
                         <span
                           className={cn(
-                            "font-bold",
-                            isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
+                            "font-bold leading-snug",
+                            isFullscreen ? "text-base" : "text-xs sm:text-[0.8125rem]",
                             isSelected
                               ? "text-[var(--accent-gold)]"
                               : "text-[var(--text-main)]",
@@ -216,15 +216,15 @@ function ContractPickerModalBody({
                         </span>
                         <span
                           dir="ltr"
-                          className="rounded-lg border theme-border bg-[var(--bg-card-subtle)] px-2 py-0.5 font-mono text-xs sm:text-sm font-bold text-[var(--text-main)]"
+                          className="rounded-md border theme-border bg-[var(--bg-card-subtle)] px-1.5 py-0.5 font-mono text-[11px] font-bold text-[var(--text-main)]"
                         >
                           {item.referenceNumber}
                         </span>
                       </span>
                       <span
                         className={cn(
-                          "block text-[var(--text-muted)]",
-                          isFullscreen ? "text-base" : "text-xs sm:text-sm",
+                          "block text-[var(--text-muted)] leading-snug",
+                          isFullscreen ? "text-xs sm:text-sm" : "text-[11px] sm:text-xs",
                         )}
                       >
                         {item.origin} {ui.dir === "rtl" ? "←" : "→"}{" "}
@@ -236,13 +236,13 @@ function ContractPickerModalBody({
                       aria-hidden="true"
                       className={cn(
                         "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
-                        isFullscreen ? "h-8 w-8" : "h-6 w-6",
+                        isFullscreen ? "h-6 w-6" : "h-5 w-5",
                         isSelected
                           ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
                           : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-transparent",
                       )}
                     >
-                      <Check className={isFullscreen ? "size-4" : "size-3.5"} />
+                      <Check className={isFullscreen ? "size-3.5" : "size-3"} />
                     </span>
                   </button>
                 </li>
@@ -251,18 +251,6 @@ function ContractPickerModalBody({
           </ul>
         )}
       </div>
-
-      {isFullscreen && (
-        <div className="shrink-0 flex justify-end border-t theme-border pt-4">
-          <button
-            type="button"
-            onClick={() => void requestDialogClose?.()}
-            className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-6 py-2.5 text-base font-semibold text-[var(--text-main)] hover:bg-[var(--bg-card)] cursor-pointer transition"
-          >
-            {text("إغلاق", "Close")}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -293,7 +281,7 @@ export default function ContractPicker({
     <div className="relative">
       <label
         htmlFor={controlId}
-        className="mb-2 block text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]"
+        className="mb-1.5 block text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]"
       >
         {ui("ابدأ من عقد موجود")}{" "}
         <span className="font-normal text-[var(--text-muted)]">
@@ -310,13 +298,13 @@ export default function ContractPicker({
           aria-expanded={isOpen}
           aria-controls={!isMobile && isOpen ? overlayId : undefined}
           onClick={toggleFromTrigger}
-          className={`theme-input flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-start text-base font-medium cursor-pointer transition ${
+          className={`theme-input flex min-h-11 sm:min-h-9 w-full items-center justify-between gap-2.5 rounded-lg px-3 py-1.5 text-start text-base sm:text-[0.8125rem] font-medium cursor-pointer transition ${
             isOpen
               ? "border-[var(--accent-gold)] ring-2 ring-[var(--accent-gold)]/20"
               : ""
           }`}
         >
-          <span className="flex min-w-0 items-center gap-2.5">
+          <span className="flex min-w-0 items-center gap-2">
             <Search
               className="size-4 shrink-0 text-[var(--text-muted)]"
               aria-hidden="true"
@@ -354,14 +342,14 @@ export default function ContractPicker({
             aria-label={ui("إلغاء ربط العقد")}
             title={ui("إلغاء ربط العقد")}
             onClick={onClear}
-            className="min-h-12 min-w-12 shrink-0 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)] cursor-pointer transition"
+            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 shrink-0 inline-flex items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)] cursor-pointer transition"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
         )}
       </div>
 
-      <p className="mt-1.5 text-sm text-[var(--text-muted)]">
+      <p className="mt-1.5 text-xs text-[var(--text-muted)]">
         {ui("اختيار العقد يملأ بيانات العميل والرحلة تلقائيًا.")}
       </p>
 

@@ -25,7 +25,7 @@ interface Payment {
   journal: { number: number };
 }
 
-const INPUT = "theme-input mt-1.5 h-11 w-full rounded-xl px-3 text-xs sm:text-sm";
+const INPUT = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 export default function PaymentPanel({
   reload,
@@ -154,7 +154,7 @@ export default function PaymentPanel({
     <section className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
+          <h2 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">
             {ui("القبض والدفع (سندات التحصيل والصرف)")}</h2>
           <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)]">
             {ui("تسوية الذمم، تحصيل مستحقات العملاء، وسداد فواتير الموردين عبر البنك أو الصندوق.")}</p>
@@ -181,7 +181,7 @@ export default function PaymentPanel({
       >
         {/* Direction Switcher (Receipt vs Disbursement) */}
         <div>
-          <label className="text-xs font-bold text-[var(--text-main)] block mb-2">
+          <label className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] block mb-2">
             {ui("نوع العملية *")}</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
             <button
@@ -192,7 +192,7 @@ export default function PaymentPanel({
                 setAmount("");
                 setPage(1);
               }}
-              className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
+              className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 type === "SALE"
                   ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
                   : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
@@ -214,7 +214,7 @@ export default function PaymentPanel({
                 setAmount("");
                 setPage(1);
               }}
-              className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
+              className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 type === "PURCHASE"
                   ? "bg-[var(--accent-surface)] border-amber-600 ring-1 ring-amber-600/30"
                   : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
@@ -374,7 +374,7 @@ export default function PaymentPanel({
           <button
             type="submit"
             disabled={saving || !documentId || !balance.data || remainingBalanceMinor === BigInt(0)}
-            className="gold-gradient-btn inline-flex min-h-11 items-center gap-2 rounded-xl px-6 py-2.5 text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md transition disabled:opacity-40 cursor-pointer"
+            className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md transition disabled:opacity-40 cursor-pointer"
           >
             {saving ? (
               <>

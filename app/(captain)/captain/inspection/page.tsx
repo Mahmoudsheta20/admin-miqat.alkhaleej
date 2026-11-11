@@ -244,11 +244,11 @@ export default function CaptainInspectionPage() {
             <Link
               href="/captain"
               aria-label={ui("العودة للرئيسية")}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] transition"
+              className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] transition"
             >
               <ArrowRight className="w-5 h-5 ltr:rotate-180" aria-hidden="true" />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
+            <h1 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">
               {ui("سجل الفحص التشغيلي للمركبة")}</h1>
           </div>
           <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1 ms-13">
@@ -260,7 +260,7 @@ export default function CaptainInspectionPage() {
             <button
               type="button"
               onClick={() => setAllSound(true)}
-              className="w-full sm:w-auto min-h-11 justify-center px-4 py-2 rounded-xl border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-700 hover:text-white dark:hover:bg-emerald-400 dark:hover:text-slate-950 transition flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-700 hover:text-white dark:hover:bg-emerald-400 dark:hover:text-slate-950 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" aria-hidden="true" />
               {ui("تحديد الكل سليم")}</button>
@@ -274,7 +274,7 @@ export default function CaptainInspectionPage() {
           type="button"
           aria-pressed={activeTab === "form"}
           onClick={() => setActiveTab("form")}
-          className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
+          className={`flex-1 sm:flex-none min-h-11 sm:min-h-9 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === "form"
               ? "gold-gradient-btn shadow-xs"
               : "border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
@@ -290,7 +290,7 @@ export default function CaptainInspectionPage() {
           type="button"
           aria-pressed={activeTab === "history"}
           onClick={() => setActiveTab("history")}
-          className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
+          className={`flex-1 sm:flex-none min-h-11 sm:min-h-9 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === "history"
               ? "gold-gradient-btn shadow-xs"
               : "border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
@@ -324,13 +324,13 @@ export default function CaptainInspectionPage() {
                 <button
                   type="button"
                   onClick={() => setInspectionDateMode("MANUAL")}
-                  className="min-h-11 px-3 py-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5 cursor-pointer"
+                  className="min-h-11 sm:min-h-8 px-3 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5 cursor-pointer"
                 >
                   <Edit3 className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   {ui("تحديد تاريخ يدوي")}</button>
                 <Link
                   href="/captain/contract"
-                  className="min-h-11 px-3.5 py-2 rounded-lg gold-gradient-btn text-xs font-bold inline-flex items-center"
+                  className="min-h-11 sm:min-h-8 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold inline-flex items-center"
                 >
                   {ui("الانتقال للعقد ←")}</Link>
               </div>
@@ -357,13 +357,13 @@ export default function CaptainInspectionPage() {
                     setSubmittedSuccess(false);
                     setInspectionDateMode("AUTO");
                   }}
-                  className="w-full sm:w-auto min-h-11 px-5 py-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition text-center cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition text-center cursor-pointer flex items-center justify-center gap-2"
                 >
                   <RotateCw className="w-3.5 h-3.5" aria-hidden="true" />
                   {ui("إجراء فحص جديد")}</button>
                 <Link
                   href="/captain/contract"
-                  className="w-full sm:w-auto min-h-11 justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
+                  className="w-full sm:w-auto min-h-11 sm:min-h-9 justify-center px-5 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold transition shadow-md flex items-center gap-2"
                 >
                   <FilePlus2 className="w-4 h-4" aria-hidden="true" />
                   {ui("إنشاء عقد رحلة الآن")}</Link>
@@ -412,7 +412,7 @@ export default function CaptainInspectionPage() {
                         if (errorMessage) setErrorMessage("");
                       }}
                       placeholder={ui("ا ص ل 7223")}
-                      className="flex-1 min-h-11 px-3 py-2 text-xs font-mono font-bold rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden"
+                      className="flex-1 min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono font-bold rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden"
                     />
                     {vehicles.length > 0 && (
                       <select
@@ -425,7 +425,7 @@ export default function CaptainInspectionPage() {
                           }
                         }}
                         value=""
-                        className="min-h-11 px-2.5 py-2 text-xs rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] font-mono text-[var(--text-main)] focus:border-[var(--accent-gold)] focus:outline-hidden"
+                        className="min-h-11 sm:min-h-9 px-2.5 py-1.5 text-base sm:text-[0.8125rem] rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] font-mono text-[var(--text-main)] focus:border-[var(--accent-gold)] focus:outline-hidden"
                       >
                         <option value="">{ui("من الأسطول...")}</option>
                         {vehicles.map((v) => (
@@ -455,7 +455,7 @@ export default function CaptainInspectionPage() {
                       type="button"
                       aria-pressed={inspectionDateMode === "AUTO"}
                       onClick={() => setInspectionDateMode("AUTO")}
-                      className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`min-h-11 sm:min-h-8 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
                         inspectionDateMode === "AUTO"
                           ? "gold-gradient-btn shadow-xs"
                           : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -467,7 +467,7 @@ export default function CaptainInspectionPage() {
                       type="button"
                       aria-pressed={inspectionDateMode === "MANUAL"}
                       onClick={() => setInspectionDateMode("MANUAL")}
-                      className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`min-h-11 sm:min-h-8 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
                         inspectionDateMode === "MANUAL"
                           ? "gold-gradient-btn shadow-xs"
                           : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -518,7 +518,7 @@ export default function CaptainInspectionPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder={ui("أية ملاحظات ميدانية عن حالة المركبة...")}
-                    className="w-full px-3 py-2.5 text-xs rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden resize-y"
+                    className="w-full px-3 py-2 text-base sm:text-[0.8125rem] rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden resize-y"
                   />
                 </div>
 
@@ -551,13 +551,13 @@ export default function CaptainInspectionPage() {
               <div className="contract-submit-bar justify-end">
                 <Link
                   href="/captain"
-                  className="w-full sm:w-auto min-h-11 px-4 sm:px-5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition inline-flex items-center justify-center shrink-0"
+                  className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition inline-flex items-center justify-center shrink-0"
                 >
                   {ui("إلغاء")}</Link>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:w-auto min-h-11 justify-center px-6 sm:px-7 rounded-xl gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto min-h-11 sm:min-h-9 justify-center px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{ui(isSubmitting ? "جاري اعتماد وتوثيق الفحص..." : "اعتماد وتوثيق الفحص التشغيلي")}</span>
@@ -592,7 +592,7 @@ export default function CaptainInspectionPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("form")}
-                className="min-h-11 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
               >
                 <ClipboardCheck className="w-3.5 h-3.5" aria-hidden="true" />
                 {ui("تسجيل أول فحص تشغيلي الآن")}</button>

@@ -22,7 +22,7 @@ interface OriginalOption {
   voucherNumber: number;
 }
 
-const INPUT_STYLE = "theme-input mt-1.5 h-11 w-full rounded-xl px-3 text-xs sm:text-sm";
+const INPUT_STYLE = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
   const ui = useUiText();
@@ -673,7 +673,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                 <textarea
                   maxLength={1000}
                   rows={2}
-                  className="theme-input mt-1.5 w-full rounded-xl p-3 text-xs sm:text-sm"
+                  className="theme-input mt-1.5 w-full rounded-lg p-3 text-base sm:text-[0.8125rem]"
                   placeholder={ui("ملاحظات توضيحية حول الخدمة أو الفاتورة...")}
                   value={form.notes || ""}
                   onChange={(e) => update({ notes: e.target.value })}
@@ -775,13 +775,13 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
               type="button"
               disabled={isSaving}
               onClick={onClose}
-              className="secondary-btn min-h-11 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
+              className="secondary-btn min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold cursor-pointer"
             >
               {ui("إلغاء")}</button>
             <button
               type="submit"
               disabled={isSaving || isSelecting || accounts.isLoading}
-              className="min-h-11 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+              className="min-h-11 sm:min-h-9 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
             >
               {isSaving ? (
                 <>

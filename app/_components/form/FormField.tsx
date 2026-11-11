@@ -33,14 +33,14 @@ export default function FormField({
       : resolvedLabel;
 
   return (
-    <div className="w-full min-w-0 space-y-2">
+    <div className="w-full min-w-0 space-y-1.5">
       {(displayLabel || badge || labelEnd) && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           {displayLabel ? (
             <label
               id={`${id}-label`}
               htmlFor={id}
-              className="flex items-center gap-1 text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] leading-snug"
+              className="flex items-center gap-1 text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] leading-snug"
             >
               <span>{displayLabel}</span>
               {required && (
@@ -59,7 +59,7 @@ export default function FormField({
           {(badge || labelEnd) && (
             <div className="flex items-center gap-2 shrink-0">
               {badge && (
-                <span className="text-sm font-medium text-[var(--accent-gold)]">
+                <span className="text-xs font-medium text-[var(--accent-gold)]">
                   {typeof badge === "string" ? ui(badge) : badge}
                 </span>
               )}
@@ -73,14 +73,14 @@ export default function FormField({
         <p
           id={`${id}-description`}
           role={error ? "alert" : undefined}
-          className={`flex items-start gap-1.5 text-sm leading-relaxed ${
+          className={`flex items-start gap-1.5 text-xs leading-relaxed ${
             error
               ? "text-rose-700 dark:text-rose-300 font-medium"
               : "text-[var(--text-muted)]"
           }`}
         >
           {error && (
-            <AlertCircle aria-hidden="true" className="mt-1 h-4 w-4 shrink-0" />
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           )}
           <span>{ui(error || hint)}</span>
         </p>

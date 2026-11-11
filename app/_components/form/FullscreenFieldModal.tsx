@@ -11,7 +11,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { Check, Maximize2 } from "lucide-react";
 import { useLanguage } from "@/lib/languageContext";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import { cn } from "@/lib/utils";
@@ -44,12 +43,16 @@ interface FullscreenFieldBodyProps extends Omit<
   "open" | "onClose" | "sessionKey" | "value"
 > {
   initialValue: string;
+  onDraftChange: (nextValue: string) => void;
+  onMarkCommitted: () => void;
 }
 
 function FullscreenFieldBody({
   initialValue,
   title,
   onApply,
+  onDraftChange,
+  onMarkCommitted,
   multiline = false,
   placeholder,
   maxLength,
@@ -63,14 +66,13 @@ function FullscreenFieldBody({
   autoComplete,
   rows = 10,
 }: FullscreenFieldBodyProps) {
-  const { language, dir: appDir } = useLanguage();
+  const { dir: appDir } = useLanguage();
   const requestDialogClose = useFullscreenDialogClose();
   const [draft, setDraft] = useState(initialValue);
   const controlRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
     null,
   );
   const inputId = useId();
-  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
   useEffect(() => {
     let secondFrame = 0;
@@ -93,12 +95,11 @@ function FullscreenFieldBody({
     };
   }, []);
 
-  const handleCancel = () => {
-    void requestDialogClose?.();
-  };
-
-  const handleApply = () => {
-    onApply(draft);
+  const handleApply = (nextValue: string) => {
+    setDraft(nextValue);
+    onDraftChange(nextValue);
+    onMarkCommitted();
+    onApply(nextValue);
     void requestDialogClose?.();
   };
 
@@ -106,110 +107,85 @@ function FullscreenFieldBody({
     event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-    if (!multiline && event.key === "Enter") {
+    const isEnterKey = event.key === "Enter" || event.keyCode === 13;
+    if (!isEnterKey) return;
+
+    if (!multiline) {
       event.preventDefault();
       event.stopPropagation();
-      handleApply();
-    } else if (
-      multiline &&
-      event.key === "Enter" &&
-      (event.ctrlKey || event.metaKey)
-    ) {
+      handleApply(event.currentTarget.value);
+    } else if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
       event.stopPropagation();
-      handleApply();
+      handleApply(event.currentTarget.value);
     }
   };
 
   const resolvedDir = dir ?? appDir;
+  const cleanTitle = title.replace(/\s*\*$/, "").trim();
+  const cleanPlaceholder = placeholder?.trim();
+  const resolvedPlaceholder = cleanTitle
+    ? cleanPlaceholder &&
+      !cleanPlaceholder.includes(cleanTitle) &&
+      cleanPlaceholder.length <= 28
+      ? `${cleanTitle} (${cleanPlaceholder})`
+      : cleanTitle
+    : cleanPlaceholder;
 
   return (
-    <div className="flex h-full flex-col justify-between gap-6">
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <label
-            htmlFor={inputId}
-            className="text-base sm:text-lg font-semibold text-[var(--text-main)]"
-          >
-            {title}
-          </label>
-          {typeof maxLength === "number" && (
-            <span className="font-mono text-sm font-semibold text-[var(--accent-gold)]">
-              {draft.length} / {maxLength}
-            </span>
-          )}
-        </div>
+    <div>
+      <label htmlFor={inputId} className="sr-only">
+        {cleanTitle || title}
+      </label>
 
-        {multiline ? (
-          <textarea
-            id={inputId}
-            ref={(el) => {
-              controlRef.current = el;
-            }}
-            dir={resolvedDir}
-            rows={rows}
-            maxLength={maxLength}
-            placeholder={placeholder}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="fullscreen-focus-control w-full min-h-60 rounded-2xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-5 py-4 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-3 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden resize-y"
-          />
-        ) : (
-          <input
-            id={inputId}
-            ref={(el) => {
-              controlRef.current = el;
-            }}
-            type={type}
-            dir={resolvedDir}
-            inputMode={inputMode}
-            maxLength={maxLength}
-            placeholder={placeholder}
-            pattern={pattern}
-            step={step}
-            min={min}
-            max={max}
-            autoComplete={autoComplete}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="fullscreen-focus-control w-full min-h-16 rounded-2xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-5 py-4 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-3 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden"
-          />
-        )}
-
-        <p className="text-sm sm:text-base text-[var(--text-muted)] leading-relaxed">
-          {multiline
-            ? text(
-                "اضغط Ctrl+Enter أو زر «اعتماد النص» لحفظ التعديل في النموذج.",
-                "Press Ctrl+Enter or «Apply» to save changes back to the form.",
-              )
-            : text(
-                "اضغط Enter أو زر «اعتماد النص» لحفظ القيمة في النموذج.",
-                "Press Enter or «Apply» to save this value back to the form.",
-              )}
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t theme-border pt-4">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-6 py-2.5 text-base font-semibold text-[var(--text-main)] hover:bg-[var(--bg-card)] transition cursor-pointer"
-        >
-          {text("إلغاء", "Cancel")}
-        </button>
-        <button
-          type="button"
-          onClick={handleApply}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl gold-gradient-btn px-7 py-2.5 text-base font-bold shadow-sm transition cursor-pointer"
-        >
-          <Check className="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span>{text("اعتماد النص", "Apply")}</span>
-        </button>
-      </div>
+      {multiline ? (
+        <textarea
+          id={inputId}
+          ref={(el) => {
+            controlRef.current = el;
+          }}
+          dir={resolvedDir}
+          rows={rows}
+          maxLength={maxLength}
+          placeholder={resolvedPlaceholder}
+          value={draft}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            setDraft(nextValue);
+            onDraftChange(nextValue);
+          }}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          className="fullscreen-focus-control w-full min-h-40 rounded-xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-4 py-3 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-2 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden resize-y"
+        />
+      ) : (
+        <input
+          id={inputId}
+          ref={(el) => {
+            controlRef.current = el;
+          }}
+          type={type}
+          dir={resolvedDir}
+          inputMode={inputMode}
+          enterKeyHint="done"
+          maxLength={maxLength}
+          placeholder={resolvedPlaceholder}
+          pattern={pattern}
+          step={step}
+          min={min}
+          max={max}
+          autoComplete={autoComplete}
+          value={draft}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            setDraft(nextValue);
+            onDraftChange(nextValue);
+          }}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          className="fullscreen-focus-control w-full min-h-12 rounded-xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-4 py-2.5 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-2 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden"
+        />
+      )}
     </div>
   );
 }
@@ -228,28 +204,65 @@ export function FullscreenFieldModal({
   onApply,
   ...rest
 }: FullscreenFieldModalProps) {
-  const { language } = useLanguage();
-  const defaultSubtitle =
-    subtitle ??
-    (language === "ar"
-      ? "مساحة إدخال موسعة بخط أكبر لسهولة القراءة والتحرير"
-      : "Expanded high-readability input view");
+  const draftRef = useRef(value);
+  const initialValueRef = useRef(value);
+  const committedRef = useRef(false);
+  const cancelledRef = useRef(false);
+  const activeSessionRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      activeSessionRef.current = null;
+      return;
+    }
+    if (activeSessionRef.current !== sessionKey) {
+      activeSessionRef.current = sessionKey;
+      draftRef.current = value;
+      initialValueRef.current = value;
+      committedRef.current = false;
+      cancelledRef.current = false;
+    }
+  }, [open, sessionKey, value]);
+
+  const handleDialogCancel = () => {
+    cancelledRef.current = true;
+  };
+
+  const handleDialogClose = () => {
+    if (
+      !committedRef.current &&
+      !cancelledRef.current &&
+      draftRef.current !== initialValueRef.current
+    ) {
+      committedRef.current = true;
+      onApply(draftRef.current);
+    }
+    onClose();
+  };
 
   return (
     <FullscreenDialog
       open={open}
-      onClose={onClose}
+      onClose={handleDialogClose}
+      onCancel={handleDialogCancel}
       title={title}
-      subtitle={defaultSubtitle}
+      subtitle={subtitle}
       variant="focus"
       closedBy="any"
-      icon={<Maximize2 className="h-5 w-5" aria-hidden="true" />}
+      hideHeader
+      bodyClassName="pt-2 pb-4 sm:pt-2 sm:pb-5"
     >
       <FullscreenFieldBody
         key={sessionKey}
         initialValue={value}
         title={title}
         onApply={onApply}
+        onDraftChange={(nextValue) => {
+          draftRef.current = nextValue;
+        }}
+        onMarkCommitted={() => {
+          committedRef.current = true;
+        }}
         {...rest}
       />
     </FullscreenDialog>
@@ -384,7 +397,7 @@ export function ExpandableField({
   const wrappedControl = inputBadge ? (
     <div className="relative flex-1 min-w-0">
       {renderedControl}
-      <span className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-muted)]">
+      <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
         {inputBadge}
       </span>
     </div>
@@ -396,13 +409,13 @@ export function ExpandableField({
   const displayLabel = required ? label.replace(/\s*\*$/, "") : label;
 
   return (
-    <div className="min-w-0 space-y-2">
+    <div className="min-w-0 space-y-1.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label
           id={labelId}
           htmlFor={fieldId}
           className={cn(
-            "text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] flex items-center gap-1",
+            "text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] flex items-center gap-1",
             labelClassName,
           )}
         >
@@ -427,7 +440,7 @@ export function ExpandableField({
       )}
 
       {hint && (
-        <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
           {hint}
         </p>
       )}

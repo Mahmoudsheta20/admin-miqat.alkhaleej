@@ -491,7 +491,7 @@ export default function AdminInspectionsPage() {
               resetCustomForm();
               setIsCustomModalOpen(true);
             }}
-            className="flex items-center gap-1.5 min-h-11 sm:min-h-10 px-4 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] transition shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] transition shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui(t("inspections.customInspection"))}</span>
@@ -584,7 +584,7 @@ export default function AdminInspectionsPage() {
                 setActiveTab("captains");
                 setStatusFilter("PENDING");
               }}
-              className="min-h-10 px-3.5 py-1.5 rounded-xl bg-[var(--accent-surface)] hover:bg-amber-500/15 border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] text-xs font-bold transition shrink-0 cursor-pointer"
+              className="min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg bg-[var(--accent-surface)] hover:bg-amber-500/15 border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] text-xs font-bold transition shrink-0 cursor-pointer"
             >
               {ui("عرض الكباتن بانتظار الفحص (")}{stats.pendingToday})
             </button>
@@ -600,7 +600,7 @@ export default function AdminInspectionsPage() {
             <button
               type="button"
               onClick={() => setActiveTab("captains")}
-              className={`flex items-center justify-center gap-2 min-h-10 sm:min-h-8 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-2 min-h-11 sm:min-h-8 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
                 activeTab === "captains"
                   ? "bg-[var(--bg-card)] text-[var(--text-main)] shadow-xs border theme-border"
                   : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -616,7 +616,7 @@ export default function AdminInspectionsPage() {
             <button
               type="button"
               onClick={() => setActiveTab("history")}
-              className={`flex items-center justify-center gap-2 min-h-10 sm:min-h-8 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-2 min-h-11 sm:min-h-8 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none whitespace-nowrap cursor-pointer ${
                 activeTab === "history"
                   ? "bg-[var(--bg-card)] text-[var(--text-main)] shadow-xs border theme-border"
                   : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -641,7 +641,7 @@ export default function AdminInspectionsPage() {
                 aria-label={isRTL ? "تصفية حسب الكابتن" : "Filter by captain"}
                 value={captainFilter}
                 onChange={(e) => setCaptainFilter(e.target.value)}
-                className="theme-input w-full min-h-11 sm:min-h-9 ps-8 pe-8 py-1.5 text-sm sm:text-xs rounded-xl cursor-pointer"
+                className="theme-input w-full min-h-11 sm:min-h-9 ps-8 pe-8 py-1.5 text-base sm:text-[0.8125rem] rounded-lg cursor-pointer"
               >
                 <option value="">{ui("جميع الكباتن (")}{safeCaptains.length})</option>
                 {safeCaptains.map((c) => (
@@ -676,7 +676,7 @@ export default function AdminInspectionsPage() {
                 placeholder={ui(activeTab === "captains"
                     ? "بحث باسم الكابتن أو الجوال أو اللوحة..."
                     : "بحث في السجل أو الكابتن أو الملاحظات...")}
-                className="theme-input w-full min-h-11 sm:min-h-9 ps-9 pe-9 py-1.5 text-sm sm:text-xs rounded-xl"
+                className="theme-input w-full min-h-11 sm:min-h-9 ps-9 pe-9 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
               />
               {search && (
                 <button
@@ -699,7 +699,7 @@ export default function AdminInspectionsPage() {
             <button
               type="button"
               onClick={() => setStatusFilter("ALL")}
-              className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition-none text-xs cursor-pointer ${
+              className={`min-h-11 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition-none text-xs cursor-pointer ${
                 statusFilter === "ALL"
                   ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] shadow-xs"
                   : "border border-[var(--control-border)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)]"
@@ -710,7 +710,7 @@ export default function AdminInspectionsPage() {
             <button
               type="button"
               onClick={() => setStatusFilter("PENDING")}
-              className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition-none text-xs flex items-center gap-1.5 cursor-pointer ${
+              className={`min-h-11 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition-none text-xs flex items-center gap-1.5 cursor-pointer ${
                 statusFilter === "PENDING"
                   ? "bg-amber-700 text-white shadow-xs"
                   : "border border-[var(--accent-gold)]/45 text-[var(--accent-gold)] hover:bg-[var(--accent-surface)]"
@@ -722,7 +722,7 @@ export default function AdminInspectionsPage() {
             <button
               type="button"
               onClick={() => setStatusFilter("INSPECTED")}
-              className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition-none text-xs flex items-center gap-1.5 cursor-pointer ${
+              className={`min-h-11 sm:min-h-8 px-3 py-1 rounded-lg font-bold transition-none text-xs flex items-center gap-1.5 cursor-pointer ${
                 statusFilter === "INSPECTED"
                   ? "bg-emerald-800 text-white dark:bg-emerald-400 dark:text-slate-950 shadow-xs"
                   : "border border-emerald-600/45 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/12"
@@ -764,13 +764,13 @@ export default function AdminInspectionsPage() {
                 dir="ltr"
                 value={historyDateFilter}
                 onChange={(e) => setHistoryDateFilter(e.target.value)}
-                className="theme-input min-h-11 sm:min-h-9 px-2.5 py-1 text-sm sm:text-xs rounded-xl font-mono cursor-pointer text-start"
+                className="theme-input min-h-11 sm:min-h-9 px-2.5 py-1 text-base sm:text-[0.8125rem] rounded-lg font-mono cursor-pointer text-start"
               />
               {historyDateFilter && (
                 <button
                   type="button"
                   onClick={() => setHistoryDateFilter("")}
-                  className="min-h-10 sm:min-h-8 px-2.5 py-1 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-8 px-2.5 py-1 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 transition cursor-pointer"
                 >
                   <X className="w-3 h-3" aria-hidden="true" />
                   {ui("إلغاء تصفية التاريخ (")}{historyDateFilter})
@@ -781,7 +781,7 @@ export default function AdminInspectionsPage() {
                 <button
                   type="button"
                   onClick={() => setCaptainFilter("")}
-                  className="min-h-10 sm:min-h-8 px-2.5 py-1 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)] text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/15 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-8 px-2.5 py-1 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)] text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/15 transition cursor-pointer"
                 >
                   <UserCheck className="w-3.5 h-3.5" aria-hidden="true" />
                   {ui("الكابتن:")}{" "}
@@ -1649,7 +1649,7 @@ export default function AdminInspectionsPage() {
                       pdfPath: selectedInspectionForView.pdfPath,
                     });
                   }}
-                  className="flex-1 sm:flex-initial min-h-11 flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs hover:shadow-md transition"
+                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition"
                   title={ui("معاينة وتحميل ملف PDF الرسمي")}
                 >
                   <FileText className="w-4 h-4" aria-hidden="true" />
@@ -1658,7 +1658,7 @@ export default function AdminInspectionsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedInspectionForView(null)}
-                  className="secondary-btn min-h-11 px-4 py-2 rounded-xl text-xs cursor-pointer"
+                  className="secondary-btn min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer"
                 >
                   {ui("إغلاق")}</button>
               </div>
@@ -1718,7 +1718,7 @@ export default function AdminInspectionsPage() {
                         }
                       }}
                       required
-                      className="theme-input w-full min-h-11 sm:min-h-10 p-2.5 text-sm sm:text-xs rounded-xl"
+                      className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                     >
                       <option value="">{ui("-- اختر الكابتن المراد فحصه --")}</option>
                       {safeCaptains.map((c) => (
@@ -1746,7 +1746,7 @@ export default function AdminInspectionsPage() {
                       onChange={(e) => setCustomVehiclePlate(e.target.value)}
                       placeholder={ui("مثال: ا ص ل 7223")}
                       required
-                      className="theme-input w-full min-h-11 sm:min-h-10 p-2.5 text-sm sm:text-xs rounded-xl font-mono"
+                      className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg font-mono"
                     />
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       {safeVehicles.length > 0 && (
@@ -1756,7 +1756,7 @@ export default function AdminInspectionsPage() {
                             if (e.target.value) setCustomVehiclePlate(e.target.value);
                           }}
                           value=""
-                          className="theme-input min-h-9 text-xs py-1 px-2 rounded-lg cursor-pointer"
+                          className="theme-input min-h-11 sm:min-h-8 text-base sm:text-xs py-1 px-2 rounded-lg cursor-pointer"
                         >
                           <option value="">{ui("اختيار سريع من مركبات الأسطول...")}</option>
                           {safeVehicles.map((v) => (
@@ -1773,7 +1773,7 @@ export default function AdminInspectionsPage() {
                             <button
                               type="button"
                               onClick={() => setCustomVehiclePlate(cap.assignedVehiclePlate || "")}
-                              className="min-h-9 text-xs px-2.5 py-1 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 hover:bg-amber-500/15 transition cursor-pointer"
+                              className="min-h-11 sm:min-h-8 text-xs px-2.5 py-1 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 hover:bg-amber-500/15 transition cursor-pointer"
                             >
                               {ui("مركبة الكابتن (")}{cap.assignedVehiclePlate})
                             </button>
@@ -1801,7 +1801,7 @@ export default function AdminInspectionsPage() {
                         type="button"
                         aria-pressed={customInspectionDateMode === "AUTO"}
                         onClick={() => setCustomInspectionDateMode("AUTO")}
-                        className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        className={`min-h-11 sm:min-h-8 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                           customInspectionDateMode === "AUTO"
                             ? "gold-gradient-btn shadow-xs"
                             : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -1813,7 +1813,7 @@ export default function AdminInspectionsPage() {
                         type="button"
                         aria-pressed={customInspectionDateMode === "MANUAL"}
                         onClick={() => setCustomInspectionDateMode("MANUAL")}
-                        className={`min-h-10 sm:min-h-8 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        className={`min-h-11 sm:min-h-8 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                           customInspectionDateMode === "MANUAL"
                             ? "gold-gradient-btn shadow-xs"
                             : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -1864,7 +1864,7 @@ export default function AdminInspectionsPage() {
                         ALL_CHECK_ITEMS.forEach((i) => (allPass[i.key] = true));
                         setCustomChecks(allPass);
                       }}
-                      className="gold-gradient-btn min-h-10 sm:min-h-8 px-3 py-1 rounded-lg text-xs cursor-pointer"
+                      className="gold-gradient-btn min-h-11 sm:min-h-8 px-3 py-1 rounded-lg text-xs cursor-pointer"
                     >
                       {ui("تحديد الكل سليم")}</button>
                     <button
@@ -1874,7 +1874,7 @@ export default function AdminInspectionsPage() {
                         ALL_CHECK_ITEMS.forEach((i) => (allFail[i.key] = false));
                         setCustomChecks(allFail);
                       }}
-                      className="secondary-btn min-h-10 sm:min-h-8 px-3 py-1 rounded-lg text-xs cursor-pointer"
+                      className="secondary-btn min-h-11 sm:min-h-8 px-3 py-1 rounded-lg text-xs cursor-pointer"
                     >
                       {ui("إلغاء التحديد")}</button>
                   </div>
@@ -1906,7 +1906,7 @@ export default function AdminInspectionsPage() {
                         key={idx}
                         type="button"
                         onClick={() => setCustomNotes(preset)}
-                        className="min-h-9 text-xs px-2.5 py-1 rounded-md bg-[var(--bg-card-subtle)] border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition cursor-pointer"
+                        className="min-h-10 sm:min-h-8 text-xs px-2.5 py-1 rounded-md bg-[var(--bg-card-subtle)] border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition cursor-pointer"
                       >
                         {ui(preset)}
                       </button>
@@ -1918,7 +1918,7 @@ export default function AdminInspectionsPage() {
                     onChange={(e) => setCustomNotes(e.target.value)}
                     rows={2}
                     placeholder={ui("اكتب أي ملاحظات فنية أو تفاصيل إضافية عن حالة المركبة...")}
-                    className="theme-input w-full p-2.5 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full p-3 text-base sm:text-[0.8125rem] rounded-lg"
                   />
                 </div>
               </div>
@@ -1934,14 +1934,14 @@ export default function AdminInspectionsPage() {
                   <button
                     type="button"
                     onClick={() => setIsCustomModalOpen(false)}
-                    className="secondary-btn min-h-11 px-4 py-2 rounded-xl text-xs cursor-pointer"
+                    className="secondary-btn min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer"
                   >
                     {ui("إلغاء")}</button>
 
                   <button
                     type="submit"
                     disabled={isSubmittingCustom}
-                    className="min-h-11 flex items-center gap-1.5 px-6 py-2 rounded-xl gold-gradient-btn text-xs font-semibold shadow-md transition disabled:opacity-50 cursor-pointer"
+                    className="min-h-11 sm:min-h-9 flex items-center gap-1.5 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-semibold shadow-md transition disabled:opacity-50 cursor-pointer"
                   >
                     {isSubmittingCustom ? (
                       <>
@@ -1982,7 +1982,7 @@ export default function AdminInspectionsPage() {
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
                 disabled={isDeleting}
-                className="secondary-btn flex-1 min-h-11 py-2.5 rounded-xl text-xs cursor-pointer"
+                className="secondary-btn flex-1 min-h-11 sm:min-h-9 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer"
               >
                 {ui("تراجع")}</button>
 
@@ -1990,7 +1990,7 @@ export default function AdminInspectionsPage() {
                 type="button"
                 onClick={handleDeleteInspection}
                 disabled={isDeleting}
-                className="flex-1 min-h-11 py-2.5 rounded-xl bg-rose-700 text-white text-xs font-bold hover:bg-rose-800 transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 min-h-11 sm:min-h-9 py-1.5 rounded-lg bg-rose-700 text-white text-xs sm:text-sm font-bold hover:bg-rose-800 transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {isDeleting ? (
                   <>

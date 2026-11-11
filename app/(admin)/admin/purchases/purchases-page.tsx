@@ -19,7 +19,7 @@ import PurchaseForm from "./purchase-form";
 import PurchaseHistory from "./purchase-history";
 import { useLanguage } from "@/lib/languageContext";
 
-const CONTROL = "theme-input h-11 rounded-xl px-3 text-xs sm:text-sm";
+const CONTROL = "theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 function signedPurchaseAmount(raw: string, isReturn: boolean): string {
   const cleaned = raw.trim();
@@ -153,7 +153,7 @@ export default function PurchasesPage() {
           <>
             <Link
               href="/admin/vat-returns"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border theme-border hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
+              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border theme-border hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
               <Calculator className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("nav.vatReturnsShort"))}</span>
@@ -165,7 +165,7 @@ export default function PurchasesPage() {
                 setMessage("");
                 setEditor("NEW_RETURN");
               }}
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
+              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
             >
               <RotateCcw className="size-4" aria-hidden="true" />
               <span>+ {ui(t("purchases.newReturn"))}</span>
@@ -177,7 +177,7 @@ export default function PurchasesPage() {
                 setMessage("");
                 setEditor("NEW");
               }}
-              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold shadow-sm hover:shadow-md transition cursor-pointer"
+              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold shadow-sm hover:shadow-md transition cursor-pointer"
             >
               <Plus className="size-4" aria-hidden="true" />
               <span>{ui(t("purchases.newPurchase"))}</span>
@@ -263,7 +263,7 @@ export default function PurchasesPage() {
             />
             <button
               type="submit"
-              className="theme-card inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 cursor-pointer text-[var(--text-main)] transition"
+              className="theme-card inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3 cursor-pointer text-[var(--text-main)] transition"
               aria-label={ui("بحث")}
             >
               <Search className="size-4" aria-hidden="true" />
@@ -272,7 +272,7 @@ export default function PurchasesPage() {
 
           <button
             type="button"
-            className="theme-card inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] p-3 cursor-pointer text-[var(--text-main)] transition"
+            className="theme-card inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] p-2.5 sm:p-2 cursor-pointer text-[var(--text-main)] transition"
             aria-label={ui("تحديث السجل")}
             onClick={() => setReload((value) => value + 1)}
           >

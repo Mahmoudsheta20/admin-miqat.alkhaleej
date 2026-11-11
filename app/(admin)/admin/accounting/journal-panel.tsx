@@ -20,7 +20,7 @@ interface Line {
   vehiclePlate: string;
 }
 
-const INPUT = "theme-input h-11 rounded-xl px-3 text-sm w-full";
+const INPUT = "theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] w-full";
 const empty = (key: string): Line => ({
   key,
   accountCode: "",
@@ -173,7 +173,7 @@ export default function JournalPanel({
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)]">
               <Scale className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-[var(--text-main)]">{ui("دفتر اليومية")}</h2>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[var(--text-main)]">{ui("دفتر اليومية")}</h2>
           </div>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             {ui("القيود المعتمدة محفوظة. التصحيح بقيد عكسي؛ وتصحيح المستند من شاشته الأصلية.")}
@@ -183,7 +183,7 @@ export default function JournalPanel({
           <button
             type="button"
             disabled={saving}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-600/35 bg-[var(--accent-surface)] hover:border-amber-600 px-3.5 py-2.5 text-xs font-bold text-[var(--accent-gold)] disabled:opacity-50 cursor-pointer transition-colors"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-amber-600/35 bg-[var(--accent-surface)] hover:border-amber-600 px-3 py-1.5 text-xs font-bold text-[var(--accent-gold)] disabled:opacity-50 cursor-pointer transition-colors"
             onClick={() => void fillCapitalPreset()}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -191,7 +191,7 @@ export default function JournalPanel({
           </button>
           <button
             type="button"
-            className="gold-gradient-btn inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold cursor-pointer transition-transform active:scale-[0.98]"
+            className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold cursor-pointer transition-transform active:scale-[0.98]"
             onClick={() => setShowForm((v) => !v)}
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
@@ -227,7 +227,7 @@ export default function JournalPanel({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
-            <label className="text-xs font-bold">
+            <label className="text-xs sm:text-[0.8125rem] font-bold">
               <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                 <Calendar className="h-3.5 w-3.5" />
                 {ui("تاريخ القيد")}
@@ -235,7 +235,7 @@ export default function JournalPanel({
               <input
                 required
                 type="date"
-                className={`${INPUT} mt-1.5 font-mono text-xs`}
+                className={`${INPUT} mt-1.5 font-mono`}
                 value={date}
                 onChange={(e) => {
                   setDate(e.target.value);
@@ -243,7 +243,7 @@ export default function JournalPanel({
                 }}
               />
             </label>
-            <label className="text-xs font-bold">
+            <label className="text-xs sm:text-[0.8125rem] font-bold">
               <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                 <FileText className="h-3.5 w-3.5" />
                 {ui("البيان")}
@@ -295,7 +295,7 @@ export default function JournalPanel({
                     <select
                       aria-label={`${ui("الحساب")} ${lineIdx + 1}`}
                       required
-                      className={`${INPUT} text-xs`}
+                      className={INPUT}
                       value={l.accountCode}
                       onChange={(e) => update(l.key, { accountCode: e.target.value })}
                     >
@@ -347,7 +347,7 @@ export default function JournalPanel({
                     <input
                       aria-label={ui("بيان السطر")}
                       maxLength={300}
-                      className={`${INPUT} text-xs`}
+                      className={INPUT}
                       placeholder={ui("بيان السطر")}
                       value={l.description}
                       onChange={(e) => update(l.key, { description: e.target.value })}
@@ -355,7 +355,7 @@ export default function JournalPanel({
                     <input
                       aria-label={ui("لوحة المركبة في القيد")}
                       maxLength={50}
-                      className={`${INPUT} text-xs font-mono`}
+                      className={`${INPUT} font-mono`}
                       placeholder={ui("لوحة المركبة (اختياري)")}
                       value={l.vehiclePlate}
                       onChange={(e) => update(l.key, { vehiclePlate: e.target.value })}
@@ -425,7 +425,7 @@ export default function JournalPanel({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
             <button
               type="button"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2.5 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition-colors"
+              className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-1.5 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition-colors"
               onClick={() => setLines((v) => [...v, empty(crypto.randomUUID())])}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
@@ -434,7 +434,7 @@ export default function JournalPanel({
 
             {/* Semantic Balance Indicator Banner */}
             <div
-              className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-xs font-medium transition-all ${
+              className={`flex items-center gap-3 rounded-xl border px-4 py-2 text-xs font-medium transition-all ${
                 isBalanced
                   ? "border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300"
                   : "border-rose-600/35 bg-rose-500/10 text-rose-800 dark:text-rose-200"
@@ -469,7 +469,7 @@ export default function JournalPanel({
             <button
               type="submit"
               disabled={saving || !isBalanced}
-              className="gold-gradient-btn inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs sm:text-sm font-bold disabled:opacity-40 cursor-pointer transition-transform active:scale-[0.98]"
+              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-40 cursor-pointer transition-transform active:scale-[0.98]"
             >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               {ui("اعتماد القيد المتوازن")}
@@ -492,17 +492,17 @@ export default function JournalPanel({
             <RotateCcw className="h-4 w-4" />
             <span>{ui("عكس القيد اليدوي")}</span>
           </div>
-          <label className="text-xs font-bold text-[var(--text-main)]">
+          <label className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
             {ui("تاريخ العكس")}
             <input
               type="date"
               required
-              className={`${INPUT} mt-1.5 font-mono text-xs`}
+              className={`${INPUT} mt-1.5 font-mono`}
               value={reverseDate}
               onChange={(e) => setReverseDate(e.target.value)}
             />
           </label>
-          <label className="flex-1 min-w-[260px] text-xs font-bold text-[var(--text-main)]">
+          <label className="flex-1 min-w-[260px] text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
             {ui("سبب عكس القيد")}
             <input
               required
@@ -516,13 +516,13 @@ export default function JournalPanel({
           <button
             type="submit"
             disabled={saving}
-            className="gold-gradient-btn min-h-11 rounded-xl px-5 py-3 text-xs sm:text-sm font-bold cursor-pointer"
+            className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold cursor-pointer"
           >
             {ui("تأكيد العكس")}
           </button>
           <button
             type="button"
-            className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-3 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
+            className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
             onClick={() => setReverseId(null)}
           >
             {ui("إلغاء")}

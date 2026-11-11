@@ -133,7 +133,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           {ui("قد يكون تم حذف العقد أو أن المعرف المطلوب غير صحيح.")}</p>
         <Link
           href="/admin/contracts"
-          className="inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold shadow-xs"
         >
           <ArrowRight className="w-4 h-4 ltr:rotate-180" aria-hidden="true" />
           <span>{ui("الرجوع لسجل العقود")}</span>
@@ -239,7 +239,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
-            className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-3.5 py-2 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+            className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
           >
             <ReceiptText className="w-4 h-4 text-[var(--accent-gold)] shrink-0" />
             <span>{ui("إنشاء فاتورة مرتبطة بالعقد")}</span>
@@ -248,7 +248,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           <button
             type="button"
             onClick={() => setIsPdfOpen(true)}
-            className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-3.5 py-2 rounded-xl secondary-btn text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg secondary-btn text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Printer className="w-4 h-4 text-[var(--text-muted)] shrink-0" aria-hidden="true" />
             <span>{ui("طباعة / معاينة PDF")}</span>
@@ -257,7 +257,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           <button
             type="button"
             onClick={() => setWhatsAppModalOpen(true)}
-            className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             title={ui("إرسال العقد للكابتن عبر واتساب")}
           >
             <MessageSquare className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -266,7 +266,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
 
           <Link
             href="/admin/contracts"
-            className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] text-xs font-bold transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight className="w-4 h-4 shrink-0 ltr:rotate-180" aria-hidden="true" />
             <span>{ui("العودة للسجل")}</span>
@@ -306,7 +306,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 type="button"
                 disabled={actionLoading}
                 onClick={() => handleUpdateStatus("APPROVED")}
-                className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+                className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{ui("اعتماد وتوثيق العقد")}</span>
@@ -318,7 +318,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 type="button"
                 disabled={actionLoading}
                 onClick={() => setRejectModalOpen(true)}
-                className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-4 py-2 rounded-xl danger-btn text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg danger-btn text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 <XCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{ui("رفض العقد")}</span>
@@ -330,7 +330,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 type="button"
                 disabled={actionLoading}
                 onClick={() => handleUpdateStatus("PENDING_REVIEW")}
-                className="flex-1 sm:flex-initial min-h-11 sm:min-h-10 justify-center px-3 py-2 rounded-xl secondary-btn text-xs font-bold transition cursor-pointer"
+                className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg secondary-btn text-xs font-bold transition cursor-pointer"
                 title={ui("إعادة العقد لحالة قيد المراجعة")}
               >
                 <span>{ui("إعادة للمراجعة")}</span>
@@ -601,7 +601,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 value={rejectNotes}
                 onChange={(e) => setRejectNotes(e.target.value)}
                 placeholder={ui("مثال: نقص في بيانات الركاب، أو عدم توافق وقت الرحلة...")}
-                className="theme-input w-full p-3 rounded-xl text-base sm:text-xs placeholder:text-[var(--text-placeholder)] focus:border-rose-600 focus:shadow-none resize-y"
+                className="theme-input w-full p-3 rounded-lg text-base sm:text-[0.8125rem] placeholder:text-[var(--text-placeholder)] focus:border-rose-600 focus:shadow-none resize-y"
               />
             </div>
 
@@ -611,7 +611,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 autoFocus
                 disabled={actionLoading}
                 onClick={() => setRejectModalOpen(false)}
-                className="min-h-11 px-4 py-2 rounded-xl secondary-btn text-xs cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg secondary-btn text-xs cursor-pointer"
               >
                 {ui("إلغاء")}</button>
 
@@ -619,7 +619,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
                 type="button"
                 disabled={actionLoading}
                 onClick={() => handleUpdateStatus("REJECTED", rejectNotes)}
-                className="min-h-11 px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {ui(actionLoading ? "جاري الرفض..." : "تأكيد الرفض")}
               </button>

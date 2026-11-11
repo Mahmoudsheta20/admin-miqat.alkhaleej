@@ -354,7 +354,7 @@ export default function InvoicesPage() {
           <button
             type="button"
             onClick={() => void load(true)}
-            className="min-h-11 sm:min-h-9 px-3.5 py-2 rounded-xl bg-rose-700 text-white text-xs font-bold hover:bg-rose-800 transition shrink-0 cursor-pointer"
+            className="min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg bg-rose-700 text-white text-xs font-bold hover:bg-rose-800 transition shrink-0 cursor-pointer"
           >
             {ui(t("common.retry"))}
           </button>
@@ -431,7 +431,7 @@ export default function InvoicesPage() {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="inline-flex min-h-11 items-center gap-2.5 text-sm font-bold cursor-pointer">
+        <label className="inline-flex min-h-11 sm:min-h-9 items-center gap-2.5 text-xs sm:text-[0.8125rem] font-bold cursor-pointer">
           <Checkbox
             checked={isArchived}
             onChange={(event) => {
@@ -500,7 +500,7 @@ export default function InvoicesPage() {
             {items.length === 0 ? (
               <Link
                 href="/admin/invoices/new"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs"
+                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold shadow-xs"
               >
                 <Plus className="w-4 h-4" />
                 <span>{ui(t("invoice.newInvoice"))}</span>
@@ -512,7 +512,7 @@ export default function InvoicesPage() {
                   setSearch("");
                   setTypeFilter("ALL");
                 }}
-                className="px-4 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
               >
                 {ui(t("common.cancel"))}
               </button>
@@ -692,7 +692,7 @@ export default function InvoicesPage() {
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-[var(--text-main)] font-bold transition"
+                              className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-[var(--text-main)] text-xs font-bold transition"
                               title={ui(t("common.view"))}
                             >
                               <Eye
@@ -706,7 +706,7 @@ export default function InvoicesPage() {
                               type="button"
                               disabled={isDownloadingThis}
                               onClick={() => void handleDownloadPdf(row)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] font-bold transition disabled:opacity-50 cursor-pointer"
+                              className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                               title={ui(t("common.downloadPdf"))}
                             >
                               {isDownloadingThis ? (
@@ -727,7 +727,7 @@ export default function InvoicesPage() {
                               <button
                                 type="button"
                                 onClick={() => setPaymentModalInvoice(row)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 font-bold transition cursor-pointer"
+                                className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
                                 title={ui(t("invoice.recordPayment"))}
                               >
                                 <CreditCard
@@ -928,7 +928,7 @@ export default function InvoicesPage() {
             type="button"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-bold disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-bold disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
           >
             {isRTL ? (
               <ChevronRight className="w-4 h-4" aria-hidden="true" />
@@ -947,7 +947,7 @@ export default function InvoicesPage() {
             type="button"
             disabled={!data || page * 30 >= data.total}
             onClick={() => setPage(page + 1)}
-            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-bold disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
+            className="min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-bold disabled:opacity-40 hover:border-[var(--accent-gold)] transition cursor-pointer"
           >
             <span>{ui(t("common.next"))}</span>
             {isRTL ? (

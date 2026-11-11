@@ -10,7 +10,7 @@ const Card = React.forwardRef<
     data-slot="card"
     className={cn(
       "rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-main)] shadow-xs",
-      className
+      className,
     )}
     {...props}
   />
@@ -24,7 +24,7 @@ const CardHeader = React.forwardRef<
   <div
     ref={ref}
     data-slot="card-header"
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("flex flex-col space-y-1 p-4 sm:p-5", className)}
     {...props}
   />
 ));
@@ -37,7 +37,10 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     data-slot="card-title"
-    className={cn("text-lg font-bold leading-none tracking-tight text-[var(--text-main)]", className)}
+    className={cn(
+      "text-base font-bold leading-snug tracking-tight text-[var(--text-main)]",
+      className,
+    )}
     {...props}
   />
 ));
@@ -76,7 +79,7 @@ const CardContent = React.forwardRef<
   <div
     ref={ref}
     data-slot="card-content"
-    className={cn("p-6 pt-0", className)}
+    className={cn("p-4 sm:p-5 pt-0", className)}
     {...props}
   />
 ));
@@ -89,7 +92,10 @@ const CardFooter = React.forwardRef<
   <div
     ref={ref}
     data-slot="card-footer"
-    className={cn("flex items-center p-6 pt-0 border-t border-[var(--border-color)] mt-4", className)}
+    className={cn(
+      "flex items-center p-4 sm:p-5 pt-0 border-t border-[var(--border-color)] mt-3",
+      className,
+    )}
     {...props}
   />
 ));
@@ -104,4 +110,3 @@ export {
   CardDescription,
   CardContent,
 };
-

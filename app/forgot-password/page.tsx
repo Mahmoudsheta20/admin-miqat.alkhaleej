@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
                       }}
                       onBlur={() => setEmailTouched(true)}
                       placeholder="example@miqat.com"
-                      className="w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
+                      className="w-full px-3 py-2 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                   </div>
 
@@ -172,7 +172,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full min-h-11 py-3 rounded-xl gold-gradient-btn flex items-center justify-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                  className="w-full min-h-11 sm:min-h-9 py-2 rounded-lg gold-gradient-btn flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold shadow-sm transition disabled:opacity-50 cursor-pointer active:scale-[0.99]"
                 >
                   {loading ? (
                     <>

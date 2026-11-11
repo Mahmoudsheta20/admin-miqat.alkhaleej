@@ -578,7 +578,7 @@ export default function AdminContractsPage() {
               aria-label={ui(
                 "ابحث برقم العقد، اسم العميل، اللوحة، أو رقم الرحلة...",
               )}
-              className="w-full min-h-9 bg-transparent border-none text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:outline-hidden"
+              className="w-full min-h-9 sm:min-h-8 bg-transparent border-none text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:outline-hidden"
             />
             {search && (
               <button
@@ -596,7 +596,7 @@ export default function AdminContractsPage() {
             )}
             <button
               type="submit"
-              className="min-h-11 sm:min-h-8 px-3 py-1.5 rounded-xl bg-[var(--accent-btn-bg)] hover:bg-[var(--accent-btn-hover)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] text-xs font-bold transition shrink-0 cursor-pointer"
+              className="min-h-11 sm:min-h-8 px-3 py-1.5 rounded-lg bg-[var(--accent-btn-bg)] hover:bg-[var(--accent-btn-hover)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] text-xs font-bold transition shrink-0 cursor-pointer"
             >
               {ui("بحث")}
             </button>
@@ -622,7 +622,7 @@ export default function AdminContractsPage() {
                   id="captainFilterSelect"
                   value={captainFilter}
                   onChange={(e) => handleCaptainFilterSelect(e.target.value)}
-                  className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-[var(--text-main)] focus:outline-hidden cursor-pointer"
+                  className="w-full min-h-8 bg-transparent border-none text-base sm:text-[0.8125rem] font-bold text-[var(--text-main)] focus:outline-hidden cursor-pointer"
                 >
                   <option value="ALL" className="bg-[var(--bg-card)] text-[var(--text-main)]">
                     {ui("جميع الكباتن (")}
@@ -669,87 +669,87 @@ export default function AdminContractsPage() {
               >
                 {ui("الفحص التشغيلي:")}
               </label>
-              <select
-                id="inspectionFilterSelect"
-                value={inspectionFilter}
-                onChange={(e) => {
-                  setInspectionFilter(
-                    e.target.value as "ALL" | "INSPECTED" | "PENDING",
-                  );
-                  setCurrentPage(1);
-                }}
-                className="w-full min-h-8 bg-transparent border-none text-base sm:text-sm font-bold text-[var(--text-main)] focus:outline-hidden cursor-pointer"
-              >
-                <option value="ALL" className="bg-[var(--bg-card)] text-[var(--text-main)]">
-                  {ui("كافة الحالات")}
-                </option>
-                <option
-                  value="INSPECTED"
-                  className="bg-[var(--bg-card)] text-[var(--text-main)]"
+                <select
+                  id="inspectionFilterSelect"
+                  value={inspectionFilter}
+                  onChange={(e) => {
+                    setInspectionFilter(
+                      e.target.value as "ALL" | "INSPECTED" | "PENDING",
+                    );
+                    setCurrentPage(1);
+                  }}
+                  className="w-full min-h-8 bg-transparent border-none text-base sm:text-[0.8125rem] font-bold text-[var(--text-main)] focus:outline-hidden cursor-pointer"
                 >
-                  {ui("مفحوص ومعتمد فقط (")}
-                  {stats.inspected})
-                </option>
-                <option value="PENDING" className="bg-[var(--bg-card)] text-[var(--text-main)]">
-                  {ui("بانتظار الفحص فقط (")}
-                  {stats.pending})
-                </option>
-              </select>
+                  <option value="ALL" className="bg-[var(--bg-card)] text-[var(--text-main)]">
+                    {ui("كافة الحالات")}
+                  </option>
+                  <option
+                    value="INSPECTED"
+                    className="bg-[var(--bg-card)] text-[var(--text-main)]"
+                  >
+                    {ui("مفحوص ومعتمد فقط (")}
+                    {stats.inspected})
+                  </option>
+                  <option value="PENDING" className="bg-[var(--bg-card)] text-[var(--text-main)]">
+                    {ui("بانتظار الفحص فقط (")}
+                    {stats.pending})
+                  </option>
+                </select>
+              </div>
+              {inspectionFilter !== "ALL" && (
+                <button
+                  type="button"
+                  aria-label={ui("إلغاء التصفية")}
+                  onClick={() => {
+                    setInspectionFilter("ALL");
+                    setCurrentPage(1);
+                  }}
+                  className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0 cursor-pointer"
+                  title={ui("إلغاء التصفية")}
+                >
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              )}
             </div>
-            {inspectionFilter !== "ALL" && (
+          </div>
+
+          {/* Operation Type Chips & Active Filters Indicator */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+              {[
+                { id: "ALL", label: "جميع العمليات" },
+                { id: "AIRPORT_TRANSFER", label: "توصيل مطار" },
+                { id: "CITY_TOUR", label: "جولة سياحية" },
+                { id: "INTERCITY", label: "بين المدن" },
+                { id: "HAJJ_UMRAH", label: "حج وعمرة" },
+              ].map((op) => (
+                <button
+                  type="button"
+                  key={op.id}
+                  onClick={() => handleTypeFilterSelect(op.id)}
+                  className={`min-h-11 sm:min-h-8 px-3 py-1.5 rounded-lg text-xs font-bold border transition shrink-0 cursor-pointer ${
+                    typeFilter === op.id
+                      ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border-[var(--accent-btn-border)] shadow-xs"
+                      : "theme-card text-[var(--text-muted)] border theme-border hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
+                  }`}
+                >
+                  {ui(op.label)}
+                </button>
+              ))}
+            </div>
+
+            {/* Reset Filters button if active */}
+            {hasActiveFilters && (
               <button
                 type="button"
-                aria-label={ui("إلغاء التصفية")}
-                onClick={() => {
-                  setInspectionFilter("ALL");
-                  setCurrentPage(1);
-                }}
-                className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0 cursor-pointer"
-                title={ui("إلغاء التصفية")}
+                onClick={handleResetFilters}
+                className="inline-flex min-h-11 sm:min-h-8 items-center gap-1.5 text-xs text-rose-700 dark:text-rose-400 hover:underline font-bold self-start sm:self-auto shrink-0 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
+                {ui("إعادة ضبط جميع عوامل التصفية")}
               </button>
             )}
           </div>
-        </div>
-
-        {/* Operation Type Chips & Active Filters Indicator */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-            {[
-              { id: "ALL", label: "جميع العمليات" },
-              { id: "AIRPORT_TRANSFER", label: "توصيل مطار" },
-              { id: "CITY_TOUR", label: "جولة سياحية" },
-              { id: "INTERCITY", label: "بين المدن" },
-              { id: "HAJJ_UMRAH", label: "حج وعمرة" },
-            ].map((op) => (
-              <button
-                type="button"
-                key={op.id}
-                onClick={() => handleTypeFilterSelect(op.id)}
-                className={`min-h-10 sm:min-h-8 px-3 py-1.5 rounded-xl text-xs font-bold border transition shrink-0 cursor-pointer ${
-                  typeFilter === op.id
-                    ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border-[var(--accent-btn-border)] shadow-xs"
-                    : "theme-card text-[var(--text-muted)] border theme-border hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
-                }`}
-              >
-                {ui(op.label)}
-              </button>
-            ))}
-          </div>
-
-          {/* Reset Filters button if active */}
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="inline-flex min-h-10 sm:min-h-8 items-center gap-1.5 text-xs text-rose-700 dark:text-rose-400 hover:underline font-bold self-start sm:self-auto shrink-0 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" aria-hidden="true" />
-              {ui("إعادة ضبط جميع عوامل التصفية")}
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Main Table & Mobile Cards Container */}
@@ -925,14 +925,14 @@ export default function AdminContractsPage() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="min-h-11 sm:min-h-9 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-[var(--accent-gold)] transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 text-xs font-bold rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-[var(--accent-gold)] transition cursor-pointer"
               >
                 {ui("إلغاء عوامل التصفية")}
               </button>
             ) : (
               <Link
                 href="/admin/contracts/new"
-                className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs"
+                className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg gold-gradient-btn transition shadow-xs"
               >
                 <FileText className="w-4 h-4" aria-hidden="true" />
                 {ui("+ إنشاء أول عقد")}
@@ -1288,7 +1288,7 @@ export default function AdminContractsPage() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="theme-input min-h-11 sm:min-h-8 rounded-lg px-2 py-1 text-base sm:text-xs font-bold focus:outline-hidden"
+                    className="theme-input min-h-11 sm:min-h-8 rounded-lg px-2 py-1 text-base sm:text-[0.8125rem] font-bold focus:outline-hidden"
                   >
                     <option value={10}>{ui("10 / صفحة")}</option>
                     <option value={25}>{ui("25 / صفحة")}</option>
@@ -1306,7 +1306,7 @@ export default function AdminContractsPage() {
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={safeCurrentPage <= 1}
-                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-lg border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
                   title={ui("الصفحة السابقة")}
                   aria-label={ui("الصفحة السابقة")}
                 >
@@ -1337,7 +1337,7 @@ export default function AdminContractsPage() {
                       key={`page-${page}`}
                       aria-current={isCurrent ? "page" : undefined}
                       onClick={() => setCurrentPage(page as number)}
-                      className={`min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-xl text-xs font-bold font-mono transition cursor-pointer ${
+                      className={`min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 sm:px-2.5 inline-flex items-center justify-center rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
                         isCurrent
                           ? "gold-gradient-btn shadow-xs"
                           : "theme-card border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
@@ -1355,7 +1355,7 @@ export default function AdminContractsPage() {
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
                   disabled={safeCurrentPage >= totalPages}
-                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-2 inline-flex items-center justify-center rounded-lg border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
                   title={ui("الصفحة التالية")}
                   aria-label={ui("الصفحة التالية")}
                 >
@@ -1736,7 +1736,7 @@ export default function AdminContractsPage() {
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
                 <Link
                   href={`/admin/contracts/${selectedContract.id}`}
-                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition shadow-xs"
+                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg gold-gradient-btn transition shadow-xs"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>{ui("صفحة المراجعة والاعتماد")}</span>
@@ -1749,7 +1749,7 @@ export default function AdminContractsPage() {
                     setContractModalFocus(null);
                     openPdf(c);
                   }}
-                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)] hover:bg-amber-500/15 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)] hover:bg-amber-500/15 transition cursor-pointer"
                 >
                   <FileText className="w-4 h-4" aria-hidden="true" />
                   <span>{ui("استعراض الـ PDF")}</span>
@@ -1762,7 +1762,7 @@ export default function AdminContractsPage() {
                     setContractModalFocus(null);
                     setReverseContract(c);
                   }}
-                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:border-sky-500 hover:bg-sky-500/15 transition cursor-pointer"
+                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg border border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:border-sky-500 hover:bg-sky-500/15 transition cursor-pointer"
                   title={ui("إنشاء رحلة عكسية من هذا العقد")}
                 >
                   <ArrowLeftRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1776,7 +1776,7 @@ export default function AdminContractsPage() {
                     setContractModalFocus(null);
                     setContractToDelete(c);
                   }}
-                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl danger-btn transition cursor-pointer"
+                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg danger-btn transition cursor-pointer"
                   title={ui("حذف العقد نهائياً")}
                 >
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1789,7 +1789,7 @@ export default function AdminContractsPage() {
                   setSelectedContract(null);
                   setContractModalFocus(null);
                 }}
-                className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 text-xs rounded-xl secondary-btn transition cursor-pointer"
+                className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-1.5 text-xs rounded-lg secondary-btn transition cursor-pointer"
               >
                 {ui("إغلاق")}
               </button>

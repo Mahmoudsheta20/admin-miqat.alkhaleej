@@ -415,9 +415,9 @@ export default function EditContractPage({ params }: PageProps) {
               <FileText className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
-              <h1 id="contract-edit-heading" className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] flex flex-wrap items-center gap-2">
+              <h1 id="contract-edit-heading" className="text-lg sm:text-xl font-semibold text-[var(--text-main)] flex flex-wrap items-center gap-2">
                 <span>{ui("تعديل العقد الرسمي")}</span>
-                <span className="font-mono text-[var(--accent-gold)] text-sm sm:text-lg break-all">
+                <span className="font-mono text-[var(--accent-gold)] text-sm sm:text-base break-all">
                   <bdi>{contract?.referenceNumber}</bdi>
                 </span>
               </h1>
@@ -433,7 +433,7 @@ export default function EditContractPage({ params }: PageProps) {
             type="button"
             onClick={() => setIsPdfOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("معاينة")}</span>
@@ -442,7 +442,7 @@ export default function EditContractPage({ params }: PageProps) {
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
             title={ui("حذف هذا العقد نهائياً")}
           >
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -452,7 +452,7 @@ export default function EditContractPage({ params }: PageProps) {
             type="button"
             onClick={() => setIsReverseOpen(true)}
             disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
           >
             <ArrowLeftRight className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("رحلة عودة")}</span>
@@ -728,7 +728,7 @@ export default function EditContractPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowDetailedChecks(!showDetailedChecks)}
-                className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer self-stretch sm:self-auto justify-center"
+                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer self-stretch sm:self-auto justify-center"
               >
                 {showDetailedChecks ? (
                   <>
@@ -783,8 +783,8 @@ export default function EditContractPage({ params }: PageProps) {
         {/* Inline submit bar on mobile/tablet so form fields stay clear; sticky on desktop lg+. */}
         <div className="contract-submit-bar">
           <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
-          <Link href="/admin/contracts" className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center rounded-xl secondary-btn px-4 text-sm font-bold">{ui("إلغاء")}</Link>
-          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl gold-gradient-btn px-5 text-sm font-bold disabled:opacity-50 cursor-pointer">
+          <Link href="/admin/contracts" className="inline-flex min-h-11 sm:min-h-10 w-full sm:w-auto items-center justify-center rounded-lg secondary-btn px-4 py-1.5 text-xs sm:text-sm font-bold">{ui("إلغاء")}</Link>
+          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-11 sm:min-h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-lg gold-gradient-btn px-5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer">
             <Save className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>
           </button>

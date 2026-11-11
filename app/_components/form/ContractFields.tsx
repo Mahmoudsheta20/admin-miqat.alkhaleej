@@ -34,15 +34,18 @@ export function ContractGuestFields({
         required
         expandable
         autoComplete="name"
+        placeholder={text("اسم الضيف الأساسي", "Lead guest name")}
         {...register("customerName")}
         error={errors.customerName?.message}
       />
       <CustomInput
         label={text("رقم جوال الضيف", "Guest phone number")}
         type="tel"
+        inputMode="tel"
         expandable
         autoComplete="tel"
         dir="ltr"
+        placeholder={text("0551234567", "0551234567")}
         {...register("customerPhone")}
         error={errors.customerPhone?.message}
       />
@@ -62,6 +65,7 @@ export function ContractJourneyFields({
         label={text("موقع الانطلاق", "Departure location")}
         required
         expandable
+        placeholder={text("مكة المكرمة", "Makkah")}
         {...register("origin")}
         error={errors.origin?.message}
       />
@@ -69,6 +73,7 @@ export function ContractJourneyFields({
         label={text("وجهة الوصول", "Arrival destination")}
         required
         expandable
+        placeholder={text("مطار الملك عبد العزيز بجدة", "Jeddah Airport")}
         {...register("destination")}
         error={errors.destination?.message}
       />
@@ -101,6 +106,7 @@ export function ContractJourneyFields({
       <CustomInput
         label={text("شركة الطيران (اختياري)", "Airline (optional)")}
         expandable
+        placeholder={text("الخطوط السعودية", "Saudia")}
         {...register("flightCarrier")}
         error={errors.flightCarrier?.message}
       />
@@ -108,6 +114,7 @@ export function ContractJourneyFields({
         label={text("رقم الرحلة الجوية (اختياري)", "Flight number (optional)")}
         expandable
         dir="ltr"
+        placeholder="SV841"
         {...register("flightNumber")}
         error={errors.flightNumber?.message}
       />
@@ -126,15 +133,15 @@ export function ContractIssueDate({
   const mode = useWatch({ control, name: "issueDateMode" }) || "AUTO";
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
   return (
-    <fieldset className="sm:col-span-2 lg:col-span-3 border-t theme-border pt-5">
-      <legend className="mb-2.5 text-sm sm:text-base font-semibold">
+    <fieldset className="sm:col-span-2 lg:col-span-3 border-t theme-border pt-4">
+      <legend className="mb-2 text-xs sm:text-sm font-semibold">
         {text("تاريخ إصدار العقد", "Contract issue date")}
       </legend>
-      <div className="flex flex-wrap items-center gap-5">
-        <label className="flex min-h-12 cursor-pointer items-center gap-2.5 text-base font-medium">
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex min-h-11 sm:min-h-9 cursor-pointer items-center gap-2 text-sm font-medium">
           <input
             type="radio"
-            className="h-5 w-5 accent-[var(--accent-gold)]"
+            className="h-4 w-4 accent-[var(--accent-gold)]"
             name="issue-mode"
             checked={mode === "AUTO"}
             onChange={() =>
@@ -143,10 +150,10 @@ export function ContractIssueDate({
           />
           {text("تاريخ اليوم", "Today")}
         </label>
-        <label className="flex min-h-12 cursor-pointer items-center gap-2.5 text-base font-medium">
+        <label className="flex min-h-11 sm:min-h-9 cursor-pointer items-center gap-2 text-sm font-medium">
           <input
             type="radio"
-            className="h-5 w-5 accent-[var(--accent-gold)]"
+            className="h-4 w-4 accent-[var(--accent-gold)]"
             name="issue-mode"
             checked={mode === "MANUAL"}
             onChange={() =>
@@ -173,7 +180,7 @@ export function ContractIssueDate({
           />
         </div>
       ) : (
-        <p className="mt-2 text-base text-[var(--text-muted)]">
+        <p className="mt-2 text-xs sm:text-sm text-[var(--text-muted)]">
           <bdi>{getSaudiTodayDateStr()}</bdi>
         </p>
       )}

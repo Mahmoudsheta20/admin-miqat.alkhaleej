@@ -108,7 +108,7 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
           {icon && (
             <div
               aria-hidden="true"
-              className="absolute top-3.5 start-3.5 text-[var(--text-muted)] pointer-events-none"
+              className="absolute top-2.5 start-3 text-[var(--text-muted)] pointer-events-none"
             >
               <LocalizedText value={icon} />
             </div>
@@ -147,9 +147,9 @@ export const CustomTextarea = forwardRef<HTMLTextAreaElement, CustomTextareaProp
                 .filter(Boolean)
                 .join(" ") || undefined
             }
-            className={`min-w-0 w-full min-h-28 py-3 text-base rounded-xl transition-all duration-150 outline-hidden font-medium leading-relaxed resize-y
-              ${icon ? "ps-10" : "ps-4"}
-              pe-4
+            className={`min-w-0 w-full min-h-22 sm:min-h-20 py-2 text-base sm:text-[0.8125rem] rounded-lg transition-all duration-150 outline-hidden font-medium leading-relaxed resize-y
+              ${icon ? "ps-9" : "ps-3"}
+              pe-3
               ${shouldAutoExpandOnClick ? "cursor-pointer" : ""}
               ${
                 error

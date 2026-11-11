@@ -141,7 +141,7 @@ export default function VatReturnsPage() {
           <>
             <Link
               href="/admin/vat-returns/selected"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
+              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
             >
               <FileCheck2 className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui("اختيار فواتير لتقرير مستقل")}</span>
@@ -149,7 +149,7 @@ export default function VatReturnsPage() {
 
             <Link
               href="/admin/purchases"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
+              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
             >
               <ShoppingBag className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("purchases.title"))}</span>
@@ -157,7 +157,7 @@ export default function VatReturnsPage() {
 
             <Link
               href="/admin/invoices"
-              className="theme-card inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
+              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] transition shadow-2xs"
             >
               <ReceiptText className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("invoice.title"))}</span>
@@ -250,7 +250,7 @@ export default function VatReturnsPage() {
             type="button"
             onClick={() => setReload((value) => value + 1)}
             disabled={isLoading}
-            className="theme-card inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2.5 text-xs font-bold text-[var(--text-main)] transition cursor-pointer"
+            className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] transition cursor-pointer"
             title={ui(t("common.refresh"))}
           >
             <RefreshCw
@@ -264,7 +264,7 @@ export default function VatReturnsPage() {
             type="button"
             disabled={!data || isLoading || isExporting}
             onClick={() => void download("csv")}
-            className="theme-card inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-2.5 text-xs font-bold text-[var(--text-main)] transition disabled:opacity-50 cursor-pointer"
+            className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] transition disabled:opacity-50 cursor-pointer"
             title="CSV"
           >
             <FileSpreadsheet className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
@@ -275,7 +275,7 @@ export default function VatReturnsPage() {
             type="button"
             disabled={!data || isLoading || isExporting}
             onClick={() => void download("pdf")}
-            className="gold-gradient-btn inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
+            className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
             title="PDF"
           >
             <Download className="size-4" aria-hidden="true" />

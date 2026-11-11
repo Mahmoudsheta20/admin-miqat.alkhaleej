@@ -23,8 +23,8 @@ interface InvoiceTaxFieldsProps {
   onSelectOriginal: (id: string) => void;
 }
 
-const INLINE_INPUT = "theme-input min-h-12 w-full rounded-xl px-3.5 py-2.5 text-base";
-const INPUT = `mt-2 ${INLINE_INPUT}`;
+const INLINE_INPUT = "theme-input min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
+const INPUT = `mt-1.5 ${INLINE_INPUT}`;
 
 export default function InvoiceTaxFields({
   value,
@@ -58,14 +58,14 @@ export default function InvoiceTaxFields({
   }, [search, value.kind]);
 
   return (
-    <section className="theme-card rounded-2xl p-5 sm:p-6">
-      <h2 className="text-base sm:text-lg font-bold text-[var(--text-main)]">
+    <section className="theme-card rounded-2xl p-4 sm:p-5">
+      <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
         {ui("نوع المستند الضريبي")}
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+      <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)]">
         {ui("اختر نوع المستند الضريبي وتصنيفه وتاريخ التوريد الفعلي.")}
       </p>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
         <FullscreenSelect
           label={ui("المستند")}
           searchable={false}
@@ -103,7 +103,7 @@ export default function InvoiceTaxFields({
           ]}
         />
 
-        <label className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
+        <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
           {ui("تاريخ التوريد / الرحلة")}
           <input
             required
@@ -118,7 +118,7 @@ export default function InvoiceTaxFields({
 
         {value.kind !== "INVOICE" && (
           <>
-            <label className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
+            <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
               {ui("تاريخ واقعة الإلغاء أو الرسوم *")}
               <input
                 required
@@ -132,7 +132,7 @@ export default function InvoiceTaxFields({
                   })
                 }
               />
-              <span className="mt-1.5 block text-sm font-normal text-[var(--text-muted)]">
+              <span className="mt-1.5 block text-xs font-normal text-[var(--text-muted)]">
                 {ui("يحدد فترة احتساب الزيادة للمدين؛ تخفيض الدائن يكون عند الإصدار أو الواقعة أيهما لاحق.")}
               </span>
             </label>
@@ -205,14 +205,14 @@ export default function InvoiceTaxFields({
               </ExpandableField>
             </div>
 
-            <p className="text-sm text-[var(--text-muted)] sm:col-span-2">
+            <p className="text-xs sm:text-sm text-[var(--text-muted)] sm:col-span-2">
               {ui("تُنسخ بيانات العميل والتصنيف من الفاتورة الأصلية، ويمكن تعديل قيم الخدمات للإشعار.")}
             </p>
           </>
         )}
       </div>
       {error && (
-        <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-400">
+        <p role="alert" className="mt-3 text-xs sm:text-sm text-rose-700 dark:text-rose-400">
           {ui(error)}
         </p>
       )}

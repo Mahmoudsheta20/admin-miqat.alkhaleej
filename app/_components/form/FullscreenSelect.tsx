@@ -259,7 +259,7 @@ function SelectModalBody({
             <Search
               className={cn(
                 "pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--text-muted)]",
-                isFullscreen ? "start-4 h-5 w-5" : "start-3 h-4 w-4",
+                isFullscreen ? "start-3.5 h-4 w-4" : "start-2.5 h-3.5 w-3.5",
               )}
               aria-hidden="true"
             />
@@ -280,8 +280,8 @@ function SelectModalBody({
               className={cn(
                 "theme-input w-full border border-[var(--control-border)] bg-[var(--input-bg)] font-medium text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-[var(--accent-gold)]/20 focus:outline-hidden",
                 isFullscreen
-                  ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
-                  : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
+                  ? "min-h-11 rounded-xl border-2 py-2.5 ps-11 pe-11 text-base focus:ring-2"
+                  : "min-h-9 rounded-lg border py-1.5 ps-8 pe-8 text-xs sm:text-[0.8125rem] focus:ring-2",
               )}
             />
             {query && (
@@ -295,21 +295,14 @@ function SelectModalBody({
                 className={cn(
                   "absolute top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition",
                   isFullscreen
-                    ? "end-2 min-h-10 min-w-10 rounded-xl"
-                    : "end-1.5 min-h-8 min-w-8",
+                    ? "end-1 min-h-9 min-w-9 rounded-lg"
+                    : "end-1 min-h-7 min-w-7",
                 )}
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
           </div>
-          {isFullscreen && (
-            <p className="mt-2 text-sm text-[var(--text-muted)]">
-              {isLoading
-                ? text("جارٍ تحديث النتائج…", "Updating results…")
-                : `${filteredOptions.length} ${text("خيار متاح", "available options")}`}
-            </p>
-          )}
         </search>
       )}
 
@@ -401,8 +394,8 @@ function SelectModalBody({
                     className={cn(
                       "fullscreen-select-option flex w-full items-start justify-between text-start transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
                       isFullscreen
-                        ? "min-h-18 gap-4 rounded-2xl border-2 px-5 py-4 text-lg"
-                        : "min-h-10 gap-2.5 rounded-xl border px-3 py-2 text-sm",
+                        ? "min-h-12 gap-3 rounded-xl border px-3.5 py-2.5 text-base"
+                        : "min-h-9 gap-2 rounded-lg border px-2.5 py-1.5 text-xs sm:text-[0.8125rem]",
                       isSelected
                         ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--text-main)] shadow-xs"
                         : isHighlighted
@@ -416,8 +409,8 @@ function SelectModalBody({
                           className={cn(
                             "leading-snug",
                             isFullscreen
-                              ? "text-lg sm:text-xl font-bold"
-                              : "text-sm font-bold",
+                              ? "text-base font-bold"
+                              : "text-xs sm:text-[0.8125rem] font-bold",
                             isSelected
                               ? "text-[var(--accent-gold)]"
                               : "text-[var(--text-main)]",
@@ -426,7 +419,7 @@ function SelectModalBody({
                           {option.label}
                         </span>
                         {option.badge && (
-                          <span className="rounded-lg border theme-border bg-[var(--bg-card-subtle)] px-2 py-0.5 text-xs font-mono font-bold text-[var(--text-main)]">
+                          <span className="rounded-md border theme-border bg-[var(--bg-card-subtle)] px-1.5 py-0.5 text-[11px] font-mono font-bold text-[var(--text-main)]">
                             {option.badge}
                           </span>
                         )}
@@ -435,7 +428,7 @@ function SelectModalBody({
                         <span
                           className={cn(
                             "block text-[var(--text-muted)] leading-snug",
-                            isFullscreen ? "text-base" : "text-xs",
+                            isFullscreen ? "text-xs sm:text-sm" : "text-[11px] sm:text-xs",
                           )}
                         >
                           {option.description}
@@ -447,13 +440,13 @@ function SelectModalBody({
                       aria-hidden="true"
                       className={cn(
                         "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
-                        isFullscreen ? "h-8 w-8" : "h-6 w-6",
+                        isFullscreen ? "h-6 w-6" : "h-5 w-5",
                         isSelected
                           ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
                           : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-transparent",
                       )}
                     >
-                      <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
+                      <Check className={isFullscreen ? "h-3.5 w-3.5" : "h-3 w-3"} />
                     </span>
                   </button>
                 </li>
@@ -463,7 +456,7 @@ function SelectModalBody({
         )}
       </div>
 
-      {(isFullscreen || footerAction || (clearable && selectedValue !== "")) && (
+      {(footerAction || (clearable && selectedValue !== "")) && (
         <div
           className={cn(
             "shrink-0 flex flex-wrap items-center justify-between gap-2 border-t theme-border",
@@ -477,27 +470,17 @@ function SelectModalBody({
                 type="button"
                 onClick={handleClear}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition",
+                  "inline-flex items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] cursor-pointer transition",
                   isFullscreen
-                    ? "min-h-12 px-4 py-2.5 text-sm sm:text-base"
-                    : "min-h-9 px-3 py-1.5 text-xs sm:text-sm",
+                    ? "min-h-11 px-3.5 py-2 text-sm"
+                    : "min-h-8 px-2.5 py-1 text-xs",
                 )}
               >
-                <X className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span>{clearLabel}</span>
               </button>
             )}
           </div>
-
-          {isFullscreen && (
-            <button
-              type="button"
-              onClick={() => void requestDialogClose?.()}
-              className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-6 py-2.5 text-base font-semibold text-[var(--text-main)] hover:bg-[var(--bg-card)] cursor-pointer transition"
-            >
-              {text("إغلاق", "Close")}
-            </button>
-          )}
         </div>
       )}
     </div>
@@ -656,7 +639,7 @@ export function FullscreenSelect({
         }}
         {...dataAttributes}
         className={cn(
-          "min-w-0 w-full min-h-12 px-4 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-medium leading-normal flex items-center justify-between gap-2.5 text-start cursor-pointer",
+          "min-w-0 w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg transition-all duration-150 outline-hidden font-medium leading-normal flex items-center justify-between gap-2 text-start cursor-pointer",
           error || ariaInvalid === true || ariaInvalid === "true"
             ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus-visible:border-rose-600 focus-visible:ring-2 focus-visible:ring-rose-500/20"
             : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] focus-visible:border-[var(--accent-gold)] focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)]/20",
@@ -664,7 +647,7 @@ export function FullscreenSelect({
           triggerClassName,
         )}
       >
-        <span className="flex min-w-0 flex-1 items-center gap-2.5">
+        <span className="flex min-w-0 flex-1 items-center gap-2">
           {icon && (
             <span
               aria-hidden="true"
@@ -682,7 +665,7 @@ export function FullscreenSelect({
             {visibleTriggerText}
           </span>
           {selectedOption?.badge && !displayValue && (
-            <span className="hidden sm:inline-flex shrink-0 rounded-md border theme-border bg-[var(--bg-card-subtle)] px-2 py-0.5 text-xs font-mono font-bold text-[var(--text-main)]">
+            <span className="hidden sm:inline-flex shrink-0 rounded-md border theme-border bg-[var(--bg-card-subtle)] px-1.5 py-0.5 text-[11px] font-mono font-bold text-[var(--text-main)]">
               {selectedOption.badge}
             </span>
           )}
@@ -703,7 +686,7 @@ export function FullscreenSelect({
           onClick={() => onChange("", undefined)}
           aria-label={clearLabel || text("مسح التحديد", "Clear selection")}
           title={clearLabel || text("مسح التحديد", "Clear selection")}
-          className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition"
+          className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -720,11 +703,11 @@ export function FullscreenSelect({
       overlayId={overlayId}
       title={resolvedTitle}
       subtitle={resolvedSubtitle}
-      icon={icon || <Search className="h-5 w-5" aria-hidden="true" />}
+      icon={icon || <Search className="h-4 w-4" aria-hidden="true" />}
       matchTriggerWidth
-      minPopoverWidth={columns === 2 ? 380 : 340}
-      maxPopoverWidth={columns === 2 ? 560 : 640}
-      preferredMaxHeight={480}
+      minPopoverWidth={columns === 2 ? 360 : 320}
+      maxPopoverWidth={columns === 2 ? 520 : 600}
+      preferredMaxHeight={440}
       dir={dir}
     >
       <SelectModalBody
@@ -737,6 +720,7 @@ export function FullscreenSelect({
         onSearchChange={onSearchChange}
         searchPlaceholder={
           searchPlaceholder ||
+          resolvedTitle ||
           text("ابحث بالاسم أو الكود أو التفاصيل…", "Search by name, code, or details…")
         }
         isLoading={isLoading}
@@ -758,7 +742,7 @@ export function FullscreenSelect({
       <div className={cn("min-w-0", className)}>
         {triggerButton}
         {showSelectedDescription && selectedOption?.description && (
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-1.5 text-xs text-[var(--text-muted)]">
             {selectedOption.description}
           </p>
         )}
@@ -779,7 +763,7 @@ export function FullscreenSelect({
       >
         {triggerButton}
         {showSelectedDescription && selectedOption?.description && (
-          <p className="mt-1.5 text-sm text-[var(--text-muted)]">
+          <p className="mt-1.5 text-xs text-[var(--text-muted)]">
             {selectedOption.description}
           </p>
         )}

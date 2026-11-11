@@ -1656,7 +1656,8 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   const inlineFontSize = await guestInput.evaluate((el) =>
     parseFloat(getComputedStyle(el).fontSize),
   );
-  expect(inlineFontSize).toBeGreaterThanOrEqual(16);
+  expect(inlineFontSize).toBeGreaterThanOrEqual(12);
+  expect(inlineFontSize).toBeLessThan(16);
 
   await guestInput.click();
   await expect(anyFullscreenDialog).toHaveCount(0);
@@ -1750,10 +1751,21 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   expect(focusDialogBox?.height ?? 0).toBeGreaterThanOrEqual(900);
   const focusControl = focusDialog.locator(".fullscreen-focus-control");
   await expect(focusControl).toBeFocused();
+  await expect(focusControl).toHaveAttribute("enterkeyhint", "done");
+  await expect(focusControl).toHaveAttribute("placeholder", "اسم الضيف الأساسي");
+  await expect(focusDialog.locator("header")).toHaveCount(0);
+  await expect(focusDialog.getByRole("heading")).toHaveCount(0);
+  await expect(
+    focusDialog.getByRole("button", { name: /^(اعتماد النص|إلغاء|Apply|Cancel)$/ }),
+  ).toHaveCount(0);
+  await expect(
+    focusDialog.getByText(/مساحة إدخال موسعة|Expanded high-readability|اضغط Enter|Press Enter/),
+  ).toHaveCount(0);
   const popupFontSize = await focusControl.evaluate((el) =>
     parseFloat(getComputedStyle(el).fontSize),
   );
-  expect(popupFontSize).toBeGreaterThanOrEqual(20);
+  expect(popupFontSize).toBeGreaterThanOrEqual(16);
+  expect(popupFontSize).toBeLessThanOrEqual(20);
 
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({
@@ -1773,22 +1785,30 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   ).toEqual([]);
 
   await focusControl.fill("ضيف الجوال بملء الشاشة");
-  await focusDialog.getByRole("button", { name: "اعتماد النص" }).click();
+  await focusControl.press("Enter");
   await expect(focusDialog).not.toBeVisible();
   await expect(anyFullscreenDialog).toHaveCount(0);
   await expect(guestInput).toHaveValue("ضيف الجوال بملء الشاشة");
 
-  // Escape closes mobile full-screen field popup without leaving any open dialogs
+  // Escape closes mobile full-screen field popup without applying unconfirmed edits
   await guestInput.click();
   await expect(focusDialog).toBeVisible();
+  await focusDialog.locator(".fullscreen-focus-control").fill("تعديل ملغى");
   await page.keyboard.press("Escape");
   await expect(focusDialog).not.toBeVisible();
   await expect(anyFullscreenDialog).toHaveCount(0);
+  await expect(guestInput).toHaveValue("ضيف الجوال بملء الشاشة");
 
   await captainTrigger.click();
   await waitSettled(focusDialog);
   await expect(activePopover).toHaveCount(0);
+  await expect(focusDialog.locator("header")).toHaveCount(0);
+  await expect(focusDialog.getByRole("heading")).toHaveCount(0);
   await expect(focusDialog.getByRole("searchbox")).toBeFocused();
+  await expect(focusDialog.getByRole("searchbox")).toHaveAttribute(
+    "placeholder",
+    "الكابتن المسؤول عن التنفيذ",
+  );
   const mobileOptionFontSize = await focusDialog
     .locator(".fullscreen-select-option")
     .first()
@@ -1818,16 +1838,23 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
 
   await page.getByRole("button", { name: /تاريخ الرحلة/ }).click();
   await expect(focusDialog).toBeVisible();
+  await expect(focusDialog.locator("header")).toHaveCount(0);
   await expect(activePopover).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(focusDialog).not.toBeVisible();
 
   await page.getByRole("button", { name: /وقت الرحلة/ }).click();
   await expect(focusDialog).toBeVisible();
+  await expect(focusDialog.locator("header")).toHaveCount(0);
   await expect(activePopover).toHaveCount(0);
   await focusDialog.getByRole("button", { name: "الآن" }).click();
   await expect(focusDialog).not.toBeVisible();
   await expect(anyFullscreenDialog).toHaveCount(0);
+
+  // Primary passenger name auto-syncs from lead guest name on mobile contract creation
+  await expect(page.locator('input[name="passengers.0.name"]')).toHaveValue(
+    "ضيف الجوال بملء الشاشة",
+  );
 
   // 3) Admin invoice: desktop (1440px & 768px) inline + popover vs mobile (390px) full-screen inputs, selects & date/time pickers
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -1921,10 +1948,10 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   await page.locator("#main-content nav button").nth(0).click();
   await invoiceCustomerInput.click();
   await expect(focusDialog).toBeVisible();
-  await focusDialog
-    .locator(".fullscreen-focus-control")
-    .fill("شركة القمة للجوال");
-  await focusDialog.getByRole("button", { name: "اعتماد النص" }).click();
+  const invoiceFocusControl = focusDialog.locator(".fullscreen-focus-control");
+  await invoiceFocusControl.fill("شركة القمة للجوال");
+  await invoiceFocusControl.press("Enter");
+  await expect(focusDialog).not.toBeVisible();
   await expect(invoiceCustomerInput).toHaveValue("شركة القمة للجوال");
   await expect(anyFullscreenDialog).toHaveCount(0);
 
@@ -1972,10 +1999,13 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
 
   await captainGuest.click();
   await expect(focusDialog).toBeVisible();
-  await focusDialog
-    .locator(".fullscreen-focus-control")
-    .fill("Captain Mobile Guest");
-  await focusDialog.getByRole("button", { name: "Apply" }).click();
+  const captainFocusControl = focusDialog.locator(".fullscreen-focus-control");
+  await expect(
+    focusDialog.getByRole("button", { name: /^(اعتماد النص|إلغاء|Apply|Cancel)$/ }),
+  ).toHaveCount(0);
+  await captainFocusControl.fill("Captain Mobile Guest");
+  await captainFocusControl.press("Enter");
+  await expect(focusDialog).not.toBeVisible();
   await expect(captainGuest).toHaveValue("Captain Mobile Guest");
 
   await page.getByRole("button", { name: /Trip date/ }).click();

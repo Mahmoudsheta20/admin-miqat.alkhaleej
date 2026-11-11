@@ -151,9 +151,9 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
                 .filter(Boolean)
                 .join(" ") || undefined
             }
-            className={`min-w-0 w-full min-h-12 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-medium leading-normal appearance-none cursor-pointer
-              ${icon ? "ps-10" : "ps-4"}
-              pe-10
+            className={`min-w-0 w-full min-h-11 sm:min-h-9 py-1.5 text-base sm:text-[0.8125rem] rounded-lg transition-all duration-150 outline-hidden font-medium leading-normal appearance-none cursor-pointer
+              ${icon ? "ps-9" : "ps-3"}
+              pe-8
               ${
                 error
                   ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20"

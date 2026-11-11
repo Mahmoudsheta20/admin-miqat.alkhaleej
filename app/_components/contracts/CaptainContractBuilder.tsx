@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Controller,
   useFieldArray,
@@ -117,24 +117,24 @@ function CaptainPassengerManifest({
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b theme-border pb-4">
+    <div className="p-4 sm:p-5 space-y-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b theme-border pb-3.5">
         <div className="hidden md:block">
-          <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
+          <h2 className="text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
+            <Users className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("كشف الركاب المرافقين (الصفحة 2 من العقد)")}</span>
           </h2>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
+          <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
             {ui(
               "إدخال بيانات الضيوف بدقة لمطابقة هوياتهم الرسمية وتفادي المخالفات",
             )}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           <MobileHorizontalStrip
             label={ui("عدد الركاب السريع")}
-            className="bg-[var(--bg-card-subtle)] p-1.5 rounded-xl border theme-border"
+            className="bg-[var(--bg-card-subtle)] p-1 rounded-xl border theme-border"
           >
             {[1, 4, 7, 12, 25, 45, 50].map((num) => (
               <button
@@ -142,7 +142,7 @@ function CaptainPassengerManifest({
                 type="button"
                 aria-pressed={fields.length === num}
                 onClick={() => setTotalPassengers(num)}
-                className={`min-h-11 min-w-11 shrink-0 snap-start px-3 rounded-lg text-sm font-bold transition font-mono cursor-pointer ${
+                className={`min-h-11 sm:min-h-8 min-w-11 sm:min-w-8 shrink-0 snap-start px-2.5 rounded-lg text-xs sm:text-[0.8125rem] font-bold transition font-mono cursor-pointer ${
                   fields.length === num
                     ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] shadow-2xs"
                     : "text-[var(--text-muted)] hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)]"
@@ -162,7 +162,7 @@ function CaptainPassengerManifest({
               }
             }}
             disabled={fields.length >= 50}
-            className="min-h-11 justify-center flex items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-sm font-bold transition shadow-xs disabled:opacity-40 cursor-pointer shrink-0"
+            className="min-h-11 sm:min-h-9 justify-center flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-xs disabled:opacity-40 cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             <span>{ui("إضافة راكب")}</span>
@@ -170,7 +170,7 @@ function CaptainPassengerManifest({
         </div>
       </div>
 
-      <div className="space-y-3.5">
+      <div className="space-y-3">
         {fields.map((field, index) => {
           const isPrimary = index === 0;
           const passengerError = errors.passengers?.[index];
@@ -178,7 +178,7 @@ function CaptainPassengerManifest({
           return (
             <div
               key={field.id}
-              className={`p-4 sm:p-5 rounded-2xl border transition ${
+              className={`p-3.5 sm:p-4 rounded-xl border transition ${
                 isPrimary
                   ? "bg-[var(--accent-surface)]/65 border-[var(--accent-gold)]/35"
                   : "bg-[var(--bg-card-subtle)] theme-border hover:border-[var(--border-hover)]"
@@ -188,7 +188,7 @@ function CaptainPassengerManifest({
               <div className="flex items-center justify-between sm:hidden pb-2.5 mb-3 border-b theme-border">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-7 h-7 rounded-lg font-mono font-bold text-sm flex items-center justify-center ${
+                    className={`w-7 h-7 rounded-lg font-mono font-bold text-xs flex items-center justify-center ${
                       isPrimary
                         ? "gold-gradient-btn"
                         : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
@@ -206,7 +206,7 @@ function CaptainPassengerManifest({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="min-h-11 px-3 rounded-xl text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition flex items-center gap-1.5 text-sm font-bold cursor-pointer"
+                    className="min-h-11 px-3 rounded-lg text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
                     aria-label={
                       isRTL
                         ? `حذف الراكب ${index + 1}`
@@ -223,7 +223,7 @@ function CaptainPassengerManifest({
               <div className="flex items-start gap-3">
                 <div
                   aria-hidden="true"
-                  className={`hidden sm:flex w-9 h-9 rounded-xl font-mono font-bold text-sm items-center justify-center shrink-0 mt-7 ${
+                  className={`hidden sm:flex w-8 h-8 rounded-lg font-mono font-bold text-xs items-center justify-center shrink-0 mt-6 ${
                     isPrimary
                       ? "gold-gradient-btn shadow-2xs"
                       : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
@@ -232,7 +232,7 @@ function CaptainPassengerManifest({
                   {index + 1}
                 </div>
 
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <CustomInput
                     label={
                       isPrimary
@@ -281,7 +281,7 @@ function CaptainPassengerManifest({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="hidden sm:flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0 mt-7 cursor-pointer"
+                    className="hidden sm:flex min-h-9 min-w-9 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0 mt-6 cursor-pointer"
                     aria-label={
                       isRTL
                         ? `حذف الراكب ${index + 1}`
@@ -289,7 +289,7 @@ function CaptainPassengerManifest({
                     }
                     title={ui("حذف هذا الراكب")}
                   >
-                    <Trash2 className="w-4.5 h-4.5" aria-hidden="true" />
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -298,7 +298,7 @@ function CaptainPassengerManifest({
         })}
       </div>
 
-      <div className="text-sm text-[var(--text-muted)] font-bold text-end pt-2 border-t theme-border">
+      <div className="text-xs sm:text-sm text-[var(--text-muted)] font-bold text-end pt-2 border-t theme-border">
         {ui("إجمالي ركاب الرحلة:")}{" "}
         <span className="font-mono text-[var(--accent-gold)]">
           {fields.length}
@@ -372,6 +372,7 @@ export default function CaptainContractBuilder({
     control,
     handleSubmit,
     setValue,
+    getValues,
     reset,
     setFocus,
     formState: { errors },
@@ -390,6 +391,17 @@ export default function CaptainContractBuilder({
       control,
       name: ["operationType", "customerName", "origin", "destination"],
     });
+
+  // Auto-sync lead guest name into primary passenger when primary passenger is empty or matches prior synced name
+  const syncedPrimaryGuestRef = useRef("");
+  useEffect(() => {
+    const nextGuest = (watchedGuest ?? "").trim();
+    const currentPrimary = (getValues("passengers.0.name") ?? "").trim();
+    if (!currentPrimary || currentPrimary === syncedPrimaryGuestRef.current) {
+      setValue("passengers.0.name", nextGuest, { shouldDirty: false });
+      syncedPrimaryGuestRef.current = nextGuest;
+    }
+  }, [watchedGuest, getValues, setValue]);
 
   const onFormInvalid = (formErrors: FieldErrors<FormValues>) => {
     const hasPassengerError = Boolean(formErrors.passengers);
@@ -543,7 +555,7 @@ export default function CaptainContractBuilder({
   };
 
   const inspectionBadge = todayInspection ? (
-    <span className="min-h-10 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25 text-sm font-bold inline-flex items-center gap-1.5">
+    <span className="min-h-9 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25 text-xs sm:text-sm font-bold inline-flex items-center gap-1.5">
       <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
       <span>
         {ui("فحص المركبة معتمد (")}
@@ -594,23 +606,23 @@ export default function CaptainContractBuilder({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto min-h-12 flex items-center justify-center text-center px-6 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
+            className="w-full sm:w-auto min-h-11 sm:min-h-9 flex items-center justify-center text-center px-5 py-2 rounded-lg border theme-card text-[var(--text-main)] text-xs sm:text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
           >
             {ui("إغلاق")}
           </button>
         ) : (
           <Link
             href="/captain"
-            className="w-full sm:w-auto min-h-12 flex items-center justify-center text-center px-6 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition"
+            className="w-full sm:w-auto min-h-11 sm:min-h-9 flex items-center justify-center text-center px-5 py-2 rounded-lg border theme-card text-[var(--text-main)] text-xs sm:text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition"
           >
             {ui("العودة للرئيسية")}
           </Link>
         )}
         <Link
           href="/captain/inspection"
-          className="w-full sm:w-auto min-h-12 justify-center px-6 py-2.5 rounded-xl gold-gradient-btn text-sm font-bold transition shadow-md flex items-center gap-2"
+          className="w-full sm:w-auto min-h-11 sm:min-h-9 justify-center px-5 py-2 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2"
         >
-          <ClipboardCheck className="w-5 h-5" aria-hidden="true" />
+          <ClipboardCheck className="w-4 h-4" aria-hidden="true" />
           {ui("إجراء فحص المركبة الآن")}
         </Link>
       </div>
@@ -628,7 +640,7 @@ export default function CaptainContractBuilder({
       <div className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 inline-block font-mono font-semibold text-[var(--accent-gold)] text-2xl tracking-wider">
         {createdContract.referenceNumber}
       </div>
-      <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-lg mx-auto leading-relaxed">
+      <p className="text-sm text-[var(--text-muted)] max-w-lg mx-auto leading-relaxed">
         {ui(
           "تم إنشاء العقد الرسمي المكون من 3 صفحات وتضمين كشف الركاب وتقرير الفحص المعتمد. يمكنك الآن تحميل أو طباعة نسخة الـ PDF.",
         )}
@@ -637,16 +649,16 @@ export default function CaptainContractBuilder({
         <button
           type="button"
           onClick={() => setIsPdfOpen(true)}
-          className="w-full sm:w-auto min-h-12 px-6 py-2.5 rounded-xl gold-gradient-btn text-sm sm:text-base font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full sm:w-auto min-h-11 sm:min-h-9 px-5 py-2 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
         >
-          <FileText className="w-5 h-5" aria-hidden="true" />
+          <FileText className="w-4 h-4" aria-hidden="true" />
           {ui("معاينة وتحميل العقد (PDF)")}
         </button>
         <a
           href={`/verify/contract/${encodeURIComponent(createdContract.referenceNumber)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card hover:border-emerald-600/50 text-emerald-800 dark:text-emerald-300 text-sm sm:text-base font-bold transition flex items-center justify-center gap-2"
+          className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 rounded-lg border theme-card hover:border-emerald-600/50 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2"
         >
           <CheckCircle2
             className="w-4 h-4 text-emerald-700 dark:text-emerald-300"
@@ -659,6 +671,7 @@ export default function CaptainContractBuilder({
           onClick={() => {
             setCreatedContract(null);
             setFormError("");
+            syncedPrimaryGuestRef.current = "";
             reset(
               buildDefaultValues(
                 todayInspection?.vehiclePlate ||
@@ -667,7 +680,7 @@ export default function CaptainContractBuilder({
               ),
             );
           }}
-          className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm sm:text-base font-bold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
+          className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 rounded-lg border theme-card text-[var(--text-main)] text-xs sm:text-sm font-bold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
         >
           {ui("+ إنشاء عقد جديد")}
         </button>
@@ -675,7 +688,7 @@ export default function CaptainContractBuilder({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto min-h-12 px-5 py-2.5 rounded-xl border theme-card text-[var(--text-main)] text-sm sm:text-base font-semibold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
+            className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 rounded-lg border theme-card text-[var(--text-main)] text-xs sm:text-sm font-semibold hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
           >
             {text("إغلاق النافذة", "Close")}
           </button>
@@ -729,15 +742,70 @@ export default function CaptainContractBuilder({
           )}
         >
           <div className="p-4 sm:p-6 space-y-5">
-            <h2 className="hidden md:flex text-base sm:text-lg font-semibold text-[var(--text-main)] items-center gap-2 border-b theme-border pb-3">
-              <MapPin
-                className="w-5 h-5 text-[var(--accent-gold)]"
-                aria-hidden="true"
-              />
-              <span>
-                {ui("بيانات الرحلة والعملية التشغيلية (الصفحة 1 من العقد)")}
-              </span>
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:border-b theme-border md:pb-3">
+              <h2 className="hidden md:flex text-base sm:text-lg font-semibold text-[var(--text-main)] items-center gap-2">
+                <MapPin
+                  className="w-5 h-5 text-[var(--accent-gold)]"
+                  aria-hidden="true"
+                />
+                <span>
+                  {ui("بيانات الرحلة والعملية التشغيلية (الصفحة 1 من العقد)")}
+                </span>
+              </h2>
+
+              <MobileHorizontalStrip
+                label={ui("قوالب العمليات")}
+                className="sm:flex-wrap pb-0"
+              >
+                {(
+                  [
+                    { value: "AIRPORT_TRANSFER", ar: "توصيل مطار", en: "Airport transfer" },
+                    { value: "CITY_TOUR", ar: "جولة سياحية", en: "City tour" },
+                    { value: "INTERCITY", ar: "نقل بين المدن", en: "Intercity" },
+                    { value: "HAJJ_UMRAH", ar: "نقل معتمرين وزوار", en: "Hajj & Umrah" },
+                  ] as const
+                ).map((preset) => {
+                  const isSelected = watchedOperationType === preset.value;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() =>
+                        setValue(
+                          "operationType",
+                          isSelected ? "" : preset.value,
+                          { shouldDirty: true, shouldValidate: true },
+                        )
+                      }
+                      className={`min-h-11 sm:min-h-8 shrink-0 snap-start whitespace-nowrap text-xs sm:text-[0.8125rem] font-bold px-3 py-1 rounded-lg border transition cursor-pointer ${
+                        isSelected
+                          ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)] shadow-2xs"
+                          : "bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-surface)] text-[var(--text-main)] hover:text-[var(--accent-gold)] border-[var(--control-border)]"
+                      }`}
+                    >
+                      {isSelected
+                        ? text(preset.ar, preset.en)
+                        : `+ ${text(preset.ar, preset.en)}`}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentOrig = getValues("origin") || "";
+                    const currentDest = getValues("destination") || "";
+                    setValue("origin", currentDest, { shouldDirty: true });
+                    setValue("destination", currentOrig, { shouldDirty: true });
+                  }}
+                  className="min-h-11 sm:min-h-8 shrink-0 snap-start inline-flex items-center gap-1.5 whitespace-nowrap text-xs sm:text-[0.8125rem] font-bold px-3 py-1 rounded-lg border border-[var(--accent-gold)]/45 bg-[var(--accent-surface)] text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+                  title={text("عكس نقطة الانطلاق ووجهة الوصول", "Swap departure and destination")}
+                >
+                  <span>⇄</span>
+                  <span>{text("عكس المسار", "Swap route")}</span>
+                </button>
+              </MobileHorizontalStrip>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {/* Operation Type */}
@@ -967,14 +1035,14 @@ export default function CaptainContractBuilder({
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto min-h-12 px-5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-sm sm:text-base font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition inline-flex items-center justify-center shrink-0 cursor-pointer"
+              className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-xs sm:text-sm font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition inline-flex items-center justify-center shrink-0 cursor-pointer"
             >
               {ui("إلغاء")}
             </button>
           ) : (
             <Link
               href="/captain"
-              className="w-full sm:w-auto min-h-12 px-5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-sm sm:text-base font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition inline-flex items-center justify-center shrink-0"
+              className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-xs sm:text-sm font-bold text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition inline-flex items-center justify-center shrink-0"
             >
               {ui("إلغاء")}
             </Link>
@@ -982,9 +1050,9 @@ export default function CaptainContractBuilder({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto min-h-12 justify-center px-6 sm:px-8 rounded-xl gold-gradient-btn text-sm sm:text-base font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto min-h-11 sm:min-h-9 justify-center px-5 sm:px-6 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            <FilePlus2 className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <FilePlus2 className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>
               {ui(
                 isSubmitting
@@ -1011,7 +1079,7 @@ export default function CaptainContractBuilder({
   }
 
   return (
-    <div className="creation-workspace space-y-6 max-w-[1600px] mx-auto pb-8">
+    <div className="creation-workspace space-y-5 max-w-[1600px] mx-auto pb-8">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b theme-border pb-4">
         <div>
@@ -1019,18 +1087,18 @@ export default function CaptainContractBuilder({
             <Link
               href="/captain"
               aria-label={ui("العودة للرئيسية")}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] transition"
+              className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] transition"
             >
               <ArrowRight
-                className="w-5 h-5 ltr:rotate-180"
+                className="w-4 h-4 ltr:rotate-180"
                 aria-hidden="true"
               />
             </Link>
-            <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
+            <h1 className="text-lg sm:text-2xl font-semibold text-[var(--text-main)]">
               {ui("إنشاء عقد نقل بري رسمي")}
             </h1>
           </div>
-          <p className="text-sm text-[var(--text-muted)] mt-1 ms-13">
+          <p className="hidden sm:block text-xs sm:text-sm text-[var(--text-muted)] mt-1 ms-11">
             {ui(
               "توليد العقد المعتمد من هيئة النقل (المادتين 39 و 40) مع كشف الركاب",
             )}

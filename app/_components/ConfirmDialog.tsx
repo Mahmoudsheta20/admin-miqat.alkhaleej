@@ -93,7 +93,7 @@ export default function ConfirmDialog({
             autoFocus={variant !== "info"}
             disabled={isBusy}
             onClick={onCancel}
-            className="w-full min-h-11 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--border-hover)] transition cursor-pointer"
+            className="w-full min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--border-hover)] transition cursor-pointer"
           >
             {ui(cancelBtnLabel)}
           </button>
@@ -112,7 +112,7 @@ export default function ConfirmDialog({
               }
               finally { pending.current = false; setIsBusy(false); }
             }}
-            className={`w-full min-h-11 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${styles.btn}`}
+            className={`w-full min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition cursor-pointer ${styles.btn}`}
           >
             {ui(isBusy ? (isRTL ? "جاري التنفيذ..." : "Processing...") : confirmBtnLabel)}
           </button>

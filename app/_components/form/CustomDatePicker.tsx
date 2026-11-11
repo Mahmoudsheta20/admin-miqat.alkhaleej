@@ -85,10 +85,8 @@ function DatePickerModalBody({
   onChange,
 }: DatePickerModalBodyProps) {
   const ui = useUiText();
-  const { language } = useLanguage();
   const isFullscreen = useIsPickerFullscreen();
   const requestDialogClose = useFullscreenDialogClose();
-  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
   const normalizedMinDate = minDate?.replace(/-/g, "/");
   const normalizedValue = value.replace(/-/g, "/");
@@ -194,8 +192,8 @@ function DatePickerModalBody({
           className={cn(
             "bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 hover:bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] font-bold transition text-center cursor-pointer disabled:opacity-40",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-8 py-1 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("اليوم")}
@@ -207,8 +205,8 @@ function DatePickerModalBody({
           className={cn(
             "bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] font-bold transition text-center cursor-pointer disabled:opacity-40",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-8 py-1 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("غداً")}
@@ -220,8 +218,8 @@ function DatePickerModalBody({
           className={cn(
             "bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] font-bold transition text-center cursor-pointer disabled:opacity-40",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-8 py-1 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("بعد غد")}
@@ -233,8 +231,8 @@ function DatePickerModalBody({
           className={cn(
             "bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] font-bold transition text-center cursor-pointer disabled:opacity-40",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-8 py-1 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("+أسبوع")}
@@ -249,7 +247,7 @@ function DatePickerModalBody({
           className={cn(
             "flex items-center justify-center border theme-border bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] transition cursor-pointer",
             isFullscreen
-              ? "min-h-12 min-w-12 rounded-xl"
+              ? "min-h-11 min-w-11 rounded-xl"
               : "min-h-8 min-w-8 rounded-lg",
           )}
           aria-label={ui("الشهر السابق")}
@@ -265,7 +263,7 @@ function DatePickerModalBody({
         <div
           className={cn(
             "font-bold text-[var(--text-main)] flex items-center gap-2",
-            isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
+            isFullscreen ? "text-base sm:text-lg" : "text-sm",
           )}
         >
           <span>{ui(ARABIC_MONTHS[viewMonth])}</span>
@@ -280,7 +278,7 @@ function DatePickerModalBody({
           className={cn(
             "flex items-center justify-center border theme-border bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] transition cursor-pointer",
             isFullscreen
-              ? "min-h-12 min-w-12 rounded-xl"
+              ? "min-h-11 min-w-11 rounded-xl"
               : "min-h-8 min-w-8 rounded-lg",
           )}
           aria-label={ui("الشهر التالي")}
@@ -324,7 +322,7 @@ function DatePickerModalBody({
           {Array.from({ length: firstDayIndex }).map((_, i) => (
             <div
               key={`empty-${i}`}
-              className={isFullscreen ? "min-h-12 sm:min-h-14" : "min-h-8"}
+              className={isFullscreen ? "min-h-11 sm:min-h-12" : "min-h-8"}
             />
           ))}
 
@@ -345,8 +343,8 @@ function DatePickerModalBody({
                 className={cn(
                   "w-full font-mono font-bold transition flex items-center justify-center relative cursor-pointer",
                   isFullscreen
-                    ? "min-h-12 sm:min-h-14 rounded-xl text-base sm:text-lg"
-                    : "min-h-8 rounded-lg text-xs sm:text-sm",
+                    ? "min-h-11 sm:min-h-12 rounded-xl text-sm sm:text-base"
+                    : "min-h-8 rounded-lg text-xs",
                   isSelected
                     ? "gold-gradient-btn shadow-xs"
                     : isToday
@@ -376,36 +374,26 @@ function DatePickerModalBody({
       <div
         className={cn(
           "shrink-0 border-t border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2",
-          isFullscreen ? "pt-4" : "pt-2.5",
+          isFullscreen ? "pt-3.5" : "pt-2.5",
         )}
       >
         <div
           className={cn(
             "flex items-center gap-2 text-[var(--text-muted)]",
-            isFullscreen ? "text-base" : "text-xs sm:text-sm",
+            isFullscreen ? "text-sm" : "text-xs",
           )}
         >
           <span>{ui("التاريخ المحدد:")}</span>
           <span
             className={cn(
               "font-mono font-bold text-[var(--text-main)]",
-              isFullscreen ? "text-lg" : "text-sm sm:text-base",
+              isFullscreen ? "text-base" : "text-xs sm:text-sm",
             )}
             dir="ltr"
           >
             {value || "—"}
           </span>
         </div>
-
-        {isFullscreen && (
-          <button
-            type="button"
-            onClick={() => void requestDialogClose?.()}
-            className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-6 py-2.5 text-base font-semibold text-[var(--text-main)] hover:bg-[var(--bg-card)] cursor-pointer transition"
-          >
-            {text("إغلاق", "Close")}
-          </button>
-        )}
       </div>
     </div>
   );
@@ -473,7 +461,7 @@ export function CustomDatePicker({
         <div className="flex items-center justify-between gap-2 min-w-0">
           <label
             htmlFor={controlId}
-            className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] flex items-center gap-1 shrink-0"
+            className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] flex items-center gap-1 shrink-0"
           >
             <span>{ui(label)}</span>
             {required && (
@@ -484,7 +472,7 @@ export function CustomDatePicker({
           </label>
           {value && (
             <span
-              className="text-sm text-[var(--accent-gold)] font-medium truncate text-end"
+              className="text-xs text-[var(--accent-gold)] font-medium truncate text-end"
               title={formattedArabicDate()}
             >
               {formattedArabicDate()}
@@ -514,7 +502,7 @@ export function CustomDatePicker({
             openOverlay();
           }
         }}
-        className={`w-full min-h-12 px-3.5 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
+        className={`w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg transition-all duration-150 outline-hidden font-mono font-semibold flex items-center justify-between text-start cursor-pointer
           ${
             error
               ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
@@ -523,14 +511,14 @@ export function CustomDatePicker({
                 : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
           }`}
       >
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <div
             aria-hidden="true"
-            className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0"
+            className="w-6 h-6 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0"
           >
-            <CalendarIcon className="w-4 h-4" />
+            <CalendarIcon className="w-3.5 h-3.5" />
           </div>
-          <span className="text-base font-bold font-mono tracking-wide truncate">
+          <span className="text-base sm:text-[0.8125rem] font-semibold font-mono tracking-normal truncate">
             {value || ui("حدد التاريخ")}
           </span>
         </div>
@@ -555,11 +543,11 @@ export function CustomDatePicker({
           "اختر التاريخ من التقويم بملء الشاشة لسهولة التصفح",
           "Pick the date from a spacious full-screen calendar",
         )}
-        icon={<CalendarIcon className="w-5 h-5" aria-hidden="true" />}
+        icon={<CalendarIcon className="w-4 h-4" aria-hidden="true" />}
         matchTriggerWidth={false}
-        minPopoverWidth={336}
-        maxPopoverWidth={364}
-        preferredMaxHeight={460}
+        minPopoverWidth={320}
+        maxPopoverWidth={352}
+        preferredMaxHeight={440}
         dir={ui.dir}
       >
         <DatePickerModalBody
@@ -574,15 +562,15 @@ export function CustomDatePicker({
         <p
           id={`${controlId}-description`}
           role="alert"
-          className="text-sm text-rose-700 dark:text-rose-400 font-bold flex items-center gap-1.5"
+          className="text-xs text-rose-700 dark:text-rose-400 font-bold flex items-center gap-1.5"
         >
-          <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
           <span>{ui(error)}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p id={`${controlId}-description`} className="text-sm text-[var(--text-muted)]">
+        <p id={`${controlId}-description`} className="text-xs text-[var(--text-muted)]">
           {ui(hint)}
         </p>
       )}

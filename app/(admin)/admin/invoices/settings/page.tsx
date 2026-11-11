@@ -10,7 +10,7 @@ import InvoiceBankFields, { EMPTY_BANK } from "@/app/_components/InvoiceBankFiel
 import { invoiceRequest, type InvoiceSettings } from "@/lib/invoices";
 
 const INPUT =
-  "theme-input mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm";
+  "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 interface CompanyForm {
   legalName: string;
@@ -145,7 +145,7 @@ export default function InvoiceSettingsPage() {
 
         <Link
           href="/admin/invoices/new"
-          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--accent-gold)] transition"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--accent-gold)] transition"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{ui("إنشاء فاتورة")}</span>
@@ -157,7 +157,7 @@ export default function InvoiceSettingsPage() {
           <Building2 className="w-5 h-5" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--text-main)]">
+          <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)]">
             {ui("بيانات الشركة والحساب البنكي")}</h1>
           <p className="mt-1 text-xs sm:text-sm text-[var(--text-muted)]">
             {ui("تُدرج هذه البيانات تلقائياً في ترويسة الفواتير الرسمية والفواتير المبدئية الجديدة")}</p>
@@ -213,7 +213,7 @@ export default function InvoiceSettingsPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-xs sm:text-sm font-bold sm:col-span-2">
+                  <label className="text-xs sm:text-[0.8125rem] font-bold sm:col-span-2">
                     {ui("اسم الشركة القانوني")}<span className="text-rose-700 dark:text-rose-400">*</span>
                     <input
                       required
@@ -228,7 +228,7 @@ export default function InvoiceSettingsPage() {
                     />
                   </label>
 
-                  <label className="text-xs sm:text-sm font-bold">
+                  <label className="text-xs sm:text-[0.8125rem] font-bold">
                     {ui("الرقم الضريبي (إن وجد)")}<input
                       maxLength={15}
                       pattern="3\d{13}3"
@@ -243,7 +243,7 @@ export default function InvoiceSettingsPage() {
                     />
                   </label>
 
-                  <label className="text-xs sm:text-sm font-bold">
+                  <label className="text-xs sm:text-[0.8125rem] font-bold">
                     {ui("السجل التجاري (إن وجد)")}<input
                       maxLength={10}
                       pattern="\d{10}"
@@ -285,7 +285,7 @@ export default function InvoiceSettingsPage() {
                       { key: "postalCode", label: "الرمز البريدي", pattern: "\\d{5}", placeholder: "5 أرقام" },
                     ] as const
                   ).map((field) => (
-                    <label key={field.key} className="text-xs sm:text-sm font-bold">
+                    <label key={field.key} className="text-xs sm:text-[0.8125rem] font-bold">
                       {ui(field.label)}
                       <input
                         maxLength={200}
@@ -304,7 +304,7 @@ export default function InvoiceSettingsPage() {
               </section>
 
               <section className="theme-card grid gap-5 rounded-2xl border theme-border p-5 sm:grid-cols-2 sm:p-6">
-                <label className="text-sm font-bold">
+                <label className="text-xs sm:text-[0.8125rem] font-bold">
                   {ui("اسم الشركة بالإنجليزية")}
                   <input
                     required
@@ -318,7 +318,7 @@ export default function InvoiceSettingsPage() {
                     }}
                   />
                 </label>
-                <label className="text-sm font-bold">
+                <label className="text-xs sm:text-[0.8125rem] font-bold">
                   {ui("الموقع الإلكتروني")}
                   <input
                     required
@@ -333,7 +333,7 @@ export default function InvoiceSettingsPage() {
                     }}
                   />
                 </label>
-                <label className="flex min-h-11 items-center gap-3 text-sm font-bold sm:col-span-2 cursor-pointer">
+                <label className="flex min-h-11 sm:min-h-9 items-center gap-3 text-xs sm:text-[0.8125rem] font-bold sm:col-span-2 cursor-pointer">
                   <Checkbox
                     checked={presentation.showSeal}
                     onChange={(event) => {
@@ -362,7 +362,7 @@ export default function InvoiceSettingsPage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="gold-gradient-btn w-full rounded-xl px-5 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
+                className="gold-gradient-btn min-h-11 sm:min-h-10 w-full rounded-lg px-5 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
               >
                 {isSaving ? (
                   <>

@@ -247,8 +247,8 @@ export default function AdminManagementPage() {
               <span>{ui("خاصية المدير العام الأساسي (Super Admin)")}</span>
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-[var(--accent-gold)]" aria-hidden="true" />
+          <h1 className="text-lg sm:text-xl font-semibold text-[var(--text-main)] flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("إدارة فريق المسؤولين")}</span>
           </h1>
           <p className="text-xs text-[var(--text-muted)] mt-1">
@@ -264,7 +264,7 @@ export default function AdminManagementPage() {
               setCopyError(null);
               setModalOpen(true);
             }}
-            className="min-h-11 px-4 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95"
+            className="min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95"
           >
             <UserPlus className="w-4 h-4" aria-hidden="true" />
             <span>{ui("إضافة مسؤول جديد")}</span>
@@ -678,7 +678,7 @@ export default function AdminManagementPage() {
                       <button
                         type="button"
                         onClick={() => void handleCopy(createdAdmin.temporaryPassword)}
-                        className="min-h-10 sm:min-h-9 px-3 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
+                        className="min-h-11 sm:min-h-8 px-3 py-1 rounded-lg gold-gradient-btn text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
                       >
                         {copiedPass ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}
                         <span>{ui(copiedPass ? "تم النسخ" : "نسخ")}</span>
@@ -695,7 +695,7 @@ export default function AdminManagementPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="w-full min-h-11 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs cursor-pointer"
+                  className="w-full min-h-11 sm:min-h-9 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold shadow-xs cursor-pointer"
                 >
                   {ui("إغلاق وتحديث القائمة")}</button>
               </div>
@@ -709,7 +709,7 @@ export default function AdminManagementPage() {
                   >
                     {ui("اسم المسؤول بالكامل")}<span className="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span>
                   </label>
-                  <div className="relative flex items-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
+                  <div className="relative flex items-center rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
                     <div className="ps-3 text-[var(--text-muted)]">
                       <User className="w-4 h-4" aria-hidden="true" />
                     </div>
@@ -721,7 +721,7 @@ export default function AdminManagementPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={ui("مثال: م. عبد الله الشمري")}
-                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden"
+                      className="w-full min-h-11 sm:min-h-9 px-3 py-1.5 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden"
                     />
                   </div>
                 </div>
@@ -733,7 +733,7 @@ export default function AdminManagementPage() {
                   >
                     {ui("البريد الإلكتروني المعتمد")}<span className="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span>
                   </label>
-                  <div className="relative flex items-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
+                  <div className="relative flex items-center rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
                     <div className="ps-3 text-[var(--text-muted)]">
                       <Mail className="w-4 h-4" aria-hidden="true" />
                     </div>
@@ -749,7 +749,7 @@ export default function AdminManagementPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="admin@example.com"
-                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
+                      className="w-full min-h-11 sm:min-h-9 px-3 py-1.5 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                   </div>
                 </div>
@@ -760,7 +760,7 @@ export default function AdminManagementPage() {
                     className="text-xs font-bold text-[var(--text-main)] block mb-1"
                   >
                     {ui("رقم الهاتف (اختياري)")}</label>
-                  <div className="relative flex items-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
+                  <div className="relative flex items-center rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] focus-within:border-[var(--accent-gold)] transition">
                     <div className="ps-3 text-[var(--text-muted)]">
                       <Phone className="w-4 h-4" aria-hidden="true" />
                     </div>
@@ -772,7 +772,7 @@ export default function AdminManagementPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+9665XXXXXXXX"
-                      className="w-full min-h-11 sm:min-h-10 px-3 py-2 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
+                      className="w-full min-h-11 sm:min-h-9 px-3 py-1.5 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                   </div>
                 </div>
@@ -790,14 +790,14 @@ export default function AdminManagementPage() {
                   <button
                     type="button"
                     onClick={() => setModalOpen(false)}
-                    className="min-h-11 sm:min-h-10 px-4 py-2 rounded-xl secondary-btn text-xs cursor-pointer"
+                    className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg secondary-btn text-xs sm:text-sm cursor-pointer"
                   >
                     {ui("إلغاء")}</button>
 
                   <button
                     type="submit"
                     disabled={formLoading}
-                    className="min-h-11 sm:min-h-10 px-5 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                    className="min-h-11 sm:min-h-9 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold shadow-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                   >
                     {formLoading ? (
                       <>
@@ -858,7 +858,7 @@ export default function AdminManagementPage() {
                 autoFocus
                 disabled={deleteLoading}
                 onClick={() => setDeleteTarget(null)}
-                className="min-h-11 px-4 py-2 rounded-xl secondary-btn text-xs cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg secondary-btn text-xs sm:text-sm cursor-pointer"
               >
                 {ui("تراجع")}</button>
 
@@ -866,7 +866,7 @@ export default function AdminManagementPage() {
                 type="button"
                 disabled={deleteLoading}
                 onClick={handleDeleteAdmin}
-                className="min-h-11 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {ui(deleteLoading ? "جاري الحذف..." : "تأكيد الحذف")}
               </button>

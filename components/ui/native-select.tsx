@@ -15,8 +15,7 @@ const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
           ref={ref}
           data-slot="native-select"
           className={cn(
-            "flex h-10 w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 ps-3.5 pe-9 py-2 text-sm text-slate-900 dark:text-slate-100 transition-colors disabled:cursor-not-allowed disabled:opacity-50 outline-none focus-visible:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500/20",
-            "flex h-10 w-full appearance-none rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] ps-3.5 pe-9 py-2 text-sm text-[var(--text-main)] transition-colors disabled:cursor-not-allowed disabled:opacity-50 outline-none focus-visible:border-[var(--brand-green)] focus-visible:ring-2 focus-visible:ring-emerald-600/20 dark:focus-visible:ring-emerald-400/25",
+            "flex h-11 sm:h-9 w-full appearance-none rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] ps-3 pe-8 py-1.5 text-base sm:text-[0.8125rem] text-[var(--text-main)] transition-colors disabled:cursor-not-allowed disabled:opacity-50 outline-none focus-visible:border-[var(--accent-gold)] focus-visible:ring-2 focus-visible:ring-amber-500/20",
             className,
           )}
           {...props}
@@ -24,8 +23,7 @@ const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
           {children}
         </select>
         <ChevronDown
-          className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500"
-          className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]"
+          className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]"
           aria-hidden="true"
         />
       </div>

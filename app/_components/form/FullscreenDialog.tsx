@@ -33,6 +33,7 @@ export function useFullscreenDialogClose(): (() => Promise<void>) | null {
 export interface FullscreenDialogProps {
   open: boolean;
   onClose: () => void;
+  onCancel?: () => void;
   title: string;
   subtitle?: string;
   badge?: ReactNode;
@@ -46,6 +47,7 @@ export interface FullscreenDialogProps {
   isBusy?: boolean;
   closeLabel?: string;
   bodyClassName?: string;
+  hideHeader?: boolean;
 }
 
 function isOutsideDialogRect(
@@ -68,6 +70,7 @@ function isOutsideDialogRect(
 export default function FullscreenDialog({
   open,
   onClose,
+  onCancel,
   title,
   subtitle,
   badge,
@@ -81,6 +84,7 @@ export default function FullscreenDialog({
   isBusy = false,
   closeLabel,
   bodyClassName,
+  hideHeader = false,
 }: FullscreenDialogProps) {
   const { language, dir } = useLanguage();
   const titleId = useId();
@@ -232,6 +236,7 @@ export default function FullscreenDialog({
           event.preventDefault();
           event.stopPropagation();
           if (!isBusy && effectiveClosedBy !== "none") {
+            onCancel?.();
             void performAnimatedClose();
           }
         }}
@@ -246,71 +251,88 @@ export default function FullscreenDialog({
       >
         {shouldRenderContent && (
           <>
-            <header className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b theme-border bg-[var(--bg-card)] px-4 py-3.5 sm:px-6 sm:py-4">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                {icon ? (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)]">
-                    {icon}
-                  </div>
-                ) : (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)]">
-                    <Maximize2 className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                )}
-
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2
-                      id={titleId}
-                      className="text-lg sm:text-xl font-semibold text-[var(--text-main)] leading-snug"
-                    >
-                      {title}
-                    </h2>
-                    {badge}
-                  </div>
-                  {subtitle && (
-                    <p className="mt-0.5 text-sm text-[var(--text-muted)] leading-relaxed">
-                      {subtitle}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                {headerActions}
+            {hideHeader ? (
+              <div className="shrink-0 flex justify-end px-4 pt-3 pb-1 sm:px-5 sm:pt-4">
+                <span id={titleId} className="sr-only">
+                  {title}
+                </span>
                 <button
                   type="button"
                   disabled={isBusy}
                   onClick={() => void performAnimatedClose()}
                   aria-label={defaultCloseText}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-2 text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card)] transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex h-11 w-11 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card)] transition cursor-pointer disabled:opacity-50"
                 >
-                  {variant === "workspace" ? (
-                    <>
-                      <Minimize2
-                        className="h-4 w-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span className="hidden sm:inline">
-                        {defaultCloseText}
-                      </span>
-                      <X className="h-4 w-4 sm:hidden" aria-hidden="true" />
-                    </>
-                  ) : (
-                    <>
-                      <X className="h-5 w-5 shrink-0" aria-hidden="true" />
-                      <span className="hidden sm:inline">
-                        {defaultCloseText}
-                      </span>
-                    </>
-                  )}
+                  <X className="h-4 w-4 shrink-0" aria-hidden="true" />
                 </button>
               </div>
-            </header>
+            ) : (
+              <header className="shrink-0 flex flex-wrap items-center justify-between gap-2.5 border-b theme-border bg-[var(--bg-card)] px-4 py-3 sm:px-5 sm:py-3.5">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  {icon ? (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)]">
+                      {icon}
+                    </div>
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] text-[var(--accent-gold)]">
+                      <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                  )}
+
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2
+                        id={titleId}
+                        className="text-base sm:text-lg font-semibold text-[var(--text-main)] leading-snug"
+                      >
+                        {title}
+                      </h2>
+                      {badge}
+                    </div>
+                    {subtitle && (
+                      <p className="mt-0.5 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {headerActions}
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => void performAnimatedClose()}
+                    aria-label={defaultCloseText}
+                    className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card)] transition cursor-pointer disabled:opacity-50"
+                  >
+                    {variant === "workspace" ? (
+                      <>
+                        <Minimize2
+                          className="h-4 w-4 shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span className="hidden sm:inline">
+                          {defaultCloseText}
+                        </span>
+                        <X className="h-4 w-4 sm:hidden" aria-hidden="true" />
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span className="hidden sm:inline">
+                          {defaultCloseText}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </header>
+            )}
 
             <div
               className={cn(
-                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-scroll px-4 py-5 sm:px-6 sm:py-6 lg:px-8",
+                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-scroll px-4 py-4 sm:px-5 sm:py-5",
                 bodyClassName,
               )}
             >
@@ -318,7 +340,7 @@ export default function FullscreenDialog({
             </div>
 
             {footer && (
-              <footer className="shrink-0 border-t theme-border bg-[var(--bg-card)] px-4 py-3.5 sm:px-6">
+              <footer className="shrink-0 border-t theme-border bg-[var(--bg-card)] px-4 py-3 sm:px-5">
                 {footer}
               </footer>
             )}

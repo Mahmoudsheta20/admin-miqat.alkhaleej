@@ -456,6 +456,8 @@ export default function ResponsivePickerOverlay({
           variant="focus"
           closedBy="any"
           icon={icon}
+          hideHeader
+          bodyClassName="pt-2 pb-4 sm:pt-2 sm:pb-5"
         >
           {children}
         </FullscreenDialog>

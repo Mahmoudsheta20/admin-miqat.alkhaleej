@@ -364,20 +364,20 @@ export function CommercialFields({
     >
       <CardHeader
         className={cn(
-          "border-b theme-border bg-[var(--bg-card-subtle)] px-5 py-4 sm:px-6",
+          "border-b theme-border bg-[var(--bg-card-subtle)] px-4 py-3.5 sm:px-5",
           embedded && "hidden md:block",
         )}
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
-              <Wallet className="h-5 w-5" aria-hidden="true" />
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
+              <Wallet className="h-4 w-4" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base sm:text-lg">
+              <CardTitle className="text-base">
                 {ui("العميل ومستحقات الرحلة — بيانات داخلية")}
               </CardTitle>
-              <CardDescription className="mt-1">
+              <CardDescription className="mt-0.5 text-xs sm:text-sm">
                 {ui(
                   "العميل مسؤول عن الفاتورة. العمولة مستقلة عن سعر العميل ولا تظهر في مستنداته.",
                 )}
@@ -386,7 +386,7 @@ export function CommercialFields({
           </div>
 
           {disabled && (
-            <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+            <Badge variant="secondary" className="gap-1.5 px-2.5 py-0.5 text-xs">
               <Lock className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{ui("مقفل بعد اعتماد التنفيذ")}</span>
             </Badge>
@@ -394,14 +394,14 @@ export function CommercialFields({
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 sm:p-6">
-        <fieldset disabled={disabled} className="space-y-5">
+      <CardContent className="p-4 sm:p-5">
+        <fieldset disabled={disabled} className="space-y-4">
           {/* Section 1: Billing Customer */}
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label
                 htmlFor={customerFieldId}
-                className="text-sm font-bold text-[var(--text-main)]"
+                className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]"
               >
                 {ui("العميل المسؤول عن الحساب")}
               </Label>
@@ -410,10 +410,10 @@ export function CommercialFields({
                 href="/admin/customers"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-gold)] hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[var(--accent-gold)] hover:underline"
               >
                 <span>{ui("إضافة أو تعديل عميل")}</span>
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </div>
 
@@ -443,7 +443,7 @@ export function CommercialFields({
                   <label
                     htmlFor={guestCheckboxId}
                     className={cn(
-                      "flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-colors select-none",
+                      "flex min-h-11 sm:min-h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-colors select-none",
                       sameGuest
                         ? "border-[var(--accent-gold)]/60 bg-[var(--accent-surface)] text-[var(--accent-gold)]"
                         : "border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/55",
@@ -479,11 +479,11 @@ export function CommercialFields({
           <Separator />
 
           {/* Section 2 & 3: Optional Checkboxes for Pricing and Commissions */}
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {/* Option 1: Trip Pricing & VAT Checkbox Card */}
             <div
               className={cn(
-                "rounded-2xl border transition-colors",
+                "rounded-xl border transition-colors",
                 isPricingOpen
                   ? "border-[var(--accent-gold)]/45 bg-[var(--accent-surface)]/45"
                   : "theme-border bg-[var(--bg-card-subtle)]",
@@ -492,11 +492,11 @@ export function CommercialFields({
               <label
                 htmlFor={pricingCheckboxId}
                 className={cn(
-                  "flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 select-none",
+                  "flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2.5 select-none",
                   disabled && "cursor-not-allowed opacity-70",
                 )}
               >
-                <span className="flex min-w-0 items-center gap-3">
+                <span className="flex min-w-0 items-center gap-2.5">
                   <Checkbox
                     id={pricingCheckboxId}
                     checked={isPricingOpen}
@@ -504,14 +504,14 @@ export function CommercialFields({
                     aria-controls={isPricingOpen ? pricingPanelId : undefined}
                     onChange={(e) => handleTogglePricing(e.target.checked)}
                   />
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25">
                     <ReceiptText className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-base font-bold text-[var(--text-main)]">
+                    <span className="block text-sm sm:text-base font-bold text-[var(--text-main)]">
                       {ui("تسعير الرحلة والضريبة")}
                     </span>
-                    <span className="block text-sm text-[var(--text-muted)]">
+                    <span className="block text-xs sm:text-sm text-[var(--text-muted)]">
                       {ui(
                         "تحديد قيمة الخدمة ومعاملتها الضريبية لإصدار الفاتورة",
                       )}
@@ -535,7 +535,7 @@ export function CommercialFields({
                   id={pricingPanelId}
                   className="border-t theme-border p-4 sm:p-5"
                 >
-                  <div className="grid gap-5 lg:grid-cols-12">
+                  <div className="grid gap-4 lg:grid-cols-12">
                     {/* Amount + Live VAT Breakdown */}
                     <div className="space-y-3 lg:col-span-5">
                       <ExpandableField
@@ -567,32 +567,32 @@ export function CommercialFields({
                           onChange={(e) =>
                             onChange({ ...value, netAmount: e.target.value })
                           }
-                          className="font-mono text-base font-semibold min-h-12"
+                          className="font-mono font-semibold"
                         />
                       </ExpandableField>
 
                       <div
                         role="status"
-                        className="grid grid-cols-2 gap-3 rounded-xl border theme-border bg-[var(--bg-card)] p-4"
+                        className="grid grid-cols-2 gap-3 rounded-xl border theme-border bg-[var(--bg-card)] p-3"
                       >
                         <div>
-                          <span className="block text-sm font-medium text-[var(--text-muted)]">
+                          <span className="block text-xs font-medium text-[var(--text-muted)]">
                             {ui("الضريبة")}
                           </span>
                           <bdi
                             dir="ltr"
-                            className="mt-0.5 block font-mono text-base font-bold tabular-nums text-[var(--text-main)]"
+                            className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-[var(--text-main)]"
                           >
                             {preview.vat} SAR
                           </bdi>
                         </div>
                         <div className="border-s theme-border ps-3">
-                          <span className="block text-sm font-medium text-[var(--text-muted)]">
+                          <span className="block text-xs font-medium text-[var(--text-muted)]">
                             {ui("الإجمالي")}
                           </span>
                           <bdi
                             dir="ltr"
-                            className="mt-0.5 block font-mono text-lg font-bold tabular-nums text-[var(--accent-gold)]"
+                            className="mt-0.5 block font-mono text-base font-bold tabular-nums text-[var(--accent-gold)]"
                           >
                             {preview.total} SAR
                           </bdi>
@@ -601,19 +601,19 @@ export function CommercialFields({
                     </div>
 
                     {/* VAT Treatment Radio Cards (< 6 choices) */}
-                    <div className="space-y-3 lg:col-span-7">
+                    <div className="space-y-2.5 lg:col-span-7">
                       <fieldset className="space-y-2">
-                        <legend className="text-sm font-semibold text-[var(--text-main)]">
+                        <legend className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
                           {ui("معاملة الرحلة الضريبية")}
                         </legend>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
                           {TAX_CATEGORY_OPTIONS.map((option) => {
                             const checked = value.taxCategory === option.value;
                             return (
                               <label
                                 key={option.value}
                                 className={cn(
-                                  "relative flex min-h-12 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-sm transition-all focus-within:ring-2 focus-within:ring-[var(--focus-color)]/35",
+                                  "relative flex min-h-11 sm:min-h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-xs sm:text-sm transition-all focus-within:ring-2 focus-within:ring-[var(--focus-color)]/35",
                                   checked
                                     ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold shadow-2xs"
                                     : "border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] font-medium hover:border-[var(--accent-gold)]/55",
@@ -653,7 +653,7 @@ export function CommercialFields({
                                 </span>
                                 <Badge
                                   variant={checked ? "gold" : "secondary"}
-                                  className="shrink-0 font-mono text-xs px-2 py-0.5"
+                                  className="shrink-0 font-mono text-[11px] px-1.5 py-0.5"
                                 >
                                   {option.rate}
                                 </Badge>
@@ -689,7 +689,7 @@ export function CommercialFields({
                                   exemptionCode: e.target.value,
                                 })
                               }
-                              className="font-mono text-base min-h-12"
+                              className="font-mono"
                             />
                           </ExpandableField>
                           <ExpandableField
@@ -712,7 +712,6 @@ export function CommercialFields({
                                   exemptionReason: e.target.value,
                                 })
                               }
-                              className="text-base min-h-12"
                             />
                           </ExpandableField>
                         </div>
@@ -726,7 +725,7 @@ export function CommercialFields({
             {/* Option 2: Trip Commissions Checkbox Card */}
             <div
               className={cn(
-                "rounded-2xl border transition-colors",
+                "rounded-xl border transition-colors",
                 isCommissionsOpen
                   ? "border-[var(--accent-gold)]/45 bg-[var(--accent-surface)]/45"
                   : "theme-border bg-[var(--bg-card-subtle)]",
@@ -735,11 +734,11 @@ export function CommercialFields({
               <label
                 htmlFor={commissionsCheckboxId}
                 className={cn(
-                  "flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 select-none",
+                  "flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-2.5 select-none",
                   disabled && "cursor-not-allowed opacity-70",
                 )}
               >
-                <span className="flex min-w-0 items-center gap-3">
+                <span className="flex min-w-0 items-center gap-2.5">
                   <Checkbox
                     id={commissionsCheckboxId}
                     checked={isCommissionsOpen}
@@ -749,14 +748,14 @@ export function CommercialFields({
                     }
                     onChange={(e) => handleToggleCommissions(e.target.checked)}
                   />
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25">
                     <Percent className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-base font-bold text-[var(--text-main)]">
+                    <span className="block text-sm sm:text-base font-bold text-[var(--text-main)]">
                       {ui("العمولات")}
                     </span>
-                    <span className="block text-sm text-[var(--text-muted)]">
+                    <span className="block text-xs sm:text-sm text-[var(--text-muted)]">
                       {ui(
                         "تحديد عمولة السائق أو المندوب للرحلة — منفصلة عن سعر العميل",
                       )}
@@ -782,9 +781,9 @@ export function CommercialFields({
               {isCommissionsOpen && (
                 <div
                   id={commissionsPanelId}
-                  className="border-t theme-border p-4 sm:p-5 space-y-4"
+                  className="border-t theme-border p-4 sm:p-5 space-y-3.5"
                 >
-                  <p className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                  <p className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-muted)]">
                     <Info
                       className="h-4 w-4 shrink-0 text-[var(--accent-gold)]"
                       aria-hidden="true"
@@ -802,11 +801,11 @@ export function CommercialFields({
                       <label
                         htmlFor={driverCheckboxId}
                         className={cn(
-                          "flex min-h-12 cursor-pointer items-center justify-between gap-2.5 px-4 py-2.5 select-none",
+                          "flex min-h-11 sm:min-h-10 cursor-pointer items-center justify-between gap-2.5 px-3.5 py-2 select-none",
                           disabled && "cursor-not-allowed opacity-70",
                         )}
                       >
-                        <span className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex min-w-0 items-center gap-2">
                           <Checkbox
                             id={driverCheckboxId}
                             checked={isDriverOpen}
@@ -822,7 +821,7 @@ export function CommercialFields({
                             className="h-4 w-4 text-[var(--accent-gold)] shrink-0"
                             aria-hidden="true"
                           />
-                          <span className="text-sm font-bold text-[var(--text-main)] truncate">
+                          <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">
                             {ui("عمولة السائق")}
                           </span>
                         </span>
@@ -846,7 +845,7 @@ export function CommercialFields({
                       {isDriverOpen && (
                         <div
                           id={driverPanelId}
-                          className="border-t theme-border p-4"
+                          className="border-t theme-border p-3.5"
                         >
                           <CommissionMethodFields
                             value={value.driverCommission}
@@ -864,11 +863,11 @@ export function CommercialFields({
                       <label
                         htmlFor={repCheckboxId}
                         className={cn(
-                          "flex min-h-12 cursor-pointer items-center justify-between gap-2.5 px-4 py-2.5 select-none",
+                          "flex min-h-11 sm:min-h-10 cursor-pointer items-center justify-between gap-2.5 px-3.5 py-2 select-none",
                           disabled && "cursor-not-allowed opacity-70",
                         )}
                       >
-                        <span className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex min-w-0 items-center gap-2">
                           <Checkbox
                             id={repCheckboxId}
                             checked={isRepOpen}
@@ -882,7 +881,7 @@ export function CommercialFields({
                             className="h-4 w-4 text-[var(--accent-gold)] shrink-0"
                             aria-hidden="true"
                           />
-                          <span className="text-sm font-bold text-[var(--text-main)] truncate">
+                          <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">
                             {ui("عمولة المندوب")}
                           </span>
                         </span>
@@ -906,7 +905,7 @@ export function CommercialFields({
                       {isRepOpen && (
                         <div
                           id={repPanelId}
-                          className="border-t theme-border p-4 space-y-3"
+                          className="border-t theme-border p-3.5 space-y-3"
                         >
                           <div className="space-y-1.5">
                             <FullscreenSelect
@@ -1022,17 +1021,17 @@ function CommissionMethodFields({
   return (
     <div className="space-y-3">
       <fieldset className="space-y-1.5">
-        <legend className="text-sm font-semibold text-[var(--text-main)]">
+        <legend className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
           {ui("طريقة العمولة")}
         </legend>
-        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-[var(--bg-card-subtle)] p-1 border theme-border">
+        <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-[var(--bg-card-subtle)] p-1 border theme-border">
           {COMMISSION_METHOD_OPTIONS.map((option) => {
             const checked = value.mode === option.value;
             return (
               <label
                 key={option.value}
                 className={cn(
-                  "flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-3 py-2 text-center text-sm leading-snug transition-all focus-within:ring-2 focus-within:ring-[var(--focus-color)]/35",
+                  "flex min-h-10 sm:min-h-8 cursor-pointer items-center justify-center rounded-md px-2.5 py-1.5 text-center text-xs sm:text-sm leading-snug transition-all focus-within:ring-2 focus-within:ring-[var(--focus-color)]/35",
                   checked
                     ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] border border-[var(--accent-btn-border)] font-bold shadow-2xs"
                     : "text-[var(--text-muted)] font-medium hover:text-[var(--text-main)]",
@@ -1102,7 +1101,7 @@ function CommissionMethodFields({
             spellCheck={false}
             value={value.amount}
             onChange={(e) => onChange({ ...value, amount: e.target.value })}
-            className="font-mono text-base min-h-12"
+            className="font-mono"
           />
         </ExpandableField>
       )}
@@ -1134,7 +1133,7 @@ function CommissionMethodFields({
               spellCheck={false}
               value={value.base}
               onChange={(e) => onChange({ ...value, base: e.target.value })}
-              className="font-mono text-base min-h-12"
+              className="font-mono"
             />
           </ExpandableField>
 
@@ -1163,7 +1162,7 @@ function CommissionMethodFields({
               spellCheck={false}
               value={value.percent}
               onChange={(e) => onChange({ ...value, percent: e.target.value })}
-              className="font-mono text-base min-h-12"
+              className="font-mono"
             />
           </ExpandableField>
         </div>
@@ -1348,7 +1347,7 @@ function ContractFinanceEditor({
                   type="submit"
                   variant="gold"
                   disabled={m.busy}
-                  className="w-full sm:w-auto min-h-11 sm:min-h-10"
+                  className="w-full sm:w-auto"
                 >
                   {m.busy && feedbackScope === "save" ? (
                     <Loader2
@@ -1368,15 +1367,15 @@ function ContractFinanceEditor({
 
       {initial && (
         <Card className="overflow-hidden">
-          <CardHeader className="border-b theme-border bg-[var(--bg-card-subtle)] px-5 py-4 sm:px-6">
+          <CardHeader className="border-b theme-border bg-[var(--bg-card-subtle)] px-4 py-3.5 sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
-                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <CardTitle className="text-base sm:text-lg">
+                    <CardTitle className="text-base">
                       {ui("تنفيذ الرحلة واستحقاق العمولة")}
                     </CardTitle>
 
@@ -1409,7 +1408,7 @@ function ContractFinanceEditor({
             </div>
           </CardHeader>
 
-          <CardContent className="p-5 sm:p-6 space-y-4">
+          <CardContent className="p-4 sm:p-5 space-y-4">
             {initial.executionStatus === "PENDING" ? (
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Complete & Accrue Commission Card */}
@@ -1424,10 +1423,10 @@ function ContractFinanceEditor({
                         aria-hidden="true"
                       />
                       <div>
-                        <h4 className="text-base font-bold text-[var(--text-main)]">
+                        <h4 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                           {ui("اعتماد التنفيذ واستحقاق العمولة")}
                         </h4>
-                        <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+                        <p className="mt-0.5 text-xs sm:text-sm text-[var(--text-muted)]">
                           {ui(
                             "يؤكد إتمام الرحلة ويفعّل استحقاق العمولات وإمكانية إصدار الفاتورة الضريبية.",
                           )}
@@ -1446,7 +1445,6 @@ function ContractFinanceEditor({
                         max={currentSaudiPeriod().day}
                         value={day}
                         onChange={(e) => setDay(e.target.value)}
-                        className="min-h-12 text-base"
                       />
                     </div>
                   </div>
@@ -1455,7 +1453,7 @@ function ContractFinanceEditor({
                     type="submit"
                     variant="gold"
                     disabled={m.busy}
-                    className="w-full sm:w-auto self-start min-h-11 sm:min-h-10"
+                    className="w-full sm:w-auto self-start"
                   >
                     {m.busy && feedbackScope === "execution" ? (
                       <Loader2
@@ -1481,10 +1479,10 @@ function ContractFinanceEditor({
                         aria-hidden="true"
                       />
                       <div>
-                        <h4 className="text-base font-bold text-[var(--text-main)]">
+                        <h4 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                           {ui("إلغاء قبل التنفيذ")}
                         </h4>
-                        <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+                        <p className="mt-0.5 text-xs sm:text-sm text-[var(--text-muted)]">
                           {ui(
                             "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب عمولات.",
                           )}
@@ -1505,7 +1503,6 @@ function ContractFinanceEditor({
                         required
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
-                        className="min-h-12 text-base"
                       />
                     </ExpandableField>
                   </div>
@@ -1514,7 +1511,7 @@ function ContractFinanceEditor({
                     type="submit"
                     variant="outline"
                     disabled={m.busy}
-                    className="w-full sm:w-auto self-start min-h-11 sm:min-h-10 border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10"
+                    className="w-full sm:w-auto self-start border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10"
                   >
                     <Ban className="h-4 w-4" aria-hidden="true" />
                     <span>{ui("إلغاء قبل التنفيذ")}</span>

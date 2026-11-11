@@ -170,11 +170,11 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-b theme-border pb-4">
               <div>
-                <h1 className="text-xl font-bold text-[var(--text-main)]">
+                <h1 className="text-lg sm:text-xl font-bold text-[var(--text-main)]">
                   {ui("توثيق عقد ميقات الخليج")}
                 </h1>
                 <p
-                  className="mt-1 font-mono text-lg font-semibold text-[var(--accent-gold)]"
+                  className="mt-1 font-mono text-base sm:text-lg font-semibold text-[var(--accent-gold)]"
                   dir="ltr"
                 >
                   {contract.referenceNumber}
@@ -191,7 +191,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                 type="button"
                 disabled={isDownloading}
                 onClick={() => void download()}
-                className="gold-gradient-btn flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                className="gold-gradient-btn flex min-h-11 sm:min-h-9 w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs sm:text-sm font-bold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               >
                 {isDownloading ? (
                   <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -205,7 +205,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
                 href={pdfViewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] px-5 py-3 text-sm font-bold text-[var(--text-main)] transition-all duration-200"
+                className="flex min-h-11 sm:min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] px-4 py-2 text-xs sm:text-sm font-bold text-[var(--text-main)] transition-all duration-200"
               >
                 <ExternalLink className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
                 {ui("معاينة العقد PDF")}
@@ -338,7 +338,7 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-4 min-h-11 w-full rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] px-4 py-3 text-sm font-bold cursor-pointer transition"
+            className="mt-4 min-h-11 sm:min-h-9 w-full rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] px-4 py-2 text-xs sm:text-sm font-bold cursor-pointer transition"
           >
             {ui("إعادة المحاولة")}
           </button>

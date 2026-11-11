@@ -858,7 +858,7 @@ export default function CaptainsManagementPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder={ui("مثال: علي أحمد غلام أحمد")}
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   />
                 </div>
 
@@ -875,7 +875,7 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="captain@miqat.com"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -892,7 +892,7 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="0542273515"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -909,7 +909,7 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2553660073"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -928,7 +928,7 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="SA-39482910"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -947,7 +947,7 @@ export default function CaptainsManagementPage() {
                     }
                     placeholder="2028/04/22"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -965,7 +965,7 @@ export default function CaptainsManagementPage() {
                       })
                     }
                     placeholder={ui("ا ص ل 7223")}
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   />
                 </div>
 
@@ -978,7 +978,7 @@ export default function CaptainsManagementPage() {
                       type="button"
                       aria-pressed={formData.active !== false}
                       onClick={() => setFormData({ ...formData, active: true })}
-                      className={`min-h-11 p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      className={`min-h-11 sm:min-h-9 p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active !== false
                           ? "border-emerald-600 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-500/20"
                           : "border-[var(--control-border)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
@@ -993,7 +993,7 @@ export default function CaptainsManagementPage() {
                       onClick={() =>
                         setFormData({ ...formData, active: false })
                       }
-                      className={`min-h-11 p-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      className={`min-h-11 sm:min-h-9 p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                         formData.active === false
                           ? "border-rose-500 bg-rose-500/10 text-rose-800 dark:text-rose-300 ring-2 ring-rose-500/20"
                           : "border-[var(--control-border)] text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)]"
@@ -1013,13 +1013,13 @@ export default function CaptainsManagementPage() {
                     setIsAddModalOpen(false);
                     setEditingCaptain(null);
                   }}
-                  className="secondary-btn min-h-11 px-4 py-2 text-xs rounded-xl cursor-pointer"
+                  className="secondary-btn min-h-11 sm:min-h-9 px-4 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer"
                 >
                   {ui("إلغاء")}</button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="min-h-11 px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
+                  className="min-h-11 sm:min-h-9 px-5 py-1.5 text-xs sm:text-sm font-bold rounded-lg gold-gradient-btn transition disabled:opacity-50"
                 >
                   {ui(isSubmitting
                     ? "جاري الحفظ..."
@@ -1118,7 +1118,7 @@ export default function CaptainsManagementPage() {
                     if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
                     copyTimerRef.current = setTimeout(() => setCopied(false), 3000);
                   }}
-                  className={`min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                     copied
                       ? "bg-emerald-800 text-white shadow-xs"
                       : "gold-gradient-btn font-semibold shadow-xs hover:shadow-md"
@@ -1144,7 +1144,7 @@ export default function CaptainsManagementPage() {
                   setTempPasswordModal(null);
                   setCopied(false);
                 }}
-                className="gold-gradient-btn w-full min-h-11 py-2.5 rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+                className="gold-gradient-btn w-full min-h-11 sm:min-h-9 py-1.5 rounded-lg text-xs sm:text-sm font-bold shadow-xs cursor-pointer"
               >
                 {ui("تم، إغلاق النافذة")}</button>
             </div>

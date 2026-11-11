@@ -9,7 +9,7 @@ interface Props {
   onChange: (value: ReportPeriod) => void;
 }
 
-const INPUT = "theme-input mt-1 h-11 rounded-xl px-3 text-sm w-full";
+const INPUT = "theme-input mt-1 min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] w-full";
 
 export default function AccountingPeriodSelector({ value: v, onChange }: Props) {
   const ui = useUiText();

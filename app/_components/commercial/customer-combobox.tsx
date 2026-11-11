@@ -48,10 +48,8 @@ function CustomerModalBody({
   onChoose,
 }: CustomerModalBodyProps) {
   const ui = useUiText();
-  const { language } = useLanguage();
   const isFullscreen = useIsPickerFullscreen();
   const requestDialogClose = useFullscreenDialogClose();
-  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
   const [search, setSearch] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement>(null);
@@ -109,7 +107,7 @@ function CustomerModalBody({
           <Search
             className={cn(
               "pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--text-muted)]",
-              isFullscreen ? "start-4 h-5 w-5" : "start-3 h-4 w-4",
+              isFullscreen ? "start-3.5 h-4 w-4" : "start-2.5 h-3.5 w-3.5",
             )}
             aria-hidden="true"
           />
@@ -128,8 +126,8 @@ function CustomerModalBody({
             className={cn(
               "theme-input w-full border border-[var(--control-border)] bg-[var(--input-bg)] font-medium text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-[var(--accent-gold)]/20 focus:outline-hidden",
               isFullscreen
-                ? "min-h-14 rounded-2xl border-2 py-3.5 ps-12 pe-12 text-base sm:text-lg focus:ring-3"
-                : "min-h-10 rounded-xl border py-2 ps-9 pe-9 text-sm sm:text-base focus:ring-2",
+                ? "min-h-11 rounded-xl border-2 py-2.5 ps-11 pe-11 text-base focus:ring-2"
+                : "min-h-9 rounded-lg border py-1.5 ps-8 pe-8 text-xs sm:text-[0.8125rem] focus:ring-2",
             )}
           />
           {search && (
@@ -143,8 +141,8 @@ function CustomerModalBody({
               className={cn(
                 "absolute top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:text-[var(--text-main)] cursor-pointer transition",
                 isFullscreen
-                  ? "end-2 min-h-10 min-w-10 rounded-xl"
-                  : "end-1.5 min-h-8 min-w-8",
+                  ? "end-1 min-h-9 min-w-9 rounded-lg"
+                  : "end-1 min-h-7 min-w-7",
               )}
             >
               <X className="h-4 w-4" aria-hidden="true" />
@@ -156,7 +154,7 @@ function CustomerModalBody({
       <div
         className={cn(
           "min-h-0 flex-1 overflow-y-auto overscroll-contain p-1",
-          isFullscreen ? "space-y-3" : "space-y-1.5",
+          isFullscreen ? "space-y-2.5" : "space-y-1.5",
         )}
       >
         <button
@@ -164,10 +162,10 @@ function CustomerModalBody({
           aria-pressed={!value}
           onClick={() => pickCustomer(null)}
           className={cn(
-            "fullscreen-select-option flex w-full items-center justify-between gap-3 text-start font-semibold transition cursor-pointer",
+            "fullscreen-select-option flex w-full items-center justify-between gap-2.5 text-start font-semibold transition cursor-pointer",
             isFullscreen
-              ? "min-h-14 rounded-2xl border-2 px-5 py-3.5 text-base"
-              : "min-h-10 rounded-xl border px-3.5 py-2 text-sm sm:text-base",
+              ? "min-h-13 rounded-xl border px-3.5 py-2.5 text-sm sm:text-base"
+              : "min-h-9 rounded-lg border px-2.5 py-1.5 text-xs sm:text-[0.8125rem]",
             !value
               ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
               : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
@@ -178,13 +176,13 @@ function CustomerModalBody({
             aria-hidden="true"
             className={cn(
               "flex shrink-0 items-center justify-center rounded-full border transition-colors",
-              isFullscreen ? "h-7 w-7" : "h-6 w-6",
+              isFullscreen ? "h-6 w-6" : "h-5 w-5",
               !value
                 ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
                 : "border-[var(--control-border)] text-transparent",
             )}
           >
-            <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
+            <Check className={isFullscreen ? "h-3.5 w-3.5" : "h-3 w-3"} />
           </span>
         </button>
 
@@ -225,7 +223,7 @@ function CustomerModalBody({
             role="list"
             className={cn(
               "grid",
-              isFullscreen ? "gap-3 grid-cols-1 md:grid-cols-2" : "gap-1.5 grid-cols-1",
+              isFullscreen ? "gap-2.5 grid-cols-1 md:grid-cols-2" : "gap-1.5 grid-cols-1",
             )}
           >
             {activeItems.map((customer) => {
@@ -237,10 +235,10 @@ function CustomerModalBody({
                     aria-pressed={isSelected}
                     onClick={() => pickCustomer(customer)}
                     className={cn(
-                      "fullscreen-select-option flex w-full items-start justify-between gap-3 text-start transition cursor-pointer",
+                      "fullscreen-select-option flex w-full items-start justify-between gap-2.5 text-start transition cursor-pointer",
                       isFullscreen
-                        ? "min-h-18 rounded-2xl border-2 px-5 py-4 text-lg"
-                        : "min-h-11 rounded-xl border px-3.5 py-2.5 text-sm sm:text-base",
+                        ? "min-h-12 rounded-xl border px-3.5 py-2.5 text-base"
+                        : "min-h-9 rounded-lg border px-2.5 py-1.5 text-xs sm:text-[0.8125rem]",
                       isSelected
                         ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--text-main)] shadow-xs"
                         : "border theme-border bg-[var(--bg-card)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50 hover:bg-[var(--bg-card-subtle)]",
@@ -249,22 +247,22 @@ function CustomerModalBody({
                     <span className="flex min-w-0 items-start gap-2.5">
                       <span
                         className={cn(
-                          "mt-0.5 flex shrink-0 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)]",
-                          isFullscreen ? "h-9 w-9" : "h-7 w-7 rounded-lg",
+                          "mt-0.5 flex shrink-0 items-center justify-center rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)]",
+                          isFullscreen ? "h-7 w-7" : "h-6 w-6",
                         )}
                       >
                         {customer.type === "COMPANY" ? (
-                          <Building2 className="h-4 w-4" aria-hidden="true" />
+                          <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
                         ) : (
-                          <User className="h-4 w-4" aria-hidden="true" />
+                          <User className="h-3.5 w-3.5" aria-hidden="true" />
                         )}
                       </span>
                       <span className="min-w-0 space-y-0.5">
                         <span className="flex flex-wrap items-center gap-2">
                           <span
                             className={cn(
-                              "font-bold",
-                              isFullscreen ? "text-lg sm:text-xl" : "text-sm sm:text-base",
+                              "font-bold leading-snug",
+                              isFullscreen ? "text-sm sm:text-base" : "text-xs sm:text-[0.8125rem]",
                               isSelected
                                 ? "text-[var(--accent-gold)]"
                                 : "text-[var(--text-main)]",
@@ -274,7 +272,7 @@ function CustomerModalBody({
                           </span>
                           <Badge
                             variant="outline"
-                            className="text-xs font-medium px-2 py-0.5"
+                            className="text-[11px] font-medium px-1.5 py-0.5"
                           >
                             {ui(customer.type === "COMPANY" ? "شركة" : "فرد")}
                           </Badge>
@@ -284,7 +282,7 @@ function CustomerModalBody({
                             dir="ltr"
                             className={cn(
                               "block font-mono text-[var(--text-muted)]",
-                              isFullscreen ? "text-base" : "text-xs sm:text-sm",
+                              isFullscreen ? "text-xs sm:text-sm" : "text-[11px] sm:text-xs",
                             )}
                           >
                             {customer.phone}
@@ -297,13 +295,13 @@ function CustomerModalBody({
                       aria-hidden="true"
                       className={cn(
                         "mt-0.5 flex shrink-0 items-center justify-center rounded-full border transition-colors",
-                        isFullscreen ? "h-8 w-8" : "h-6 w-6",
+                        isFullscreen ? "h-6 w-6" : "h-5 w-5",
                         isSelected
                           ? "border-[var(--accent-btn-border)] bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
                           : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-transparent",
                       )}
                     >
-                      <Check className={isFullscreen ? "h-4 w-4" : "h-3.5 w-3.5"} />
+                      <Check className={isFullscreen ? "h-3.5 w-3.5" : "h-3 w-3"} />
                     </span>
                   </button>
                 </li>
@@ -325,25 +323,15 @@ function CustomerModalBody({
           rel="noopener noreferrer"
           onClick={() => void requestDialogClose?.()}
           className={cn(
-            "inline-flex items-center gap-2 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] font-semibold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition",
+            "inline-flex items-center gap-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] font-semibold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition",
             isFullscreen
-              ? "min-h-12 px-4 py-2.5 text-sm sm:text-base"
-              : "min-h-9 px-3 py-1.5 text-xs sm:text-sm",
+              ? "min-h-11 px-3.5 py-2 text-sm"
+              : "min-h-8 px-2.5 py-1 text-xs",
           )}
         >
           <span>{ui("إضافة أو تعديل عميل")}</span>
-          <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         </Link>
-
-        {isFullscreen && (
-          <button
-            type="button"
-            onClick={() => void requestDialogClose?.()}
-            className="inline-flex min-h-12 items-center justify-center rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-6 py-2.5 text-base font-semibold text-[var(--text-main)] hover:bg-[var(--bg-card)] cursor-pointer transition"
-          >
-            {text("إغلاق", "Close")}
-          </button>
-        )}
       </div>
     </div>
   );
@@ -408,19 +396,19 @@ export function CustomerCombobox({
           aria-controls={!isMobile && open ? overlayId : undefined}
           onClick={toggleFromTrigger}
           className={cn(
-            "flex min-h-12 w-full items-center justify-between gap-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] px-4 py-2.5 text-start text-base text-[var(--text-main)] transition-colors outline-none hover:border-[var(--accent-gold)] focus-visible:border-[var(--accent-gold)] focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-55 cursor-pointer",
+            "flex min-h-11 sm:min-h-9 w-full items-center justify-between gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] px-3 py-1.5 text-start text-base sm:text-[0.8125rem] text-[var(--text-main)] transition-colors outline-none hover:border-[var(--accent-gold)] focus-visible:border-[var(--accent-gold)] focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-55 cursor-pointer",
             open &&
               "border-[var(--accent-gold)] ring-2 ring-[var(--accent-gold)]/20",
           )}
         >
-          <span className="flex min-w-0 items-center gap-2.5">
+          <span className="flex min-w-0 items-center gap-2">
             {selectedCustomer ? (
               <>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)]">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)]">
                   {selectedCustomer.type === "COMPANY" ? (
-                    <Building2 className="h-4 w-4" aria-hidden="true" />
+                    <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
                   ) : (
-                    <User className="h-4 w-4" aria-hidden="true" />
+                    <User className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
                 </span>
                 <span className="truncate font-semibold">
@@ -428,14 +416,14 @@ export function CustomerCombobox({
                 </span>
                 <Badge
                   variant="secondary"
-                  className="shrink-0 text-xs font-medium px-2 py-0.5"
+                  className="shrink-0 text-[11px] font-medium px-1.5 py-0.5"
                 >
                   {ui(selectedCustomer.type === "COMPANY" ? "شركة" : "فرد")}
                 </Badge>
                 {selectedCustomer.phone && (
                   <bdi
                     dir="ltr"
-                    className="hidden sm:inline shrink-0 font-mono text-sm text-[var(--text-muted)]"
+                    className="hidden sm:inline shrink-0 font-mono text-xs text-[var(--text-muted)]"
                   >
                     {selectedCustomer.phone}
                   </bdi>
@@ -467,7 +455,7 @@ export function CustomerCombobox({
             onClick={() => handleChoose(null)}
             aria-label={ui("مسح التحديد")}
             title={ui("مسح التحديد")}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
+            className="inline-flex h-11 w-11 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>

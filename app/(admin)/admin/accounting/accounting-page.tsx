@@ -26,7 +26,7 @@ interface ClosedPeriod {
   closedAt: string;
 }
 
-const INPUT = "theme-input h-11 rounded-xl px-3 text-sm";
+const INPUT = "theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 function LegacyReview({
   report,
@@ -107,7 +107,7 @@ function LegacyReview({
         <button
           type="submit"
           disabled={saving}
-          className="gold-gradient-btn min-h-11 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
+          className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-40 cursor-pointer"
         >
           {ui("اعتماد ترحيل الفاتورة")}</button>
       </form>
@@ -204,7 +204,7 @@ function PeriodArchive({
         <button
           type="submit"
           disabled={saving || !confirmed || report.unpostedInvoices.length > 0}
-          className="gold-gradient-btn min-h-11 rounded-xl px-5 py-3 text-xs sm:text-sm font-semibold disabled:opacity-40 cursor-pointer shadow-sm"
+          className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-semibold disabled:opacity-40 cursor-pointer shadow-sm"
         >
           {ui(saving ? "جارٍ إقفال الفترة…" : "تأكيد إقفال الفترة وحفظ الأرشيف")}
         </button>
@@ -379,7 +379,7 @@ export default function AccountingPage() {
           <>
             <Link
               href="/admin/accounts"
-              className="inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
               <BookOpen className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("nav.accounts"))}</span>
@@ -387,7 +387,7 @@ export default function AccountingPage() {
 
             <Link
               href="/admin/vat-returns"
-              className="inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
               <Calculator className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("nav.vatReturns"))}</span>
@@ -422,7 +422,7 @@ export default function AccountingPage() {
             type="button"
             aria-pressed={tab === key}
             onClick={() => setTab(key)}
-            className={`min-h-11 sm:min-h-10 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold border transition-none cursor-pointer ${
+            className={`min-h-11 sm:min-h-9 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold border transition-none cursor-pointer ${
               tab === key
                 ? "bg-[var(--accent-btn-bg)] border-[var(--accent-btn-border)] text-[var(--accent-btn-fg)]"
                 : "theme-card border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
@@ -439,7 +439,7 @@ export default function AccountingPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-3 text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
+              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
               onClick={changed}
             >
               {ui(t("common.refresh"))}
@@ -450,7 +450,7 @@ export default function AccountingPage() {
                 type="button"
                 disabled={exporting || isLoading || !data}
                 onClick={() => void download(f)}
-                className="gold-gradient-btn min-h-11 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 cursor-pointer"
+                className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-40 cursor-pointer"
               >
                 {ui(f === "pdf"
                   ? t("accounting.exportPdf")

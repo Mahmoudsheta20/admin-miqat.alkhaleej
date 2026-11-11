@@ -25,7 +25,7 @@ interface InvoiceBankFieldsProps {
   onChange: (value: InvoiceBankForm) => void;
 }
 const INLINE_INPUT =
-  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base";
+  "theme-input min-h-11 sm:min-h-9 w-full min-w-0 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 export default function InvoiceBankFields({
   isDefaultSettings = false,
   isEnabled,
@@ -36,22 +36,22 @@ export default function InvoiceBankFields({
   const ui = useUiText();
 
   return (
-    <section className="theme-card rounded-2xl p-5 sm:p-6">
-      <label className="flex min-h-12 cursor-pointer items-start gap-3">
+    <section className="theme-card rounded-2xl p-4 sm:p-5">
+      <label className="flex min-h-11 cursor-pointer items-start gap-3">
         <Checkbox
           checked={isEnabled}
           onChange={(event) => onToggle(event.target.checked)}
-          className="mt-1"
+          className="mt-0.5"
         />
         <span>
-          <span className="block text-base font-bold text-[var(--text-main)]">
+          <span className="block text-sm sm:text-base font-bold text-[var(--text-main)]">
             {ui(
               isDefaultSettings
                 ? "حفظ بيانات الحساب البنكي الافتراضي"
                 : "إضافة بيانات التحويل البنكي",
             )}
           </span>
-          <span className="mt-1 block text-sm text-[var(--text-muted)] leading-relaxed">
+          <span className="mt-0.5 block text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
             {ui(
               isDefaultSettings
                 ? "تُملأ تلقائيًا في الفواتير المبدئية والضريبية الجديدة. يمكنك تعديلها لكل فاتورة، والفواتير المحفوظة تحتفظ ببياناتها."
@@ -61,7 +61,7 @@ export default function InvoiceBankFields({
         </span>
       </label>
       {isEnabled && (
-        <div className="mt-5 grid gap-4 border-t theme-border pt-5 sm:grid-cols-2">
+        <div className="mt-4 grid gap-4 border-t theme-border pt-4 sm:grid-cols-2">
           {(
             [
               { key: "bankName", label: "اسم البنك" },

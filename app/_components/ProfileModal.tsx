@@ -270,7 +270,7 @@ function ProfileModalContent({
                     onChange={(e) => setName(e.target.value)}
                     placeholder={ui("اسم المستخدم")}
                     required
-                    className="theme-input w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl font-bold"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg font-semibold"
                   />
                 </div>
               </div>
@@ -288,7 +288,7 @@ function ProfileModalContent({
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="05xxxxxxxx"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 px-3.5 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg font-mono text-start"
                   />
                 </div>
               </div>
@@ -342,13 +342,13 @@ function ProfileModalContent({
               <button
                 type="button"
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
-                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}</button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-h-11 px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md disabled:opacity-50 cursor-pointer"
               >
                 {ui(isSubmitting ? "جاري الحفظ..." : "حفظ التغييرات")}
               </button>
@@ -399,14 +399,14 @@ function ProfileModalContent({
                   placeholder={ui("أدخل كلمة المرور الحالية")}
                   required
                   dir="ltr"
-                  className="theme-input w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
+                  className="theme-input w-full min-h-11 sm:min-h-9 ps-3 pe-10 py-1.5 text-base sm:text-[0.8125rem] rounded-lg font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPass(!showCurrentPass)}
                   aria-label={ui(showCurrentPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                   aria-pressed={showCurrentPass}
-                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                  className="absolute end-1 h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   {showCurrentPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
@@ -427,14 +427,14 @@ function ProfileModalContent({
                   placeholder={ui("كلمة مرور جديدة (8 خانات على الأقل)")}
                   required
                   dir="ltr"
-                  className="theme-input w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
+                  className="theme-input w-full min-h-11 sm:min-h-9 ps-3 pe-10 py-1.5 text-base sm:text-[0.8125rem] rounded-lg font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPass(!showNewPass)}
                   aria-label={ui(showNewPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                   aria-pressed={showNewPass}
-                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                  className="absolute end-1 h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   {showNewPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
@@ -455,14 +455,14 @@ function ProfileModalContent({
                   placeholder={ui("أعد إدخال كلمة المرور الجديدة للتأكيد")}
                   required
                   dir="ltr"
-                  className="theme-input w-full min-h-11 ps-3.5 pe-11 py-2.5 text-sm sm:text-xs rounded-xl font-mono text-start"
+                  className="theme-input w-full min-h-11 sm:min-h-9 ps-3 pe-10 py-1.5 text-base sm:text-[0.8125rem] rounded-lg font-mono text-start"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPass(!showConfirmPass)}
                   aria-label={ui(showConfirmPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                   aria-pressed={showConfirmPass}
-                  className="absolute end-1 h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                  className="absolute end-1 h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   {showConfirmPass ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                 </button>
@@ -474,13 +474,13 @@ function ProfileModalContent({
               <button
                 type="button"
                 disabled={isSubmitting || isChangingPass} onClick={onClose}
-                className="min-h-11 px-4 py-2 text-xs font-bold rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}</button>
               <button
                 type="submit"
                 disabled={isChangingPass}
-                className="min-h-11 px-6 py-2.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                className="min-h-11 sm:min-h-9 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
               >
                 {isChangingPass ? (
                   <>

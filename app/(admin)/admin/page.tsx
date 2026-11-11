@@ -573,7 +573,7 @@ export default function AdminDashboardPage() {
                     ? "/admin/fleet"
                     : "/admin/contracts"
               }
-              className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg text-sm font-semibold text-[var(--accent-gold)] hover:underline"
+              className="inline-flex items-center gap-1.5 min-h-11 sm:min-h-9 px-3 rounded-lg text-xs sm:text-sm font-semibold text-[var(--accent-gold)] hover:underline"
             >
               <span>
                 {activeTab === "invoices"
@@ -624,7 +624,7 @@ export default function AdminDashboardPage() {
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`min-h-11 px-3.5 rounded-lg border text-xs sm:text-sm font-semibold whitespace-nowrap inline-flex items-center gap-2 transition-none cursor-pointer ${
+                    className={`min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg border text-xs sm:text-[0.8125rem] font-semibold whitespace-nowrap inline-flex items-center gap-2 transition-none cursor-pointer ${
                       isSelected
                         ? "bg-[var(--accent-btn-bg)] border-[var(--accent-btn-border)] text-[var(--accent-btn-fg)]"
                         : "bg-[var(--bg-card-subtle)] border-[var(--control-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)]"
@@ -651,14 +651,14 @@ export default function AdminDashboardPage() {
                 onChange={(e) => setFeedSearch(e.target.value)}
                 placeholder={text("بحث سريع بالمرجع، العميل، اللوحة...", "Filter by ref, customer, plate...")}
                 aria-label={text("بحث سريع في السجل", "Quick filter dashboard records")}
-                className="w-full min-h-11 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] ps-9 pe-9 text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden"
+                className="w-full min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] ps-9 pe-9 py-1.5 text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:outline-hidden"
               />
               {feedSearch && (
                 <button
                   type="button"
                   onClick={() => setFeedSearch("")}
                   aria-label={text("مسح البحث", "Clear search")}
-                  className="absolute top-1/2 -translate-y-1/2 end-1.5 w-8 h-8 inline-flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                  className="absolute top-1/2 -translate-y-1/2 end-1.5 min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>

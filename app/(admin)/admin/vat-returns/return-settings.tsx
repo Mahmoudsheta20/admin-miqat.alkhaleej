@@ -77,7 +77,7 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
           {ui("تُحفظ القيم لكل ربع مع سجل مراجعة. أدخل الرصيد المتاح فعليًا من إقرار سابق؛ لا يُرحّل رصيد الربع السابق تلقائيًا لتجنب خصمه مرتين. التصحيح الموجب يزيد الضريبة، والسالب يخفضها.")}
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="text-sm font-bold">
+          <label className="text-xs sm:text-[0.8125rem] font-bold">
             {ui("تصحيحات سابقة (الخانة 14)")}
             <input
               required
@@ -85,12 +85,12 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
               inputMode="decimal"
               dir="ltr"
               placeholder="0.00"
-              className="theme-input mt-2 h-11 w-full rounded-xl px-3 font-mono"
+              className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono"
               value={correction}
               onChange={(e) => setCorrection(e.target.value)}
             />
           </label>
-          <label className="text-sm font-bold">
+          <label className="text-xs sm:text-[0.8125rem] font-bold">
             {ui("الرصيد الدائن المتاح (الخانة 15)")}
             <input
               required
@@ -98,18 +98,18 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
               inputMode="decimal"
               dir="ltr"
               placeholder="0.00"
-              className="theme-input mt-2 h-11 w-full rounded-xl px-3 font-mono"
+              className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono"
               value={credit}
               onChange={(e) => setCredit(e.target.value)}
             />
           </label>
         </div>
-        <label className="block text-sm font-bold">
+        <label className="block text-xs sm:text-[0.8125rem] font-bold">
           {ui("تاريخ تقديم هذا الإقرار في بوابة الهيئة (اختياري)")}
           <input
             type="date"
             dir="ltr"
-            className="theme-input mt-2 h-11 w-full rounded-xl px-3 font-mono text-start"
+            className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono text-start"
             value={filedOn}
             onChange={(e) => setFiledOn(e.target.value)}
           />
@@ -117,14 +117,14 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
             {ui("سجّل التاريخ بعد تقديم الإقرار فعليًا. يُستخدم لتحديد خانة الإشعارات الدائنة اللاحقة؛ لا يرسل النظام أي إقرار.")}
           </span>
         </label>
-        <label className="block text-sm font-bold">
+        <label className="block text-xs sm:text-[0.8125rem] font-bold">
           {ui("مرجع التصحيح أو الإقرار السابق")}
           <textarea
             required={requiresNote}
             minLength={requiresNote ? 5 : undefined}
             maxLength={1000}
             rows={2}
-            className="theme-input mt-2 w-full rounded-xl px-3 py-2 text-sm"
+            className="theme-input mt-1.5 w-full rounded-lg px-3 py-2 text-base sm:text-[0.8125rem]"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
@@ -140,7 +140,7 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
         <button
           type="submit"
           disabled={isSaving}
-          className="gold-gradient-btn min-h-11 rounded-xl px-5 py-3 text-sm font-bold disabled:opacity-50 cursor-pointer"
+          className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer"
         >
           {ui(isSaving ? "جارٍ الحفظ…" : "حفظ وإعادة حساب الإقرار")}
         </button>

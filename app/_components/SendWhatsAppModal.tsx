@@ -136,7 +136,7 @@ function SendWhatsAppModalContent({
                 aria-describedby={phoneHintId}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="theme-input w-full min-h-11 px-3.5 py-2.5 rounded-xl text-sm font-mono text-start"
+                className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono text-start"
               />
               <span id={phoneHintId} className="text-xs text-[var(--text-muted)] mt-1.5 block">
                 {ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
@@ -154,7 +154,7 @@ function SendWhatsAppModalContent({
               <button
                 type="submit"
                 disabled={sending}
-                className="flex-1 min-h-11 py-2.5 px-4 rounded-xl text-xs font-bold gold-gradient-btn transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                className="flex-1 min-h-11 sm:min-h-9 py-1.5 px-4 rounded-lg text-xs sm:text-sm font-bold gold-gradient-btn transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {sending ? (
                   <>
@@ -172,7 +172,7 @@ function SendWhatsAppModalContent({
                 type="button"
                 disabled={sending}
                 onClick={onClose}
-                className="min-h-11 px-4 py-2.5 rounded-xl text-xs font-bold border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}
               </button>

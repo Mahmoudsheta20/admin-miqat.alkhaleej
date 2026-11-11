@@ -188,7 +188,7 @@ export default function CaptainHomePage() {
             </button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="text-lg sm:text-2xl font-semibold text-[var(--text-main)] truncate">
+                <h1 className="text-lg sm:text-xl font-semibold text-[var(--text-main)] truncate">
                   {ui("مرحباً بك، كابتن")} {user.name}
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-[var(--accent-surface)] text-[var(--accent-gold)] text-xs font-bold border border-[var(--accent-gold)]/35 shrink-0">
@@ -207,7 +207,7 @@ export default function CaptainHomePage() {
             type="button"
             onClick={() => loadData(true)}
             disabled={isLoading}
-            className="self-start sm:self-center inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] disabled:opacity-50 cursor-pointer transition-colors"
+            className="self-start sm:self-center inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] disabled:opacity-50 cursor-pointer transition-colors"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
@@ -328,14 +328,14 @@ export default function CaptainHomePage() {
                 <button
                   type="button"
                   onClick={() => setIsCreateFullscreen(true)}
-                  className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl sm:rounded-2xl border border-[var(--control-border)] bg-[var(--bg-card)] text-sm font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+                  className="w-full sm:w-auto min-h-11 sm:min-h-9 inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] text-xs sm:text-sm font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
                 >
                   <Maximize2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{text("إنشاء بملء الشاشة", "Full-screen create")}</span>
                 </button>
                 <Link
                   href="/captain/contract"
-                  className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl gold-gradient-btn text-xs font-bold transition shadow-md"
+                  className="w-full sm:w-auto min-h-11 sm:min-h-9 inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md"
                 >
                   <FilePlus2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {ui("إنشاء عقد رحلة جديد")}
@@ -344,7 +344,7 @@ export default function CaptainHomePage() {
             ) : (
               <Link
                 href="/captain/inspection"
-                className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl sm:rounded-2xl gold-gradient-btn text-xs font-bold transition shadow-md"
+                className="w-full sm:w-auto min-h-11 sm:min-h-9 inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-md"
               >
                 <ClipboardCheck
                   className="w-4 h-4 shrink-0"
@@ -624,7 +624,7 @@ export default function CaptainHomePage() {
                       <a
                         href={pdfDownloadHref}
                         download={`Contract_${c.referenceNumber}.pdf`}
-                        className="inline-flex min-h-10 items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold transition text-[var(--text-main)]"
+                        className="inline-flex min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold transition text-[var(--text-main)]"
                         aria-label={`${ui("تحميل العقد PDF")} ${c.referenceNumber}`}
                         title={ui("تحميل العقد PDF")}
                       >
@@ -638,7 +638,7 @@ export default function CaptainHomePage() {
                         type="button"
                         onClick={() => openPdf(c)}
                         aria-label={`${ui("عرض PDF")} ${c.referenceNumber}`}
-                        className="inline-flex min-h-10 items-center gap-1.5 px-3.5 py-1.5 rounded-xl gold-gradient-btn text-xs font-bold transition shadow-xs cursor-pointer"
+                        className="inline-flex min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold transition shadow-xs cursor-pointer"
                       >
                         <FileText className="w-3.5 h-3.5" aria-hidden="true" />
                         {ui("عرض PDF")}

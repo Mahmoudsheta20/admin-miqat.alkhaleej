@@ -26,7 +26,7 @@ interface ReverseTripModalProps {
   onSuccess?: (newContract: Contract) => void;
 }
 
-const FIELD_CLASS = "theme-input w-full min-w-0 min-h-12 rounded-xl px-3 py-2 text-base";
+const FIELD_CLASS = "theme-input w-full min-w-0 min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 export default function ReverseTripModal(props: ReverseTripModalProps) {
 
@@ -129,24 +129,24 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
       className="return-trip-dialog fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-2 sm:p-6"
     >
       <div className="mobile-dialog-panel mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-2xl border theme-border theme-card shadow-2xl">
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b theme-border p-4 sm:px-6">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b theme-border p-4 sm:px-5">
           <div className="min-w-0">
-            <h2 id="return-trip-title" className="flex items-center gap-2 text-lg font-bold"><ArrowLeftRight aria-hidden="true" className="h-5 w-5 text-[var(--accent-gold)]" />{ui(isRTL ? "رحلة عودة" : "Return Trip")}</h2>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">{ui(isRTL ? "من العقد " : "From Contract ")}<span className="font-mono" dir="ltr">{contract.referenceNumber}</span></p>
+            <h2 id="return-trip-title" className="flex items-center gap-2 text-base sm:text-lg font-bold"><ArrowLeftRight aria-hidden="true" className="h-4 w-4 text-[var(--accent-gold)]" />{ui(isRTL ? "رحلة عودة" : "Return Trip")}</h2>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">{ui(isRTL ? "من العقد " : "From Contract ")}<span className="font-mono" dir="ltr">{contract.referenceNumber}</span></p>
           </div>
-          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={ui(t("common.close"))} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] cursor-pointer"><X aria-hidden="true" className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={ui(t("common.close"))} className="flex h-11 w-11 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] cursor-pointer"><X aria-hidden="true" className="h-5 w-5" /></button>
         </header>
         {createdContract ? (
           <div className="space-y-4 p-6 text-center" role="status">
             <CheckCircle2 aria-hidden="true" className="mx-auto h-12 w-12 text-emerald-700 dark:text-emerald-300" />
-            <h3 className="text-lg font-bold">{ui(isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully")}</h3>
-            <p className="font-mono text-[var(--text-muted)]" dir="ltr">{createdContract.referenceNumber}</p>
-            {!createdContract.pdfPath && <p className="text-sm text-[var(--accent-gold)]">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
-            <button type="button" onClick={() => { onClose(); router.push(`/admin/contracts/${createdContract.id}/edit`); }} className="min-h-12 w-full rounded-xl gold-gradient-btn px-4 font-bold cursor-pointer">{ui(isRTL ? "عرض وتعديل عقد العودة" : "View & Edit Return Contract")}</button>
+            <h3 className="text-base sm:text-lg font-bold">{ui(isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully")}</h3>
+            <p className="font-mono text-sm text-[var(--text-muted)]" dir="ltr">{createdContract.referenceNumber}</p>
+            {!createdContract.pdfPath && <p className="text-xs sm:text-sm text-[var(--accent-gold)]">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
+            <button type="button" onClick={() => { onClose(); router.push(`/admin/contracts/${createdContract.id}/edit`); }} className="min-h-11 sm:min-h-9 w-full rounded-lg gold-gradient-btn px-4 text-xs sm:text-sm font-bold cursor-pointer">{ui(isRTL ? "عرض وتعديل عقد العودة" : "View & Edit Return Contract")}</button>
           </div>
         ) : (
           <>
-            <form id="return-trip-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-6">
+            <form id="return-trip-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-5">
               <div className="rounded-xl border theme-border theme-card-subtle p-4">
                 <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="grid min-w-0 grid-cols-1 gap-3 disabled:opacity-60 sm:grid-cols-2">
                   <ExpandableField
@@ -169,7 +169,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
                   </ExpandableField>
                 </fieldset>
                 <p className="mt-2 text-xs text-[var(--text-muted)]">{ui(isRTL ? "تم عكس المسار تلقائياً، ويمكنك تعديله." : "Route reversed automatically, you may adjust it.")}</p>
-                <p className="mt-3 border-t theme-border pt-3 text-sm text-[var(--text-muted)]">{ui(isRTL ? `نفس العميل و${contract.passengers?.length || 0} ركاب. سيُنشأ عقد جديد، وتبقى الرحلة الأصلية كما هي.` : `Same client and ${contract.passengers?.length || 0} passengers. A new contract will be created, leaving the original intact.`)}</p>
+                <p className="mt-3 border-t theme-border pt-3 text-xs sm:text-sm text-[var(--text-muted)]">{ui(isRTL ? `نفس العميل و${contract.passengers?.length || 0} ركاب. سيُنشأ عقد جديد، وتبقى الرحلة الأصلية كما هي.` : `Same client and ${contract.passengers?.length || 0} passengers. A new contract will be created, leaving the original intact.`)}</p>
               </div>
               <fieldset disabled={isSubmitting || isLoading || Boolean(loadError)} className="min-w-0 space-y-4 disabled:opacity-60">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -213,7 +213,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
                     })),
                   ]}
                 />
-                {!isLoading && !isOriginalCaptainActive && <p className="text-sm text-[var(--accent-gold)]">{ui(isRTL ? "الكابتن الأصلي غير نشط. اختر كابتناً بديلاً." : "Original captain is inactive. Please choose a replacement captain.")}</p>}
+                {!isLoading && !isOriginalCaptainActive && <p className="text-xs sm:text-sm text-[var(--accent-gold)]">{ui(isRTL ? "الكابتن الأصلي غير نشط. اختر كابتناً بديلاً." : "Original captain is inactive. Please choose a replacement captain.")}</p>}
                 <FullscreenSelect
                   label={ui(isRTL ? "المركبة" : "Vehicle")}
                   required
@@ -237,17 +237,17 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
                     })),
                   ]}
                 />
-                <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border theme-border p-4">
+                <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border theme-border p-3.5">
                   <Checkbox required checked={isConfirmed} onChange={event => setIsConfirmed(event.target.checked)} className="mt-0.5" />
-                  <span className="text-sm leading-relaxed text-[var(--text-main)]">{ui(isRTL ? "أؤكد إجراء الفحص الفني فعلياً واجتياز جميع بنوده للمركبة والكابتن المختارين، وصحة بيانات رحلة العودة. سيكون تاريخ إصدار العقد وتاريخ الفحص مطابقين لتاريخ رحلة العودة المختار." : "I confirm that safety inspection passed all 16 points for the selected vehicle and captain, and return details are accurate. Issue and inspection dates will match the return date.")}</span>
+                  <span className="text-xs sm:text-sm leading-relaxed text-[var(--text-main)]">{ui(isRTL ? "أؤكد إجراء الفحص الفني فعلياً واجتياز جميع بنوده للمركبة والكابتن المختارين، وصحة بيانات رحلة العودة. سيكون تاريخ إصدار العقد وتاريخ الفحص مطابقين لتاريخ رحلة العودة المختار." : "I confirm that safety inspection passed all 16 points for the selected vehicle and captain, and return details are accurate. Issue and inspection dates will match the return date.")}</span>
                 </label>
               </fieldset>
-              {isLoading && <p role="status" className="text-sm text-[var(--text-muted)]">{ui(isRTL ? "جاري تحميل الكباتن والمركبات..." : "Loading captains and vehicles...")}</p>}
-              {(error || loadError) && <p role="alert" className="flex items-start gap-2 rounded-xl bg-rose-500/10 p-3 text-sm text-rose-700 dark:text-rose-300"><AlertCircle aria-hidden="true" className="h-5 w-5 shrink-0" /><span>{error || loadError}</span></p>}
+              {isLoading && <p role="status" className="text-xs sm:text-sm text-[var(--text-muted)]">{ui(isRTL ? "جاري تحميل الكباتن والمركبات..." : "Loading captains and vehicles...")}</p>}
+              {(error || loadError) && <p role="alert" className="flex items-start gap-2 rounded-xl bg-rose-500/10 p-3 text-xs sm:text-sm text-rose-700 dark:text-rose-300"><AlertCircle aria-hidden="true" className="h-4 w-4 shrink-0" /><span>{error || loadError}</span></p>}
             </form>
-            <footer className="grid shrink-0 grid-cols-[auto_1fr] gap-3 border-t theme-border p-4 sm:px-6">
-              <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-12 rounded-xl border theme-border px-4 text-sm font-bold cursor-pointer">{ui(t("common.cancel"))}</button>
-              <button type="submit" form="return-trip-form" disabled={isSubmitting || isLoading || Boolean(loadError) || !isConfirmed} className="min-h-12 rounded-xl gold-gradient-btn px-4 text-sm font-bold disabled:opacity-50 cursor-pointer">{ui(isSubmitting ? (isRTL ? "جاري حفظ العقد وPDF..." : "Saving Contract & PDF...") : (isRTL ? "إنشاء عقد العودة" : "Create Return Contract"))}</button>
+            <footer className="grid shrink-0 grid-cols-[auto_1fr] gap-2.5 border-t theme-border p-4 sm:px-5">
+              <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-11 sm:min-h-9 rounded-lg border theme-border px-4 text-xs sm:text-sm font-bold cursor-pointer">{ui(t("common.cancel"))}</button>
+              <button type="submit" form="return-trip-form" disabled={isSubmitting || isLoading || Boolean(loadError) || !isConfirmed} className="min-h-11 sm:min-h-9 rounded-lg gold-gradient-btn px-4 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer">{ui(isSubmitting ? (isRTL ? "جاري حفظ العقد وPDF..." : "Saving Contract & PDF...") : (isRTL ? "إنشاء عقد العودة" : "Create Return Contract"))}</button>
             </footer>
           </>
         )}

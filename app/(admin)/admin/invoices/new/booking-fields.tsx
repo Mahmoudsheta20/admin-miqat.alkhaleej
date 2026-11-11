@@ -33,7 +33,7 @@ interface BookingFieldsProps {
   onTransportChange: (change: Partial<TransportDetails>) => void;
 }
 const INLINE_INPUT =
-  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base";
+  "theme-input min-h-11 sm:min-h-9 w-full min-w-0 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 const ICONS = {
   ONE_WAY: ArrowLeft,
   ROUND_TRIP: ArrowLeftRight,
@@ -60,7 +60,7 @@ export default function BookingFields({
   return (
     <div>
       <fieldset>
-        <legend className="mb-3 text-sm sm:text-base font-semibold text-[var(--text-main)]">
+        <legend className="mb-2.5 text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
           {ui("نوع الرحلة")}
         </legend>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
@@ -71,7 +71,7 @@ export default function BookingFields({
             return (
               <label
                 key={key}
-                className={`relative flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-3 text-sm font-bold transition-all duration-200 has-focus-visible:ring-2 has-focus-visible:ring-[var(--focus-color)] motion-reduce:transition-none ${isSelected ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
+                className={`relative flex min-h-11 sm:min-h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200 has-focus-visible:ring-2 has-focus-visible:ring-[var(--focus-color)] motion-reduce:transition-none ${isSelected ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
               >
                 <input
                   type="radio"
@@ -131,8 +131,8 @@ export default function BookingFields({
           />
         </ExpandableField>
         {booking.type === "MULTI_STOP" && (
-          <div className="rounded-xl border border-dashed theme-border p-4 sm:col-span-2 space-y-3">
-            <p className="text-sm text-[var(--text-muted)]">
+          <div className="rounded-xl border border-dashed theme-border p-3.5 sm:col-span-2 space-y-3">
+            <p className="text-xs sm:text-sm text-[var(--text-muted)]">
               {ui("الوجهات بين الانطلاق والوصول، حسب ترتيب الزيارة.")}
             </p>
             {booking.stops.map((stop, index) => (
@@ -154,7 +154,7 @@ export default function BookingFields({
                     type="button"
                     aria-label={ui(`حذف الوجهة ${index + 1}`)}
                     disabled={booking.stops.length === 1}
-                    className="min-h-12 min-w-12 inline-flex items-center justify-center rounded-xl p-2.5 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 cursor-pointer shrink-0"
+                    className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center rounded-lg p-2 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 cursor-pointer shrink-0"
                     onClick={() =>
                       onBookingChange({
                         stops: booking.stops.filter(
@@ -185,7 +185,7 @@ export default function BookingFields({
             <button
               type="button"
               disabled={booking.stops.length >= 5}
-              className="min-h-11 flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-bold text-[var(--accent-gold)] hover:underline disabled:opacity-40 cursor-pointer"
+              className="min-h-11 sm:min-h-9 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold text-[var(--accent-gold)] hover:underline disabled:opacity-40 cursor-pointer"
               onClick={() => onBookingChange({ stops: [...booking.stops, ""] })}
             >
               <Plus className="size-4" aria-hidden="true" />
@@ -308,7 +308,7 @@ export default function BookingFields({
       {vehicleError && (
         <p
           role="status"
-          className="mt-3 text-sm text-[var(--accent-gold)] font-medium"
+          className="mt-3 text-xs sm:text-sm text-[var(--accent-gold)] font-medium"
         >
           {ui("تعذر تحميل الأسطول؛ يمكنك إدخال نوع المركبة يدويًا.")}
           <button
@@ -320,7 +320,7 @@ export default function BookingFields({
           </button>
         </p>
       )}
-      <p className="mt-4 flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
+      <p className="mt-3.5 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
         <Clock3 className="size-4 shrink-0" />
         {ui("جميع مواعيد الرحلة بتوقيت السعودية")}
       </p>

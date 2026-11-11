@@ -12,7 +12,7 @@ interface InvoicePhoneFieldProps {
   onChange: (value: InvoicePhone) => void;
 }
 
-const INPUT = "theme-input min-h-12 min-w-0 rounded-xl px-3.5 py-2.5 text-base";
+const INPUT = "theme-input min-h-11 sm:min-h-9 min-w-0 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 export default function InvoicePhoneField({ value, onChange }: InvoicePhoneFieldProps) {
   const ui = useUiText();
@@ -35,13 +35,13 @@ export default function InvoicePhoneField({ value, onChange }: InvoicePhoneField
 
   return (
     <fieldset className="min-w-0">
-      <legend className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
+      <legend className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
         {ui("رقم الجوال")}
         <span className="ms-0.5 text-rose-700 dark:text-rose-400" aria-hidden="true">
           *
         </span>
       </legend>
-      <div className="mt-2 flex min-w-0 items-center gap-2" dir="ltr">
+      <div className="mt-1.5 flex min-w-0 items-center gap-2" dir="ltr">
         <div className="w-[40%] shrink-0">
           <FullscreenSelect
             name="guestPhoneCountry"
@@ -50,7 +50,7 @@ export default function InvoicePhoneField({ value, onChange }: InvoicePhoneField
             columns={2}
             value={value.country}
             displayValue={`+${selectedCountry?.callingCode || "966"} · ${value.country}`}
-            triggerClassName="px-3 text-base font-mono font-semibold"
+            triggerClassName="px-2.5 text-base sm:text-[0.8125rem] font-mono font-semibold"
             onChange={(nextCountry) => {
               const selected = PHONE_COUNTRIES.find(
                 (item) => item.country === nextCountry,
@@ -87,7 +87,7 @@ export default function InvoicePhoneField({ value, onChange }: InvoicePhoneField
           onChange={(event) => onChange(updateInvoicePhone(value, event.target.value))}
         />
       </div>
-      <p className="mt-1.5 text-sm font-normal text-[var(--text-muted)]">
+      <p className="mt-1 text-xs font-normal text-[var(--text-muted)]">
         {ui("يمكنك لصق الرقم الدولي كاملًا، وسيُحدد كود الدولة تلقائيًا.")}
       </p>
       {isMobile && (

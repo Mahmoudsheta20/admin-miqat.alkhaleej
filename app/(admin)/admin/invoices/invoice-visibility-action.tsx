@@ -85,7 +85,7 @@ export default function InvoiceVisibilityAction({
             className="mobile-dialog-panel theme-card m-auto w-full max-w-lg space-y-5 rounded-2xl border theme-border p-5 sm:p-7"
           >
             <div>
-              <h2 className="text-xl font-bold text-[var(--text-main)]">{label}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-[var(--text-main)]">{label}</h2>
               <p className="mt-2 font-mono text-sm text-[var(--accent-gold)]" dir="ltr">
                 {number}
               </p>
@@ -99,14 +99,14 @@ export default function InvoiceVisibilityAction({
                   ? "ستنتقل الفاتورة إلى قائمة المحذوفات ويمكن استعادتها. هذه الإزالة لا تلغي الفاتورة أو دفعاتها ولا تستبعدها من الضريبة. لتخفيض فاتورة صادرة، استخدم إشعارًا دائنًا."
                   : "The invoice will move to Removed invoices and can be restored. This does not cancel the invoice or its payments, or remove it from VAT. Use a credit note to reduce an issued invoice."}
             </p>
-            <label className="block text-sm font-bold text-[var(--text-main)]">
+            <label className="block text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
               {isRTL ? "سبب الإجراء" : "Reason"}
               <textarea
                 required
                 minLength={3}
                 maxLength={500}
                 rows={3}
-                className="theme-input mt-2 w-full rounded-xl p-3 text-sm"
+                className="theme-input mt-1.5 w-full rounded-lg p-3 text-base sm:text-[0.8125rem]"
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 autoFocus
@@ -122,14 +122,14 @@ export default function InvoiceVisibilityAction({
                 type="button"
                 disabled={isSaving}
                 onClick={() => setIsOpen(false)}
-                className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-4 py-2.5 text-sm font-bold transition cursor-pointer"
+                className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer"
               >
                 {isRTL ? "إلغاء" : "Cancel"}
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="gold-gradient-btn min-h-11 rounded-xl px-5 py-2.5 text-sm font-bold disabled:opacity-50 cursor-pointer"
+                className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer"
               >
                 {isSaving ? (isRTL ? "جارٍ الحفظ…" : "Saving…") : label}
               </button>

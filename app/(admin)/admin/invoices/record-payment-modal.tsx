@@ -289,7 +289,7 @@ function RecordPaymentModalContent({
                     onChange={(e) => setAmount(e.target.value)}
                     required
                     placeholder="0.00"
-                    className="theme-input h-11 w-full rounded-xl pl-3.5 pr-14 text-sm font-mono font-bold text-start"
+                    className="theme-input min-h-11 sm:min-h-9 w-full rounded-lg pl-3.5 pr-14 py-1.5 text-base sm:text-[0.8125rem] font-mono font-bold text-start"
                   />
                   <span className="pointer-events-none select-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                     {ui(t("common.sar"))}
@@ -299,7 +299,7 @@ function RecordPaymentModalContent({
 
               {/* Payment Account */}
               <div>
-                <span className="text-xs font-bold text-[var(--text-main)] block mb-1.5">
+                <span className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] block mb-1.5">
                   {isRTL ? "طريقة استلام المبلغ (حساب الإيداع) *" : "Payment Method (Deposit Account) *"}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -307,7 +307,7 @@ function RecordPaymentModalContent({
                     type="button"
                     aria-pressed={cashAccount === "1102"}
                     onClick={() => setCashAccount("1102")}
-                    className={`min-h-11 p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
+                    className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
                       cashAccount === "1102"
                         ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
                         : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
@@ -326,7 +326,7 @@ function RecordPaymentModalContent({
                     type="button"
                     aria-pressed={cashAccount === "1101"}
                     onClick={() => setCashAccount("1101")}
-                    className={`min-h-11 p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
+                    className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
                       cashAccount === "1101"
                         ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
                         : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
@@ -345,7 +345,7 @@ function RecordPaymentModalContent({
 
               {/* Payment Date */}
               <div>
-                <label htmlFor="pay-date" className="text-xs font-bold text-[var(--text-main)] inline-flex items-center gap-1.5 mb-1.5">
+                <label htmlFor="pay-date" className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] inline-flex items-center gap-1.5 mb-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
                   <span>{isRTL ? "تاريخ التحصيل *" : "Collection Date *"}</span>
                 </label>
@@ -355,13 +355,13 @@ function RecordPaymentModalContent({
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   required
-                  className="theme-input h-11 w-full px-3.5 rounded-xl text-xs sm:text-sm font-mono"
+                  className="theme-input min-h-11 sm:min-h-9 w-full px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono"
                 />
               </div>
 
               {/* Reference / Note */}
               <div>
-                <label htmlFor="pay-ref" className="text-xs font-bold text-[var(--text-main)] block mb-1.5">
+                <label htmlFor="pay-ref" className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] block mb-1.5">
                   {isRTL ? "رقم الحوالة أو المرجع " : "Reference / Transfer No. "}
                   <span className="text-[var(--text-muted)] font-normal">({ui(t("common.optional"))})</span>
                 </label>
@@ -371,7 +371,7 @@ function RecordPaymentModalContent({
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
                   placeholder={isRTL ? "مثال: حوالة بنكية 8934 أو إيصال تسليم" : "e.g. Bank transfer 8934 or delivery receipt"}
-                  className="theme-input h-11 w-full px-3.5 rounded-xl text-xs sm:text-sm"
+                  className="theme-input min-h-11 sm:min-h-9 w-full px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem]"
                 />
               </div>
 
@@ -391,14 +391,14 @@ function RecordPaymentModalContent({
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="min-h-11 px-4 py-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+                  className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs sm:text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
                 >
                   {ui(t("common.cancel"))}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || isLoadingBalance || balance === null || isRefundDue || Boolean(successMessage)}
-                  className="min-h-11 px-5 py-2.5 rounded-xl gold-gradient-btn text-xs font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="min-h-11 sm:min-h-9 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
                   {isSubmitting ? (
                     <>

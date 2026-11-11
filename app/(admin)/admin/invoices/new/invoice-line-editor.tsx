@@ -25,7 +25,7 @@ interface InvoiceLineEditorProps {
 }
 
 const INLINE_INPUT =
-  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base";
+  "theme-input min-h-11 sm:min-h-9 w-full min-w-0 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 const COMPONENTS: Record<string, string> = {
   OWN_SUPPLY: "توريد المنشأة المباشر",
@@ -143,9 +143,9 @@ export default function InvoiceLineEditor({
 
   return (
     <fieldset className="rounded-2xl border theme-border bg-[var(--bg-card-subtle)] p-4 sm:p-6 space-y-5">
-      <div className="flex items-center justify-between gap-3 border-b theme-border pb-3.5">
-        <legend className="px-1 text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
-          <span className="rounded-md bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] px-2.5 py-0.5 font-mono text-sm font-bold">
+      <div className="flex items-center justify-between gap-3 border-b theme-border pb-3">
+        <legend className="px-1 text-sm sm:text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
+          <span className="rounded-md bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] px-2 py-0.5 font-mono text-xs sm:text-sm font-bold">
             #{index + 1}
           </span>
           <span>
@@ -160,7 +160,7 @@ export default function InvoiceLineEditor({
             type="button"
             onClick={onRemove}
             aria-label={ui(`حذف الخدمة ${index + 1}`)}
-            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl p-2 text-[var(--text-muted)] transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 inline-flex items-center justify-center rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 cursor-pointer"
           >
             <Trash2 className="size-4" aria-hidden="true" />
           </button>
@@ -236,15 +236,15 @@ export default function InvoiceLineEditor({
         />
 
         {/* Unit Price with Mode Toggle */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-1.5 text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
             <span>{ui("السعر (ر.س) *")}</span>
-            <div className="inline-flex rounded-lg border border-[var(--control-border)] p-0.5 bg-[var(--bg-card)] text-sm shrink-0">
+            <div className="inline-flex rounded-lg border border-[var(--control-border)] p-0.5 bg-[var(--bg-card)] text-xs shrink-0">
               <button
                 type="button"
                 aria-pressed={priceEntryMode === "EXCL"}
                 onClick={() => setPriceEntryMode("EXCL")}
-                className={`min-h-10 sm:min-h-8 px-2.5 py-0.5 rounded transition cursor-pointer ${
+                className={`min-h-10 sm:min-h-7 px-2 py-0.5 rounded transition cursor-pointer ${
                   priceEntryMode === "EXCL"
                     ? "bg-[var(--accent-btn-bg)] font-semibold text-[var(--accent-btn-fg)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -267,7 +267,7 @@ export default function InvoiceLineEditor({
                     setInclusiveInput(moneyDecimal(grossMinor));
                   }
                 }}
-                className={`min-h-10 sm:min-h-8 px-2.5 py-0.5 rounded transition cursor-pointer ${
+                className={`min-h-10 sm:min-h-7 px-2 py-0.5 rounded transition cursor-pointer ${
                   priceEntryMode === "INCL"
                     ? "bg-[var(--accent-btn-bg)] font-semibold text-[var(--accent-btn-fg)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -318,7 +318,7 @@ export default function InvoiceLineEditor({
                 }}
                 onChange={(e) => handlePriceChange(e.target.value, "INCL")}
               />
-              <span className="block text-sm text-[var(--text-muted)] mt-1.5 font-mono">
+              <span className="block text-xs text-[var(--text-muted)] mt-1.5 font-mono">
                 {ui("صافي قبل الضريبة:")}{" "}
                 <bdi dir="ltr">{value.unitPrice || "0.00"}</bdi> {ui("ر.س")}
               </span>
@@ -413,7 +413,7 @@ export default function InvoiceLineEditor({
           type="button"
           aria-expanded={expanded}
           onClick={() => setIsExpanded(!isExpanded)}
-          className="min-h-11 flex items-center gap-1.5 rounded-lg py-1.5 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer transition-colors"
+          className="min-h-11 sm:min-h-9 flex items-center gap-1.5 rounded-lg py-1 text-xs sm:text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer transition-colors"
         >
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>{ui("تطبيق خصم أو تفاصيل توريد إضافية")}</span>
@@ -423,10 +423,10 @@ export default function InvoiceLineEditor({
           />
         </button>
 
-        <p className="text-sm font-bold text-[var(--text-main)]">
+        <p className="text-xs sm:text-sm font-bold text-[var(--text-main)]">
           {ui("إجمالي هذا البند (شامل الضريبة):")}{" "}
           <b
-            className="ms-1 font-mono text-base text-[var(--text-main)]"
+            className="ms-1 font-mono text-sm sm:text-base text-[var(--text-main)]"
             dir="ltr"
           >
             {amount || "—"}
@@ -459,13 +459,13 @@ export default function InvoiceLineEditor({
           </ExpandableField>
 
           {/* Discount */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)]">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2 text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
               <span>{ui("الخصم")}</span>
               <FullscreenSelect
                 ariaLabel={ui(`نوع الخصم للخدمة ${index + 1}`)}
                 searchable={false}
-                triggerClassName="min-h-11 rounded-lg px-3 py-1.5 text-sm font-semibold"
+                triggerClassName="min-h-10 sm:min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold"
                 value={discountMode}
                 onChange={(nextMode) => {
                   const mode = nextMode as "AMOUNT" | "PERCENT";

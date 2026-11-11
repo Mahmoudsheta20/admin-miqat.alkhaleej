@@ -475,7 +475,7 @@ export default function FleetManagementPage() {
                       })
                     }
                     placeholder={ui("ا ص ل 7223")}
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   />
                 </div>
 
@@ -495,7 +495,7 @@ export default function FleetManagementPage() {
                     }
                     placeholder="ASL 7223"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -511,7 +511,7 @@ export default function FleetManagementPage() {
                       setFormData({ ...formData, make: e.target.value })
                     }
                     placeholder="GMC"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   />
                 </div>
 
@@ -527,7 +527,7 @@ export default function FleetManagementPage() {
                       setFormData({ ...formData, model: e.target.value })
                     }
                     placeholder="Yukon XL VIP"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   />
                 </div>
 
@@ -540,7 +540,7 @@ export default function FleetManagementPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   >
                     <option value="VIP_VAN">{ui("فان VIP")}</option>
                     <option value="SUV_VIP">{ui("دفع رباعي VIP")}</option>
@@ -566,7 +566,7 @@ export default function FleetManagementPage() {
                         status: e.target.value as VehicleStatus,
                       })
                     }
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                   >
                     <option value="AVAILABLE">{ui("جاهزة")}</option>
                     <option value="ON_TRIP">{ui("في رحلة")}</option>
@@ -584,7 +584,7 @@ export default function FleetManagementPage() {
                     value={yearInput}
                     onChange={(e) => setYearInput(e.target.value.replace(/[^\d]/g, "").slice(0, 4))}
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -598,7 +598,7 @@ export default function FleetManagementPage() {
                     value={capacityInput}
                     onChange={(e) => setCapacityInput(e.target.value.replace(/[^\d]/g, "").slice(0, 3))}
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -612,7 +612,7 @@ export default function FleetManagementPage() {
                     value={mileageInput}
                     onChange={(e) => setMileageInput(e.target.value.replace(/[^\d]/g, ""))}
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -631,7 +631,7 @@ export default function FleetManagementPage() {
                     }
                     placeholder="2027-05-14"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
 
@@ -650,7 +650,7 @@ export default function FleetManagementPage() {
                     }
                     placeholder="2027-01-20"
                     dir="ltr"
-                    className="theme-input w-full min-h-11 sm:min-h-10 px-3 py-2 text-sm sm:text-xs rounded-xl text-start"
+                    className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg text-start"
                   />
                 </div>
               </div>
@@ -662,13 +662,13 @@ export default function FleetManagementPage() {
                     setIsAddModalOpen(false);
                     setEditingVehicle(null);
                   }}
-                  className="secondary-btn min-h-11 px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+                  className="secondary-btn min-h-11 sm:min-h-9 px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg cursor-pointer"
                 >
                   {ui("إلغاء")}</button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="min-h-11 px-5 py-2 text-xs font-bold rounded-xl gold-gradient-btn transition disabled:opacity-50"
+                  className="min-h-11 sm:min-h-9 px-5 py-1.5 text-xs sm:text-sm font-bold rounded-lg gold-gradient-btn transition disabled:opacity-50"
                 >
                   {ui(isSubmitting
                     ? "جاري الحفظ..."

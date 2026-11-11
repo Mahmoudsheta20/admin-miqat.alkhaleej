@@ -93,30 +93,30 @@ export function PassengerManifestManager({
       }
     >
       {/* Section Header & Dynamic Passenger Count Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b theme-border pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b theme-border pb-3.5">
         <div className={embedded ? "hidden md:block" : undefined}>
           <div className="flex items-center gap-2.5">
-            <div aria-hidden="true" className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
-              <Users className="w-4.5 h-4.5" />
+            <div aria-hidden="true" className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+              <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                 {ui("كشف الركاب والمرافقين (بيان تفصيلي)")}</h2>
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-sm font-bold bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 font-mono">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30 font-mono">
                 <span>{fields.length}</span>
-                <span className="text-sm font-medium text-[var(--text-muted)]">{ui("/ 50 راكب")}</span>
+                <span className="text-xs font-medium text-[var(--text-muted)]">{ui("/ 50 راكب")}</span>
               </span>
             </div>
           </div>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
+          <p className="text-xs sm:text-[0.8125rem] text-[var(--text-muted)] mt-1">
             {ui("توثيق أسماء وبيانات الضيوف حتى 50 راكباً للسيارات الخاصة والفانات والحافلات")}</p>
         </div>
 
         {/* Counter Stepper, Direct Count & Add Button */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Stepper + Direct Number Input */}
-          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] shadow-2xs">
-            <span className="text-sm font-bold text-[var(--text-muted)] px-1 select-none">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] shadow-2xs">
+            <span className="text-xs font-bold text-[var(--text-muted)] px-1 select-none">
               {ui("العدد:")}</span>
 
             {/* Decrement Button */}
@@ -127,11 +127,11 @@ export function PassengerManifestManager({
                 setCustomCount("");
               }}
               disabled={fields.length <= 1}
-              className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-[var(--text-main)] hover:bg-[var(--bg-card)] disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-[var(--text-main)] hover:bg-[var(--bg-card)] disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               aria-label={ui("إنقاص راكب واحد")}
               title={ui("إنقاص راكب واحد")}
             >
-              <Minus className="w-4 h-4" aria-hidden="true" />
+              <Minus className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
 
             {/* Direct Number Input */}
@@ -152,7 +152,7 @@ export function PassengerManifestManager({
                   handleApplyCustomCount(customCount);
                 }
               }}
-              className="stepper-count-input w-12 text-center font-mono font-semibold text-base bg-transparent border-0 focus:outline-hidden text-[var(--text-main)]"
+              className="stepper-count-input w-10 text-center font-mono font-semibold text-sm bg-transparent border-0 focus:outline-hidden text-[var(--text-main)]"
               title={ui("اكتب العدد المطلوب (1-50) ثم اضغط Enter أو خارج الحقل للتطبيق")}
             />
 
@@ -164,11 +164,11 @@ export function PassengerManifestManager({
                 setCustomCount("");
               }}
               disabled={fields.length >= 50}
-              className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-[var(--text-main)] hover:bg-[var(--bg-card)] disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-[var(--text-main)] hover:bg-[var(--bg-card)] disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               aria-label={ui("زيادة راكب واحد")}
               title={ui("زيادة راكب واحد")}
             >
-              <Plus className="w-4 h-4" aria-hidden="true" />
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
 
             {/* Apply button appears when user edits the number directly */}
@@ -176,7 +176,7 @@ export function PassengerManifestManager({
               <button
                 type="button"
                 onClick={() => handleApplyCustomCount(customCount)}
-                className="min-h-9 px-3 py-1 rounded-lg gold-gradient-btn text-sm font-bold shadow-2xs transition cursor-pointer"
+                className="min-h-8 px-2.5 py-1 rounded-lg gold-gradient-btn text-xs font-bold shadow-2xs transition cursor-pointer"
               >
                 {ui("تطبيق")}</button>
             )}
@@ -187,7 +187,7 @@ export function PassengerManifestManager({
             type="button"
             onClick={addOne}
             disabled={fields.length >= 50}
-            className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-sm font-bold transition shadow-xs disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
+            className="flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition shadow-xs disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
             title={ui(fields.length >= 50 ? "تم الوصول للحد الأقصى (50 راكباً)" : "إضافة راكب جديد")}
           >
             <UserPlus className="w-4 h-4" aria-hidden="true" />
@@ -198,7 +198,7 @@ export function PassengerManifestManager({
             <button
               type="button"
               onClick={onToggleFullscreen}
-              className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)] transition cursor-pointer"
+              className="flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] hover:text-[var(--accent-gold)] transition cursor-pointer"
             >
               {isFullscreen ? (
                 <>
@@ -217,9 +217,9 @@ export function PassengerManifestManager({
       </div>
 
       {/* Quick Capacity Presets */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 p-3 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border">
-        <div className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-muted)] pe-1 shrink-0">
-          <Sparkles className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] pe-1 shrink-0">
+          <Sparkles className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
           <span>{ui("تحديد سريع لسعة المركبة:")}</span>
         </div>
         <MobileHorizontalStrip
@@ -237,7 +237,7 @@ export function PassengerManifestManager({
                   setTotalPassengers(preset.count);
                   setCustomCount("");
                 }}
-                className={`min-h-11 sm:min-h-10 shrink-0 snap-start whitespace-nowrap px-3.5 py-1.5 rounded-xl text-sm font-bold transition cursor-pointer ${
+                className={`min-h-11 sm:min-h-8 shrink-0 snap-start whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                   isActive
                     ? "gold-gradient-btn shadow-2xs font-semibold ring-2 ring-[var(--accent-gold)]/25"
                     : "bg-[var(--input-bg)] text-[var(--text-main)] border border-[var(--control-border)] hover:border-[var(--accent-gold)]"
@@ -251,7 +251,7 @@ export function PassengerManifestManager({
       </div>
 
       {/* Passenger Cards List */}
-      <div className="space-y-3.5">
+      <div className="space-y-3">
         {fields.map((field, index) => {
           const isPrimary = index === 0;
           const passengerErrors = errors?.passengers?.[index];
@@ -259,17 +259,17 @@ export function PassengerManifestManager({
           return (
             <div
               key={field.id}
-              className={`p-4 sm:p-5 rounded-2xl border transition-all duration-150 ${
+              className={`p-3.5 sm:p-4 rounded-xl border transition-all duration-150 ${
                 isPrimary
                   ? "bg-[var(--accent-surface)]/55 border-[var(--accent-gold)]/35"
                   : "bg-[var(--bg-card-subtle)] theme-border hover:border-[var(--accent-gold)]/35"
               }`}
             >
               {/* Header on Mobile */}
-              <div className="flex items-center justify-between sm:hidden pb-2.5 mb-3 border-b theme-border">
+              <div className="flex items-center justify-between sm:hidden pb-2 mb-2.5 border-b theme-border">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-7 h-7 rounded-lg font-mono font-semibold text-sm flex items-center justify-center ${
+                    className={`w-6 h-6 rounded-lg font-mono font-semibold text-xs flex items-center justify-center ${
                       isPrimary
                         ? "gold-gradient-btn"
                         : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
@@ -277,7 +277,7 @@ export function PassengerManifestManager({
                   >
                     {index + 1}
                   </span>
-                  <span className="text-sm font-bold text-[var(--text-main)]">
+                  <span className="text-xs font-bold text-[var(--text-main)]">
                     {ui(isPrimary ? "الضيف الأساسي (المرافق الأول)" : `الراكب ${index + 1}`)}
                   </span>
                 </div>
@@ -286,20 +286,20 @@ export function PassengerManifestManager({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="min-h-10 px-2.5 py-1.5 rounded-lg text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition flex items-center gap-1.5 text-sm font-bold cursor-pointer"
+                    className="min-h-10 px-2.5 py-1 rounded-lg text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
                   >
-                    <Trash2 className="w-4 h-4" aria-hidden="true" />
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{ui("حذف")}</span>
                   </button>
                 )}
               </div>
 
               {/* Desktop & Tablet Fields Layout */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2.5">
                 {/* Sequence Badge (Desktop) */}
                 <div
                   aria-hidden="true"
-                  className={`hidden sm:flex w-9 h-9 rounded-xl font-mono font-semibold text-sm items-center justify-center shrink-0 mt-7 ${
+                  className={`hidden sm:flex w-8 h-8 rounded-lg font-mono font-semibold text-xs items-center justify-center shrink-0 mt-6 ${
                     isPrimary
                       ? "gold-gradient-btn shadow-2xs"
                       : "bg-[var(--bg-card)] border theme-border text-[var(--text-main)]"
@@ -309,7 +309,7 @@ export function PassengerManifestManager({
                 </div>
 
                 {/* Input Fields using CustomInput */}
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <CustomInput
                     label={ui(isPrimary ? "اسم الضيف" : `اسم الراكب ${index + 1}`)}
                     icon={<User className="w-4 h-4" />}
@@ -345,11 +345,11 @@ export function PassengerManifestManager({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="hidden sm:flex min-h-11 min-w-11 items-center justify-center p-2.5 rounded-xl text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0 mt-7 cursor-pointer"
+                    className="hidden sm:flex min-h-9 min-w-9 items-center justify-center p-2 rounded-lg text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0 mt-6 cursor-pointer"
                     aria-label={ui(`حذف الراكب ${index + 1}`)}
                     title={ui("حذف هذا الراكب")}
                   >
-                    <Trash2 className="w-4.5 h-4.5" aria-hidden="true" />
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -359,14 +359,14 @@ export function PassengerManifestManager({
       </div>
 
       {/* Footer Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3.5 border-t theme-border text-sm text-[var(--text-muted)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 border-t theme-border text-xs text-[var(--text-muted)]">
         <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" />
+          <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" />
           <span>{ui("يمكنك ضبط وتحديد حتى 50 راكباً للرحلات الجماعية والباصات والوفود الرسمية.")}</span>
         </div>
         <div className="flex items-center gap-2 font-mono font-bold text-[var(--accent-gold)] shrink-0">
           <span>{ui("إجمالي الركاب:")}</span>
-          <span className="text-base font-semibold bg-[var(--accent-surface)] px-2.5 py-0.5 rounded-lg border border-[var(--accent-gold)]/30" dir="ltr">
+          <span className="text-sm font-semibold bg-[var(--accent-surface)] px-2 py-0.5 rounded-lg border border-[var(--accent-gold)]/30" dir="ltr">
             {fields.length} / 50
           </span>
         </div>

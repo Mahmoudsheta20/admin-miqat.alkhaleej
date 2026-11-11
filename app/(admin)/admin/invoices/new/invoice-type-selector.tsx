@@ -67,18 +67,18 @@ export default function InvoiceTypeSelector({
           : "CUSTOMER";
 
   return (
-    <fieldset className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
+    <fieldset className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
       <legend className="sr-only">{ui("نوع المستند المطلوب إنشاؤه")}</legend>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3.5">
         <div>
-          <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+          <h2 className="text-base font-semibold text-[var(--text-main)]">
             {ui("نوع المستند المطلوب")}</h2>
-          <p className="text-sm text-[var(--text-muted)] mt-0.5 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5 leading-relaxed">
             {ui("اختر طبيعة الفاتورة؛ يحدد هذا الاختيار كيفية معالجة المستند ضريبياً ومحاسبياً.")}</p>
         </div>
       </div>
 
-      <div className="grid gap-3.5 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {CHOICES.map((choice) => {
           const isSelected = currentChoice === choice.id;
           const Icon = choice.icon;
@@ -86,7 +86,7 @@ export default function InvoiceTypeSelector({
           return (
             <label
               key={choice.id}
-              className={`relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 sm:p-5 transition-all duration-200 ${
+              className={`relative flex cursor-pointer items-start gap-2.5 rounded-xl border p-3.5 sm:p-4 transition-all duration-200 ${
                 isSelected
                   ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/40"
                   : "border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)]/55"
@@ -98,19 +98,19 @@ export default function InvoiceTypeSelector({
                 value={choice.id}
                 checked={isSelected}
                 onChange={() => onChangeType(choice.id)}
-                className="mt-1.5 size-4 shrink-0 accent-amber-700 dark:accent-amber-400"
+                className="mt-1 size-4 shrink-0 accent-amber-700 dark:accent-amber-400"
               />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Icon className={`size-4 ${isSelected ? "text-[var(--accent-gold)]" : "text-[var(--text-muted)]"}`} />
-                    <span className="text-base font-semibold text-[var(--text-main)]">
+                    <span className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                       {ui(choice.title)}
                     </span>
                   </div>
                   {choice.badge && (
                     <span
-                      className={`rounded-md px-2.5 py-0.5 text-sm font-bold ${
+                      className={`rounded-md px-2 py-0.5 text-xs font-bold ${
                         isSelected
                           ? "bg-[var(--accent-gold)]/15 text-[var(--accent-gold)]"
                           : "bg-[var(--bg-card-subtle)] text-[var(--text-muted)]"
@@ -120,7 +120,7 @@ export default function InvoiceTypeSelector({
                     </span>
                   )}
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-muted)]">
+                <p className="mt-1 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)]">
                   {ui(choice.description)}
                 </p>
               </div>

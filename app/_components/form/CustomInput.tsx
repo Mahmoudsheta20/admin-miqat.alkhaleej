@@ -26,6 +26,7 @@ export interface CustomInputProps extends React.InputHTMLAttributes<HTMLInputEle
   hint?: string;
   icon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
+  trailingAction?: React.ReactNode;
   clearable?: boolean;
   onClear?: () => void;
   badge?: string;
@@ -43,6 +44,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
       hint,
       icon,
       trailingIcon,
+      trailingAction,
       clearable,
       onClear,
       badge,
@@ -111,12 +113,15 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
       !NON_TEXT_INPUT_TYPES.has(inputType);
     const shouldAutoExpandOnClick = canExpand && openOnClick;
 
+    const hasClearButton = Boolean(clearable && hasValue && !disabled);
+    const hasEndControl = hasClearButton || Boolean(trailingAction);
+
     const inputControl = (
       <div dir={dir} className="relative flex min-w-0 flex-1 items-center">
         {icon && (
           <div
             aria-hidden="true"
-            className="absolute start-3.5 text-[var(--text-muted)] pointer-events-none flex items-center justify-center"
+            className="absolute start-3 text-[var(--text-muted)] pointer-events-none flex items-center justify-center"
           >
             <LocalizedText value={icon} />
           </div>
@@ -153,9 +158,9 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
               .filter(Boolean)
               .join(" ") || undefined
           }
-          className={`min-w-0 w-full min-h-12 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-medium leading-normal
-            ${icon ? "ps-10" : "ps-4"}
-            ${clearable || trailingIcon ? "pe-11" : "pe-4"}
+          className={`min-w-0 w-full min-h-11 sm:min-h-9 py-1.5 text-base sm:text-[0.8125rem] rounded-lg transition-all duration-150 outline-hidden font-medium leading-normal
+            ${icon ? "ps-9" : "ps-3"}
+            ${hasEndControl ? "pe-11 sm:pe-10" : trailingIcon ? "pe-9" : "pe-3"}
             ${shouldAutoExpandOnClick ? "cursor-pointer" : ""}
             ${
               error
@@ -166,21 +171,27 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
             ${className}`}
         />
 
-        {clearable && hasValue && !disabled && (
+        {hasClearButton && (
           <button
             type="button"
             onClick={onClear}
-            className="absolute end-1.5 h-9 w-9 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition rounded-lg cursor-pointer"
+            className="absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-7 sm:w-7 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition rounded-lg cursor-pointer"
             aria-label={label ? ui(`مسح ${label}`) : ui("مسح الحقل")}
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
         )}
 
-        {trailingIcon && (!clearable || !hasValue) && (
+        {trailingAction && !hasClearButton && (
+          <div className="absolute end-1 top-1/2 -translate-y-1/2 flex items-center">
+            {trailingAction}
+          </div>
+        )}
+
+        {trailingIcon && !trailingAction && !hasClearButton && (
           <div
             aria-hidden="true"
-            className="absolute end-3.5 text-[var(--text-muted)] pointer-events-none flex items-center justify-center"
+            className="absolute end-3 text-[var(--text-muted)] pointer-events-none flex items-center justify-center"
           >
             <LocalizedText value={trailingIcon} />
           </div>

@@ -268,7 +268,7 @@ function ResetPasswordContent() {
                       onChange={(e) => setEmailInput(e.target.value)}
                       placeholder="name@example.com"
                       readOnly={isAutoVerified}
-                      className={`w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start ${
+                      className={`w-full px-3 py-2 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start ${
                         isAutoVerified ? "opacity-75 cursor-not-allowed" : ""
                       }`}
                     />
@@ -322,7 +322,7 @@ function ResetPasswordContent() {
                       }}
                       placeholder={ui("أدخل رمز التحقق (مثل: 739104)")}
                       readOnly={isAutoVerified && tokenInput.length > 0}
-                      className="w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-center tracking-widest font-bold"
+                      className="w-full px-3 py-2 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-center tracking-widest font-bold"
                     />
                   </div>
                 </div>
@@ -349,13 +349,13 @@ function ResetPasswordContent() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder={ui("أدخل 8 خانات على الأقل")}
-                      className="w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
+                      className="w-full px-3 py-2 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                       aria-pressed={showNewPassword}
-                      className="min-h-11 min-w-11 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
+                      className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
                       aria-label={ui(showNewPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                     >
                       {showNewPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
@@ -385,13 +385,13 @@ function ResetPasswordContent() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder={ui("أعد إدخال كلمة المرور للتأكيد")}
-                      className="w-full px-3 py-2.5 bg-transparent text-base sm:text-sm text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
+                      className="w-full px-3 py-2 bg-transparent text-base sm:text-[0.8125rem] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] outline-hidden font-mono text-start"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       aria-pressed={showConfirmPassword}
-                      className="min-h-11 min-w-11 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
+                      className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
                       aria-label={ui(showConfirmPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور")}
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
@@ -403,7 +403,7 @@ function ResetPasswordContent() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full min-h-11 mt-2 py-3 rounded-xl gold-gradient-btn text-xs font-semibold shadow-md disabled:opacity-50 transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                  className="w-full min-h-11 sm:min-h-9 mt-2 py-2 rounded-lg gold-gradient-btn text-xs sm:text-sm font-semibold shadow-sm disabled:opacity-50 transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                 >
                   {loading ? (
                     <>

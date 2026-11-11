@@ -74,7 +74,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
     >
       <header className="flex justify-between gap-4">
         <div className="min-w-0">
-          <h2 id="purchase-history-title" className="text-xl font-bold">
+          <h2 id="purchase-history-title" className="text-lg sm:text-xl font-bold">
             {ui("تفاصيل القيد وسجل المراجعة")}
           </h2>
           {data && (
@@ -215,14 +215,14 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
               <p className="text-sm leading-relaxed text-[var(--text-muted)]">
                 {ui("الإلغاء يستبعد القيد من التقرير ويحتفظ بتاريخه. استخدمه لتصحيح تسجيل خاطئ، وليس بدلًا من إشعار دائن من المورد أو لتعديل إقرار سبق تقديمه.")}
               </p>
-              <label className="block text-sm font-bold">
+              <label className="block text-xs sm:text-[0.8125rem] font-bold">
                 {ui("سبب إلغاء القيد")}
                 <input
                   autoFocus
                   required
                   minLength={3}
                   maxLength={200}
-                  className="theme-input mt-2 h-11 w-full rounded-xl px-3"
+                  className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 />
@@ -231,7 +231,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="min-h-11 rounded-xl bg-rose-700 hover:bg-rose-800 px-4 py-3 text-sm font-bold text-white disabled:opacity-50 cursor-pointer"
+                  className="min-h-11 sm:min-h-9 rounded-lg bg-rose-700 hover:bg-rose-800 px-4 py-1.5 text-xs sm:text-sm font-bold text-white disabled:opacity-50 cursor-pointer"
                 >
                   {ui("تأكيد إلغاء القيد")}
                 </button>
@@ -239,7 +239,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
                   type="button"
                   disabled={isSaving}
                   onClick={() => setIsVoiding(false)}
-                  className="theme-card min-h-11 rounded-xl border theme-border px-4 py-3 text-sm cursor-pointer"
+                  className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-4 py-1.5 text-xs sm:text-sm cursor-pointer"
                 >
                   {ui("رجوع")}
                 </button>
@@ -249,7 +249,7 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
             <button
               type="button"
               onClick={() => setIsVoiding(true)}
-              className="mt-7 min-h-11 rounded-xl border border-rose-300 px-4 py-3 text-sm font-bold text-rose-700 dark:border-rose-800 dark:text-rose-400 cursor-pointer"
+              className="mt-7 min-h-11 sm:min-h-9 rounded-lg border border-rose-300 px-4 py-1.5 text-xs sm:text-sm font-bold text-rose-700 dark:border-rose-800 dark:text-rose-400 cursor-pointer"
             >
               {ui("إلغاء قيد مسجل بالخطأ")}
             </button>

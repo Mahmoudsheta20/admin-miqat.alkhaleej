@@ -25,14 +25,14 @@ export default function InvoiceTaxSummary({ invoice }: InvoiceTaxSummaryProps) {
           </p>
         )}
         {tax.kind === "INVOICE" && (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2.5">
             <Link
-              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-3 py-2 text-sm font-bold transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs sm:text-sm font-bold transition"
               href={`/admin/zatca/new?originalInvoiceId=${invoice.id}&kind=CREDIT`}
             >
               {ui("إشعار دائن")}</Link>
             <Link
-              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-3 py-2 text-sm font-bold transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs sm:text-sm font-bold transition"
               href={`/admin/zatca/new?originalInvoiceId=${invoice.id}&kind=DEBIT`}
             >
               {ui("إشعار مدين")}</Link>

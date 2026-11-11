@@ -131,8 +131,8 @@ function TimePickerModalBody({
           className={cn(
             "bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 hover:bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] font-bold transition text-center cursor-pointer",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-9 py-1.5 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("الآن")}
@@ -143,8 +143,8 @@ function TimePickerModalBody({
           className={cn(
             "bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] font-bold transition text-center cursor-pointer",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-9 py-1.5 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("+30 د")}
@@ -155,8 +155,8 @@ function TimePickerModalBody({
           className={cn(
             "bg-[var(--bg-card-subtle)] hover:bg-[var(--table-row-hover)] text-[var(--text-main)] font-bold transition text-center cursor-pointer",
             isFullscreen
-              ? "min-h-12 py-2.5 px-3 rounded-xl text-base"
-              : "min-h-9 py-1.5 px-2 rounded-lg text-xs sm:text-sm",
+              ? "min-h-11 py-2 px-3 rounded-xl text-sm"
+              : "min-h-8 py-1 px-2 rounded-lg text-xs",
           )}
         >
           {ui("+1 ساعة")}
@@ -167,14 +167,14 @@ function TimePickerModalBody({
       <div
         className={cn(
           "min-h-0 flex-1 grid grid-cols-2",
-          isFullscreen ? "gap-4" : "gap-2.5",
+          isFullscreen ? "gap-3" : "gap-2.5",
         )}
       >
         <div className="flex min-h-0 flex-col">
           <p
             className={cn(
               "font-bold text-[var(--text-muted)] text-center",
-              isFullscreen ? "text-base mb-2" : "text-xs mb-1.5",
+              isFullscreen ? "text-sm mb-1.5" : "text-xs mb-1",
             )}
           >
             {ui("الساعة (24h)")}
@@ -183,7 +183,7 @@ function TimePickerModalBody({
             className={cn(
               "overflow-y-auto overscroll-contain border theme-border bg-[var(--bg-card-subtle)]",
               isFullscreen
-                ? "min-h-48 flex-1 rounded-2xl p-2 space-y-1.5"
+                ? "min-h-44 flex-1 rounded-xl p-1.5 space-y-1"
                 : "h-44 min-h-0 rounded-xl p-1.5 space-y-1",
             )}
           >
@@ -198,8 +198,8 @@ function TimePickerModalBody({
                   className={cn(
                     "w-full font-mono font-bold transition text-center flex items-center justify-around cursor-pointer",
                     isFullscreen
-                      ? "min-h-12 py-2 text-base rounded-xl"
-                      : "min-h-9 py-1 text-sm rounded-lg",
+                      ? "min-h-11 py-1.5 text-sm rounded-lg"
+                      : "min-h-8 py-1 text-xs sm:text-sm rounded-lg",
                     isSelected
                       ? "gold-gradient-btn shadow-xs"
                       : "bg-[var(--input-bg)] hover:bg-[var(--accent-surface)] text-[var(--text-main)]",
@@ -208,7 +208,7 @@ function TimePickerModalBody({
                   <span>{String(i).padStart(2, "0")}</span>
                   <span
                     className={cn(
-                      isFullscreen ? "text-sm" : "text-xs",
+                      isFullscreen ? "text-xs" : "text-[11px]",
                       !isSelected && "text-[var(--text-muted)]",
                     )}
                   >
@@ -224,7 +224,7 @@ function TimePickerModalBody({
           <p
             className={cn(
               "font-bold text-[var(--text-muted)] text-center",
-              isFullscreen ? "text-base mb-2" : "text-xs mb-1.5",
+              isFullscreen ? "text-sm mb-1.5" : "text-xs mb-1",
             )}
           >
             {ui("الدقائق")}
@@ -233,7 +233,7 @@ function TimePickerModalBody({
             className={cn(
               "overflow-y-auto overscroll-contain border theme-border bg-[var(--bg-card-subtle)]",
               isFullscreen
-                ? "min-h-48 flex-1 rounded-2xl p-2 space-y-1.5"
+                ? "min-h-44 flex-1 rounded-xl p-1.5 space-y-1"
                 : "h-44 min-h-0 rounded-xl p-1.5 space-y-1",
             )}
           >
@@ -248,8 +248,8 @@ function TimePickerModalBody({
                   className={cn(
                     "w-full font-mono font-bold transition text-center cursor-pointer",
                     isFullscreen
-                      ? "min-h-12 py-2 text-base rounded-xl"
-                      : "min-h-9 py-1 text-sm rounded-lg",
+                      ? "min-h-11 py-1.5 text-sm rounded-lg"
+                      : "min-h-8 py-1 text-xs sm:text-sm rounded-lg",
                     isSelected
                       ? "gold-gradient-btn shadow-xs"
                       : "bg-[var(--input-bg)] hover:bg-[var(--accent-surface)] text-[var(--text-main)]",
@@ -273,7 +273,7 @@ function TimePickerModalBody({
         <span
           className={cn(
             "font-semibold text-[var(--text-muted)] block",
-            isFullscreen ? "text-sm mb-2" : "text-xs mb-1.5",
+            isFullscreen ? "text-xs mb-1.5" : "text-xs mb-1",
           )}
         >
           {ui("مواعيد شائعة:")}
@@ -294,7 +294,7 @@ function TimePickerModalBody({
               className={cn(
                 "border theme-border bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-surface)] hover:border-[var(--accent-gold)]/45 text-[var(--text-main)] hover:text-[var(--accent-gold)] font-mono font-bold transition text-center cursor-pointer",
                 isFullscreen
-                  ? "min-h-11 py-2 px-3 rounded-xl text-base"
+                  ? "min-h-11 py-1.5 px-2.5 rounded-lg text-sm"
                   : "min-h-8 py-1 px-1.5 rounded-lg text-xs",
               )}
             >
@@ -314,7 +314,7 @@ function TimePickerModalBody({
         <span
           className={cn(
             "font-bold text-[var(--text-main)] font-mono",
-            isFullscreen ? "text-base sm:text-lg" : "text-sm",
+            isFullscreen ? "text-sm sm:text-base" : "text-xs sm:text-sm",
           )}
           dir="ltr"
         >
@@ -326,8 +326,8 @@ function TimePickerModalBody({
           className={cn(
             "gold-gradient-btn font-bold cursor-pointer",
             isFullscreen
-              ? "min-h-12 px-6 py-2.5 rounded-xl text-base"
-              : "min-h-9 px-4 py-1.5 rounded-lg text-sm",
+              ? "min-h-11 px-5 py-2 rounded-lg text-sm"
+              : "min-h-8 px-4 py-1 rounded-lg text-xs sm:text-sm",
           )}
         >
           {ui("تأكيد")}
@@ -382,7 +382,7 @@ export function CustomTimePicker({
         <div className="flex items-center justify-between gap-2 min-w-0">
           <label
             htmlFor={controlId}
-            className="text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] flex items-center gap-1 shrink-0"
+            className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] flex items-center gap-1 shrink-0"
           >
             <span>{ui(label)}</span>
             {required && (
@@ -392,7 +392,7 @@ export function CustomTimePicker({
             )}
           </label>
           {value && (
-            <span className="text-sm text-[var(--accent-gold)] font-medium font-mono shrink-0" dir="ltr">
+            <span className="text-xs text-[var(--accent-gold)] font-medium font-mono shrink-0" dir="ltr">
               ({formatTimeDisplay12h(value, ui.language)})
             </span>
           )}
@@ -421,7 +421,7 @@ export function CustomTimePicker({
               openOverlay();
             }
           }}
-          className={`flex-1 min-w-0 min-h-12 px-3.5 py-2.5 text-base rounded-xl transition-all duration-150 outline-hidden font-mono font-bold flex items-center justify-between text-start cursor-pointer
+          className={`flex-1 min-w-0 min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg transition-all duration-150 outline-hidden font-mono font-semibold flex items-center justify-between text-start cursor-pointer
             ${
               error
                 ? "bg-rose-500/5 border border-rose-500/60 text-rose-950 dark:text-rose-100 focus:ring-2 focus:ring-rose-500/20"
@@ -430,14 +430,14 @@ export function CustomTimePicker({
                   : "bg-[var(--input-bg)] border border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
             }`}
         >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div
               aria-hidden="true"
-              className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0"
+              className="w-6 h-6 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center shrink-0"
             >
-              <Clock className="w-4 h-4" />
+              <Clock className="w-3.5 h-3.5" />
             </div>
-            <span className="text-base font-bold font-mono tracking-wider truncate">
+            <span className="text-base sm:text-[0.8125rem] font-semibold font-mono tracking-normal truncate">
               {value || ui("حدد الوقت")}
             </span>
           </div>
@@ -457,7 +457,7 @@ export function CustomTimePicker({
             onClick={() => onChange("")}
             aria-label={ui("مسح الحقل")}
             title={ui("مسح الحقل")}
-            className="min-h-12 min-w-11 px-2.5 rounded-xl border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-500/5 flex items-center justify-center shrink-0 transition cursor-pointer"
+            className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 px-2 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-muted)] hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-500/5 flex items-center justify-center shrink-0 transition cursor-pointer"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -475,11 +475,11 @@ export function CustomTimePicker({
           "حدد الساعة والدقيقة بملء الشاشة لسهولة الاختيار",
           "Choose hours and minutes from a full-screen picker",
         )}
-        icon={<Clock className="w-5 h-5" aria-hidden="true" />}
+        icon={<Clock className="w-4 h-4" aria-hidden="true" />}
         matchTriggerWidth={false}
-        minPopoverWidth={320}
-        maxPopoverWidth={360}
-        preferredMaxHeight={480}
+        minPopoverWidth={310}
+        maxPopoverWidth={348}
+        preferredMaxHeight={450}
         dir={ui.dir}
       >
         <TimePickerModalBody
@@ -493,15 +493,15 @@ export function CustomTimePicker({
         <p
           id={`${controlId}-description`}
           role="alert"
-          className="text-sm text-rose-700 dark:text-rose-400 font-bold flex items-center gap-1.5"
+          className="text-xs text-rose-700 dark:text-rose-400 font-bold flex items-center gap-1.5"
         >
-          <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
           <span>{ui(error)}</span>
         </p>
       )}
 
       {hint && !error && (
-        <p id={`${controlId}-description`} className="text-sm text-[var(--text-muted)]">
+        <p id={`${controlId}-description`} className="text-xs text-[var(--text-muted)]">
           {ui(hint)}
         </p>
       )}

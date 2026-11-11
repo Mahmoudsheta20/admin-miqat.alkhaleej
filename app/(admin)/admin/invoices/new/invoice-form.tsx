@@ -130,8 +130,8 @@ const EMPTY_BUYER: BuyerForm = {
 };
 
 const INLINE_INPUT =
-  "theme-input min-h-12 w-full min-w-0 rounded-xl px-3.5 py-2.5 text-base";
-const INPUT = `mt-2 ${INLINE_INPUT}`;
+  "theme-input min-h-11 sm:min-h-9 w-full min-w-0 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
+const INPUT = `mt-1.5 ${INLINE_INPUT}`;
 
 const STAGES: {
   id: FormStage;
@@ -867,12 +867,12 @@ export default function InvoiceForm({
       </div>
 
       {/* Add Service Buttons */}
-      <div className="mt-5 flex flex-wrap items-center gap-2 pt-3 border-t theme-border">
+      <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t theme-border">
         <button
           type="button"
           disabled={rows.length >= 200}
           onClick={() => addService()}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-4 py-2 text-sm font-semibold text-[var(--accent-gold)] transition cursor-pointer"
+          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-[var(--accent-gold)] transition cursor-pointer"
         >
           <Plus className="size-4" aria-hidden="true" />
           <span>{ui("إضافة خدمة جديدة")}</span>
@@ -884,7 +884,7 @@ export default function InvoiceForm({
               type="button"
               disabled={rows.length >= 200}
               onClick={() => addService(label)}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-2 text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
             >
               <Plus className="size-3.5" aria-hidden="true" />
               <span>{ui(label)}</span>
@@ -908,7 +908,7 @@ export default function InvoiceForm({
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <Link
               href="/admin/invoices"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition"
             >
               <ArrowRight
                 className="size-4 ltr:rotate-180"
@@ -918,22 +918,22 @@ export default function InvoiceForm({
             </Link>
             <Link
               href="/admin/invoices"
-              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition"
+              className="inline-flex min-h-11 sm:min-h-9 items-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition"
             >
               {ui("إلغاء الأمر")}
             </Link>
           </div>
 
-          <header className="mb-6">
+          <header className="mb-5">
             <div className="flex items-center gap-3">
-              <div className="size-11 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)]">
+              <div className="size-10 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 flex items-center justify-center text-[var(--accent-gold)]">
                 <ReceiptText className="size-5" aria-hidden="true" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] tracking-tight">
+                <h1 className="text-lg sm:text-2xl font-semibold text-[var(--text-main)] tracking-tight">
                   {docHeadingTitle}
                 </h1>
-                <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+                <p className="mt-0.5 text-xs sm:text-sm text-[var(--text-muted)]">
                   {docHeadingSubtitle}
                 </p>
               </div>
@@ -945,9 +945,9 @@ export default function InvoiceForm({
       {/* 4-Stage Interactive Stepper Header */}
       <nav
         aria-label={ui("مراحل إنشاء الفاتورة")}
-        className="mb-6 theme-card rounded-2xl border theme-border p-2.5 sm:p-3"
+        className="mb-5 theme-card rounded-2xl border theme-border p-2 sm:p-2.5"
       >
-        <div className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory touch-pan-x touch-pan-y md:grid md:grid-cols-4">
+        <div className="flex items-stretch gap-2 overflow-x-auto no-scrollbar snap-x snap-mandatory touch-pan-x touch-pan-y md:grid md:grid-cols-4">
           {STAGES.map((st, idx) => {
             const isCurrent = currentStage === st.id;
             const currentIndex = STAGES.findIndex((s) => s.id === currentStage);
@@ -959,7 +959,7 @@ export default function InvoiceForm({
                 type="button"
                 aria-current={isCurrent ? "step" : undefined}
                 onClick={() => setCurrentStage(st.id)}
-                className={`min-h-12 shrink-0 min-w-[186px] sm:min-w-[208px] md:min-w-0 flex items-center gap-3 p-3 sm:p-3.5 rounded-xl text-start transition cursor-pointer select-none ${
+                className={`min-h-11 shrink-0 min-w-[178px] sm:min-w-[196px] md:min-w-0 flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl text-start transition cursor-pointer select-none ${
                   isCurrent
                     ? "bg-[var(--accent-surface)] border border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30 text-[var(--text-main)]"
                     : isCompleted
@@ -968,7 +968,7 @@ export default function InvoiceForm({
                 }`}
               >
                 <div
-                  className={`size-8 rounded-lg flex items-center justify-center font-mono font-bold text-sm shrink-0 ${
+                  className={`size-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                     isCurrent
                       ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
                       : isCompleted
@@ -984,11 +984,11 @@ export default function InvoiceForm({
                 </div>
                 <div className="min-w-0">
                   <p
-                    className={`text-sm font-semibold whitespace-normal leading-snug ${isCurrent ? "text-[var(--accent-gold)]" : "text-[var(--text-main)]"}`}
+                    className={`text-xs sm:text-sm font-semibold whitespace-normal leading-snug ${isCurrent ? "text-[var(--accent-gold)]" : "text-[var(--text-main)]"}`}
                   >
                     {ui(st.title)}
                   </p>
-                  <p className="text-sm text-[var(--text-muted)] truncate hidden sm:block">
+                  <p className="text-xs text-[var(--text-muted)] truncate hidden sm:block">
                     {ui(st.subtitle)}
                   </p>
                 </div>
@@ -1029,7 +1029,7 @@ export default function InvoiceForm({
       {isLoading ? (
         <div
           role="status"
-          className="theme-card animate-pulse rounded-2xl p-12 text-center text-[var(--text-muted)] text-base"
+          className="theme-card animate-pulse rounded-2xl p-10 text-center text-[var(--text-muted)] text-sm sm:text-base"
         >
           <Loader2 className="size-7 animate-spin mx-auto mb-3 text-[var(--accent-gold)]" />
           <span>{ui("جارٍ تجهيز شاشة الفاتورة…")}</span>
@@ -1038,18 +1038,18 @@ export default function InvoiceForm({
         <form
           id="invoice-create-form"
           onSubmit={save}
-          className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_400px]"
+          className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_390px]"
         >
           {/* Main Stepper Stages Area */}
           <fieldset
             disabled={isSaving || isSourceLoading}
-            className="min-w-0 space-y-6 disabled:opacity-75"
+            className="min-w-0 space-y-5 disabled:opacity-75"
           >
             {/* =========================================================================
                 المرحلة الأولى: نوع المستند والعميل (§5 المرحلة الأولى)
                ========================================================================= */}
             {currentStage === "DOCUMENT_AND_CUSTOMER" && (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {/* 1a. Unified Document Selector */}
                 <InvoiceTypeSelector
                   documentType={documentType}
@@ -1059,13 +1059,13 @@ export default function InvoiceForm({
 
                 {/* 1b. If Credit or Debit Note, choose Original Invoice and Reason */}
                 {isTaxMode && taxDocument.kind !== "INVOICE" && (
-                  <section className="theme-card rounded-2xl p-5 sm:p-6 border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)]">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="rounded-md bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] px-2.5 py-0.5 text-sm font-semibold">
+                  <section className="theme-card rounded-2xl p-4 sm:p-5 border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)]">
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <span className="rounded-md bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] px-2.5 py-0.5 text-xs font-semibold">
                         {ui("ربط الفاتورة الأصلية للإشعار")}
                       </span>
                     </div>
-                    <p className="text-sm text-[var(--text-muted)] mb-4 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[var(--text-muted)] mb-3.5 leading-relaxed">
                       {ui(
                         "يُشترط نظاماً ربط الإشعار برقم الفاتورة الصادرة سابقاً. سيتم نسخ بيانات العميل والمسار والضريبة تلقائياً.",
                       )}
@@ -1146,13 +1146,13 @@ export default function InvoiceForm({
                 )}
 
                 {/* 1c. Fast Import: Use Existing Contract */}
-                <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-4 mb-4">
+                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-3.5 mb-4">
                     <div>
-                      <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                         {ui("بيانات العميل والفاتورة")}
                       </h2>
-                      <p className="text-sm text-[var(--text-muted)] mt-0.5">
+                      <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
                         {ui(
                           "اختر العقد لاستيراد كافة بيانات الرحلة والعميل بضغطة زر، أو أدخلها يدوياً",
                         )}
@@ -1286,7 +1286,7 @@ export default function InvoiceForm({
 
                     {/* Phone with Country Code */}
                     <div>
-                      <span className="block text-sm sm:text-[0.9375rem] font-semibold text-[var(--text-main)] mb-1">
+                      <span className="block text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] mb-1">
                         {ui("رقم الجوال للتواصل والفاتورة *")}
                       </span>
                       <InvoicePhoneField
@@ -1410,11 +1410,11 @@ export default function InvoiceForm({
                   )}
 
                   {/* National Address: auto-opened if B2B/VAT or toggleable */}
-                  <div className="mt-5 pt-4 border-t theme-border">
+                  <div className="mt-4 pt-3.5 border-t theme-border">
                     <button
                       type="button"
                       aria-expanded={showBuyerDetails}
-                      className="inline-flex min-h-11 items-center gap-2 py-1 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] transition cursor-pointer"
+                      className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 py-1 text-xs sm:text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] transition cursor-pointer"
                       onClick={() => setShowBuyerDetails(!showBuyerDetails)}
                     >
                       <span>
@@ -1482,12 +1482,12 @@ export default function InvoiceForm({
                 </section>
 
                 {/* Stage 1 Footer Button */}
-                <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+                <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
                   {inModal && onClose && (
                     <button
                       type="button"
                       onClick={onClose}
-                      className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-5 py-2.5 text-base font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+                      className="inline-flex min-h-11 sm:min-h-9 items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
                     >
                       {ui("إلغاء")}
                     </button>
@@ -1495,7 +1495,7 @@ export default function InvoiceForm({
                   <button
                     type="button"
                     onClick={() => setCurrentStage("TRIP_AND_SERVICE")}
-                    className="gold-gradient-btn inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
+                    className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
                   >
                     <span>{ui("المتابعة: مسار الرحلة والخدمة")}</span>
                     <ArrowLeft
@@ -1511,13 +1511,13 @@ export default function InvoiceForm({
                 المرحلة الثانية: الرحلة والخدمة (§5 المرحلة الثانية)
                ========================================================================= */}
             {currentStage === "TRIP_AND_SERVICE" && (
-              <div className="space-y-6">
-                <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
-                  <div className="border-b theme-border pb-4 mb-5">
-                    <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+              <div className="space-y-5">
+                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
+                  <div className="border-b theme-border pb-3.5 mb-4">
+                    <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                       {ui("مسار الرحلة ومواعيدها")}
                     </h2>
-                    <p className="text-sm text-[var(--text-muted)] mt-0.5">
+                    <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
                       {ui(
                         "حدد نوع الرحلة، محطة الانطلاق، وجهة الوصول، والتاريخ",
                       )}
@@ -1540,7 +1540,7 @@ export default function InvoiceForm({
                   />
 
                   {/* Informative Passengers Notice (§5 المرحلة الثانية) */}
-                  <div className="mt-5 rounded-xl border border-sky-600/25 bg-sky-500/10 p-3.5 text-sm text-[var(--text-main)] flex items-center gap-2">
+                  <div className="mt-4 rounded-xl border border-sky-600/25 bg-sky-500/10 p-3 text-xs sm:text-sm text-[var(--text-main)] flex items-center gap-2">
                     <HelpCircle className="size-4 text-sky-700 dark:text-sky-400 shrink-0" />
                     <span>
                       {ui(
@@ -1551,25 +1551,25 @@ export default function InvoiceForm({
                 </section>
 
                 {/* Collapsible Supplemental Details: Driver, Odometer, Distance */}
-                <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
+                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
                   <button
                     type="button"
                     aria-expanded={showSupplementalTrip}
                     onClick={() =>
                       setShowSupplementalTrip(!showSupplementalTrip)
                     }
-                    className="flex min-h-11 w-full items-center justify-between gap-3 text-start cursor-pointer"
+                    className="flex min-h-11 sm:min-h-9 w-full items-center justify-between gap-3 text-start cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
                       <Truck
-                        className="size-5 text-[var(--accent-gold)] shrink-0"
+                        className="size-4 sm:size-5 text-[var(--accent-gold)] shrink-0"
                         aria-hidden="true"
                       />
                       <div>
-                        <h3 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                        <h3 className="text-sm font-semibold text-[var(--text-main)]">
                           {ui("تفاصيل الرحلة التشغيلية الإضافية (اختياري)")}
                         </h3>
-                        <p className="text-sm text-[var(--text-muted)]">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {ui(
                             "بيانات السائق، قراءة العداد، المسافة المقطوعة، وملاحظات التشغيل",
                           )}
@@ -1577,13 +1577,13 @@ export default function InvoiceForm({
                       </div>
                     </div>
                     <ChevronDown
-                      className={`size-5 text-[var(--text-muted)] transition-transform shrink-0 ${showSupplementalTrip ? "rotate-180" : ""}`}
+                      className={`size-4 text-[var(--text-muted)] transition-transform shrink-0 ${showSupplementalTrip ? "rotate-180" : ""}`}
                       aria-hidden="true"
                     />
                   </button>
 
                   {showSupplementalTrip && (
-                    <div className="mt-5 pt-5 border-t theme-border">
+                    <div className="mt-4 pt-4 border-t theme-border">
                       <TransportFields
                         isSupplemental
                         value={transport}
@@ -1598,11 +1598,11 @@ export default function InvoiceForm({
                 </section>
 
                 {/* Stage 2 Stepper Navigation */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
                     onClick={() => setCurrentStage("DOCUMENT_AND_CUSTOMER")}
-                    className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-5 py-2.5 text-sm sm:text-base font-bold text-[var(--text-main)] transition cursor-pointer"
+                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
                   >
                     <ArrowRight
                       className="size-4 ltr:rotate-180"
@@ -1613,7 +1613,7 @@ export default function InvoiceForm({
                   <button
                     type="button"
                     onClick={() => setCurrentStage("PRICE_AND_TAX")}
-                    className="gold-gradient-btn inline-flex min-h-12 items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
+                    className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
                   >
                     <span>{ui("المتابعة: السعر والضريبة")}</span>
                     <ArrowLeft
@@ -1629,20 +1629,20 @@ export default function InvoiceForm({
                 المرحلة الثالثة: السعر والضريبة (§5 المرحلة الثالثة)
                ========================================================================= */}
             {currentStage === "PRICE_AND_TAX" && (
-              <div className="space-y-6">
-                <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
-                  <div className="border-b theme-border pb-4 mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-5">
+                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
+                  <div className="border-b theme-border pb-3.5 mb-4 flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                         {ui("الخدمات والأسعار والمعاملة الضريبية")}
                       </h2>
-                      <p className="text-sm text-[var(--text-muted)] mt-0.5">
+                      <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
                         {ui(
                           "أدخل تفاصيل الخدمات، ويمكنك كتابة السعر قبل الضريبة أو السعر الإجمالي شامل 15%",
                         )}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] px-3 py-2 text-sm font-bold text-[var(--accent-gold)]">
+                    <div className="rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent-gold)]">
                       {ui("مثال: خدمة ٣٠٠ ر.س + ضريبة ٤٥ ر.س = ٣٤٥ ر.س إجمالي")}
                     </div>
                   </div>
@@ -1667,11 +1667,11 @@ export default function InvoiceForm({
                 )}
 
                 {/* Stage 3 Stepper Navigation */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
                     onClick={() => setCurrentStage("TRIP_AND_SERVICE")}
-                    className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-5 py-2.5 text-sm sm:text-base font-bold text-[var(--text-main)] transition cursor-pointer"
+                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
                   >
                     <ArrowRight
                       className="size-4 ltr:rotate-180"
@@ -1682,7 +1682,7 @@ export default function InvoiceForm({
                   <button
                     type="button"
                     onClick={() => setCurrentStage("PAYMENT_AND_REVIEW")}
-                    className="gold-gradient-btn inline-flex min-h-12 items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
+                    className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
                   >
                     <span>{ui("المتابعة: الدفع والمراجعة")}</span>
                     <ArrowLeft
@@ -1698,19 +1698,19 @@ export default function InvoiceForm({
                 المرحلة الرابعة: الدفع والمراجعة (§5 المرحلة الرابعة)
                ========================================================================= */}
             {currentStage === "PAYMENT_AND_REVIEW" && (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {/* 4a. The User Question: "هل دفع العميل؟" */}
                 {documentType !== "PROFORMA" ? (
-                  <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
-                    <div className="border-b theme-border pb-4 mb-5">
-                      <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] flex items-center gap-2">
+                  <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
+                    <div className="border-b theme-border pb-3.5 mb-4">
+                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
                         <Wallet
-                          className="size-5 text-[var(--accent-gold)]"
+                          className="size-4 sm:size-5 text-[var(--accent-gold)]"
                           aria-hidden="true"
                         />
                         <span>{ui("هل دفع العميل قيمة الفاتورة؟")}</span>
                       </h2>
-                      <p className="text-sm text-[var(--text-muted)] mt-0.5">
+                      <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
                         {ui(
                           "حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة",
                         )}
@@ -1720,7 +1720,7 @@ export default function InvoiceForm({
                     <div className="grid gap-3 sm:grid-cols-3">
                       {/* NOT PAID (آجل) */}
                       <label
-                        className={`p-4 rounded-xl border cursor-pointer transition text-start ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "NOT_PAID"
                             ? "bg-[var(--accent-surface)] border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30"
                             : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/55"
@@ -1734,8 +1734,8 @@ export default function InvoiceForm({
                           onChange={() => changePaymentStatusChoice("NOT_PAID")}
                           className="sr-only"
                         />
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-[var(--text-main)]">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                             {ui("لم يدفع بعد (آجل)")}
                           </span>
                           <span className="size-4 rounded-full border border-[var(--accent-gold)] flex items-center justify-center">
@@ -1744,7 +1744,7 @@ export default function InvoiceForm({
                             )}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--text-muted)]">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {ui(
                             "تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.",
                           )}
@@ -1753,7 +1753,7 @@ export default function InvoiceForm({
 
                       {/* FULLY PAID */}
                       <label
-                        className={`p-4 rounded-xl border cursor-pointer transition text-start ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "FULLY_PAID"
                             ? "bg-emerald-500/12 border-emerald-600/50 ring-1 ring-emerald-500/30 dark:bg-emerald-950/45 dark:border-emerald-500/50"
                             : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-emerald-600/55 dark:hover:border-emerald-500/55"
@@ -1769,8 +1769,8 @@ export default function InvoiceForm({
                           }
                           className="sr-only"
                         />
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-[var(--text-main)]">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                             {ui("دفع المبلغ كاملاً")}
                           </span>
                           <span className="size-4 rounded-full border border-emerald-600 dark:border-emerald-400 flex items-center justify-center">
@@ -1779,7 +1779,7 @@ export default function InvoiceForm({
                             )}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--text-muted)]">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {ui(
                             "تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.",
                           )}
@@ -1788,7 +1788,7 @@ export default function InvoiceForm({
 
                       {/* PARTIALLY PAID */}
                       <label
-                        className={`p-4 rounded-xl border cursor-pointer transition text-start ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "PARTIALLY_PAID"
                             ? "bg-sky-500/10 border-sky-600/45 ring-1 ring-sky-500/30"
                             : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-sky-600/55 dark:hover:border-sky-400/55"
@@ -1804,8 +1804,8 @@ export default function InvoiceForm({
                           }
                           className="sr-only"
                         />
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-[var(--text-main)]">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                             {ui("دفع جزءاً من المبلغ")}
                           </span>
                           <span className="size-4 rounded-full border border-sky-600 dark:border-sky-400 flex items-center justify-center">
@@ -1814,7 +1814,7 @@ export default function InvoiceForm({
                             )}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--text-muted)]">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {ui(
                             "تسجيل دفعة مقدمة الآن مع بقاء الرصيد المتبقي للمتابعة.",
                           )}
@@ -1824,13 +1824,13 @@ export default function InvoiceForm({
 
                     {/* If FULLY PAID: choose bank or cash */}
                     {paymentStatusChoice === "FULLY_PAID" && (
-                      <div className="mt-5 pt-4 border-t theme-border space-y-3">
-                        <span className="text-sm font-bold text-[var(--text-main)] block">
+                      <div className="mt-4 pt-3.5 border-t theme-border space-y-2.5">
+                        <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] block">
                           {ui("كيف استلمت المبلغ من العميل؟")}
                         </span>
-                        <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="grid gap-2.5 sm:grid-cols-3">
                           <label
-                            className={`p-3.5 rounded-xl border text-sm font-bold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "BANK_TRANSFER" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
+                            className={`min-h-11 sm:min-h-9 p-2.5 rounded-lg border text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "BANK_TRANSFER" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
                           >
                             <input
                               type="radio"
@@ -1848,7 +1848,7 @@ export default function InvoiceForm({
                             <span>{ui("تحويل بنكي (البنك الأهلي SNB)")}</span>
                           </label>
                           <label
-                            className={`p-3.5 rounded-xl border text-sm font-bold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "CASH" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
+                            className={`min-h-11 sm:min-h-9 p-2.5 rounded-lg border text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "CASH" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
                           >
                             <input
                               type="radio"
@@ -1864,7 +1864,7 @@ export default function InvoiceForm({
                             <span>{ui("نقداً بالصندوق")}</span>
                           </label>
                           <label
-                            className={`p-3.5 rounded-xl border text-sm font-bold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "CARD" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
+                            className={`min-h-11 sm:min-h-9 p-2.5 rounded-lg border text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "CARD" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
                           >
                             <input
                               type="radio"
@@ -1944,27 +1944,27 @@ export default function InvoiceForm({
 
                 {/* 4b. Collapsible "تفاصيل للمحاسب (تلقائية)" (§5 المرحلة الرابعة) */}
                 {documentType !== "PROFORMA" && (
-                  <section className="theme-card rounded-2xl p-5 border theme-border">
+                  <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
                     <button
                       type="button"
                       aria-expanded={showAccountantDetails}
                       onClick={() =>
                         setShowAccountantDetails(!showAccountantDetails)
                       }
-                      className="flex min-h-11 w-full items-center justify-between gap-3 text-start cursor-pointer"
+                      className="flex min-h-11 sm:min-h-9 w-full items-center justify-between gap-3 text-start cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5">
                         <Landmark
-                          className="size-5 text-[var(--text-muted)] shrink-0"
+                          className="size-4 sm:size-5 text-[var(--text-muted)] shrink-0"
                           aria-hidden="true"
                         />
                         <div>
-                          <span className="text-sm font-semibold text-[var(--text-main)]">
+                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                             {ui(
                               "تفاصيل التوجيه المحاسبي (تلقائية ومخصصة للمحاسب)",
                             )}
                           </span>
-                          <p className="text-sm text-[var(--text-muted)]">
+                          <p className="text-xs text-[var(--text-muted)]">
                             {ui("حساب الإيراد")}: {revenueAccountCode} ·{" "}
                             {ui("حساب التسوية المالية")}:{" "}
                             {settlementAccountCode}
@@ -2035,7 +2035,7 @@ export default function InvoiceForm({
                             },
                           ]}
                         />
-                        <p className="sm:col-span-2 text-sm text-[var(--text-muted)] leading-relaxed">
+                        <p className="sm:col-span-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                           {ui(
                             "يوجه النظام القيود تلقائياً بناءً على إجابتك في سؤال «هل دفع العميل؟». يمكنك تغيير الحساب هنا للمحاسبة المتقدمة فقط.",
                           )}
@@ -2046,24 +2046,24 @@ export default function InvoiceForm({
                 )}
 
                 {/* 4c. Pre-Issuance Summary & Review Card (§5 المرحلة الرابعة) */}
-                <section className="theme-card rounded-2xl p-5 sm:p-6 border theme-border">
-                  <div className="border-b theme-border pb-4 mb-4">
-                    <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
+                  <div className="border-b theme-border pb-3.5 mb-4">
+                    <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                       {ui("مراجعة بيانات المستند قبل الإصدار")}
                     </h2>
-                    <p className="text-sm text-[var(--text-muted)] mt-0.5">
+                    <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
                       {ui(
                         "تأكد من صحة المبالغ والمسار قبل الضغط على زر الإصدار",
                       )}
                     </p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 text-sm">
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
+                  <div className="grid gap-3 sm:grid-cols-2 text-xs sm:text-sm">
+                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                       <span className="text-[var(--text-muted)] block mb-1">
                         {ui("العميل والمستند:")}
                       </span>
-                      <p className="font-bold text-base text-[var(--text-main)]">
+                      <p className="font-bold text-sm text-[var(--text-main)]">
                         {buyer.name || "—"}
                       </p>
                       {phone.number && (
@@ -2076,11 +2076,11 @@ export default function InvoiceForm({
                       )}
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
+                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                       <span className="text-[var(--text-muted)] block mb-1">
                         {ui("مسار وموعد الرحلة:")}
                       </span>
-                      <p className="font-bold text-base text-[var(--text-main)]">
+                      <p className="font-bold text-sm text-[var(--text-main)]">
                         {transport.origin || "—"} {ui.dir === "rtl" ? "←" : "→"}{" "}
                         {transport.destination || "—"}
                       </p>
@@ -2092,7 +2092,7 @@ export default function InvoiceForm({
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
+                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                       <span className="text-[var(--text-muted)] block mb-1">
                         {ui("تاريخ ووقت الفاتورة:")}
                       </span>
@@ -2108,11 +2108,11 @@ export default function InvoiceForm({
                       />
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
+                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
                       <span className="text-[var(--text-muted)] block mb-1">
                         {ui("حالة السداد والمتبقي:")}
                       </span>
-                      <p className="font-semibold font-mono text-base">
+                      <p className="font-semibold font-mono text-sm">
                         {paymentStatusChoice === "FULLY_PAID" ? (
                           <span className="text-emerald-700 dark:text-emerald-300">
                             {ui("مدفوع بالكامل (٠.٠٠ متبقي)")}
@@ -2133,8 +2133,8 @@ export default function InvoiceForm({
                   </div>
 
                   {/* Review Checkbox */}
-                  <div className="mt-5 pt-4 border-t theme-border">
-                    <label className="flex min-h-12 items-start gap-3 text-sm sm:text-base leading-relaxed text-[var(--text-main)] font-bold cursor-pointer">
+                  <div className="mt-4 pt-3.5 border-t theme-border">
+                    <label className="flex min-h-11 sm:min-h-9 items-start gap-2.5 text-xs sm:text-sm leading-relaxed text-[var(--text-main)] font-semibold cursor-pointer">
                       <Checkbox
                         required
                         checked={isReviewed}
@@ -2151,11 +2151,11 @@ export default function InvoiceForm({
                 </section>
 
                 {/* Stage 4 Stepper Navigation & Primary Save Button */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
                     onClick={() => setCurrentStage("PRICE_AND_TAX")}
-                    className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-5 py-2.5 text-sm sm:text-base font-bold text-[var(--text-main)] transition cursor-pointer"
+                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
                   >
                     <ArrowRight
                       className="size-4 ltr:rotate-180"
@@ -2168,7 +2168,7 @@ export default function InvoiceForm({
                     id="invoice-submit-btn"
                     type="submit"
                     disabled={!canSave || !isReviewed}
-                    className="gold-gradient-btn flex min-h-12 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl px-7 sm:px-8 text-base font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                    className="gold-gradient-btn flex min-h-11 sm:min-h-9 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   >
                     {isSaving ? (
                       <Loader2 className="size-4 animate-spin" />
@@ -2194,16 +2194,16 @@ export default function InvoiceForm({
           <aside className="min-w-0 lg:sticky lg:top-5 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto">
             <fieldset disabled={isSaving} className="min-w-0 space-y-4">
               <section className="overflow-hidden rounded-2xl border theme-border bg-[var(--bg-card)]">
-                <div className="border-b theme-border px-5 py-4 bg-[var(--bg-card-subtle)]">
+                <div className="border-b theme-border px-4 py-3.5 bg-[var(--bg-card-subtle)]">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-[var(--accent-gold)]">
+                    <span className="text-xs font-semibold text-[var(--accent-gold)]">
                       {ui("ملخص المستند")}
                     </span>
-                    <span className="text-sm font-bold text-[var(--text-muted)] font-mono">
+                    <span className="text-xs font-bold text-[var(--text-muted)] font-mono">
                       {rows.length} {ui(rows.length === 1 ? "خدمة" : "خدمات")}
                     </span>
                   </div>
-                  <h2 className="text-base font-semibold text-[var(--text-main)] mt-1">
+                  <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)] mt-1">
                     {ui(
                       documentType === "PROFORMA"
                         ? "فاتورة مبدئية"
@@ -2211,13 +2211,13 @@ export default function InvoiceForm({
                     )}
                   </h2>
                   {buyer.name && (
-                    <p className="text-sm text-[var(--text-muted)] truncate mt-0.5">
+                    <p className="text-xs sm:text-sm text-[var(--text-muted)] truncate mt-0.5">
                       {ui("العميل:")} {buyer.name}
                     </p>
                   )}
                 </div>
 
-                <dl aria-live="polite" className="space-y-3 px-5 py-4 text-sm">
+                <dl aria-live="polite" className="space-y-2.5 px-4 py-3.5 text-xs sm:text-sm">
                   {[
                     ["الإجمالي قبل الخصم", beforeDiscount.net],
                     ["قيمة الخصم", discountTotal],
@@ -2239,19 +2239,19 @@ export default function InvoiceForm({
                 </dl>
 
                 {/* Dark Slate Signature Total Box */}
-                <div className="mx-4 mb-4 rounded-xl bg-slate-900 dark:bg-slate-800/95 p-4 text-white border border-slate-700">
-                  <p className="text-sm text-slate-200 font-bold">
+                <div className="mx-3.5 mb-3.5 rounded-xl bg-slate-900 dark:bg-slate-800/95 p-3.5 text-white border border-slate-700">
+                  <p className="text-xs text-slate-200 font-bold">
                     {ui("الإجمالي المطلوب شامل الضريبة")}
                   </p>
                   <div className="mt-1 flex items-baseline gap-1.5">
                     <strong
-                      className="font-mono text-3xl font-semibold tracking-tight text-white"
+                      className="font-mono text-2xl font-semibold tracking-tight text-white"
                       dir="ltr"
                       data-testid="invoice-total"
                     >
                       {amount(estimate.gross)}
                     </strong>
-                    <span className="text-sm font-bold text-amber-300">
+                    <span className="text-xs sm:text-sm font-bold text-amber-300">
                       {ui("ر.س")}
                     </span>
                   </div>

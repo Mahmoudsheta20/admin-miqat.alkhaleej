@@ -59,7 +59,7 @@ const TYPES: Record<
   },
 };
 
-const INPUT = "theme-input mt-2 h-11 w-full rounded-xl px-3 text-sm";
+const INPUT = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 function suggestNextChildCode(
   parentCode: string,
@@ -232,7 +232,7 @@ function Editor({
                 </span>
               )}
             </div>
-            <h2 id="account-editor-title" className="mt-1 text-xl font-semibold text-[var(--text-main)]">
+            <h2 id="account-editor-title" className="mt-1 text-lg sm:text-xl font-semibold text-[var(--text-main)]">
               {isEditing
                 ? ui.language === "en" && account.nameEn
                   ? account.nameEn
@@ -432,14 +432,14 @@ function Editor({
           <button
             type="button"
             disabled={saving}
-            className="min-h-11 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-2.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition disabled:opacity-50"
+            className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition disabled:opacity-50"
             onClick={onClose}
           >
             {ui("إلغاء")}</button>
           <button
             type="submit"
             disabled={saving}
-            className="gold-gradient-btn min-h-11 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer transition shadow-sm"
+            className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer transition shadow-sm"
           >
             {ui(saving
               ? "جارٍ الحفظ…"
@@ -668,7 +668,7 @@ export default function AccountsPage() {
           <>
             <Link
               href="/admin/accounting"
-              className="inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-2 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
             >
               <Landmark className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
               <span>{ui(t("accounting.title"))}</span>
@@ -676,7 +676,7 @@ export default function AccountsPage() {
 
             <button
               type="button"
-              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-10 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
+              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
               onClick={() => setEditor({ account: "NEW" })}
             >
               <Plus className="size-4" aria-hidden="true" />
@@ -946,13 +946,13 @@ export default function AccountsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={ui("ابحث بالرمز (1102)، الاسم العربي (البنك الأهلي)، أو الإنجليزي (Fuel)...")}
-            className="theme-input w-full h-11 ps-10 pe-11 py-2.5 text-xs sm:text-sm rounded-xl"
+            className="theme-input w-full min-h-11 sm:min-h-9 ps-10 pe-11 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute end-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+              className="absolute end-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
               aria-label={ui("مسح البحث")}
             >
               <X className="size-3.5" aria-hidden="true" />
@@ -965,7 +965,7 @@ export default function AccountsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="theme-input h-11 rounded-xl px-3 text-xs font-bold"
+            className="theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-bold"
             aria-label={ui("فلترة بنوع الحساب")}
           >
             <option value="ALL">{ui("جميع الأبواب الرئيسية")}</option>
@@ -981,7 +981,7 @@ export default function AccountsPage() {
             onChange={(e) =>
               setPostingFilter(e.target.value as "ALL" | "POSTING" | "GROUP")
             }
-            className="theme-input h-11 rounded-xl px-3 text-xs font-bold"
+            className="theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-bold"
             aria-label={ui("فلترة بطبيعة الترحيل")}
           >
             <option value="ALL">{ui("كافة الحسابات (فرعي ورئيسي)")}</option>
@@ -1501,7 +1501,7 @@ export default function AccountsPage() {
                             onClick={() =>
                               setEditor({ account: "NEW", prefillParent: a })
                             }
-                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-2.5 py-1.5 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
+                            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-2.5 py-1 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
                             title={
                               ui.language === "en"
                                 ? `Add sub-account under ${a.code}`
@@ -1514,7 +1514,7 @@ export default function AccountsPage() {
                         )}
                         <button
                           type="button"
-                          className="min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
+                          className="min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
                           onClick={() => setEditor({ account: a })}
                         >
                           {ui("تعديل")}</button>
