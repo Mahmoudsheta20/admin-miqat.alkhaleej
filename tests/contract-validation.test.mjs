@@ -24,7 +24,19 @@ function loadTs(filePath) {
   return exports;
 }
 
-const { adminContractSchema, OPERATION_TYPE_LABELS, parseOperationType, sanitizeContractPayload } = loadTs('lib/validations/contract.ts');
+const {
+  adminContractSchema,
+  OPERATION_TYPE_LABELS,
+  parseOperationType,
+  sanitizeContractPayload,
+} = loadTs('lib/validations/contract.ts');
+
+const {
+  extractContractServiceType,
+  cleanContractNotes,
+  encodeContractNotes,
+  CONTRACT_SERVICE_OPTIONS,
+} = loadTs('lib/contractConstants.ts');
 
 const baseValidForm = {
   operationType: 'جولة سياحية',
@@ -81,11 +93,58 @@ test('parseOperationType handles Arabic, English, edit labels, and compound phra
     ['توصيل معتمرين', 'HAJJ_UMRAH'],
     ['زيارة عمرة', 'HAJJ_UMRAH'],
     ['Hajj & Umrah', 'HAJJ_UMRAH'],
+    ['خدمة بالساعة / تأجير بسائق', 'CITY_TOUR'],
+    ['نقل وفود وفعاليات ومؤتمرات', 'CITY_TOUR'],
+    ['توصيل محطات قطار الحرمين', 'INTERCITY'],
+    ['رحلة خاصة VIP', 'CITY_TOUR'],
+    ['خدمة يوم كامل', 'CITY_TOUR'],
+    ['توصيل وفد وزاري لمؤتمر الطاقة', 'CITY_TOUR'],
+    ['استقبال VIP بصالة الطيران الخاص', 'AIRPORT_TRANSFER'],
   ];
 
   for (const [input, expectedEnum] of cases) {
     assert.equal(parseOperationType(input), expectedEnum, `expected "${input}" -> ${expectedEnum}`);
     assert.ok(OPERATION_TYPE_LABELS[expectedEnum]);
+  }
+});
+
+test('encodeContractNotes and extractContractServiceType preserve custom user written service type', () => {
+  const customService = 'توصيل وفد تجاري VIP';
+  const userNotes = 'العميل يفضل مقعد أمامي ومياه باردة';
+
+  const encoded = encodeContractNotes(customService, userNotes);
+  assert.equal(encoded, `نوع الخدمة: ${customService}\n${userNotes}`);
+
+  const extracted = extractContractServiceType('CITY_TOUR', encoded);
+  assert.equal(extracted, customService);
+
+  const cleanedNotes = cleanContractNotes(encoded);
+  assert.equal(cleanedNotes, userNotes);
+
+  // When notes has no custom service type, fallback to enum label
+  assert.equal(extractContractServiceType('INTERCITY', 'ملاحظة عامة'), 'نقل بين المدن');
+  assert.equal(cleanContractNotes('ملاحظة عامة'), 'ملاحظة عامة');
+});
+
+test('sanitizeContractPayload preserves exact custom service type into contract notes', () => {
+  const customType = 'نقل ضيوف معرض إكسبو';
+  const parsed = adminContractSchema.safeParse({
+    ...baseValidForm,
+    operationType: customType,
+    notes: 'ملاحظة خاصة بالرحلة',
+  });
+  assert.equal(parsed.success, true);
+  const payload = sanitizeContractPayload(parsed.data, 'insp-1');
+  assert.equal(payload.operationType, 'CITY_TOUR');
+  assert.equal(payload.notes, `نوع الخدمة: ${customType}\nملاحظة خاصة بالرحلة`);
+});
+
+test('CONTRACT_SERVICE_OPTIONS contains comprehensive preset options with valid labels and default enums', () => {
+  assert.ok(CONTRACT_SERVICE_OPTIONS.length >= 8);
+  for (const opt of CONTRACT_SERVICE_OPTIONS) {
+    assert.ok(opt.value, 'option must have value');
+    assert.ok(opt.label, 'option must have label');
+    assert.ok(opt.defaultEnum, 'option must have defaultEnum');
   }
 });
 

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Sparkles, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight } from "lucide-react";
+import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Sparkles, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight, Briefcase, PenLine } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getCaptains } from "@/app/_actions/captain";
 import { getVehicles } from "@/app/_actions/fleet";
@@ -18,7 +18,14 @@ import { getContractById, updateContract, deleteContract } from "@/app/_actions/
 import { Contract, Vehicle } from "@/lib/types";
 import { adminContractSchema, AdminContractFormValues, sanitizeContractPayload } from "@/lib/validations/contract";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
-import { getSaudiTodayDateStr, getSaudiCurrentTimeStr } from "@/lib/contractConstants";
+import {
+  getSaudiTodayDateStr,
+  getSaudiCurrentTimeStr,
+  extractContractServiceType,
+  cleanContractNotes,
+  CONTRACT_SERVICE_OPTIONS,
+} from "@/lib/contractConstants";
+import { CustomInput } from "@/app/_components/form/CustomInput";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
@@ -30,30 +37,6 @@ import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 import { CaptainSelector, CaptainWithMeta } from "@/app/_components/form/CaptainSelector";
 import { VehicleSelector } from "@/app/_components/form/VehicleSelector";
 import { PassengerManifestManager } from "@/app/_components/form/PassengerManifestManager";
-
-const OPERATION_TYPES = [
-  "توصيل واستقبال مطار",
-  "جولة سياحية وزيارات",
-  "نقل بين المدن",
-  "خدمات الحج والعمرة",
-];
-
-
-
-function mapOperationToLabel(type: string): string {
-  switch (type) {
-    case "AIRPORT_TRANSFER":
-      return "توصيل واستقبال مطار";
-    case "CITY_TOUR":
-      return "جولة سياحية وزيارات";
-    case "INTERCITY":
-      return "نقل بين المدن";
-    case "HAJJ_UMRAH":
-      return "خدمات الحج والعمرة";
-    default:
-      return type || "توصيل واستقبال مطار";
-  }
-}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -179,7 +162,6 @@ export default function EditContractPage({ params }: PageProps) {
 
   const selectedCaptainId = useWatch({ control, name: "captainId" });
   const selectedVehiclePlate = useWatch({ control, name: "vehiclePlate" });
-  const watchedOperationType = useWatch({ control, name: "operationType" });
 
   // Load contract, captains & vehicles
   useEffect(() => {
@@ -223,7 +205,7 @@ export default function EditContractPage({ params }: PageProps) {
               : [{ name: "", nationality: "", idNumber: "" }];
 
           reset({
-            operationType: mapOperationToLabel(c.operationType),
+            operationType: extractContractServiceType(c.operationType, c.notes),
             customerName: c.customerName || "",
             customerPhone: c.customerPhone || "",
             origin: c.origin || "",
@@ -236,7 +218,7 @@ export default function EditContractPage({ params }: PageProps) {
             flightNumber: c.flightNumber || "",
             captainId: c.captainId || "",
             vehiclePlate: c.vehiclePlate || "",
-            notes: c.notes || "",
+            notes: cleanContractNotes(c.notes),
             passengers: rawPassengers,
           });
 
@@ -523,28 +505,70 @@ export default function EditContractPage({ params }: PageProps) {
                 control={control}
                 name="operationType"
                 render={({ field, fieldState }) => {
-                  const opOptions = [
-                    ...(watchedOperationType && !OPERATION_TYPES.includes(watchedOperationType)
-                      ? [{ value: watchedOperationType, label: watchedOperationType }]
-                      : []),
-                    ...OPERATION_TYPES.map((op) => ({
-                      value: op,
-                      label: ui(op),
-                    })),
-                  ];
+                  const trimmedValue = (field.value ?? "").trim();
+                  const matchedOption = CONTRACT_SERVICE_OPTIONS.find(
+                    (opt) => opt.value === trimmedValue && opt.value !== "CUSTOM"
+                  );
+                  const isCustomSelected =
+                    trimmedValue === "CUSTOM" ||
+                    (Boolean(trimmedValue) && !matchedOption);
+
+                  const selectValue = isCustomSelected
+                    ? "CUSTOM"
+                    : matchedOption
+                    ? matchedOption.value
+                    : "";
+
                   return (
-                    <FullscreenSelect
-                      id={operationTypeId}
-                      name={field.name}
-                      label={ui("نوع العملية التشغيلية")}
-                      required
-                      searchable={false}
-                      value={field.value || ""}
-                      onChange={(nextValue) => field.onChange(nextValue)}
-                      onBlur={field.onBlur}
-                      error={fieldState.error?.message}
-                      options={opOptions}
-                    />
+                    <div className="space-y-3">
+                      <FullscreenSelect
+                        id={operationTypeId}
+                        name={field.name}
+                        label={ui("نوع العملية التشغيلية *")}
+                        required
+                        searchable={false}
+                        placeholder={ui("بدون — اختر نوع العملية التشغيلية")}
+                        icon={<Briefcase className="w-4 h-4 text-[var(--accent-gold)]" />}
+                        value={selectValue}
+                        onChange={(nextValue) => {
+                          if (nextValue === "CUSTOM") {
+                            field.onChange(isCustomSelected ? field.value : "");
+                          } else {
+                            field.onChange(nextValue);
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                        clearable
+                        error={!isCustomSelected ? fieldState.error?.message : undefined}
+                        options={CONTRACT_SERVICE_OPTIONS.map((opt) => ({
+                          value: opt.value,
+                          label: ui(opt.label),
+                          description: opt.description ? ui(opt.description) : undefined,
+                          badge: opt.badge ? ui(opt.badge) : undefined,
+                        }))}
+                      />
+
+                      {isCustomSelected && (
+                        <div className="animate-in fade-in-50 slide-in-from-top-1 duration-150">
+                          <CustomInput
+                            name={`${field.name}_custom`}
+                            value={trimmedValue === "CUSTOM" ? "" : field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            onBlur={field.onBlur}
+                            label={ui("كتابة نوع الخدمة يدوياً")}
+                            required
+                            icon={<PenLine className="w-4 h-4 text-[var(--accent-gold)]" />}
+                            placeholder={ui(
+                              "اكتب تفاصيل نوع الخدمة المطلوب (مثال: نقل وفد وزاري، توصيل خاص VIP...)"
+                            )}
+                            clearable
+                            onClear={() => field.onChange("")}
+                            error={fieldState.error?.message}
+                            autoFocus
+                          />
+                        </div>
+                      )}
+                    </div>
                   );
                 }}
               />

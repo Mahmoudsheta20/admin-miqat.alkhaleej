@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Download, ExternalLink, FileText, Loader2, MapPin, Calendar, Plane, Car, Users } from "lucide-react";
+import { CheckCircle2, Download, ExternalLink, FileText, Loader2, MapPin, Calendar, Plane, Car, Users, Briefcase } from "lucide-react";
 import { backendUrl, type ApiResult } from "@/lib/backend";
 import type { ContractStatus } from "@/lib/types";
 
@@ -214,6 +214,18 @@ export default function PublicContract({ refNumber }: PublicContractProps) {
 
             {/* Operational Details */}
             <dl className="mt-6 space-y-3.5 text-sm">
+              {contract.operationType && (
+                <div className="flex justify-between gap-4 border-b theme-border pb-3">
+                  <dt className="flex items-center gap-2 text-[var(--text-muted)]">
+                    <Briefcase className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
+                    {ui("نوع العملية:")}
+                  </dt>
+                  <dd className="font-bold text-[var(--text-main)]">
+                    {ui(contract.operationType)}
+                  </dd>
+                </div>
+              )}
+
               {contract.origin && contract.destination && (
                 <div className="flex items-start justify-between gap-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border p-3.5">
                   <dt className="flex items-center gap-2 text-[var(--text-muted)] font-medium shrink-0">

@@ -55,7 +55,7 @@ import {
   TableRow,
   TableCell,
 } from "@/app/_components/ui";
-import { formatOfficialDate } from "@/lib/contractConstants";
+import { formatOfficialDate, extractContractServiceType } from "@/lib/contractConstants";
 import {
   fetchCached,
   getCachedData,
@@ -1012,7 +1012,7 @@ export default function AdminContractsPage() {
                           <div className="flex flex-wrap items-center gap-1.5 mt-1">
                             <StatusBadge
                               type="operation"
-                              status={c.operationType}
+                              status={extractContractServiceType(c.operationType, c.notes)}
                               size="sm"
                             />
                             {c.status && (

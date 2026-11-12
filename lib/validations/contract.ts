@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { OperationType } from "@/lib/types";
 import { ContractFormPayload } from "@/app/_actions/contract";
-import { getSaudiTodayDateStr } from "@/lib/contractConstants";
+import { getSaudiTodayDateStr, encodeContractNotes } from "@/lib/contractConstants";
 
 /**
  * Normalizes Eastern Arabic numerals (٠-٩) to Western Arabic (0-9)
@@ -98,7 +98,24 @@ export function parseOperationType(val?: string | null): OperationType {
   if (str === "intercity") return "INTERCITY";
   if (str === "hajj_umrah") return "HAJJ_UMRAH";
 
-  if (str.includes("مطار") || str.includes("airport")) {
+  if (
+    str === "hourly_chauffeur" ||
+    str === "events_delegations" ||
+    str === "vip_private" ||
+    str === "full_day"
+  ) {
+    return "CITY_TOUR";
+  }
+  if (str === "haramain_train") {
+    return "INTERCITY";
+  }
+
+  if (
+    str.includes("مطار") ||
+    str.includes("airport") ||
+    str.includes("طيران") ||
+    str.includes("استقبال")
+  ) {
     return "AIRPORT_TRANSFER";
   }
   if (
@@ -106,12 +123,15 @@ export function parseOperationType(val?: string | null): OperationType {
     str.includes("معتمر") ||
     str.includes("زوار") ||
     str.includes("حج") ||
+    str.includes("مشاعر") ||
     str.includes("hajj") ||
     str.includes("umrah")
   ) {
     return "HAJJ_UMRAH";
   }
   if (
+    str.includes("قطار") ||
+    str.includes("محط") ||
     str.includes("مدن") ||
     str.includes("بين") ||
     str.includes("intercity") ||
@@ -123,11 +143,24 @@ export function parseOperationType(val?: string | null): OperationType {
     str.includes("سياح") ||
     str.includes("جولة") ||
     str.includes("tour") ||
-    str.includes("زيار")
+    str.includes("زيار") ||
+    str.includes("وفد") ||
+    str.includes("وفود") ||
+    str.includes("ضيوف") ||
+    str.includes("معرض") ||
+    str.includes("إكسبو") ||
+    str.includes("expo") ||
+    str.includes("فعالي") ||
+    str.includes("مؤتمر") ||
+    str.includes("ساعة") ||
+    str.includes("سائق") ||
+    str.includes("vip") ||
+    str.includes("يوم") ||
+    str.includes("خاص")
   ) {
     return "CITY_TOUR";
   }
-  if (str.includes("استقبال") || str.includes("توصيل")) {
+  if (str.includes("توصيل")) {
     return "AIRPORT_TRANSFER";
   }
   return "AIRPORT_TRANSFER";
@@ -185,8 +218,13 @@ export function sanitizeContractPayload(
       : getSaudiTodayDateStr();
   const cleanIssueDate = normalizeToIsoDate(rawIssueDate);
 
+  const rawOperation = data.operationType?.trim() || "";
+  const mappedOperation = parseOperationType(rawOperation);
+  const userNotes = cleanOptional(data.notes);
+  const encodedNotes = encodeContractNotes(rawOperation, userNotes);
+
   return {
-    operationType: parseOperationType(data.operationType),
+    operationType: mappedOperation,
     origin: data.origin.trim(),
     destination: data.destination.trim(),
     tripDate: cleanDate,
@@ -195,7 +233,7 @@ export function sanitizeContractPayload(
     flightNumber: cleanOptional(data.flightNumber),
     customerName: data.customerName.trim(),
     customerPhone: normalizedPhone,
-    notes: cleanOptional(data.notes),
+    notes: cleanOptional(encodedNotes),
     issueDate: cleanIssueDate,
     captainId: data.captainId.trim(),
     vehiclePlate: data.vehiclePlate.trim() || "",

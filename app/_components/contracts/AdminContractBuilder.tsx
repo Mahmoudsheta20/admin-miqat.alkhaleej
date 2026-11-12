@@ -66,7 +66,10 @@ import {
 import {
   getSaudiTodayDateStr,
   getSaudiCurrentTimeStr,
+  CONTRACT_SERVICE_OPTIONS,
+  CONTRACT_QUICK_PRESETS,
 } from "@/lib/contractConstants";
+import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 const PdfPreviewModal = dynamic(
   () => import("@/app/_components/PdfPreviewModal"),
   { ssr: false },
@@ -864,12 +867,7 @@ export default function AdminContractBuilder({
                 label={ui("قوالب العمليات")}
                 className="sm:flex-wrap pb-0"
               >
-                {[
-                  "توصيل واستقبال مطار",
-                  "جولة سياحية",
-                  "نقل بين المدن",
-                  "نقل معتمرين وزوار",
-                ].map((tag) => {
+                {CONTRACT_QUICK_PRESETS.map((tag) => {
                   const isSelected =
                     (watchedOperationType ?? "").trim() === tag;
                   return (
@@ -924,7 +922,7 @@ export default function AdminContractBuilder({
                   Boolean(trimmedValue) && trimmedValue !== resolvedLabel;
 
                 return (
-                  <div>
+                  <div className="space-y-2">
                     <CustomInput
                       ref={field.ref}
                       name={field.name}
@@ -945,6 +943,42 @@ export default function AdminContractBuilder({
                       }
                       error={fieldState.error?.message}
                     />
+
+                    {/* Quick Options Dropdown Selector */}
+                    <div className="pt-0.5">
+                      <FullscreenSelect
+                        id="admin-operation-type-preset-picker"
+                        name="operationTypePresetPicker"
+                        label={ui("اختيار سريع من العمليات المعتمدة")}
+                        searchable={false}
+                        placeholder={ui("اختر نوع العملية التشغيلية...")}
+                        value={
+                          CONTRACT_SERVICE_OPTIONS.some((o) => o.value === trimmedValue)
+                            ? trimmedValue
+                            : ""
+                        }
+                        onChange={(val) => {
+                          if (val === "CUSTOM") {
+                            setValue("operationType", "", {
+                              shouldValidate: isSubmitted,
+                              shouldDirty: true,
+                            });
+                          } else if (val) {
+                            setValue("operationType", val, {
+                              shouldValidate: isSubmitted,
+                              shouldDirty: true,
+                            });
+                          }
+                        }}
+                        options={CONTRACT_SERVICE_OPTIONS.map((opt) => ({
+                          value: opt.value,
+                          label: ui(opt.label),
+                          description: opt.description ? ui(opt.description) : undefined,
+                          badge: opt.badge ? ui(opt.badge) : undefined,
+                        }))}
+                      />
+                    </div>
+
                     {showPdfPreviewHint && (
                       <p className="mt-1.5 text-xs text-[var(--text-muted)] px-1">
                         {ui("نوع التشغيل في الـ PDF:")}{" "}

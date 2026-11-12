@@ -16,6 +16,7 @@ const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"
 import { Contract, ContractStatus } from "@/lib/types";
 import { getContractById, updateContractStatusAction } from "@/app/_actions/contract";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import { extractContractServiceType, cleanContractNotes } from "@/lib/contractConstants";
 
 interface ContractReviewPageProps {
   params: Promise<{ id: string }>;
@@ -194,13 +195,6 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
   const statusInfo = statusConfig[currentStatus] || statusConfig.PENDING_REVIEW;
   const StatusIcon = statusInfo.icon;
 
-  const operationLabels: Record<string, string> = {
-    AIRPORT_TRANSFER: "نقل مطار",
-    CITY_TOUR: "جولة داخل المدينة",
-    INTERCITY: "نقل بين المدن",
-    HAJJ_UMRAH: "حج وعمرة",
-  };
-
   return (
     <div className="space-y-6 pb-16" dir={ui.dir}>
       {/* Top Breadcrumbs & Nav */}
@@ -371,7 +365,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             <div>
               <span className="text-[var(--text-muted)] block mb-0.5">{ui("نوع العملية:")}</span>
               <span className="font-bold text-[var(--text-main)]">
-                {operationLabels[contract.operationType] ? ui(operationLabels[contract.operationType]) : contract.operationType}
+                {ui(extractContractServiceType(contract.operationType, contract.notes))}
               </span>
             </div>
 
@@ -430,11 +424,11 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
               </div>
             )}
 
-            {contract.notes && (
+            {cleanContractNotes(contract.notes) && (
               <div className="pt-1 border-t theme-border">
                 <span className="text-[var(--text-muted)] block mb-0.5">{ui("ملاحظات العقد:")}</span>
                 <p className="text-[var(--text-main)] leading-relaxed theme-card-subtle p-2.5 rounded-xl">
-                  {contract.notes}
+                  {cleanContractNotes(contract.notes)}
                 </p>
               </div>
             )}

@@ -23,6 +23,7 @@ import ContractActions from "./contract-actions";
 import { cn } from "@/lib/utils";
 import { useUiText } from "@/lib/ui-text";
 import type { Contract, ContractStatus } from "@/lib/types";
+import { extractContractServiceType } from "@/lib/contractConstants";
 
 export interface ContractMobileCardProps {
   contract: Contract;
@@ -127,7 +128,7 @@ export default function ContractMobileCard({
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <StatusBadge type="operation" status={c.operationType} size="sm" />
+              <StatusBadge type="operation" status={extractContractServiceType(c.operationType, c.notes)} size="sm" />
               {c.flightNumber && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/25 font-mono text-[11px] font-semibold">
                   <Plane className="w-3 h-3 text-blue-600 dark:text-blue-400" aria-hidden="true" />

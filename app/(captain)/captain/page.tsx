@@ -37,7 +37,7 @@ import {
 } from "@/app/_actions/inspection";
 import { getContracts } from "@/app/_actions/contract";
 import { Contract, VehicleInspection } from "@/lib/types";
-import { formatOfficialDate } from "@/lib/contractConstants";
+import { formatOfficialDate, extractContractServiceType } from "@/lib/contractConstants";
 import StatusBadge from "@/app/_components/StatusBadge";
 import FullscreenDialog from "@/app/_components/form/FullscreenDialog";
 import CaptainContractBuilder from "@/app/_components/contracts/CaptainContractBuilder";
@@ -474,7 +474,7 @@ export default function CaptainHomePage() {
                     badge={
                       <StatusBadge
                         type="operation"
-                        status={c.operationType}
+                        status={extractContractServiceType(c.operationType, c.notes)}
                         size="sm"
                       />
                     }
@@ -594,7 +594,7 @@ export default function CaptainHomePage() {
                         </span>
                         <StatusBadge
                           type="operation"
-                          status={c.operationType}
+                          status={extractContractServiceType(c.operationType, c.notes)}
                           size="sm"
                         />
                       </div>

@@ -80,6 +80,138 @@ export interface ContractOptions {
   accentColor: string;
 }
 
+export interface ContractServiceOption {
+  value: string;
+  label: string;
+  description?: string;
+  badge?: string;
+  defaultEnum: string;
+}
+
+export const CONTRACT_SERVICE_OPTIONS: ContractServiceOption[] = [
+  {
+    value: "توصيل واستقبال مطار",
+    label: "توصيل واستقبال مطار",
+    description: "المطارات وصالات الطيران والمحطات الجوية",
+    badge: "مطار",
+    defaultEnum: "AIRPORT_TRANSFER",
+  },
+  {
+    value: "جولة سياحية",
+    label: "جولة سياحية",
+    description: "المزارات والمعالم السياحية والزيارات التاريخية",
+    badge: "سياحة",
+    defaultEnum: "CITY_TOUR",
+  },
+  {
+    value: "نقل بين المدن",
+    label: "نقل بين المدن",
+    description: "بين مكة، جدة، المدينة، والرياض",
+    badge: "بين المدن",
+    defaultEnum: "INTERCITY",
+  },
+  {
+    value: "نقل معتمرين وزوار",
+    label: "نقل معتمرين وزوار",
+    description: "المسجد الحرام، المشاعر المقدسة، والمسجد النبوي",
+    badge: "عمرة وحج",
+    defaultEnum: "HAJJ_UMRAH",
+  },
+  {
+    value: "خدمة بالساعة / تأجير بسائق",
+    label: "خدمة بالساعة / تأجير بسائق",
+    description: "سائق خاص مخصص بالساعات تحت الطلب",
+    badge: "بالساعة",
+    defaultEnum: "CITY_TOUR",
+  },
+  {
+    value: "نقل وفود وفعاليات ومؤتمرات",
+    label: "نقل وفود وفعاليات ومؤتمرات",
+    description: "المؤتمرات، الفعاليات الرسمية، والشركات",
+    badge: "وفود",
+    defaultEnum: "CITY_TOUR",
+  },
+  {
+    value: "توصيل محطات قطار الحرمين",
+    label: "توصيل محطات قطار الحرمين",
+    description: "محطة الرصيفة، مطار جدة، والسليمانية",
+    badge: "قطار",
+    defaultEnum: "INTERCITY",
+  },
+  {
+    value: "رحلة خاصة VIP",
+    label: "رحلة خاصة VIP",
+    description: "خدمة كبار الشخصيات مع سيارات فارهة وسائق خاص",
+    badge: "VIP",
+    defaultEnum: "CITY_TOUR",
+  },
+  {
+    value: "خدمة يوم كامل",
+    label: "خدمة يوم كامل",
+    description: "تأجير يومي متكامل للمركبة مع الكابتن",
+    badge: "يومي",
+    defaultEnum: "CITY_TOUR",
+  },
+  {
+    value: "CUSTOM",
+    label: "أخرى (كتابة يدوية)",
+    description: "كتابة نوع خدمة مخصص أو غير مدرج بالقائمة",
+    badge: "يدوي",
+    defaultEnum: "AIRPORT_TRANSFER",
+  },
+];
+
+export const CONTRACT_QUICK_PRESETS: string[] = [
+  "توصيل واستقبال مطار",
+  "جولة سياحية",
+  "نقل بين المدن",
+  "نقل معتمرين وزوار",
+  "خدمة بالساعة / تأجير بسائق",
+  "نقل وفود وفعاليات ومؤتمرات",
+  "توصيل محطات قطار الحرمين",
+  "رحلة خاصة VIP",
+  "خدمة يوم كامل",
+];
+
+export function extractContractServiceType(
+  operationType?: string | null,
+  notes?: string | null
+): string {
+  if (notes) {
+    const match = notes.match(/نوع الخدمة:\s*([^\r\n]+)/);
+    if (match && match[1]?.trim()) {
+      return match[1].trim();
+    }
+  }
+  if (operationType) {
+    const trimmed = operationType.trim();
+    if (trimmed === "AIRPORT_TRANSFER") return "توصيل واستقبال مطار";
+    if (trimmed === "CITY_TOUR") return "جولة سياحية";
+    if (trimmed === "INTERCITY") return "نقل بين المدن";
+    if (trimmed === "HAJJ_UMRAH") return "نقل معتمرين وزوار";
+    return trimmed;
+  }
+  return "توصيل واستقبال مطار";
+}
+
+export function cleanContractNotes(notes?: string | null): string {
+  if (!notes) return "";
+  return notes.replace(/نوع الخدمة:\s*[^\r\n]+(?:\r?\n)?/, "").trim();
+}
+
+export function encodeContractNotes(
+  serviceType?: string | null,
+  additionalNotes?: string | null
+): string | undefined {
+  const cleanService = (serviceType || "").trim();
+  const rawNotes = (additionalNotes || "").replace(/نوع الخدمة:\s*[^\r\n]+(?:\r?\n)?/, "").trim();
+  if (cleanService && cleanService !== "CUSTOM") {
+    const prefix = `نوع الخدمة: ${cleanService}`;
+    return rawNotes ? `${prefix}\n${rawNotes}` : prefix;
+  }
+  return rawNotes || undefined;
+}
+
 export interface FullContractData {
   company: CompanyInfo;
   contract: ContractInfo;

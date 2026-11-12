@@ -29,6 +29,7 @@ import {
   Trash2,
   User,
   Users,
+  PenLine,
 } from "lucide-react";
 import {
   getTodayInspection,
@@ -57,7 +58,7 @@ import {
 } from "@/lib/contractConstants";
 import { inspectionMatchesDay } from "@/lib/inspection";
 import { useLanguage } from "@/lib/languageContext";
-import { OperationType, VehicleInspection } from "@/lib/types";
+import { VehicleInspection } from "@/lib/types";
 import { useUiText } from "@/lib/ui-text";
 import { sanitizeContractPayload } from "@/lib/validations/contract";
 
@@ -77,7 +78,7 @@ export interface CaptainContractBuilderProps {
 }
 
 interface FormValues {
-  operationType: OperationType | "";
+  operationType: string;
   customerName: string;
   customerPhone: string;
   origin: string;
@@ -763,6 +764,11 @@ export default function CaptainContractBuilder({
                     { value: "CITY_TOUR", ar: "جولة سياحية", en: "City tour" },
                     { value: "INTERCITY", ar: "نقل بين المدن", en: "Intercity" },
                     { value: "HAJJ_UMRAH", ar: "نقل معتمرين وزوار", en: "Hajj & Umrah" },
+                    { value: "HOURLY_CHAUFFEUR", ar: "خدمة بالساعة / تأجير بسائق", en: "Hourly service" },
+                    { value: "EVENTS_DELEGATIONS", ar: "نقل وفود وفعاليات ومؤتمرات", en: "Delegations & events" },
+                    { value: "HARAMAIN_TRAIN", ar: "توصيل محطات قطار الحرمين", en: "Haramain train" },
+                    { value: "VIP_PRIVATE", ar: "رحلة خاصة VIP", en: "Private VIP trip" },
+                    { value: "FULL_DAY", ar: "خدمة يوم كامل", en: "Full day service" },
                   ] as const
                 ).map((preset) => {
                   const isSelected = watchedOperationType === preset.value;
@@ -813,49 +819,140 @@ export default function CaptainContractBuilder({
                 control={control}
                 name="operationType"
                 rules={{ required: "نوع العملية التشغيلية مطلوب" }}
-                render={({ field, fieldState }) => (
-                  <FullscreenSelect
-                    id={`${fieldId}-opType`}
-                    name={field.name}
-                    buttonRef={field.ref}
-                    label={ui("نوع العملية التشغيلية *")}
-                    required
-                    searchable={false}
-                    placeholder={ui("بدون — اختر نوع العملية")}
-                    value={field.value}
-                    onChange={(nextValue) => field.onChange(nextValue)}
-                    onBlur={field.onBlur}
-                    ariaInvalid={fieldState.error ? true : undefined}
-                    error={
-                      fieldState.error?.message
-                        ? ui(fieldState.error.message)
-                        : undefined
-                    }
-                    options={[
-                      {
-                        value: "",
-                        label: ui("بدون — اختر نوع العملية"),
-                        disabled: true,
-                      },
-                      {
-                        value: "AIRPORT_TRANSFER",
-                        label: ui("توصيل مطار (Airport Transfer)"),
-                      },
-                      {
-                        value: "CITY_TOUR",
-                        label: ui("جولة سياحية (City Tour)"),
-                      },
-                      {
-                        value: "INTERCITY",
-                        label: ui("نقل بين المدن (Intercity)"),
-                      },
-                      {
-                        value: "HAJJ_UMRAH",
-                        label: ui("نقل زوار ومعتمرين (Hajj & Umrah)"),
-                      },
-                    ]}
-                  />
-                )}
+                render={({ field, fieldState }) => {
+                  const val = field.value || "";
+                  const knownValues = [
+                    "AIRPORT_TRANSFER",
+                    "CITY_TOUR",
+                    "INTERCITY",
+                    "HAJJ_UMRAH",
+                    "HOURLY_CHAUFFEUR",
+                    "EVENTS_DELEGATIONS",
+                    "HARAMAIN_TRAIN",
+                    "VIP_PRIVATE",
+                    "FULL_DAY",
+                  ];
+                  const isCustom = val === "CUSTOM" || (Boolean(val) && !knownValues.includes(val));
+                  const selectVal = isCustom ? "CUSTOM" : val;
+
+                  return (
+                    <div className="space-y-3">
+                      <FullscreenSelect
+                        id={`${fieldId}-opType`}
+                        name={field.name}
+                        buttonRef={field.ref}
+                        label={ui("نوع العملية التشغيلية *")}
+                        required
+                        searchable={false}
+                        placeholder={ui("بدون — اختر نوع العملية")}
+                        value={selectVal}
+                        onChange={(nextValue) => {
+                          if (nextValue === "CUSTOM") {
+                            setValue("operationType", isCustom ? field.value : "", {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          } else {
+                            setValue("operationType", nextValue, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                        ariaInvalid={fieldState.error ? true : undefined}
+                        error={
+                          !isCustom && fieldState.error?.message
+                            ? ui(fieldState.error.message)
+                            : undefined
+                        }
+                        options={[
+                          {
+                            value: "",
+                            label: ui("بدون — اختر نوع العملية"),
+                            disabled: true,
+                          },
+                          {
+                            value: "AIRPORT_TRANSFER",
+                            label: ui("توصيل مطار (Airport Transfer)"),
+                          },
+                          {
+                            value: "CITY_TOUR",
+                            label: ui("جولة سياحية (City Tour)"),
+                          },
+                          {
+                            value: "INTERCITY",
+                            label: ui("نقل بين المدن (Intercity)"),
+                          },
+                          {
+                            value: "HAJJ_UMRAH",
+                            label: ui("نقل زوار ومعتمرين (Hajj & Umrah)"),
+                          },
+                          {
+                            value: "HOURLY_CHAUFFEUR",
+                            label: ui("خدمة بالساعة / تأجير بسائق"),
+                          },
+                          {
+                            value: "EVENTS_DELEGATIONS",
+                            label: ui("نقل وفود وفعاليات ومؤتمرات"),
+                          },
+                          {
+                            value: "HARAMAIN_TRAIN",
+                            label: ui("توصيل محطات قطار الحرمين"),
+                          },
+                          {
+                            value: "VIP_PRIVATE",
+                            label: ui("رحلة خاصة VIP"),
+                          },
+                          {
+                            value: "FULL_DAY",
+                            label: ui("خدمة يوم كامل"),
+                          },
+                          {
+                            value: "CUSTOM",
+                            label: ui("أخرى (كتابة يدوية)"),
+                          },
+                        ]}
+                      />
+
+                      {isCustom && (
+                        <div className="animate-in fade-in-50 slide-in-from-top-1 duration-150">
+                          <CustomInput
+                            id={`${fieldId}-customOpType`}
+                            name={`${field.name}_custom`}
+                            value={val === "CUSTOM" ? "" : field.value ?? ""}
+                            onChange={(e) =>
+                              setValue("operationType", e.target.value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              })
+                            }
+                            onBlur={field.onBlur}
+                            label={ui("كتابة نوع الخدمة يدوياً")}
+                            required
+                            icon={<PenLine className="w-4 h-4 text-[var(--accent-gold)]" />}
+                            placeholder={ui(
+                              "اكتب تفاصيل نوع الخدمة المطلوب (مثال: نقل وفد وزاري، توصيل خاص VIP...)"
+                            )}
+                            clearable
+                            onClear={() =>
+                              setValue("operationType", "", {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              })
+                            }
+                            error={
+                              fieldState.error?.message
+                                ? ui(fieldState.error.message)
+                                : undefined
+                            }
+                            autoFocus
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                }}
               />
 
               {/* Customer Name */}
