@@ -20,6 +20,9 @@ const server=createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1'),path=url.pathname.replace(/^\/api/,'');let body={};
  for await(const chunk of req){body.raw=(body.raw||'')+chunk;}try{body=JSON.parse(body.raw||'{}');}catch{body={};}
  const json=(data,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({success:status<400,...(status<400?{data}:{error:typeof data==='string'?data:'Fixture error'})}));};
+ const rawJson=(payload,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(payload));};
+ const fixtureQrDataUrl='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jI2YAAAAASUVORK5CYII=';
+ let waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0};
  if(path==='/health')return json({status:'ok'});
  if(path==='/auth/login'){
   if(body.password!=='fixture-password')return json('بيانات الدخول غير صحيحة',401);
@@ -57,6 +60,11 @@ const server=createServer(async(req,res)=>{
  if(path.startsWith('/invoices/transport-defaults/')){const targetId=path.split('/')[3];const target=contracts.find(c=>c.id===targetId)||contract;return json({customerName:target.customerName,transport:{serviceType:target.operationType||'AIRPORT_TRANSFER',contractReference:target.referenceNumber,origin:target.origin||'',destination:target.destination||'',tripDate:target.tripDate||day,departureTime:(target.tripTime||'12:00').slice(0,5),contactName:target.customerName,contactPhone:target.customerPhone,vehiclePlate:target.vehiclePlate,distanceUnit:'KM',passengers:target.passengers||[]}});}
  if(path.startsWith('/invoices/'))return json(invoice);
  if(path==='/zatca/settings')return json({issuers:[],egs:[],sdkConfigured:false,productionPermitted:false});
+ if(path==='/whatsapp/status')return rawJson({success:true,...waFixtureState,data:waFixtureState});
+ if(path==='/whatsapp/qr')return rawJson({success:true,status:waFixtureState.status,qr:waFixtureState.qrImage,qrImage:waFixtureState.qrImage});
+ if(path==='/whatsapp/send'&&req.method==='POST')return rawJson({success:true,message:'تمت إضافة الرسالة إلى طابور الإرسال الآمن بنجاح',data:{jobId:'wa_fixture_1',position:1,status:waFixtureState.status}});
+ if(path==='/whatsapp/logout'&&req.method==='POST'){waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0};return rawJson({success:true,message:'تم تسجيل الخروج من الواتساب',status:waFixtureState.status,qrImage:waFixtureState.qrImage,data:waFixtureState});}
+ if(path==='/whatsapp/reconnect'&&req.method==='POST'){waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0};return rawJson({success:true,status:waFixtureState.status,qrImage:waFixtureState.qrImage,data:waFixtureState});}
  if(path==='/accounting/financial-report')return json(financial);
  if(path==='/accounting/vat-return')return json({year:Number(day.slice(0,4)),quarter:1,period:{start:day,endExclusive:day,endInclusive:day,dueDate:day},company,generatedAt:new Date().toISOString(),settings:{version:1,previousCorrection:'0',carriedCredit:'0',notes:'',filedOn:null,updatedAt:null},rows:Array.from({length:16},(_,i)=>({box:i+1,label:`Fixture VAT ${i+1}`,section:i<6?'SALES':i<12?'PURCHASES':'NET',amount:'0.00',adjustment:'0.00',vat:'0.00',isTotal:[6,12,16].includes(i+1)})),sales:[],purchases:[],warnings:[],coverage:{legacyCount:0,proformaCount:0,otherIssuerCount:0,basis:'Fixture',domesticPurchasesOnly:true},summary:{netSales:'0.00',outputVat:'0.00',netPurchases:'0.00',recordedInputVat:'0.00',recoverableInputVat:'0.00',nonRecoverableInputVat:'0.00',currentVatDue:'0.00',netVatDue:'0.00',creditNet:'0.00',debitNet:'0.00',excludedOutsideScope:'0.00'}});
  if((path.startsWith('/accounting/balance')||path.startsWith('/accounting/document-balance')))return json({balance:'115.00',direction:'RECEIVABLE'});

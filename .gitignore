@@ -66,3 +66,7 @@ public/storage/inspections/*
 /.next-e2e/
 /playwright-report/
 /test-results/
+
+# WhatsApp Baileys session credentials
+miqat_auth_info/
+./miqat_auth_info/

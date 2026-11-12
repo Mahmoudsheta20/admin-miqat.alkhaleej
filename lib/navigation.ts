@@ -26,6 +26,7 @@ export const NAVIGATION: NavigationItem[] = [
   { href: "/admin/vat-returns", ar: "الإقرار الضريبي", en: "VAT returns", icon: "vat", group: "finance", roles: ["ADMIN"] },
   { href: "/admin/invoices/settings", ar: "الشركة والبنك", en: "Company & bank", icon: "company", group: "settings", roles: ["ADMIN"] },
   { href: "/admin/zatca", ar: "إعدادات ZATCA", en: "ZATCA settings", icon: "tax", group: "settings", roles: ["ADMIN"] },
+  { href: "/admin/whatsapp", ar: "ربط الواتساب", en: "WhatsApp connection", icon: "whatsapp", group: "settings", roles: ["ADMIN"] },
   { href: "/admin/admins", ar: "المسؤولون", en: "Administrators", icon: "shield", group: "settings", roles: ["ADMIN"], superAdminOnly: true },
   { href: "/captain", ar: "الرئيسية", en: "Home", icon: "dashboard", group: "captain", roles: ["CAPTAIN"], mobile: true },
   { href: "/captain/inspection", ar: "الفحص اليومي", en: "Inspection", icon: "inspection", group: "captain", roles: ["CAPTAIN"], mobile: true },

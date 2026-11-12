@@ -6,7 +6,7 @@ const output=ts.transpileModule(fs.readFileSync('lib/navigation.ts','utf8'),{com
 const mod={};new Function('exports',output)(mod);
 test('unified navigation includes all admin sections and hides privileged administration',()=>{
  const items=mod.navigationFor('ADMIN');
- for(const path of ['/admin/contracts','/admin/fleet','/admin/captains','/admin/inspections','/admin/customers','/admin/staff','/admin/representatives','/admin/invoices','/admin/purchases','/admin/accounting','/admin/accounts','/admin/vat-returns','/admin/invoices/settings','/admin/zatca'])assert.ok(items.some(item=>item.href===path),path);
+ for(const path of ['/admin/contracts','/admin/fleet','/admin/captains','/admin/inspections','/admin/customers','/admin/staff','/admin/representatives','/admin/invoices','/admin/purchases','/admin/accounting','/admin/accounts','/admin/vat-returns','/admin/invoices/settings','/admin/zatca','/admin/whatsapp'])assert.ok(items.some(item=>item.href===path),path);
  assert.ok(!items.some(item=>item.href==='/admin/admins'));
  assert.ok(mod.navigationFor('ADMIN',true).some(item=>item.href==='/admin/admins'));
  assert.ok(!items.some(item=>item.href.endsWith('/new')));

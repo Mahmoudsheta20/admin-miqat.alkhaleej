@@ -624,6 +624,19 @@ test("invoice creation supports 0% VAT without reason and preserves zero VAT tot
   expect(payload.lines[0].rate).toBe("0");
   expect(payload.lines[0].exemptionCode).toBe("VATEX-SA-32");
 });
+test("admin WhatsApp settings page displays QR code from backend status", async ({
+  page,
+}) => {
+  await preferences(page, "ar");
+  await login(page);
+  await page.goto("/admin/whatsapp");
+  await expect(
+    page.getByRole("heading", { name: /ربط الواتساب/ }),
+  ).toBeVisible();
+  const qrImg = page.getByAltText("رمز QR لربط الواتساب");
+  await expect(qrImg).toBeVisible();
+  await expect(qrImg).toHaveAttribute("src", /^data:image\/png;base64,/);
+});
 test("expense entry saves supplier details and exact amounts in the isolated backend", async ({
   page,
 }) => {

@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { MessageSquare, X, Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useUiText } from "@/lib/ui-text";
 import { sendContractWhatsApp, sendInvoiceWhatsApp } from "@/lib/whatsapp";
@@ -144,9 +145,18 @@ function SendWhatsAppModalContent({
             </div>
 
             {error && (
-              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>{error}</span>
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 space-y-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{error}</span>
+                </div>
+                <Link
+                  href="/admin/whatsapp"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1 text-[var(--accent-gold)] hover:underline"
+                >
+                  <span>{ui("إعدادات ربط الواتساب (QR)")}</span>
+                </Link>
               </div>
             )}
 

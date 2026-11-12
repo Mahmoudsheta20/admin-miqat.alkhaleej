@@ -3438,6 +3438,8 @@ export const UI_PHRASES: Record<string, string> = {
   "نسبة صفرية 0% (بدون سبب)": "Zero-rated 0% (without reason)",
   "تطبيق ضريبة 0% مباشرة دون الحاجة لإدخال سبب أو رمز إعفاء":
     "Apply 0% VAT directly without needing exemption code or reason",
+  "إعدادات ربط الواتساب (QR)": "WhatsApp QR Connection Settings",
+  "ربط الواتساب": "WhatsApp connection",
 };
 export const UI_TEMPLATES: Record<string, string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",
