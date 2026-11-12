@@ -1,10 +1,8 @@
 "use client";
 import { useUiText } from "@/lib/ui-text";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { phoneCountries, PHONE_COUNTRIES, updateInvoicePhone, type InvoicePhone } from "@/lib/invoice-phone";
-import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
-import { FullscreenFieldModal } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 
 interface InvoicePhoneFieldProps {
@@ -16,14 +14,6 @@ const INPUT = "theme-input min-h-11 sm:min-h-9 min-w-0 rounded-lg px-3 py-1.5 te
 
 export default function InvoicePhoneField({ value, onChange }: InvoicePhoneFieldProps) {
   const ui = useUiText();
-  const isMobile = useIsMobileViewport();
-  const [expandOpen, setExpandOpen] = useState(false);
-  const [expandSession, setExpandSession] = useState(0);
-  const openExpandModal = () => {
-    if (!isMobile) return;
-    setExpandSession((prev) => prev + 1);
-    setExpandOpen(true);
-  };
   const countries = useMemo(() => phoneCountries(ui.language), [ui.language]);
   const selectedCountry = useMemo(
     () =>
@@ -74,38 +64,15 @@ export default function InvoicePhoneField({ value, onChange }: InvoicePhoneField
           maxLength={32}
           autoComplete="tel-national"
           dir="ltr"
-          className={`${INPUT} w-0 flex-1 font-mono ${isMobile ? "cursor-pointer" : ""}`}
+          className={`${INPUT} w-0 flex-1 font-mono`}
           placeholder={placeholder}
           value={value.number}
-          onClick={openExpandModal}
-          onKeyDown={(event) => {
-            if (isMobile && event.key === "F2") {
-              event.preventDefault();
-              openExpandModal();
-            }
-          }}
           onChange={(event) => onChange(updateInvoicePhone(value, event.target.value))}
         />
       </div>
       <p className="mt-1 text-xs font-normal text-[var(--text-muted)]">
         {ui("يمكنك لصق الرقم الدولي كاملًا، وسيُحدد كود الدولة تلقائيًا.")}
       </p>
-      {isMobile && (
-        <FullscreenFieldModal
-          open={expandOpen}
-          onClose={() => setExpandOpen(false)}
-          sessionKey={expandSession}
-          title={ui("رقم الجوال")}
-          value={value.number}
-          type="tel"
-          inputMode="tel"
-          maxLength={32}
-          autoComplete="tel-national"
-          dir="ltr"
-          placeholder={placeholder}
-          onApply={(next) => onChange(updateInvoicePhone(value, next))}
-        />
-      )}
     </fieldset>
   );
 }

@@ -1735,7 +1735,7 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   await page.keyboard.press("Escape");
   await expect(activePopover).toHaveCount(0);
 
-  // 2) Mobile (< 768px): no dialog auto-opens on load; tapping inputs, selectors, and pickers opens animated full-screen focus dialogs
+  // 2) Mobile (< 768px): text inputs edit directly inline without opening full-screen popups; selectors and date/time pickers open full-screen focus dialogs
   await page.setViewportSize({ width: 390, height: 960 });
   await expect(anyFullscreenDialog).toHaveCount(0);
   expect(
@@ -1743,29 +1743,25 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  await expect(page.locator(".workspace-header")).toBeVisible();
+  await expect(page.locator(".mobile-bottom-nav")).toBeVisible();
 
   await guestInput.click();
-  await waitSettled(focusDialog);
-  const focusDialogBox = await focusDialog.boundingBox();
-  expect(focusDialogBox?.width ?? 0).toBeGreaterThanOrEqual(389);
-  expect(focusDialogBox?.height ?? 0).toBeGreaterThanOrEqual(900);
-  const focusControl = focusDialog.locator(".fullscreen-focus-control");
-  await expect(focusControl).toBeFocused();
-  await expect(focusControl).toHaveAttribute("enterkeyhint", "done");
-  await expect(focusControl).toHaveAttribute("placeholder", "اسم الضيف الأساسي");
-  await expect(focusDialog.locator("header")).toHaveCount(0);
-  await expect(focusDialog.getByRole("heading")).toHaveCount(0);
-  await expect(
-    focusDialog.getByRole("button", { name: /^(اعتماد النص|إلغاء|Apply|Cancel)$/ }),
-  ).toHaveCount(0);
-  await expect(
-    focusDialog.getByText(/مساحة إدخال موسعة|Expanded high-readability|اضغط Enter|Press Enter/),
-  ).toHaveCount(0);
-  const popupFontSize = await focusControl.evaluate((el) =>
+  await expect(anyFullscreenDialog).toHaveCount(0);
+  await expect(guestInput).toBeFocused();
+  await expect(page.locator(".workspace-header")).toBeHidden();
+  await expect(page.locator(".mobile-bottom-nav")).toBeHidden();
+  const mobileInputFontSize = await guestInput.evaluate((el) =>
     parseFloat(getComputedStyle(el).fontSize),
   );
-  expect(popupFontSize).toBeGreaterThanOrEqual(16);
-  expect(popupFontSize).toBeLessThanOrEqual(20);
+  expect(mobileInputFontSize).toBeGreaterThanOrEqual(16);
+
+  await guestInput.fill("ضيف الجوال بملء الشاشة");
+  await expect(anyFullscreenDialog).toHaveCount(0);
+  await expect(guestInput).toHaveValue("ضيف الجوال بملء الشاشة");
+  await guestInput.blur();
+  await expect(page.locator(".workspace-header")).toBeVisible();
+  await expect(page.locator(".mobile-bottom-nav")).toBeVisible();
 
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({
@@ -1783,21 +1779,6 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
       nodes: v.nodes.map((n) => n.target),
     })),
   ).toEqual([]);
-
-  await focusControl.fill("ضيف الجوال بملء الشاشة");
-  await focusControl.press("Enter");
-  await expect(focusDialog).not.toBeVisible();
-  await expect(anyFullscreenDialog).toHaveCount(0);
-  await expect(guestInput).toHaveValue("ضيف الجوال بملء الشاشة");
-
-  // Escape closes mobile full-screen field popup without applying unconfirmed edits
-  await guestInput.click();
-  await expect(focusDialog).toBeVisible();
-  await focusDialog.locator(".fullscreen-focus-control").fill("تعديل ملغى");
-  await page.keyboard.press("Escape");
-  await expect(focusDialog).not.toBeVisible();
-  await expect(anyFullscreenDialog).toHaveCount(0);
-  await expect(guestInput).toHaveValue("ضيف الجوال بملء الشاشة");
 
   await captainTrigger.click();
   await waitSettled(focusDialog);
@@ -1947,15 +1928,17 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
 
   await page.locator("#main-content nav button").nth(0).click();
   await invoiceCustomerInput.click();
-  await expect(focusDialog).toBeVisible();
-  const invoiceFocusControl = focusDialog.locator(".fullscreen-focus-control");
-  await invoiceFocusControl.fill("شركة القمة للجوال");
-  await invoiceFocusControl.press("Enter");
-  await expect(focusDialog).not.toBeVisible();
+  await expect(anyFullscreenDialog).toHaveCount(0);
+  await expect(page.locator(".workspace-header")).toBeHidden();
+  await expect(page.locator(".mobile-bottom-nav")).toBeHidden();
+  await invoiceCustomerInput.fill("شركة القمة للجوال");
   await expect(invoiceCustomerInput).toHaveValue("شركة القمة للجوال");
+  await invoiceCustomerInput.blur();
+  await expect(page.locator(".workspace-header")).toBeVisible();
+  await expect(page.locator(".mobile-bottom-nav")).toBeVisible();
   await expect(anyFullscreenDialog).toHaveCount(0);
 
-  // 4) Captain contract EN LTR: desktop inline/popover and mobile full-screen inputs/selector/pickers
+  // 4) Captain contract EN LTR: desktop inline/popover and mobile inline inputs + full-screen selector/pickers
   await page.context().request.post("/api/proxy/auth/logout");
   await preferences(page, "en", "light");
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -1988,6 +1971,7 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   await expect(anyFullscreenDialog).toHaveCount(0);
   await captainGuest.fill("Captain Desktop Guest");
   await expect(captainGuest).toHaveValue("Captain Desktop Guest");
+  await captainGuest.blur();
 
   await page.setViewportSize({ width: 390, height: 960 });
   await expect(anyFullscreenDialog).toHaveCount(0);
@@ -1996,16 +1980,17 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  await expect(page.locator(".workspace-header")).toBeVisible();
+  await expect(page.locator(".mobile-bottom-nav")).toBeVisible();
 
   await captainGuest.click();
-  await expect(focusDialog).toBeVisible();
-  const captainFocusControl = focusDialog.locator(".fullscreen-focus-control");
-  await expect(
-    focusDialog.getByRole("button", { name: /^(اعتماد النص|إلغاء|Apply|Cancel)$/ }),
-  ).toHaveCount(0);
-  await captainFocusControl.fill("Captain Mobile Guest");
-  await captainFocusControl.press("Enter");
-  await expect(focusDialog).not.toBeVisible();
+  await expect(anyFullscreenDialog).toHaveCount(0);
+  await expect(page.locator(".workspace-header")).toBeHidden();
+  await expect(page.locator(".mobile-bottom-nav")).toBeHidden();
+  await captainGuest.fill("Captain Mobile Guest");
+  await captainGuest.blur();
+  await expect(page.locator(".workspace-header")).toBeVisible();
+  await expect(page.locator(".mobile-bottom-nav")).toBeVisible();
   await expect(captainGuest).toHaveValue("Captain Mobile Guest");
 
   await page.getByRole("button", { name: /Trip date/ }).click();

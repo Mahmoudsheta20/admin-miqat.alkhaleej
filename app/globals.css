@@ -512,7 +512,38 @@ button, a { text-underline-offset: .2em; }
   }
 }
 @media (min-width:1024px) { .workspace-sidebar.hidden { display:flex; } .mobile-bottom-nav { display:none; } .app-main { padding-bottom:0; } .app-content { padding-bottom:2rem; } }
-@media (max-width:1023px) { .workspace-sidebar.hidden { display:none; } .app-main { padding:18px 18px 0; } .workspace-header { padding:10px 16px; } .sidebar-link { min-height: 44px; } }
+@media (max-width:1023px) {
+  .workspace-sidebar.hidden { display:none; }
+  .app-main { padding:18px 18px 0; }
+  .workspace-header { padding:10px 16px; }
+  .sidebar-link { min-height: 44px; }
+
+  /* When the user interacts with / focuses any text input or textarea on mobile/tablet viewports,
+     disappear the top header and bottom navigation to maximize vertical space for the keyboard. */
+  html[data-input-focused="true"],
+  body[data-input-focused="true"],
+  .app-shell[data-input-focused="true"] {
+    --mobile-nav-height: 0px;
+  }
+
+  html[data-input-focused="true"] .workspace-header,
+  body[data-input-focused="true"] .workspace-header,
+  .app-shell[data-input-focused="true"] .workspace-header {
+    display: none !important;
+  }
+
+  html[data-input-focused="true"] .mobile-bottom-nav,
+  body[data-input-focused="true"] .mobile-bottom-nav,
+  .app-shell[data-input-focused="true"] .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  html[data-input-focused="true"] .app-content,
+  body[data-input-focused="true"] .app-content,
+  .app-shell[data-input-focused="true"] .app-content {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
 @media (max-width:639px) { .app-main { padding:16px 14px 0; } .workspace-header { gap:4px; padding:8px; min-height:60px; } .workspace-breadcrumb { font-size:12px; } .workspace-header-actions { gap:0; } .workspace-header-actions .icon-button { width:44px; } .page-header { flex-direction:column; gap:14px; } .page-actions { width:100%; } .document-preview { height:96dvh; } .document-toolbar { padding:12px; gap:4px; } .document-toolbar > svg { display:none; } .app-content :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) { font-size:16px; } }
 @media (max-width:639px), (pointer: coarse) {
   .button,

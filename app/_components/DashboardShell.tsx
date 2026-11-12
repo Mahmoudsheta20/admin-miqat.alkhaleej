@@ -37,6 +37,92 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
     pathname.startsWith("/admin/invoices/new") ||
     pathname.startsWith("/admin/zatca/new") ||
     pathname.startsWith("/captain/contract");
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let blurTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const isMobileViewport = (): boolean =>
+      typeof window !== "undefined" && window.innerWidth < 1024;
+
+    const isTextInput = (el: unknown): boolean => {
+      if (!el || typeof el !== "object" || !("tagName" in el)) return false;
+      const element = el as HTMLElement;
+      const tag = element.tagName;
+      if (tag === "TEXTAREA" || tag === "SELECT") return true;
+      if (tag === "INPUT") {
+        const type = ((element as HTMLInputElement).type || "text").toLowerCase();
+        return !["checkbox", "radio", "hidden", "button", "submit", "reset", "file"].includes(type);
+      }
+      return Boolean(element.isContentEditable);
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      if (!isMobileViewport()) return;
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+        blurTimeout = null;
+      }
+      if (isTextInput(event.target)) {
+        document.documentElement.setAttribute("data-input-focused", "true");
+        document.body.setAttribute("data-input-focused", "true");
+      }
+    };
+
+    const handleFocusOut = (event: FocusEvent) => {
+      if (!isMobileViewport()) {
+        document.documentElement.removeAttribute("data-input-focused");
+        document.body.removeAttribute("data-input-focused");
+        return;
+      }
+      if (isTextInput(event.relatedTarget)) {
+        return;
+      }
+      if (blurTimeout) clearTimeout(blurTimeout);
+      blurTimeout = setTimeout(() => {
+        document.documentElement.removeAttribute("data-input-focused");
+        document.body.removeAttribute("data-input-focused");
+        blurTimeout = null;
+      }, 120);
+    };
+
+    const handleResize = () => {
+      if (isMobileViewport() && isTextInput(document.activeElement)) {
+        document.documentElement.setAttribute("data-input-focused", "true");
+        document.body.setAttribute("data-input-focused", "true");
+      } else {
+        document.documentElement.removeAttribute("data-input-focused");
+        document.body.removeAttribute("data-input-focused");
+      }
+    };
+
+    const handlePointerDown = (event: Event) => {
+      if (!isMobileViewport()) return;
+      if (isTextInput(event.target)) {
+        if (blurTimeout) {
+          clearTimeout(blurTimeout);
+          blurTimeout = null;
+        }
+        document.documentElement.setAttribute("data-input-focused", "true");
+        document.body.setAttribute("data-input-focused", "true");
+      }
+    };
+
+    window.addEventListener("focusin", handleFocusIn);
+    window.addEventListener("focusout", handleFocusOut);
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      if (blurTimeout) clearTimeout(blurTimeout);
+      window.removeEventListener("focusin", handleFocusIn);
+      window.removeEventListener("focusout", handleFocusOut);
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("resize", handleResize);
+      document.documentElement.removeAttribute("data-input-focused");
+      document.body.removeAttribute("data-input-focused");
+    };
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -100,7 +186,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
   ];
 
   return (
-    <div className="app-shell flex h-dvh overflow-hidden">
+    <div ref={shellRef} className="app-shell flex h-dvh overflow-hidden">
       <a href="#main-content" className="skip-link">
         {text("الانتقال إلى المحتوى", "Skip to content")}
       </a>

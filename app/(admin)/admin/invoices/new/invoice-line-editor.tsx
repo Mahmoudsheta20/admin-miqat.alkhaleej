@@ -7,11 +7,7 @@ import { percentageDiscount } from "@/lib/invoice-booking";
 import { moneyDecimal, moneyMinor } from "@/lib/money";
 import type { InvoiceLineInput } from "@/lib/invoices";
 import { BILLING_UNIT_LABELS, type BillingUnit } from "@/lib/invoice-transport";
-import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
-import {
-  ExpandableField,
-  FullscreenFieldModal,
-} from "@/app/_components/form/FullscreenFieldModal";
+import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 
 interface InvoiceLineEditorProps {
@@ -76,7 +72,6 @@ export default function InvoiceLineEditor({
   onRemove,
 }: InvoiceLineEditorProps) {
   const ui = useUiText();
-  const isMobile = useIsMobileViewport();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const expanded =
@@ -89,22 +84,6 @@ export default function InvoiceLineEditor({
     "AMOUNT",
   );
   const [discountPercent, setDiscountPercent] = useState("0");
-  const [priceExpandOpen, setPriceExpandOpen] = useState(false);
-  const [priceExpandSession, setPriceExpandSession] = useState(0);
-  const [discountExpandOpen, setDiscountExpandOpen] = useState(false);
-  const [discountExpandSession, setDiscountExpandSession] = useState(0);
-
-  const openPriceExpand = () => {
-    if (!isMobile) return;
-    setPriceExpandSession((prev) => prev + 1);
-    setPriceExpandOpen(true);
-  };
-
-  const openDiscountExpand = () => {
-    if (!isMobile) return;
-    setDiscountExpandSession((prev) => prev + 1);
-    setDiscountExpandOpen(true);
-  };
 
   function handlePriceChange(rawVal: string, mode: "EXCL" | "INCL") {
     if (mode === "EXCL") {
@@ -286,16 +265,9 @@ export default function InvoiceLineEditor({
               inputMode="decimal"
               dir="ltr"
               pattern="\d{1,10}(\.\d{1,6})?"
-              className={`${INLINE_INPUT} font-mono text-start ${isMobile ? "cursor-pointer" : ""}`}
+              className={`${INLINE_INPUT} font-mono text-start`}
               placeholder="0.00"
               value={value.unitPrice}
-              onClick={openPriceExpand}
-              onKeyDown={(e) => {
-                if (isMobile && e.key === "F2") {
-                  e.preventDefault();
-                  openPriceExpand();
-                }
-              }}
               onChange={(e) => handlePriceChange(e.target.value, "EXCL")}
             />
           ) : (
@@ -306,16 +278,9 @@ export default function InvoiceLineEditor({
                 inputMode="decimal"
                 dir="ltr"
                 pattern="\d{1,10}(\.\d{1,6})?"
-                className={`${INLINE_INPUT} font-mono text-start ${isMobile ? "cursor-pointer" : ""}`}
+                className={`${INLINE_INPUT} font-mono text-start`}
                 placeholder="0.00"
                 value={inclusiveInput}
-                onClick={openPriceExpand}
-                onKeyDown={(e) => {
-                  if (isMobile && e.key === "F2") {
-                    e.preventDefault();
-                    openPriceExpand();
-                  }
-                }}
                 onChange={(e) => handlePriceChange(e.target.value, "INCL")}
               />
               <span className="block text-xs text-[var(--text-muted)] mt-1.5 font-mono">
@@ -323,21 +288,6 @@ export default function InvoiceLineEditor({
                 <bdi dir="ltr">{value.unitPrice || "0.00"}</bdi> {ui("ر.س")}
               </span>
             </div>
-          )}
-
-          {isMobile && (
-            <FullscreenFieldModal
-              open={priceExpandOpen}
-              onClose={() => setPriceExpandOpen(false)}
-              sessionKey={priceExpandSession}
-              title={ui("السعر (ر.س)")}
-              value={priceEntryMode === "EXCL" ? value.unitPrice : inclusiveInput}
-              inputMode="decimal"
-              dir="ltr"
-              pattern="\d{1,10}(\.\d{1,6})?"
-              placeholder="0.00"
-              onApply={(next) => handlePriceChange(next, priceEntryMode)}
-            />
           )}
         </div>
 
@@ -496,17 +446,10 @@ export default function InvoiceLineEditor({
                   ? "(?:100(?:[.]0{1,2})?|0?[0-9]{1,2}(?:[.][0-9]{1,2})?)"
                   : "[0-9]{1,10}([.][0-9]{1,2})?"
               }
-              className={`${INLINE_INPUT} font-mono ${isMobile ? "cursor-pointer" : ""}`}
+              className={`${INLINE_INPUT} font-mono`}
               value={
                 discountMode === "PERCENT" ? discountPercent : value.discount
               }
-              onClick={openDiscountExpand}
-              onKeyDown={(e) => {
-                if (isMobile && e.key === "F2") {
-                  e.preventDefault();
-                  openDiscountExpand();
-                }
-              }}
               onChange={(e) => {
                 if (discountMode === "PERCENT") {
                   setDiscountPercent(e.target.value);
@@ -523,40 +466,6 @@ export default function InvoiceLineEditor({
                 }
               }}
             />
-
-            {isMobile && (
-              <FullscreenFieldModal
-                open={discountExpandOpen}
-                onClose={() => setDiscountExpandOpen(false)}
-                sessionKey={discountExpandSession}
-                title={ui("الخصم")}
-                value={
-                  discountMode === "PERCENT" ? discountPercent : value.discount
-                }
-                inputMode="decimal"
-                dir="ltr"
-                pattern={
-                  discountMode === "PERCENT"
-                    ? "(?:100(?:[.]0{1,2})?|0?[0-9]{1,2}(?:[.][0-9]{1,2})?)"
-                    : "[0-9]{1,10}([.][0-9]{1,2})?"
-                }
-                onApply={(next) => {
-                  if (discountMode === "PERCENT") {
-                    setDiscountPercent(next);
-                    onChange({
-                      discount:
-                        percentageDiscount(
-                          value.quantity,
-                          value.unitPrice,
-                          next,
-                        ) || "0",
-                    });
-                  } else {
-                    onChange({ discount: next });
-                  }
-                }}
-              />
-            )}
           </div>
 
           {/* Component */}

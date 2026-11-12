@@ -7,12 +7,12 @@ import {
   useId,
   useRef,
   useState,
+  type ClipboardEvent,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from "react";
 import { useLanguage } from "@/lib/languageContext";
-import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import { cn } from "@/lib/utils";
 import FullscreenDialog, { useFullscreenDialogClose } from "./FullscreenDialog";
 
@@ -121,6 +121,19 @@ function FullscreenFieldBody({
     }
   };
 
+  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = event.clipboardData?.getData("text");
+    if (!pastedText) return;
+    event.preventDefault();
+    const target = event.currentTarget;
+    const start = target.selectionStart ?? draft.length;
+    const end = target.selectionEnd ?? draft.length;
+    const combined = `${draft.slice(0, start)}${pastedText}${draft.slice(end)}`;
+    const nextValue =
+      typeof maxLength === "number" ? combined.slice(0, maxLength) : combined;
+    handleApply(nextValue);
+  };
+
   const resolvedDir = dir ?? appDir;
   const cleanTitle = title.replace(/\s*\*$/, "").trim();
   const cleanPlaceholder = placeholder?.trim();
@@ -182,6 +195,7 @@ function FullscreenFieldBody({
             onDraftChange(nextValue);
           }}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           autoFocus
           className="fullscreen-focus-control w-full min-h-12 rounded-xl border-2 border-[var(--control-border)] bg-[var(--input-bg)] px-4 py-2.5 text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-gold)] focus:ring-2 focus:ring-[var(--accent-gold)]/20 focus:outline-hidden"
         />
@@ -269,17 +283,6 @@ export function FullscreenFieldModal({
   );
 }
 
-const NON_TEXT_INPUT_TYPES = new Set([
-  "date",
-  "time",
-  "datetime-local",
-  "hidden",
-  "checkbox",
-  "radio",
-  "file",
-  "range",
-]);
-
 export interface ExpandableFieldProps {
   label: string;
   htmlFor?: string;
@@ -316,81 +319,27 @@ export interface ExpandableFieldProps {
 
 /**
  * Wraps controlled `<input>` / `<textarea>` fields (such as invoice & captain forms)
- * so interacting with them automatically opens `FullscreenFieldModal` in full-screen focus mode.
+ * with consistent label, badge, suffix, and hint layout for inline editing on all viewports.
  */
 export function ExpandableField({
   label,
   htmlFor,
   required,
   hint,
-  value,
-  onApply,
   multiline = false,
-  openOnClick = true,
-  placeholder,
-  maxLength,
-  dir,
-  inputMode,
-  type,
-  pattern,
-  step,
-  min,
-  max,
-  autoComplete,
-  disabled = false,
   labelClassName,
   inputBadge,
   children,
   suffix,
 }: ExpandableFieldProps) {
-  const isMobile = useIsMobileViewport();
   const generatedId = useId();
   const childProps = isValidElement(children) ? children.props : undefined;
   const fieldId = htmlFor || childProps?.id || generatedId;
-  const [modalOpen, setModalOpen] = useState(false);
-  const [expandSession, setExpandSession] = useState(0);
-
-  const openExpandModal = () => {
-    if (!isMobile) return;
-    setExpandSession((prev) => prev + 1);
-    setModalOpen(true);
-  };
-
-  const effectiveType = type ?? childProps?.type ?? "text";
-  const isControlReadOnly = Boolean(
-    disabled || childProps?.disabled || childProps?.readOnly,
-  );
-  const canAutoExpand =
-    isMobile &&
-    openOnClick &&
-    !isControlReadOnly &&
-    !NON_TEXT_INPUT_TYPES.has(effectiveType);
 
   const renderedControl = isValidElement(children)
     ? cloneElement(children, {
         id: childProps?.id || fieldId,
-        className: cn(
-          childProps?.className,
-          canAutoExpand && "cursor-pointer",
-          inputBadge && "pe-14",
-        ),
-        onClick: canAutoExpand
-          ? (event: React.MouseEvent<HTMLElement>) => {
-              childProps?.onClick?.(event);
-              if (!event.defaultPrevented) {
-                openExpandModal();
-              }
-            }
-          : childProps?.onClick,
-        onKeyDown: canAutoExpand
-          ? (event: React.KeyboardEvent<HTMLElement>) => {
-              childProps?.onKeyDown?.(event);
-              if (!event.defaultPrevented && event.key === "F2") {
-                event.preventDefault();
-                openExpandModal();
-              }
-            }
-          : childProps?.onKeyDown,
+        className: cn(childProps?.className, inputBadge && "pe-14"),
       })
     : children;
 
@@ -443,28 +392,6 @@ export function ExpandableField({
         <p className="text-xs text-[var(--text-muted)] leading-relaxed">
           {hint}
         </p>
-      )}
-
-      {isMobile && !isControlReadOnly && (
-        <FullscreenFieldModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          sessionKey={expandSession}
-          title={displayLabel}
-          value={value}
-          onApply={onApply}
-          multiline={multiline}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          dir={dir}
-          inputMode={inputMode}
-          type={effectiveType}
-          pattern={pattern}
-          step={step}
-          min={min}
-          max={max}
-          autoComplete={autoComplete}
-        />
       )}
     </div>
   );
