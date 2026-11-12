@@ -624,6 +624,56 @@ test("invoice creation supports 0% VAT without reason and preserves zero VAT tot
   expect(payload.lines[0].rate).toBe("0");
   expect(payload.lines[0].exemptionCode).toBe("VATEX-SA-32");
 });
+test("proforma invoice creation catches missing service description before submit and saves via review", async ({
+  page,
+}) => {
+  await preferences(page, "ar");
+  await login(page);
+  await page.goto("/admin/invoices/new?type=PROFORMA");
+  await page.locator('input[name="customerName"]').fill("4brothers");
+  await page.locator('input[type="tel"]').fill("0501347193");
+  await page.locator("#main-content nav button").nth(1).click();
+  await page.getByLabel("عنوان الانطلاق", { exact: false }).fill("مكة");
+  await page.getByLabel("عنوان الوصول", { exact: false }).fill("المدينة");
+  await page.locator("#main-content nav button").nth(2).click();
+  await page.getByLabel("السعر (ر.س)", { exact: false }).fill("200");
+  await page.getByLabel("المعاملة الضريبية", { exact: false }).click();
+  const vatSelectPopover = page.locator(".picker-popover:popover-open");
+  await expect(vatSelectPopover).toBeVisible();
+  await vatSelectPopover
+    .getByRole("button", { name: /نسبة صفرية 0% \(بدون سبب\)/ })
+    .click();
+  await expect(vatSelectPopover).not.toBeVisible();
+
+  // Clicking Next without service description catches it in Stage 3 instead of failing later
+  await page
+    .getByRole("button", { name: /المتابعة: الدفع والمراجعة/ })
+    .click();
+  await expect(page.locator("#main-content [role='alert']")).toContainText(
+    "أدخل وصف الخدمة للبند رقم 1",
+  );
+
+  await page
+    .getByLabel("وصف الخدمة", { exact: false })
+    .fill("نقل ركاب مكة - المدينة");
+  await page
+    .getByRole("button", { name: /المتابعة: الدفع والمراجعة/ })
+    .click();
+
+  await expect(page.getByText("ضريبة القيمة المضافة (0%)")).toBeVisible();
+  await expect(page.getByText("نقل ركاب مكة - المدينة")).toBeVisible();
+  await page.getByRole("checkbox", { name: /أقر بأنني راجعت/ }).check();
+  const saved = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && /\/invoices$/.test(request.url()),
+  );
+  await page.locator('button[type="submit"]').click();
+  const payload = (await saved).postDataJSON();
+  expect(payload.documentType).toBe("PROFORMA");
+  expect(payload.accounting).toBeUndefined();
+  expect(payload.lines[0].description).toBe("نقل ركاب مكة - المدينة");
+  expect(payload.lines[0].rate).toBe("0");
+});
 test("admin WhatsApp settings page displays QR code from backend status", async ({
   page,
 }) => {

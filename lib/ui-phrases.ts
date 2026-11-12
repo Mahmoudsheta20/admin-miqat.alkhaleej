@@ -3440,6 +3440,9 @@ export const UI_PHRASES: Record<string, string> = {
     "Apply 0% VAT directly without needing exemption code or reason",
   "إعدادات ربط الواتساب (QR)": "WhatsApp QR Connection Settings",
   "ربط الواتساب": "WhatsApp connection",
+  "الخدمات والضريبة:": "Services & tax:",
+  "بند بدون وصف": "Missing service description",
+  "ضريبة القيمة المضافة (0%)": "Value added tax (0%)",
 };
 export const UI_TEMPLATES: Record<string, string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",

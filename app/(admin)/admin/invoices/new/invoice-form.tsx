@@ -67,6 +67,13 @@ import {
   saudiDateTimeInput,
 } from "@/lib/invoice-draft";
 import {
+  hasCompleteBankDetails,
+  sanitizeBankForm,
+  validateStage1Fields,
+  validateStage2Fields,
+  validateStage3Fields,
+} from "@/lib/invoice-validation";
+import {
   INVOICE_TYPE_LABELS,
   invoiceRequest,
   type InvoiceDocumentType,
@@ -408,8 +415,9 @@ export default function InvoiceForm({
     ]).then(([config, linked, originalResult]) => {
       if (!active) return;
       setSettings(config.data || null);
-      setBankDetails({ ...EMPTY_BANK, ...config.data?.company?.bankDetails });
-      setHasBankDetails(Boolean(config.data?.company?.bankDetails));
+      const sanitizedBank = sanitizeBankForm(config.data?.company?.bankDetails);
+      setBankDetails(sanitizedBank);
+      setHasBankDetails(hasCompleteBankDetails(sanitizedBank));
       setError(config.error || "");
       setInvoiceDate(saudiDateTimeInput());
 
@@ -696,42 +704,48 @@ export default function InvoiceForm({
     requestAnimationFrame(() => errorRegion.current?.focus());
   }
 
+  const contactPhone = invoicePhoneNumber(phone);
+  const stage1Issue = validateStage1Fields({
+    isTaxMode,
+    taxDocument,
+    hasOriginal: Boolean(original),
+    buyer,
+    contactPhone,
+    passengerCount: transport.passengerCount,
+  });
+  const stage2Issue = validateStage2Fields({
+    transport,
+    bookingError: validateBooking(booking, transport),
+    transportError: validateTransportDraft(transport),
+  });
+  const stage3Error = validateStage3Fields({
+    lines: rows.map((row) => row.input),
+    estimateValid: estimate.isValid,
+    estimateError: estimate.error,
+    checkBank: (documentType === "PROFORMA" || isTaxMode) && hasBankDetails,
+    bankDetails,
+  });
+
   const goToNextStage = () => {
     setError("");
     if (currentStage === "DOCUMENT_AND_CUSTOMER") {
-      if (
-        isTaxMode &&
-        taxDocument.kind !== "INVOICE" &&
-        (!original || !taxDocument.adjustmentReason?.trim())
-      ) {
-        showError(
-          "اختر الفاتورة الأصلية وأدخل سبب إصدار الإشعار للمتابعة إلى مسار الرحلة.",
-        );
-        return;
-      }
-      if (!buyer.name.trim()) {
-        showError("أدخل اسم العميل أو المنشأة للمتابعة إلى مسار الرحلة.");
-        return;
-      }
-      const contactPhone = invoicePhoneNumber(phone);
-      if (!contactPhone) {
-        showError("أدخل رقم جوال صحيحًا للتواصل والفاتورة.");
+      if (stage1Issue) {
+        if (stage1Issue.openBuyerDetails) setShowBuyerDetails(true);
+        showError(stage1Issue.error);
         return;
       }
       setCurrentStage("TRIP_AND_SERVICE");
     } else if (currentStage === "TRIP_AND_SERVICE") {
-      if (!transport.origin.trim()) {
-        showError("أدخل عنوان الانطلاق للمتابعة إلى السعر والضريبة.");
+      if (stage2Issue) {
+        if (stage2Issue.isTransportError) setHasTransportError(true);
+        showError(stage2Issue.error);
         return;
       }
-      if (!transport.destination.trim()) {
-        showError("أدخل عنوان الوصول للمتابعة إلى السعر والضريبة.");
-        return;
-      }
+      setHasTransportError(false);
       setCurrentStage("PRICE_AND_TAX");
     } else if (currentStage === "PRICE_AND_TAX") {
-      if (!estimate.isValid) {
-        showError(estimate.error || "راجع قيم الخدمات والأسعار للمتابعة.");
+      if (stage3Error) {
+        showError(stage3Error);
         return;
       }
       setCurrentStage("PAYMENT_AND_REVIEW");
@@ -747,13 +761,42 @@ export default function InvoiceForm({
   };
 
   // Save / Issue Invoice
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitInvoice(reviewedOverride?: boolean) {
+    const reviewed = reviewedOverride ?? isReviewed;
     if (!canSave) return;
     setError("");
     setHasTransportError(false);
 
-    if (!isReviewed) {
+    if (stage1Issue) {
+      setCurrentStage("DOCUMENT_AND_CUSTOMER");
+      if (stage1Issue.openBuyerDetails) setShowBuyerDetails(true);
+      showError(stage1Issue.error);
+      return;
+    }
+
+    if (stage2Issue) {
+      if (stage2Issue.isTransportError) setHasTransportError(true);
+      setCurrentStage("TRIP_AND_SERVICE");
+      showError(stage2Issue.error);
+      return;
+    }
+
+    if (stage3Error) {
+      setCurrentStage("PRICE_AND_TAX");
+      showError(stage3Error);
+      return;
+    }
+
+    const parsedInvoiceDate = invoiceDate
+      ? new Date(`${invoiceDate}+03:00`)
+      : null;
+    if (!parsedInvoiceDate || Number.isNaN(parsedInvoiceDate.getTime())) {
+      setCurrentStage("PAYMENT_AND_REVIEW");
+      showError("أدخل تاريخ ووقت الفاتورة بشكل صحيح.");
+      return;
+    }
+
+    if (!reviewed) {
       setCurrentStage("PAYMENT_AND_REVIEW");
       showError("يرجى تحديد خانة الإقرار بمراجعة بيانات الفاتورة قبل الإصدار.");
       document.getElementById("review-checkbox-label")?.scrollIntoView({
@@ -763,80 +806,12 @@ export default function InvoiceForm({
       return;
     }
 
-    if (
-      isTaxMode &&
-      taxDocument.kind !== "INVOICE" &&
-      (!original || !taxDocument.adjustmentReason?.trim())
-    ) {
-      setCurrentStage("DOCUMENT_AND_CUSTOMER");
-      showError(
-        "اختر الفاتورة الأصلية وأدخل سبب إصدار الإشعار في المرحلة الأولى.",
-      );
-      return;
-    }
-
-    if (
-      isTaxMode &&
-      taxDocument.profile === "STANDARD" &&
-      ((!buyer.vatNumber && !buyer.commercialRegistration) ||
-        ![
-          buyer.street,
-          buyer.building,
-          buyer.district,
-          buyer.city,
-          buyer.postalCode,
-        ].every((v) => v.trim()))
-    ) {
-      setCurrentStage("DOCUMENT_AND_CUSTOMER");
-      setShowBuyerDetails(true);
-      showError("أكمل عنوان ومعرف المشتري في المرحلة الأولى.");
-      return;
-    }
-
-    if (!estimate.isValid) {
-      setCurrentStage("PRICE_AND_TAX");
-      showError(estimate.error || "راجع قيم الخدمات في المرحلة الثالثة.");
-      return;
-    }
-
-    const addressParts = [
-      buyer.street,
-      buyer.building,
-      buyer.district,
-      buyer.city,
-      buyer.postalCode,
-    ];
-    const hasAddress = addressParts.some((value) => value.trim());
-    if (hasAddress && !addressParts.every((value) => value.trim())) {
-      setCurrentStage("DOCUMENT_AND_CUSTOMER");
-      setShowBuyerDetails(true);
-      showError(
-        "أكمل عنوان العميل: الشارع والمبنى والحي والمدينة والرمز البريدي.",
-      );
-      return;
-    }
-
-    const contactPhone = invoicePhoneNumber(phone);
-    if (!contactPhone) {
+    const validPhone = contactPhone;
+    if (!validPhone) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
       showError(
         "أدخل رقم جوال صحيحًا مع اختيار كود الدولة المناسب في المرحلة الأولى.",
       );
-      return;
-    }
-
-    const bookingError = validateBooking(booking, transport);
-    if (bookingError) {
-      setCurrentStage("TRIP_AND_SERVICE");
-      showError(bookingError);
-      return;
-    }
-
-    const transportError = validateTransportDraft(transport);
-    if (transportError) {
-      setHasTransportError(true);
-      setCurrentStage("TRIP_AND_SERVICE");
-      showError(transportError);
       return;
     }
 
@@ -858,6 +833,14 @@ export default function InvoiceForm({
         return;
       }
     }
+
+    const hasAddress = [
+      buyer.street,
+      buyer.building,
+      buyer.district,
+      buyer.city,
+      buyer.postalCode,
+    ].some((value) => value.trim());
 
     setIsSaving(true);
     try {
@@ -888,6 +871,27 @@ export default function InvoiceForm({
               : {}),
           };
 
+      const normalizedBank =
+        (documentType === "PROFORMA" || isTaxMode) && hasBankDetails
+          ? {
+              bankName: bankDetails.bankName.trim(),
+              accountHolder: bankDetails.accountHolder.trim(),
+              ...(bankDetails.accountNumber.trim()
+                ? { accountNumber: bankDetails.accountNumber.trim() }
+                : {}),
+              ...(bankDetails.iban.replace(/\s/g, "").trim()
+                ? {
+                    iban: bankDetails.iban
+                      .replace(/\s/g, "")
+                      .toUpperCase(),
+                  }
+                : {}),
+              ...(bankDetails.swiftCode.trim()
+                ? { swiftCode: bankDetails.swiftCode.trim().toUpperCase() }
+                : {}),
+            }
+          : undefined;
+
       if (!operationKey.current) operationKey.current = crypto.randomUUID();
 
       const result = await invoiceRequest<{ id: string }>("", "POST", {
@@ -906,28 +910,31 @@ export default function InvoiceForm({
               },
             }
           : {}),
-        ...((documentType === "PROFORMA" || isTaxMode) && hasBankDetails
-          ? {
-              bankDetails: Object.fromEntries(
-                Object.entries(bankDetails)
-                  .map(([key, value]) => [key, value.trim()])
-                  .filter(([, value]) => value),
-              ),
-            }
-          : {}),
+        ...(normalizedBank ? { bankDetails: normalizedBank } : {}),
         operationKey: operationKey.current,
-        invoiceDate: new Date(`${invoiceDate}+03:00`).toISOString(),
+        invoiceDate: parsedInvoiceDate.toISOString(),
         buyer: payloadBuyer,
         ...(customerId && !original ? { customerId } : {}),
         paymentCode,
-        accountingApproved: isReviewed,
+        accountingApproved: reviewed,
         ...(documentType !== "PROFORMA"
           ? { accounting: { revenueAccountCode, settlementAccountCode } }
           : {}),
         ...(selectedContract ? { contractId: selectedContract.id } : {}),
         transport: transportPayload({
           ...transport,
-          contactPhone,
+          origin: transport.origin.trim(),
+          destination: transport.destination.trim(),
+          ...(transport.billedDistance?.trim()
+            ? { billedDistance: transport.billedDistance.trim() }
+            : { billedDistance: undefined }),
+          ...(transport.odometerStart?.trim()
+            ? { odometerStart: transport.odometerStart.trim() }
+            : { odometerStart: undefined }),
+          ...(transport.odometerEnd?.trim()
+            ? { odometerEnd: transport.odometerEnd.trim() }
+            : { odometerEnd: undefined }),
+          contactPhone: validPhone,
           notes: bookingNotes(booking, transport),
         }),
         lines: rows.map((row) => {
@@ -948,20 +955,23 @@ export default function InvoiceForm({
                 : "توريد خاضع للنسبة الصفرية";
 
           return {
-            ...row.input,
-            category: cat,
             code: row.input.code.trim(),
             description: row.input.description.trim(),
-            discount: row.input.discount || "0",
+            quantity: row.input.quantity.trim(),
             billingUnit: row.input.billingUnit || "TRIP",
-            taxReviewed: isReviewed,
+            unitPrice: row.input.unitPrice.trim(),
+            discount: (row.input.discount || "0").trim() || "0",
+            category: cat,
+            rate: cat === "S" ? "15" : "0",
+            component: row.input.component,
+            taxReviewed: reviewed,
             ...(isZero
               ? {
                   exemptionCode: row.input.exemptionCode?.trim() || defaultCode,
                   exemptionReason:
                     row.input.exemptionReason?.trim() || defaultReason,
                 }
-              : { exemptionCode: undefined, exemptionReason: undefined }),
+              : {}),
           };
         }),
       });
@@ -1005,6 +1015,11 @@ export default function InvoiceForm({
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submitInvoice();
   }
 
   // Exact minor-unit Remaining Balance for Stage 4
@@ -1137,7 +1152,15 @@ export default function InvoiceForm({
           {STAGES.map((st, idx) => {
             const isCurrent = currentStage === st.id;
             const currentIndex = STAGES.findIndex((s) => s.id === currentStage);
-            const isCompleted = idx < currentIndex;
+            const isStageValid =
+              st.id === "DOCUMENT_AND_CUSTOMER"
+                ? !stage1Issue
+                : st.id === "TRIP_AND_SERVICE"
+                  ? !stage2Issue
+                  : st.id === "PRICE_AND_TAX"
+                    ? !stage3Error
+                    : isReviewed;
+            const isCompleted = idx < currentIndex && isStageValid;
 
             return (
               <button
@@ -2252,13 +2275,6 @@ export default function InvoiceForm({
                               ),
                               badge: "4102",
                             },
-                            {
-                              value: "4103",
-                              label: ui(
-                                "4103 · إيرادات النقل الصفرية أو المعفاة",
-                              ),
-                              badge: "4103",
-                            },
                           ]}
                         />
                         <FullscreenSelect
@@ -2382,6 +2398,49 @@ export default function InvoiceForm({
                         )}
                       </p>
                     </div>
+                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border sm:col-span-2">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="text-[var(--text-muted)]">
+                          {ui("الخدمات والضريبة:")}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStage("PRICE_AND_TAX")}
+                          className="text-xs font-semibold text-[var(--accent-gold)] hover:underline cursor-pointer"
+                        >
+                          {ui("تعديل")}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {rows.map((row, idx) => (
+                          <div
+                            key={row.id}
+                            className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm"
+                          >
+                            <span
+                              className={
+                                row.input.description.trim()
+                                  ? "font-semibold text-[var(--text-main)]"
+                                  : "font-semibold text-rose-700 dark:text-rose-400"
+                              }
+                            >
+                              {idx + 1}.{" "}
+                              {row.input.description.trim() ||
+                                ui("بند بدون وصف")}
+                            </span>
+                            <span
+                              className="font-mono text-[var(--text-muted)]"
+                              dir="ltr"
+                            >
+                              {estimate.lines[idx]?.gross
+                                ? `${estimate.lines[idx].gross} ${ui("ر.س")}`
+                                : "—"}{" "}
+                              ({row.input.rate || "0"}%)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Review Checkbox */}
@@ -2481,7 +2540,14 @@ export default function InvoiceForm({
                     ["الإجمالي قبل الخصم", beforeDiscount.net],
                     ["قيمة الخصم", discountTotal],
                     ["المبلغ قبل الضريبة", estimate.net],
-                    ["ضريبة القيمة المضافة (15%)", estimate.vat],
+                    [
+                      rows.every((r) => r.input.rate === "0")
+                        ? "ضريبة القيمة المضافة (0%)"
+                        : rows.every((r) => r.input.rate === "15")
+                          ? "ضريبة القيمة المضافة (15%)"
+                          : "ضريبة القيمة المضافة",
+                      estimate.vat,
+                    ],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between gap-3">
                       <dt className="text-[var(--text-muted)]">
@@ -2565,7 +2631,7 @@ export default function InvoiceForm({
                         type="button"
                         onClick={() => {
                           if (!isReviewed) setIsReviewed(true);
-                          document.getElementById("invoice-submit-btn")?.click();
+                          void submitInvoice(true);
                         }}
                         disabled={!canSave}
                         className="flex-1 min-h-9 gold-gradient-btn inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer shadow-xs hover:shadow-sm transition disabled:opacity-50"
@@ -2667,7 +2733,7 @@ export default function InvoiceForm({
                 type="button"
                 onClick={() => {
                   if (!isReviewed) setIsReviewed(true);
-                  document.getElementById("invoice-submit-btn")?.click();
+                  void submitInvoice(true);
                 }}
                 disabled={!canSave}
                 className="gold-gradient-btn min-h-11 px-4 rounded-xl text-sm font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow-md transition disabled:opacity-50"
