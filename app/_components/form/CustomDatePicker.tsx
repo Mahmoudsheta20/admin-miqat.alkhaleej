@@ -21,7 +21,7 @@ export interface CustomDatePickerProps {
   id?: string;
   buttonRef?: Ref<HTMLButtonElement>;
   label?: string;
-  value: string; // YYYY/MM/DD or YYYY-MM-DD
+  value?: string; // YYYY/MM/DD or YYYY-MM-DD
   onChange: (val: string) => void;
   error?: string;
   required?: boolean;
@@ -47,7 +47,7 @@ const ARABIC_MONTHS = [
 
 const WEEK_DAYS = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
 
-function parseDateStr(str: string): { year: number; month: number; day: number } | null {
+function parseDateStr(str?: string): { year: number; month: number; day: number } | null {
   if (!str) return null;
   const parts = str.replace(/-/g, "/").split("/");
   if (parts.length !== 3) return null;
@@ -74,7 +74,7 @@ function formatDate(year: number, month: number, day: number): string {
 }
 
 interface DatePickerModalBodyProps {
-  value: string;
+  value?: string;
   minDate?: string;
   onChange: (val: string) => void;
 }
@@ -88,14 +88,14 @@ function DatePickerModalBody({
   const isFullscreen = useIsPickerFullscreen();
   const requestDialogClose = useFullscreenDialogClose();
 
-  const normalizedMinDate = minDate?.replace(/-/g, "/");
-  const normalizedValue = value.replace(/-/g, "/");
+  const normalizedMinDate = minDate ? minDate.replace(/-/g, "/") : "";
+  const normalizedValue = value ? value.replace(/-/g, "/") : "";
   const isBeforeMinDate = (date: string) =>
     Boolean(normalizedMinDate && date < normalizedMinDate);
 
   const parsed =
     parseDateStr(value) ||
-    parseDateStr(minDate || "") || {
+    parseDateStr(minDate) || {
       year: new Date().getFullYear(),
       month: new Date().getMonth(),
       day: new Date().getDate(),
@@ -552,7 +552,7 @@ export function CustomDatePicker({
       >
         <DatePickerModalBody
           key={sessionKey}
-          value={value}
+          value={value || ""}
           minDate={minDate}
           onChange={onChange}
         />

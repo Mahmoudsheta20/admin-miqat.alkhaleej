@@ -3419,6 +3419,25 @@ export const UI_PHRASES: Record<string, string> = {
   "إنشاء فاتورة بملء الشاشة": "Full-screen invoice",
   "تحرير الحقل": "Edit field",
   "تحرير النص": "Edit text",
+  "عكس نقطة الانطلاق ووجهة الوصول": "Swap departure and destination",
+  "عكس المسار": "Swap route",
+  "الفاتورة الأصلية المرتبطة": "Linked original invoice",
+  "تغيير": "Change",
+  "تم استيراد العقد": "Contract imported",
+  "إلغاء الربط": "Unlink",
+  "حفظ الفاتورة": "Save invoice",
+  "إصدار الفاتورة": "Issue invoice",
+  "الخدمة": "Service",
+  "استيراد من عقد": "Import from contract",
+  "استيراد مسار الرحلة من عقد موجود": "Import trip route from existing contract",
+  "استيراد مسار الرحلة من عقد": "Import trip route from contract",
+  "اختر العقد لملء نقطة الانطلاق والوصول وتفاصيل الرحلة تلقائياً":
+    "Select contract to auto-fill origin, destination, and trip details",
+  "استعادة مسار العقد": "Restore contract route",
+  "استعادة مسار العقد الأصلي": "Restore original contract route",
+  "نسبة صفرية 0% (بدون سبب)": "Zero-rated 0% (without reason)",
+  "تطبيق ضريبة 0% مباشرة دون الحاجة لإدخال سبب أو رمز إعفاء":
+    "Apply 0% VAT directly without needing exemption code or reason",
 };
 export const UI_TEMPLATES: Record<string, string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",

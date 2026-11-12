@@ -16,7 +16,7 @@ export interface CustomTimePickerProps {
   buttonRef?: Ref<HTMLButtonElement>;
   clearable?: boolean;
   label?: string;
-  value: string; // HH:mm (24-hour format)
+  value?: string; // HH:mm (24-hour format)
   onChange: (val: string) => void;
   error?: string;
   required?: boolean;
@@ -24,7 +24,7 @@ export interface CustomTimePickerProps {
   className?: string;
 }
 
-function parseTime(val: string): { hour: number; minute: number } {
+function parseTime(val?: string): { hour: number; minute: number } {
   if (!val) {
     const now = new Date();
     return { hour: now.getHours(), minute: now.getMinutes() };
@@ -42,7 +42,7 @@ function formatTime(hour: number, minute: number): string {
   return `${hh}:${mm}`;
 }
 
-function formatTimeDisplay12h(time24: string, lang: "ar" | "en"): string {
+function formatTimeDisplay12h(time24?: string, lang: "ar" | "en" = "ar"): string {
   if (!time24) return "";
   const [hStr, mStr] = time24.split(":");
   const h = parseInt(hStr, 10);
@@ -69,7 +69,7 @@ function TimePickerModalBody({
   value,
   onChange,
 }: {
-  value: string;
+  value?: string;
   onChange: (val: string) => void;
 }) {
   const ui = useUiText();
@@ -484,7 +484,7 @@ export function CustomTimePicker({
       >
         <TimePickerModalBody
           key={sessionKey}
-          value={value}
+          value={value || ""}
           onChange={onChange}
         />
       </ResponsivePickerOverlay>

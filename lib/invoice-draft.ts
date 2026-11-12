@@ -28,15 +28,16 @@ export function estimateInvoice(lines: InvoiceLineInput[]): InvoiceEstimate {
     const groups = new Map<string, { net: bigint; rate: string }>();
     let totalNet = BigInt(0);
     const calculated = lines.map(line => {
-      if (!line.category || !["S", "Z", "E", "O"].includes(line.category)) throw new Error("اختر المعالجة الضريبية لكل خدمة لعرض الإجمالي.");
-      if ((line.category === "S" && line.rate !== "15") || (line.category !== "S" && line.rate !== "0")) throw new Error("راجع نسبة الضريبة المحددة للخدمة.");
+      const normalizedCategory = line.category === "Z_NO_REASON" ? "Z" : line.category;
+      if (!normalizedCategory || !["S", "Z", "E", "O"].includes(normalizedCategory)) throw new Error("اختر المعالجة الضريبية لكل خدمة لعرض الإجمالي.");
+      if ((normalizedCategory === "S" && line.rate !== "15") || (normalizedCategory !== "S" && line.rate !== "0")) throw new Error("راجع نسبة الضريبة المحددة للخدمة.");
       const quantity = decimal(line.quantity), price = decimal(line.unitPrice);
       if (quantity === BigInt(0)) throw new Error("الكمية يجب أن تكون أكبر من صفر.");
       const raw = quantity * price - cents(line.discount || "0") * CENT_DIVISOR;
       if (raw < BigInt(0)) throw new Error("خصم الخدمة يتجاوز قيمتها.");
       const net = (raw + CENT_DIVISOR / BigInt(2)) / CENT_DIVISOR;
       const vat = tax(net, line.rate);
-      const key = [line.category, line.rate, line.exemptionCode || "", line.exemptionReason || ""].join("|");
+      const key = [normalizedCategory, line.rate, line.exemptionCode || "", line.exemptionReason || ""].join("|");
       const group = groups.get(key) || { net: BigInt(0), rate: line.rate };
       group.net += net; groups.set(key, group); totalNet += net;
       return { net: money(net), vat: money(vat), gross: money(net + vat) };

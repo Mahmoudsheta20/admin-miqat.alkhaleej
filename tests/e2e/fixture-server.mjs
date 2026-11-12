@@ -54,7 +54,7 @@ const server=createServer(async(req,res)=>{
  if(path==='/invoices/settings')return json({company});
  if(path==='/invoices'){if(req.method==='POST'){const row={...invoice,...body,id:randomUUID()};invoices.push(row);return json(row,201);}return json({items:invoices,total:invoices.length,page:Number(url.searchParams.get('page')||1)});}
  if(path==='/invoices/contracts')return json({items:contracts});
- if(path.startsWith('/invoices/transport-defaults/'))return json({transport:{},buyer:{name:contract.customerName},contractIds:[id]});
+ if(path.startsWith('/invoices/transport-defaults/')){const targetId=path.split('/')[3];const target=contracts.find(c=>c.id===targetId)||contract;return json({customerName:target.customerName,transport:{serviceType:target.operationType||'AIRPORT_TRANSFER',contractReference:target.referenceNumber,origin:target.origin||'',destination:target.destination||'',tripDate:target.tripDate||day,departureTime:(target.tripTime||'12:00').slice(0,5),contactName:target.customerName,contactPhone:target.customerPhone,vehiclePlate:target.vehiclePlate,distanceUnit:'KM',passengers:target.passengers||[]}});}
  if(path.startsWith('/invoices/'))return json(invoice);
  if(path==='/zatca/settings')return json({issuers:[],egs:[],sdkConfigured:false,productionPermitted:false});
  if(path==='/accounting/financial-report')return json(financial);

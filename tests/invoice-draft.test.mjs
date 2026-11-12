@@ -16,6 +16,11 @@ test('estimate rounds VAT per category and supports discounts and mixed zero-rat
   assert.equal(estimateInvoice([line({ unitPrice: '0.03' }), line({ unitPrice: '0.03' })]).vat, '0.01');
   const result = estimateInvoice([line({ quantity: '2', unitPrice: '100', discount: '10' }), line({ unitPrice: '50', category: 'Z', rate: '0' })]);
   assert.equal(result.net, '240.00'); assert.equal(result.vat, '28.50'); assert.equal(result.gross, '268.50');
+  const zeroNoReason = estimateInvoice([line({ unitPrice: '250.00', category: 'Z_NO_REASON', rate: '0' })]);
+  assert.equal(zeroNoReason.isValid, true);
+  assert.equal(zeroNoReason.net, '250.00');
+  assert.equal(zeroNoReason.vat, '0.00');
+  assert.equal(zeroNoReason.gross, '250.00');
   assert.equal(estimateInvoice([line({ unitPrice: '0.1', quantity: '3' })]).net, '0.30');
 });
 test('missing tax selection, invalid amounts, negative discounts and overflow never show a valid total', () => {

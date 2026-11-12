@@ -28,12 +28,12 @@ interface ContractPickerProps {
   onClear: () => void;
 }
 
-interface ContractPickerModalBodyProps {
+export interface ContractPickerModalBodyProps {
   selectedId?: string;
   onSelect: (contract: InvoiceContractOption) => void;
 }
 
-function ContractPickerModalBody({
+export function ContractPickerModalBody({
   selectedId,
   onSelect,
 }: ContractPickerModalBodyProps) {
@@ -376,5 +376,70 @@ export default function ContractPicker({
         />
       </ResponsivePickerOverlay>
     </div>
+  );
+}
+
+export function ContractRouteImportButton({
+  onSelect,
+}: {
+  onSelect: (contract: InvoiceContractOption) => void;
+}) {
+  const ui = useUiText();
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const controlId = useId();
+  const overlayId = `${controlId}-route-contract-picker`;
+  const {
+    isMobile,
+    open: isOpen,
+    sessionKey,
+    triggerRef,
+    overlayRef,
+    toggleFromTrigger,
+    closeOverlay,
+  } = usePickerDisclosure();
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        id={controlId}
+        type="button"
+        aria-haspopup={isMobile ? "dialog" : undefined}
+        aria-expanded={isOpen}
+        aria-controls={!isMobile && isOpen ? overlayId : undefined}
+        onClick={toggleFromTrigger}
+        className="min-h-11 sm:min-h-8 inline-flex items-center gap-1.5 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-2.5 py-1 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
+        title={ui("استيراد مسار الرحلة من عقد موجود")}
+      >
+        <FileText className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+        <span>{ui("استيراد من عقد")}</span>
+      </button>
+
+      <ResponsivePickerOverlay
+        open={isOpen}
+        onClose={closeOverlay}
+        anchorRef={triggerRef}
+        overlayRef={overlayRef}
+        overlayId={overlayId}
+        title={text("استيراد مسار الرحلة من عقد", "Import trip route from contract")}
+        subtitle={text(
+          "اختر العقد لملء نقطة الانطلاق والوصول وتفاصيل الرحلة تلقائياً",
+          "Select contract to auto-fill origin, destination, and trip details",
+        )}
+        icon={<FileText className="size-5" aria-hidden="true" />}
+        matchTriggerWidth={false}
+        minPopoverWidth={360}
+        maxPopoverWidth={560}
+      >
+        <ContractPickerModalBody
+          key={sessionKey}
+          onSelect={(c) => {
+            onSelect(c);
+            closeOverlay();
+          }}
+        />
+      </ResponsivePickerOverlay>
+    </>
   );
 }

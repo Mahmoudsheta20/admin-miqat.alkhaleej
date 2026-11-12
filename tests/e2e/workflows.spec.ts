@@ -581,6 +581,49 @@ test("invoice creation preserves exact totals through review and issuance", asyn
   expect(payload.lines[0].unitPrice).toBe("100");
   expect(payload.documentType).toBe("TAX");
 });
+test("invoice creation supports 0% VAT without reason and preserves zero VAT total", async ({
+  page,
+}) => {
+  await preferences(page, "ar");
+  await login(page);
+  await page.goto("/admin/invoices/new?type=TAX");
+  await page.locator('input[name="customerName"]').fill("عميل النسبة الصفرية");
+  await page.locator('input[type="tel"]').fill("559998877");
+  await page.locator("#main-content nav button").nth(1).click();
+  await page.getByLabel("عنوان الانطلاق", { exact: false }).fill("جدة");
+  await page.getByLabel("عنوان الوصول", { exact: false }).fill("مكة");
+  await page.locator("#main-content nav button").nth(2).click();
+  await page
+    .getByLabel("وصف الخدمة", { exact: false })
+    .fill("نقل بري صفر ضريبة");
+  await page.getByLabel("السعر (ر.س)", { exact: false }).fill("500");
+  await page.getByLabel("المعاملة الضريبية", { exact: false }).click();
+  const vatSelectPopover = page.locator(".picker-popover:popover-open");
+  await expect(vatSelectPopover).toBeVisible();
+  await vatSelectPopover
+    .getByRole("button", { name: /نسبة صفرية 0% \(بدون سبب\)/ })
+    .click();
+  await expect(vatSelectPopover).not.toBeVisible();
+  await expect(
+    page.getByLabel("رمز الإعفاء الضريبي الرسمي", { exact: false }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("سبب الإعفاء أو النسبة الصفرية بالعربية", { exact: false }),
+  ).toHaveCount(0);
+  await expect(page.getByTestId("invoice-total")).toContainText("500.00");
+  await page.locator("#main-content nav button").nth(3).click();
+  await page.getByRole("checkbox", { name: /أقر بأنني راجعت/ }).check();
+  const saved = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && /\/invoices$/.test(request.url()),
+  );
+  await page.locator('button[type="submit"]').click();
+  const payload = (await saved).postDataJSON();
+  expect(payload.lines[0].unitPrice).toBe("500");
+  expect(payload.lines[0].category).toBe("Z");
+  expect(payload.lines[0].rate).toBe("0");
+  expect(payload.lines[0].exemptionCode).toBe("VATEX-SA-32");
+});
 test("expense entry saves supplier details and exact amounts in the isolated backend", async ({
   page,
 }) => {

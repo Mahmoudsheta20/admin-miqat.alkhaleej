@@ -5,8 +5,10 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   Clock3,
+  FileText,
   MapPin,
   Plus,
+  RotateCcw,
   Route,
   Trash2,
 } from "lucide-react";
@@ -16,6 +18,10 @@ import {
 } from "@/lib/invoice-booking";
 import type { TransportDetails } from "@/lib/invoice-transport";
 import type { Vehicle } from "@/lib/types";
+import {
+  ContractRouteImportButton,
+  type InvoiceContractOption,
+} from "./contract-picker";
 
 import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
@@ -28,6 +34,8 @@ interface BookingFieldsProps {
   vehicles: Vehicle[];
   isLoadingVehicles: boolean;
   vehicleError: string;
+  selectedContract?: InvoiceContractOption | null;
+  onSelectContract?: (contract: InvoiceContractOption) => void;
   onRetryVehicles: () => void;
   onBookingChange: (change: Partial<InvoiceBooking>) => void;
   onTransportChange: (change: Partial<TransportDetails>) => void;
@@ -48,6 +56,8 @@ export default function BookingFields({
   vehicles,
   isLoadingVehicles,
   vehicleError,
+  selectedContract,
+  onSelectContract,
   onRetryVehicles,
   onBookingChange,
   onTransportChange,
@@ -92,20 +102,88 @@ export default function BookingFields({
         </div>
       </fieldset>
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
+        <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
+              {ui("مسار الرحلة")}
+            </span>
+            {selectedContract && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 px-2.5 py-1 text-xs font-semibold text-[var(--accent-gold)]">
+                <FileText className="size-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                <span className="font-mono">{selectedContract.referenceNumber}</span>
+                {selectedContract.origin && selectedContract.destination && (
+                  <span className="text-[var(--text-muted)] text-[0.6875rem]">
+                    ({selectedContract.origin} ← {selectedContract.destination})
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedContract &&
+              (selectedContract.origin !== transport.origin ||
+                selectedContract.destination !== transport.destination) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onTransportChange({
+                      origin: selectedContract.origin,
+                      destination: selectedContract.destination,
+                      tripDate: selectedContract.tripDate || transport.tripDate,
+                    });
+                  }}
+                  className="min-h-11 sm:min-h-8 inline-flex items-center gap-1.5 rounded-lg border border-[var(--accent-gold)]/50 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-2.5 py-1 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
+                  title={ui("استعادة مسار العقد الأصلي")}
+                >
+                  <RotateCcw
+                    className="size-3.5 text-[var(--accent-gold)]"
+                    aria-hidden="true"
+                  />
+                  <span>{ui("استعادة مسار العقد")}</span>
+                </button>
+              )}
+
+            {!selectedContract && onSelectContract && (
+              <ContractRouteImportButton onSelect={onSelectContract} />
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const currentOrigin = transport.origin;
+                const currentDestination = transport.destination;
+                onTransportChange({
+                  origin: currentDestination,
+                  destination: currentOrigin,
+                });
+              }}
+              className="min-h-11 sm:min-h-8 inline-flex items-center gap-1.5 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
+              title={ui("عكس نقطة الانطلاق ووجهة الوصول")}
+            >
+              <ArrowLeftRight
+                className="size-3.5 text-[var(--accent-gold)]"
+                aria-hidden="true"
+              />
+              <span>{ui("عكس المسار")}</span>
+            </button>
+          </div>
+        </div>
+
         <ExpandableField
           label={ui("عنوان الانطلاق")}
           required
           maxLength={160}
           placeholder={ui("المدينة، الفندق أو المطار")}
-          value={transport.origin}
-          onApply={(origin) => onTransportChange({ origin })}
+          value={transport.origin || ""}
+          onApply={(origin) => onTransportChange({ origin: origin || "" })}
         >
           <input
             required
             maxLength={160}
             placeholder={ui("المدينة، الفندق أو المطار")}
             className={INLINE_INPUT}
-            value={transport.origin}
+            value={transport.origin || ""}
             onChange={(event) =>
               onTransportChange({ origin: event.target.value })
             }
@@ -116,15 +194,17 @@ export default function BookingFields({
           required
           maxLength={160}
           placeholder={ui("حدد وجهة الوصول")}
-          value={transport.destination}
-          onApply={(destination) => onTransportChange({ destination })}
+          value={transport.destination || ""}
+          onApply={(destination) =>
+            onTransportChange({ destination: destination || "" })
+          }
         >
           <input
             required
             maxLength={160}
             placeholder={ui("حدد وجهة الوصول")}
             className={INLINE_INPUT}
-            value={transport.destination}
+            value={transport.destination || ""}
             onChange={(event) =>
               onTransportChange({ destination: event.target.value })
             }
@@ -196,7 +276,7 @@ export default function BookingFields({
         <CustomDatePicker
           label={ui("تاريخ الذهاب")}
           required
-          value={transport.tripDate}
+          value={transport.tripDate || ""}
           onChange={(tripDate) =>
             onTransportChange({ tripDate: tripDate.replace(/\//g, "-") })
           }
@@ -214,7 +294,7 @@ export default function BookingFields({
               label={ui("تاريخ العودة")}
               required
               minDate={transport.tripDate || undefined}
-              value={booking.returnDate}
+              value={booking.returnDate || ""}
               onChange={(returnDate) =>
                 onBookingChange({ returnDate: returnDate.replace(/\//g, "-") })
               }
@@ -223,7 +303,7 @@ export default function BookingFields({
               label={ui("وقت العودة")}
               required
               clearable
-              value={booking.returnTime}
+              value={booking.returnTime || ""}
               onChange={(returnTime) => onBookingChange({ returnTime })}
             />
           </>
@@ -238,8 +318,8 @@ export default function BookingFields({
             max={200}
             step={1}
             dir="ltr"
-            value={booking.hours}
-            onApply={(hours) => onBookingChange({ hours })}
+            value={booking.hours || ""}
+            onApply={(hours) => onBookingChange({ hours: hours || "" })}
           >
             <input
               required
@@ -249,7 +329,7 @@ export default function BookingFields({
               step={1}
               dir="ltr"
               className={`${INLINE_INPUT} font-mono`}
-              value={booking.hours}
+              value={booking.hours || ""}
               onChange={(event) =>
                 onBookingChange({ hours: event.target.value })
               }

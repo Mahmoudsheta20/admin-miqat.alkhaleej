@@ -43,6 +43,12 @@ const TAX_OPTIONS: {
     hint: "تطبق على معظم رحلات وخدمات النقل المحلية",
   },
   {
+    code: "Z_NO_REASON",
+    label: "نسبة صفرية 0% (بدون سبب)",
+    rate: "0",
+    hint: "تطبيق ضريبة 0% مباشرة دون الحاجة لإدخال سبب أو رمز إعفاء",
+  },
+  {
     code: "Z",
     label: "خاضع لنسبة صفرية 0% (صادرات ونقل دولي)",
     rate: "0",
@@ -118,12 +124,19 @@ export default function InvoiceLineEditor({
     });
   }
 
-  const hasExemption = Boolean(value.category && value.category !== "S");
+  const hasExemption = Boolean(
+    value.category &&
+      value.category !== "S" &&
+      value.category !== "Z_NO_REASON",
+  );
 
   return (
     <fieldset className="rounded-2xl border theme-border bg-[var(--bg-card-subtle)] p-4 sm:p-6 space-y-5">
+      <legend className="sr-only">
+        {value.description || `${ui("الخدمة")} #${index + 1}`}
+      </legend>
       <div className="flex items-center justify-between gap-3 border-b theme-border pb-3">
-        <legend className="px-1 text-sm sm:text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
+        <div className="px-1 text-sm sm:text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
           <span className="rounded-md bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] px-2 py-0.5 font-mono text-xs sm:text-sm font-bold">
             #{index + 1}
           </span>
@@ -133,7 +146,7 @@ export default function InvoiceLineEditor({
                 ? `Service ${index + 1}`
                 : `الخدمة ${index + 1}`)}
           </span>
-        </legend>
+        </div>
         {canRemove && (
           <button
             type="button"
@@ -152,14 +165,16 @@ export default function InvoiceLineEditor({
           required
           maxLength={200}
           placeholder={ui("مثال: نقل معتمرين VIP من مطار جدة إلى فندق مكة")}
-          value={value.description}
-          onApply={(description) => onChange({ description })}
+          value={value.description || ""}
+          onApply={(description) =>
+            onChange({ description: description || "" })
+          }
         >
           <input
             required
             maxLength={200}
             className={INLINE_INPUT}
-            value={value.description}
+            value={value.description || ""}
             onChange={(e) => onChange({ description: e.target.value })}
             placeholder={ui("مثال: نقل معتمرين VIP من مطار جدة إلى فندق مكة")}
           />
@@ -182,8 +197,8 @@ export default function InvoiceLineEditor({
               ? "[1-9][0-9]{0,2}"
               : "[0-9]{1,10}([.][0-9]{1,6})?"
           }
-          value={value.quantity}
-          onApply={(quantity) => updatePrice({ quantity })}
+          value={value.quantity || ""}
+          onApply={(quantity) => updatePrice({ quantity: quantity || "" })}
         >
           <input
             required
@@ -195,7 +210,7 @@ export default function InvoiceLineEditor({
                 : "[0-9]{1,10}([.][0-9]{1,6})?"
             }
             className={`${INLINE_INPUT} font-mono`}
-            value={value.quantity}
+            value={value.quantity || ""}
             onChange={(e) => updatePrice({ quantity: e.target.value })}
           />
         </ExpandableField>
@@ -235,6 +250,7 @@ export default function InvoiceLineEditor({
               <button
                 type="button"
                 aria-pressed={priceEntryMode === "INCL"}
+                disabled={Boolean(value.category && value.category !== "S")}
                 onClick={() => {
                   setPriceEntryMode("INCL");
                   const netMinor = value.unitPrice
@@ -246,7 +262,7 @@ export default function InvoiceLineEditor({
                     setInclusiveInput(moneyDecimal(grossMinor));
                   }
                 }}
-                className={`min-h-10 sm:min-h-7 px-2 py-0.5 rounded transition cursor-pointer ${
+                className={`min-h-10 sm:min-h-7 px-2 py-0.5 rounded transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                   priceEntryMode === "INCL"
                     ? "bg-[var(--accent-btn-bg)] font-semibold text-[var(--accent-btn-fg)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
@@ -299,12 +315,38 @@ export default function InvoiceLineEditor({
           placeholder={ui("اختر المعاملة الضريبية")}
           value={value.category}
           onChange={(cat) => {
+            const isNoReason = cat === "Z_NO_REASON";
+            const rate = cat === "S" ? "15" : "0";
+            const defaultCode =
+              cat === "E"
+                ? "VATEX-SA-29"
+                : cat === "O"
+                  ? "VATEX-SA-OOS"
+                  : "VATEX-SA-32";
+            const defaultReason =
+              cat === "E"
+                ? "خدمات معفاة بموجب المادة 29 من اللائحة"
+                : cat === "O"
+                  ? "مبالغ ورسوم خارج نطاق ضريبة القيمة المضافة"
+                  : "توريد خاضع للنسبة الصفرية";
+
+            if (cat !== "S") {
+              setPriceEntryMode("EXCL");
+            }
+
             onChange({
               category: cat,
-              rate: cat === "S" ? "15" : "0",
+              rate,
               ...(cat === "S"
                 ? { exemptionCode: undefined, exemptionReason: undefined }
-                : {}),
+                : {
+                    exemptionCode: isNoReason
+                      ? defaultCode
+                      : value.exemptionCode || defaultCode,
+                    exemptionReason: isNoReason
+                      ? defaultReason
+                      : value.exemptionReason || defaultReason,
+                  }),
             });
           }}
           options={TAX_OPTIONS.map((opt) => ({
@@ -328,7 +370,6 @@ export default function InvoiceLineEditor({
             onApply={(exemptionCode) => onChange({ exemptionCode })}
           >
             <input
-              required
               maxLength={100}
               dir="ltr"
               className={`${INLINE_INPUT} font-mono`}
@@ -339,14 +380,12 @@ export default function InvoiceLineEditor({
           </ExpandableField>
           <ExpandableField
             label={ui("سبب الإعفاء أو النسبة الصفرية بالعربية")}
-            required
             maxLength={200}
             placeholder={ui("مثال: توريد خدمات نقل دولي خارج حدود المملكة")}
             value={value.exemptionReason || ""}
             onApply={(exemptionReason) => onChange({ exemptionReason })}
           >
             <input
-              required
               maxLength={200}
               className={INLINE_INPUT}
               placeholder={ui("مثال: توريد خدمات نقل دولي خارج حدود المملكة")}
@@ -395,15 +434,15 @@ export default function InvoiceLineEditor({
             required
             dir="ltr"
             maxLength={200}
-            value={value.code}
-            onApply={(code) => onChange({ code })}
+            value={value.code || ""}
+            onApply={(code) => onChange({ code: code || "" })}
           >
             <input
               required
               dir="ltr"
               maxLength={200}
               className={`${INLINE_INPUT} font-mono`}
-              value={value.code}
+              value={value.code || ""}
               onChange={(e) => onChange({ code: e.target.value })}
             />
           </ExpandableField>
@@ -448,7 +487,9 @@ export default function InvoiceLineEditor({
               }
               className={`${INLINE_INPUT} font-mono`}
               value={
-                discountMode === "PERCENT" ? discountPercent : value.discount
+                (discountMode === "PERCENT"
+                  ? discountPercent
+                  : value.discount) || ""
               }
               onChange={(e) => {
                 if (discountMode === "PERCENT") {

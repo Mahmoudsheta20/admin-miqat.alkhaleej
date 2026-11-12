@@ -21,6 +21,7 @@ import {
   ChevronDown,
   CreditCard,
   FileSpreadsheet,
+  FileText,
   HelpCircle,
   Landmark,
   Loader2,
@@ -29,6 +30,7 @@ import {
   Save,
   Truck,
   Wallet,
+  X,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -308,11 +310,18 @@ export default function InvoiceForm({
 
   const applyOriginal = useCallback((invoice: InvoiceDetail) => {
     setOriginal(invoice);
+    const buyerInput = invoice.snapshot.input.buyer;
+    const address = buyerInput?.address;
     setBuyer({
       ...EMPTY_BUYER,
-      ...invoice.snapshot.input.buyer,
-      ...invoice.snapshot.input.buyer.address,
-      vatNumber: invoice.snapshot.input.buyer.vatNumber || "",
+      name: buyerInput?.name || "",
+      vatNumber: buyerInput?.vatNumber || "",
+      commercialRegistration: buyerInput?.identification || "",
+      street: address?.street || "",
+      building: address?.building || "",
+      district: address?.district || "",
+      city: address?.city || "",
+      postalCode: address?.postalCode || "",
     });
     setTaxDocument((current) => ({
       ...current,
@@ -405,31 +414,47 @@ export default function InvoiceForm({
       setInvoiceDate(saudiDateTimeInput());
 
       if (linked?.data && initialContractId) {
-        const { transport: details, customerName } = linked.data;
+        const { transport: details = {} as TransportDetails, customerName = "" } =
+          linked.data;
+        const origin = details.origin || "";
+        const destination = details.destination || "";
+        const tripDate =
+          details.tripDate || saudiDateTimeInput().slice(0, 10);
         setSelectedContract({
           id: initialContractId,
           referenceNumber: details.contractReference || initialContractId,
-          customerName,
-          origin: details.origin,
-          destination: details.destination,
-          tripDate: details.tripDate,
+          customerName: customerName || "",
+          origin,
+          destination,
+          tripDate,
         });
-        setBuyer((current) => ({ ...current, name: customerName }));
-        setTransport(details);
-        setPhone(invoicePhoneFrom(details.contactPhone));
-        setRows([
-          {
-            id: "line-1",
-            input: {
-              ...emptyInvoiceLine(),
-              description:
-                `خدمة نقل من ${details.origin} إلى ${details.destination}`.slice(
-                  0,
-                  200,
-                ),
+        setBuyer((current) => ({ ...current, name: customerName || "" }));
+        setTransport((current) => ({
+          ...current,
+          ...details,
+          origin,
+          destination,
+          tripDate,
+          contractReference: details.contractReference || initialContractId,
+        }));
+        if (details.contactPhone) {
+          setPhone(invoicePhoneFrom(details.contactPhone));
+        }
+        if (origin && destination) {
+          setRows([
+            {
+              id: "line-1",
+              input: {
+                ...emptyInvoiceLine(),
+                description:
+                  `خدمة نقل من ${origin} إلى ${destination}`.slice(
+                    0,
+                    200,
+                  ),
+              },
             },
-          },
-        ]);
+          ]);
+        }
       } else if (initialContractId) {
         setSourceError(linked?.error || "تعذر تحميل العقد المرتبط.");
       }
@@ -495,7 +520,19 @@ export default function InvoiceForm({
     !sourceError;
 
   function updateBuyer(change: Partial<BuyerForm>) {
-    setBuyer((current) => ({ ...current, ...change }));
+    setBuyer((current) => {
+      const next = { ...current, ...change };
+      return {
+        name: next.name ?? "",
+        vatNumber: next.vatNumber ?? "",
+        street: next.street ?? "",
+        building: next.building ?? "",
+        district: next.district ?? "",
+        city: next.city ?? "",
+        postalCode: next.postalCode ?? "",
+        commercialRegistration: next.commercialRegistration ?? "",
+      };
+    });
     if (isTaxMode && change.vatNumber !== undefined && !original) {
       setTaxDocument((current) => ({
         ...current,
@@ -526,6 +563,15 @@ export default function InvoiceForm({
   }
 
   function addService(description = "") {
+    if (
+      rows.length === 1 &&
+      !rows[0].input.description.trim() &&
+      (!rows[0].input.unitPrice || rows[0].input.unitPrice === "0") &&
+      description
+    ) {
+      updateRow(rows[0].id, { description });
+      return;
+    }
     const index = nextRow.current++;
     setRows((current) => [
       ...current,
@@ -543,28 +589,37 @@ export default function InvoiceForm({
     setIsSourceLoading(true);
     setSourceError("");
     setIsReviewed(false);
-    const result = await invoiceRequest<TransportDefaults>(
-      `/transport-defaults/${encodeURIComponent(contract.id)}`,
+
+    // Immediately and synchronously populate route, trip date, and buyer name from the contract
+    const safeCustomerName = contract.customerName || "";
+    setBuyer((current) =>
+      current.name === safeCustomerName
+        ? current
+        : { ...EMPTY_BUYER, name: safeCustomerName },
     );
-    if (version !== sourceVersion.current) return;
-    if (result.data) {
-      const { customerName, transport: details } = result.data;
-      setBuyer((current) =>
-        current.name === customerName
-          ? current
-          : { ...EMPTY_BUYER, name: customerName },
-      );
-      setTransport(details);
-      setPhone(invoicePhoneFrom(details.contactPhone));
+    const initialOrigin = contract.origin || "";
+    const initialDestination = contract.destination || "";
+    const initialTripDate =
+      contract.tripDate || saudiDateTimeInput().slice(0, 10);
+    setTransport((current) => ({
+      ...current,
+      origin: initialOrigin || current.origin,
+      destination: initialDestination || current.destination,
+      tripDate: initialTripDate || current.tripDate,
+      contractReference: contract.referenceNumber || contract.id,
+    }));
+    if (initialOrigin && initialDestination) {
       setRows((current) =>
-        current.length === 1
+        current.length === 1 &&
+        (!current[0].input.description.trim() ||
+          current[0].input.description.startsWith("خدمة نقل من"))
           ? [
               {
                 ...current[0],
                 input: {
                   ...current[0].input,
                   description:
-                    `خدمة نقل من ${details.origin} إلى ${details.destination}`.slice(
+                    `خدمة نقل من ${initialOrigin} إلى ${initialDestination}`.slice(
                       0,
                       200,
                     ),
@@ -573,6 +628,54 @@ export default function InvoiceForm({
             ]
           : current,
       );
+    }
+
+    const result = await invoiceRequest<TransportDefaults>(
+      `/transport-defaults/${encodeURIComponent(contract.id)}`,
+    );
+    if (version !== sourceVersion.current) return;
+    if (result.data) {
+      const { customerName, transport: details } = result.data;
+      const finalCustomerName = customerName || contract.customerName || "";
+      setBuyer((current) =>
+        current.name === finalCustomerName
+          ? current
+          : { ...EMPTY_BUYER, name: finalCustomerName },
+      );
+      const origin = details?.origin || contract.origin || "";
+      const destination = details?.destination || contract.destination || "";
+      const tripDate =
+        details?.tripDate || contract.tripDate || saudiDateTimeInput().slice(0, 10);
+      setTransport((current) => ({
+        ...current,
+        ...details,
+        origin,
+        destination,
+        tripDate,
+        contractReference:
+          details?.contractReference || contract.referenceNumber || contract.id,
+      }));
+      if (details?.contactPhone) {
+        setPhone(invoicePhoneFrom(details.contactPhone));
+      }
+      if (origin && destination) {
+        setRows((current) =>
+          current.length === 1 &&
+          (!current[0].input.description.trim() ||
+            current[0].input.description.startsWith("خدمة نقل من"))
+            ? [
+                {
+                  ...current[0],
+                  input: {
+                    ...current[0].input,
+                    description:
+                      `خدمة نقل من ${origin} إلى ${destination}`.slice(0, 200),
+                  },
+                },
+              ]
+            : current,
+        );
+      }
     } else {
       setSourceError(result.error || "تعذر تحميل تفاصيل العقد.");
     }
@@ -593,12 +696,72 @@ export default function InvoiceForm({
     requestAnimationFrame(() => errorRegion.current?.focus());
   }
 
+  const goToNextStage = () => {
+    setError("");
+    if (currentStage === "DOCUMENT_AND_CUSTOMER") {
+      if (
+        isTaxMode &&
+        taxDocument.kind !== "INVOICE" &&
+        (!original || !taxDocument.adjustmentReason?.trim())
+      ) {
+        showError(
+          "اختر الفاتورة الأصلية وأدخل سبب إصدار الإشعار للمتابعة إلى مسار الرحلة.",
+        );
+        return;
+      }
+      if (!buyer.name.trim()) {
+        showError("أدخل اسم العميل أو المنشأة للمتابعة إلى مسار الرحلة.");
+        return;
+      }
+      const contactPhone = invoicePhoneNumber(phone);
+      if (!contactPhone) {
+        showError("أدخل رقم جوال صحيحًا للتواصل والفاتورة.");
+        return;
+      }
+      setCurrentStage("TRIP_AND_SERVICE");
+    } else if (currentStage === "TRIP_AND_SERVICE") {
+      if (!transport.origin.trim()) {
+        showError("أدخل عنوان الانطلاق للمتابعة إلى السعر والضريبة.");
+        return;
+      }
+      if (!transport.destination.trim()) {
+        showError("أدخل عنوان الوصول للمتابعة إلى السعر والضريبة.");
+        return;
+      }
+      setCurrentStage("PRICE_AND_TAX");
+    } else if (currentStage === "PRICE_AND_TAX") {
+      if (!estimate.isValid) {
+        showError(estimate.error || "راجع قيم الخدمات والأسعار للمتابعة.");
+        return;
+      }
+      setCurrentStage("PAYMENT_AND_REVIEW");
+    }
+  };
+
+  const goToPreviousStage = () => {
+    setError("");
+    const idx = STAGES.findIndex((s) => s.id === currentStage);
+    if (idx > 0) {
+      setCurrentStage(STAGES[idx - 1].id);
+    }
+  };
+
   // Save / Issue Invoice
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSave) return;
     setError("");
     setHasTransportError(false);
+
+    if (!isReviewed) {
+      setCurrentStage("PAYMENT_AND_REVIEW");
+      showError("يرجى تحديد خانة الإقرار بمراجعة بيانات الفاتورة قبل الإصدار.");
+      document.getElementById("review-checkbox-label")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
 
     if (
       isTaxMode &&
@@ -767,17 +930,40 @@ export default function InvoiceForm({
           contactPhone,
           notes: bookingNotes(booking, transport),
         }),
-        lines: rows.map((row) => ({
-          ...row.input,
-          code: row.input.code.trim(),
-          description: row.input.description.trim(),
-          discount: row.input.discount || "0",
-          billingUnit: row.input.billingUnit || "TRIP",
-          taxReviewed: isReviewed,
-          ...(row.input.category === "S"
-            ? { exemptionCode: undefined, exemptionReason: undefined }
-            : {}),
-        })),
+        lines: rows.map((row) => {
+          const rawCat = row.input.category;
+          const isZero = rawCat !== "S";
+          const cat = rawCat === "Z_NO_REASON" ? "Z" : rawCat;
+          const defaultCode =
+            cat === "E"
+              ? "VATEX-SA-29"
+              : cat === "O"
+                ? "VATEX-SA-OOS"
+                : "VATEX-SA-32";
+          const defaultReason =
+            cat === "E"
+              ? "خدمات معفاة بموجب المادة 29 من اللائحة"
+              : cat === "O"
+                ? "مبالغ ورسوم خارج نطاق ضريبة القيمة المضافة"
+                : "توريد خاضع للنسبة الصفرية";
+
+          return {
+            ...row.input,
+            category: cat,
+            code: row.input.code.trim(),
+            description: row.input.description.trim(),
+            discount: row.input.discount || "0",
+            billingUnit: row.input.billingUnit || "TRIP",
+            taxReviewed: isReviewed,
+            ...(isZero
+              ? {
+                  exemptionCode: row.input.exemptionCode?.trim() || defaultCode,
+                  exemptionReason:
+                    row.input.exemptionReason?.trim() || defaultReason,
+                }
+              : { exemptionCode: undefined, exemptionReason: undefined }),
+          };
+        }),
       });
 
       if (result.data) {
@@ -972,7 +1158,7 @@ export default function InvoiceForm({
                     isCurrent
                       ? "bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)]"
                       : isCompleted
-                        ? "border border-emerald-600/40 bg-emerald-500/15 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-950/45 dark:text-emerald-300"
+                        ? "border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--accent-gold)]"
                         : "bg-[var(--bg-card-subtle)] text-[var(--text-muted)]"
                   }`}
                 >
@@ -1142,6 +1328,29 @@ export default function InvoiceForm({
                         </ExpandableField>
                       </div>
                     </div>
+                    {original && (
+                      <div className="mt-3.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--bg-card)] p-3.5 text-xs sm:text-sm flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <ReceiptText className="size-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                          <div>
+                            <span className="font-bold text-[var(--text-main)]">
+                              {ui("الفاتورة الأصلية المرتبطة")}: {original.invoiceNumber}
+                            </span>
+                            <span className="text-[var(--text-muted)] ms-2">
+                              ({original.customerName} · {amount(original.snapshot.totals.gross)} {ui("ر.س")})
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void selectOriginal("")}
+                          className="min-h-11 sm:min-h-8 inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-rose-500 hover:text-rose-600 transition cursor-pointer"
+                        >
+                          <X className="size-3.5" aria-hidden="true" />
+                          <span>{ui("تغيير")}</span>
+                        </button>
+                      </div>
+                    )}
                   </section>
                 )}
 
@@ -1176,6 +1385,36 @@ export default function InvoiceForm({
                         {ui(sourceError)}
                       </p>
                     )}
+                    {selectedContract && (
+                      <div className="mt-3.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+                        <div className="flex items-center gap-2.5">
+                          <div className="size-8 rounded-lg bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] flex items-center justify-center shrink-0">
+                            <FileText className="size-4" aria-hidden="true" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[var(--text-main)]">
+                                {ui("تم استيراد العقد")}: {selectedContract.referenceNumber}
+                              </span>
+                              <span className="rounded-md border theme-border bg-[var(--bg-card)] px-1.5 py-0.5 font-mono text-xs font-semibold text-[var(--text-main)]">
+                                {selectedContract.tripDate}
+                              </span>
+                            </div>
+                            <p className="text-[var(--text-muted)] text-xs mt-0.5">
+                              {selectedContract.customerName} · {selectedContract.origin} {ui.dir === "rtl" ? "←" : "→"} {selectedContract.destination}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={clearContract}
+                          className="min-h-11 sm:min-h-8 inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-rose-500 hover:text-rose-600 transition cursor-pointer"
+                        >
+                          <X className="size-3.5" aria-hidden="true" />
+                          <span>{ui("إلغاء الربط")}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {!original && (
@@ -1186,7 +1425,7 @@ export default function InvoiceForm({
                           setCustomerId(c?.id || "");
                           if (c) {
                             setBuyer({
-                              name: c.name,
+                              name: c.name || "",
                               vatNumber: c.vatNumber || "",
                               commercialRegistration: c.identification || "",
                               street: c.address?.street || "",
@@ -1219,8 +1458,8 @@ export default function InvoiceForm({
                       autoComplete="name"
                       disabled={Boolean(original)}
                       placeholder={ui("اسم الفرد، الفندق، أو الشركة")}
-                      value={buyer.name}
-                      onApply={(name) => updateBuyer({ name })}
+                      value={buyer.name || ""}
+                      onApply={(name) => updateBuyer({ name: name || "" })}
                     >
                       <input
                         name="customerName"
@@ -1230,7 +1469,7 @@ export default function InvoiceForm({
                         autoComplete="name"
                         placeholder={ui("اسم الفرد، الفندق، أو الشركة")}
                         className={INLINE_INPUT}
-                        value={buyer.name}
+                        value={buyer.name || ""}
                         onChange={(e) => updateBuyer({ name: e.target.value })}
                       />
                     </ExpandableField>
@@ -1243,8 +1482,10 @@ export default function InvoiceForm({
                       dir="ltr"
                       disabled={Boolean(original)}
                       placeholder={ui("3xxxxxxxxxxxxxx3 (15 رقماً)")}
-                      value={buyer.vatNumber}
-                      onApply={(vatNumber) => updateBuyer({ vatNumber })}
+                      value={buyer.vatNumber || ""}
+                      onApply={(vatNumber) =>
+                        updateBuyer({ vatNumber: vatNumber || "" })
+                      }
                     >
                       <input
                         name="customerVat"
@@ -1255,7 +1496,7 @@ export default function InvoiceForm({
                         dir="ltr"
                         placeholder={ui("3xxxxxxxxxxxxxx3 (15 رقماً)")}
                         className={`${INLINE_INPUT} font-mono`}
-                        value={buyer.vatNumber}
+                        value={buyer.vatNumber || ""}
                         onChange={(e) =>
                           updateBuyer({ vatNumber: e.target.value })
                         }
@@ -1269,7 +1510,7 @@ export default function InvoiceForm({
                       placeholder={ui("إذا كان مختلفاً عن صاحب الفاتورة")}
                       value={transport.contactName || ""}
                       onApply={(contactName) =>
-                        updateTransport({ contactName })
+                        updateTransport({ contactName: contactName || "" })
                       }
                     >
                       <input
@@ -1304,8 +1545,8 @@ export default function InvoiceForm({
                       maxLength={160}
                       dir="ltr"
                       placeholder="customer@example.com"
-                      value={booking.email}
-                      onApply={(email) => updateBooking({ email })}
+                      value={booking.email || ""}
+                      onApply={(email) => updateBooking({ email: email || "" })}
                     >
                       <input
                         type="email"
@@ -1313,7 +1554,7 @@ export default function InvoiceForm({
                         dir="ltr"
                         placeholder="customer@example.com"
                         className={INLINE_INPUT}
-                        value={booking.email}
+                        value={booking.email || ""}
                         onChange={(e) =>
                           updateBooking({ email: e.target.value })
                         }
@@ -1330,7 +1571,8 @@ export default function InvoiceForm({
                       step={1}
                       placeholder={ui("مثال: 4 ركاب")}
                       value={
-                        transport.passengerCount !== undefined
+                        transport.passengerCount !== undefined &&
+                        transport.passengerCount !== null
                           ? String(transport.passengerCount)
                           : ""
                       }
@@ -1353,7 +1595,12 @@ export default function InvoiceForm({
                         step={1}
                         placeholder={ui("مثال: 4 ركاب")}
                         className={`${INLINE_INPUT} font-mono`}
-                        value={transport.passengerCount ?? ""}
+                        value={
+                          transport.passengerCount !== undefined &&
+                          transport.passengerCount !== null
+                            ? transport.passengerCount
+                            : ""
+                        }
                         onChange={(e) =>
                           updateTransport({
                             passengerCount: e.target.value
@@ -1379,10 +1626,13 @@ export default function InvoiceForm({
                         value={
                           original
                             ? original.snapshot.input.buyer.identification || ""
-                            : buyer.commercialRegistration
+                            : buyer.commercialRegistration || ""
                         }
                         onApply={(commercialRegistration) =>
-                          updateBuyer({ commercialRegistration })
+                          updateBuyer({
+                            commercialRegistration:
+                              commercialRegistration || "",
+                          })
                         }
                       >
                         <input
@@ -1397,7 +1647,7 @@ export default function InvoiceForm({
                             original
                               ? original.snapshot.input.buyer.identification ||
                                 ""
-                              : buyer.commercialRegistration
+                              : buyer.commercialRegistration || ""
                           }
                           onChange={(e) =>
                             updateBuyer({
@@ -1457,16 +1707,16 @@ export default function InvoiceForm({
                               "pattern" in field ? field.pattern : undefined
                             }
                             disabled={Boolean(original)}
-                            value={buyer[field.key]}
+                            value={buyer[field.key] || ""}
                             onApply={(next) =>
-                              updateBuyer({ [field.key]: next })
+                              updateBuyer({ [field.key]: next || "" })
                             }
                           >
                             <input
                               readOnly={Boolean(original)}
                               maxLength={200}
                               className={INLINE_INPUT}
-                              value={buyer[field.key]}
+                              value={buyer[field.key] || ""}
                               pattern={
                                 "pattern" in field ? field.pattern : undefined
                               }
@@ -1494,7 +1744,7 @@ export default function InvoiceForm({
                   )}
                   <button
                     type="button"
-                    onClick={() => setCurrentStage("TRIP_AND_SERVICE")}
+                    onClick={goToNextStage}
                     className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
                   >
                     <span>{ui("المتابعة: مسار الرحلة والخدمة")}</span>
@@ -1531,6 +1781,8 @@ export default function InvoiceForm({
                     vehicles={vehicles}
                     isLoadingVehicles={isLoadingVehicles}
                     vehicleError={vehicleError}
+                    selectedContract={selectedContract}
+                    onSelectContract={(c) => void selectContract(c)}
                     onRetryVehicles={() => {
                       setIsLoadingVehicles(true);
                       setVehicleReload((v) => v + 1);
@@ -1601,7 +1853,7 @@ export default function InvoiceForm({
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={() => setCurrentStage("DOCUMENT_AND_CUSTOMER")}
+                    onClick={goToPreviousStage}
                     className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
                   >
                     <ArrowRight
@@ -1612,7 +1864,7 @@ export default function InvoiceForm({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCurrentStage("PRICE_AND_TAX")}
+                    onClick={goToNextStage}
                     className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
                   >
                     <span>{ui("المتابعة: السعر والضريبة")}</span>
@@ -1670,7 +1922,7 @@ export default function InvoiceForm({
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={() => setCurrentStage("TRIP_AND_SERVICE")}
+                    onClick={goToPreviousStage}
                     className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
                   >
                     <ArrowRight
@@ -1681,7 +1933,7 @@ export default function InvoiceForm({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCurrentStage("PAYMENT_AND_REVIEW")}
+                    onClick={goToNextStage}
                     className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
                   >
                     <span>{ui("المتابعة: الدفع والمراجعة")}</span>
@@ -1755,8 +2007,8 @@ export default function InvoiceForm({
                       <label
                         className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "FULLY_PAID"
-                            ? "bg-emerald-500/12 border-emerald-600/50 ring-1 ring-emerald-500/30 dark:bg-emerald-950/45 dark:border-emerald-500/50"
-                            : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-emerald-600/55 dark:hover:border-emerald-500/55"
+                            ? "bg-[var(--accent-surface)] border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30"
+                            : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/55"
                         }`}
                       >
                         <input
@@ -1773,9 +2025,9 @@ export default function InvoiceForm({
                           <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
                             {ui("دفع المبلغ كاملاً")}
                           </span>
-                          <span className="size-4 rounded-full border border-emerald-600 dark:border-emerald-400 flex items-center justify-center">
+                          <span className="size-4 rounded-full border border-[var(--accent-gold)] flex items-center justify-center">
                             {paymentStatusChoice === "FULLY_PAID" && (
-                              <span className="size-2 rounded-full bg-emerald-700 dark:bg-emerald-400" />
+                              <span className="size-2 rounded-full bg-[var(--accent-gold)]" />
                             )}
                           </span>
                         </div>
@@ -2114,7 +2366,7 @@ export default function InvoiceForm({
                       </span>
                       <p className="font-semibold font-mono text-sm">
                         {paymentStatusChoice === "FULLY_PAID" ? (
-                          <span className="text-emerald-700 dark:text-emerald-300">
+                          <span className="text-[var(--accent-gold)]">
                             {ui("مدفوع بالكامل (٠.٠٠ متبقي)")}
                           </span>
                         ) : paymentStatusChoice === "PARTIALLY_PAID" ? (
@@ -2134,7 +2386,14 @@ export default function InvoiceForm({
 
                   {/* Review Checkbox */}
                   <div className="mt-4 pt-3.5 border-t theme-border">
-                    <label className="flex min-h-11 sm:min-h-9 items-start gap-2.5 text-xs sm:text-sm leading-relaxed text-[var(--text-main)] font-semibold cursor-pointer">
+                    <label
+                      id="review-checkbox-label"
+                      className={`flex min-h-11 sm:min-h-9 items-start gap-2.5 text-xs sm:text-sm leading-relaxed font-semibold cursor-pointer p-3 rounded-xl border transition ${
+                        isReviewed
+                          ? "border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--text-main)]"
+                          : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50"
+                      }`}
+                    >
                       <Checkbox
                         required
                         checked={isReviewed}
@@ -2154,7 +2413,7 @@ export default function InvoiceForm({
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={() => setCurrentStage("PRICE_AND_TAX")}
+                    onClick={goToPreviousStage}
                     className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
                   >
                     <ArrowRight
@@ -2167,8 +2426,8 @@ export default function InvoiceForm({
                   <button
                     id="invoice-submit-btn"
                     type="submit"
-                    disabled={!canSave || !isReviewed}
-                    className="gold-gradient-btn flex min-h-11 sm:min-h-9 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                    disabled={!canSave}
+                    className="gold-gradient-btn flex min-h-11 sm:min-h-9 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs sm:text-sm font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   >
                     {isSaving ? (
                       <Loader2 className="size-4 animate-spin" />
@@ -2269,6 +2528,65 @@ export default function InvoiceForm({
                   </div>
                 )}
 
+                {/* Desktop Stage Progression in Sidebar */}
+                <div className="hidden lg:block border-t theme-border p-3.5 bg-[var(--bg-card-subtle)] space-y-2.5">
+                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                    <span className="font-semibold text-[var(--text-main)]">
+                      {ui("المرحلة")}{" "}
+                      {ui(STAGES.find((s) => s.id === currentStage)?.number)}:{" "}
+                      {ui(STAGES.find((s) => s.id === currentStage)?.title)}
+                    </span>
+                    <span>
+                      {ui(STAGES.find((s) => s.id === currentStage)?.number)} / {ui("٤")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {currentStage !== "DOCUMENT_AND_CUSTOMER" && (
+                      <button
+                        type="button"
+                        onClick={goToPreviousStage}
+                        className="flex-1 min-h-9 inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-3 py-1.5 text-xs font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
+                      >
+                        <ArrowRight className="size-3.5 ltr:rotate-180" aria-hidden="true" />
+                        <span>{ui("السابق")}</span>
+                      </button>
+                    )}
+                    {currentStage !== "PAYMENT_AND_REVIEW" ? (
+                      <button
+                        type="button"
+                        onClick={goToNextStage}
+                        className="flex-1 min-h-9 gold-gradient-btn inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer shadow-xs hover:shadow-sm transition"
+                      >
+                        <span>{ui("التالي")}</span>
+                        <ArrowLeft className="size-3.5 ltr:rotate-180" aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isReviewed) setIsReviewed(true);
+                          document.getElementById("invoice-submit-btn")?.click();
+                        }}
+                        disabled={!canSave}
+                        className="flex-1 min-h-9 gold-gradient-btn inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer shadow-xs hover:shadow-sm transition disabled:opacity-50"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <Save className="size-3.5" />
+                        )}
+                        <span>
+                          {ui(
+                            documentType === "PROFORMA"
+                              ? "حفظ الفاتورة"
+                              : "إصدار الفاتورة",
+                          )}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {!estimate.isValid && (
                   <p className="px-5 pb-4 text-sm leading-relaxed text-rose-700 dark:text-rose-400 font-bold">
                     {ui(estimate.error)}
@@ -2280,7 +2598,7 @@ export default function InvoiceForm({
                 <div className="rounded-xl border theme-border p-3.5 text-center text-sm text-[var(--text-muted)]">
                   <p className="font-bold text-[var(--text-main)] flex items-center justify-center gap-1.5">
                     <CheckCircle2
-                      className="size-4 text-emerald-700 dark:text-emerald-300"
+                      className="size-4 text-[var(--accent-gold)]"
                       aria-hidden="true"
                     />
                     <span>{settings.company.legalName}</span>
@@ -2321,10 +2639,7 @@ export default function InvoiceForm({
             {currentStage !== "DOCUMENT_AND_CUSTOMER" && (
               <button
                 type="button"
-                onClick={() => {
-                  const idx = STAGES.findIndex((s) => s.id === currentStage);
-                  if (idx > 0) setCurrentStage(STAGES[idx - 1].id);
-                }}
+                onClick={goToPreviousStage}
                 className="min-h-11 px-3.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-sm font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] inline-flex items-center gap-1 cursor-pointer transition"
               >
                 <ArrowRight
@@ -2338,13 +2653,8 @@ export default function InvoiceForm({
             {currentStage !== "PAYMENT_AND_REVIEW" ? (
               <button
                 type="button"
-                onClick={() => {
-                  const idx = STAGES.findIndex((s) => s.id === currentStage);
-                  if (idx >= 0 && idx < STAGES.length - 1) {
-                    setCurrentStage(STAGES[idx + 1].id);
-                  }
-                }}
-                className="gold-gradient-btn min-h-11 px-4 rounded-xl text-sm font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                onClick={goToNextStage}
+                className="gold-gradient-btn min-h-11 px-4 rounded-xl text-sm font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow-md transition"
               >
                 <span>{ui("التالي")}</span>
                 <ArrowLeft
@@ -2356,17 +2666,24 @@ export default function InvoiceForm({
               <button
                 type="button"
                 onClick={() => {
-                  document
-                    .getElementById("invoice-submit-btn")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "center",
-                    });
+                  if (!isReviewed) setIsReviewed(true);
+                  document.getElementById("invoice-submit-btn")?.click();
                 }}
-                className="min-h-11 px-3.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--accent-gold)] text-sm font-bold inline-flex items-center gap-1 cursor-pointer"
+                disabled={!canSave}
+                className="gold-gradient-btn min-h-11 px-4 rounded-xl text-sm font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow-md transition disabled:opacity-50"
               >
-                <Save className="size-4" />
-                <span>{ui("إلى الإصدار")}</span>
+                {isSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                <span>
+                  {ui(
+                    documentType === "PROFORMA"
+                      ? "حفظ الفاتورة"
+                      : "إصدار الفاتورة",
+                  )}
+                </span>
               </button>
             )}
           </div>
