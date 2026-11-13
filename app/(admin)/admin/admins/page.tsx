@@ -8,13 +8,30 @@ import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_co
 import { Badge } from "@/app/_components/ui";
 
 import React, { useState, useEffect, useId, useRef } from "react";
-import { ShieldCheck, UserPlus, Crown, Users, CheckCircle2, Trash2, Power, Copy, Check, AlertCircle, Sparkles, Mail, Phone, User, X, Lock, KeyRound } from "lucide-react";
-import { getAdminsListAction, createAdminUserAction, toggleAdminStatusAction, deleteAdminUserAction, resetAdminTemporaryPasswordAction } from "@/app/_actions/adminManagement";
+import { Shield, ShieldCheck, UserPlus, Crown, Users, CheckCircle2, Trash2, Power, Copy, Check, AlertCircle, Sparkles, Mail, Phone, User, X, Lock, KeyRound } from "lucide-react";
+import AdminPermissionsEditor from "@/app/_components/AdminPermissionsEditor";
+import {
+  getAdminsListAction,
+  createAdminUserAction,
+  updateAdminPermissionsAction,
+  toggleAdminStatusAction,
+  deleteAdminUserAction,
+  resetAdminTemporaryPasswordAction,
+} from "@/app/_actions/adminManagement";
 import { AdminUserItem, SUPER_ADMIN_EMAIL } from "@/lib/adminConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
+import { useLanguage } from "@/lib/languageContext";
+import {
+  buildFullPermissions,
+  normalizePermissionsInput,
+  summarizeAdminPermissions,
+  type AdminPermissions,
+} from "@/lib/permissions";
 
 export default function AdminManagementPage() {
   const ui = useUiText();
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
 
 
   const cachedAdmins = getCachedData<{ success: boolean; admins?: AdminUserItem[] }>("admins_list");
@@ -32,6 +49,15 @@ export default function AdminManagementPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [createPermissions, setCreatePermissions] = useState<AdminPermissions>(() =>
+    buildFullPermissions()
+  );
+
+  // Edit Permissions State
+  const [permTarget, setPermTarget] = useState<AdminUserItem | null>(null);
+  const [permDraft, setPermDraft] = useState<AdminPermissions>({});
+  const [permSaving, setPermSaving] = useState(false);
+  const [permError, setPermError] = useState<string | null>(null);
 
   // Created / Reset Admin Success State
   const [createdAdmin, setCreatedAdmin] = useState<{
@@ -97,6 +123,7 @@ export default function AdminManagementPage() {
         name,
         email,
         phone,
+        permissions: createPermissions,
       });
 
       if (res.success && res.admin && res.temporaryPassword) {
@@ -108,6 +135,7 @@ export default function AdminManagementPage() {
         setName("");
         setEmail("");
         setPhone("");
+        setCreatePermissions(buildFullPermissions());
         fetchAdmins(true);
       } else {
         setFormError(res.error || "فشل إنشاء حساب المسؤول");
@@ -116,6 +144,47 @@ export default function AdminManagementPage() {
       setFormError("حدث خطأ غير متوقع أثناء إنشاء الحساب");
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const openPermissionsModal = (admin: AdminUserItem) => {
+    if (admin.isSuperAdmin) return;
+    setPermTarget(admin);
+    setPermDraft(
+      admin.permissions
+        ? normalizePermissionsInput(admin.permissions)
+        : buildFullPermissions()
+    );
+    setPermError(null);
+  };
+
+  const handleSavePermissions = async () => {
+    if (!permTarget || permTarget.isSuperAdmin) return;
+    setPermSaving(true);
+    setPermError(null);
+    setActionBanner(null);
+    try {
+      const cleanPerms = normalizePermissionsInput(permDraft);
+      const res = await updateAdminPermissionsAction(permTarget.id, cleanPerms);
+      const updatedAdmin = res.admin;
+      if (res.success && updatedAdmin) {
+        invalidateClientCache("admins_list");
+        setAdmins((prev) =>
+          prev.map((a) => (a.id === permTarget.id ? updatedAdmin : a))
+        );
+        setPermTarget(null);
+        setActionBanner({
+          type: "success",
+          message: text("تم تحديث صلاحيات المسؤول بنجاح.", "Admin permissions updated."),
+          dynamic: true,
+        });
+      } else {
+        setPermError(res.error || text("تعذر تحديث الصلاحيات", "Unable to update permissions"));
+      }
+    } catch {
+      setPermError(text("حدث خطأ أثناء حفظ الصلاحيات", "Error while saving permissions"));
+    } finally {
+      setPermSaving(false);
     }
   };
 
@@ -262,6 +331,7 @@ export default function AdminManagementPage() {
               setCreatedAdmin(null);
               setFormError(null);
               setCopyError(null);
+              setCreatePermissions(buildFullPermissions());
               setModalOpen(true);
             }}
             className="min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-95"
@@ -382,6 +452,7 @@ export default function AdminManagementPage() {
                   <th className="py-3 px-4 font-bold">{ui("البريد الإلكتروني")}</th>
                   <th className="py-3 px-4 font-bold">{ui("رقم الهاتف")}</th>
                   <th className="py-3 px-4 font-bold">{ui("الرتبة")}</th>
+                  <th className="py-3 px-4 font-bold">{text("الصلاحيات", "Permissions")}</th>
                   <th className="py-3 px-4 font-bold">{ui("الحالة")}</th>
                   <th className="py-3 px-4 font-bold text-end">{ui("الإجراءات")}</th>
                 </tr>
@@ -435,6 +506,26 @@ export default function AdminManagementPage() {
                     </td>
 
                     <td className="py-3 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-bold ${
+                          adm.isSuperAdmin || !adm.permissions
+                            ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/30"
+                            : "bg-[var(--bg-card-subtle)] text-[var(--text-main)] theme-border"
+                        }`}
+                      >
+                        <ShieldCheck className="w-3 h-3 shrink-0" aria-hidden="true" />
+                        <span>
+                          {summarizeAdminPermissions(
+                            adm.permissions,
+                            language,
+                            Boolean(adm.isSuperAdmin),
+                            adm.email
+                          )}
+                        </span>
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4">
                       {adm.active ? (
                         <span className="inline-flex items-center gap-1 text-emerald-800 dark:text-emerald-300 font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden="true" />
@@ -451,6 +542,16 @@ export default function AdminManagementPage() {
                     <td className="py-3 px-4 text-end">
                       {isSuper && !adm.isSuperAdmin ? (
                         <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openPermissionsModal(adm)}
+                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
+                            title={text("تعديل الصلاحيات", "Edit permissions")}
+                            aria-label={`${text("تعديل الصلاحيات", "Edit permissions")} — ${adm.name}`}
+                          >
+                            <Shield className="w-3.5 h-3.5" aria-hidden="true" />
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => setResetTarget(adm)}
@@ -543,6 +644,15 @@ export default function AdminManagementPage() {
                     <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">
                       <button
                         type="button"
+                        onClick={() => openPermissionsModal(adm)}
+                        className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
+                      >
+                        <Shield className="w-3.5 h-3.5 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                        <span>{text("الصلاحيات", "Permissions")}</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => setResetTarget(adm)}
                         disabled={resetLoadingAdminId === adm.id}
                         className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
@@ -596,6 +706,16 @@ export default function AdminManagementPage() {
                       alignEnd
                     />
                   )}
+                  <MobileCardField
+                    label={text("الصلاحيات", "Permissions")}
+                    value={summarizeAdminPermissions(
+                      adm.permissions,
+                      language,
+                      Boolean(adm.isSuperAdmin),
+                      adm.email
+                    )}
+                    className="col-span-2"
+                  />
                 </MobileCardMetaGrid>
               </MobileRecordCard>
             ))}
@@ -611,7 +731,11 @@ export default function AdminManagementPage() {
           onClose={() => setModalOpen(false)}
           isBusy={formLoading}
         >
-          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-md theme-card rounded-2xl p-6 shadow-2xl space-y-4">
+          <div
+            className={`mobile-dialog-panel overflow-y-auto w-full ${
+              createdAdmin ? "max-w-md" : "max-w-2xl"
+            } theme-card rounded-2xl p-6 shadow-2xl space-y-4`}
+          >
             <div className="flex items-center justify-between border-b theme-border pb-3">
               <div className="flex items-center gap-2">
                 {createdAdmin ? (
@@ -777,6 +901,14 @@ export default function AdminManagementPage() {
                   </div>
                 </div>
 
+                <div className="pt-1 border-t theme-border">
+                  <AdminPermissionsEditor
+                    value={createPermissions}
+                    onChange={setCreatePermissions}
+                    disabled={formLoading}
+                  />
+                </div>
+
                 <div className="p-3 rounded-xl theme-card-subtle text-xs text-[var(--text-muted)] space-y-1">
                   <p className="flex items-center gap-1 font-bold text-[var(--text-main)]">
                     <Lock className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
@@ -869,6 +1001,86 @@ export default function AdminManagementPage() {
                 className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {ui(deleteLoading ? "جاري الحذف..." : "تأكيد الحذف")}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Edit Permissions Modal */}
+      {permTarget && (
+        <Modal
+          label={text("تعديل صلاحيات المسؤول", "Edit Admin Permissions")}
+          onClose={() => {
+            if (!permSaving) setPermTarget(null);
+          }}
+          isBusy={permSaving}
+        >
+          <div className="mobile-dialog-panel overflow-y-auto w-full max-w-2xl theme-card rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between gap-3 border-b theme-border pb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] shrink-0">
+                  <ShieldCheck className="w-5 h-5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-[var(--text-main)]">
+                    {text("تعديل صلاحيات المسؤول", "Edit Admin Permissions")}
+                  </h2>
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {permTarget.name} (<bdi dir="ltr" className="font-mono">{permTarget.email}</bdi>)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label={ui("إغلاق")}
+                disabled={permSaving}
+                onClick={() => setPermTarget(null)}
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {permError && (
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-700 dark:text-rose-400" aria-hidden="true" />
+                <span>{permError}</span>
+              </div>
+            )}
+
+            <AdminPermissionsEditor
+              value={permDraft}
+              onChange={setPermDraft}
+              disabled={permSaving}
+            />
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t theme-border">
+              <button
+                type="button"
+                disabled={permSaving}
+                onClick={() => setPermTarget(null)}
+                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg secondary-btn text-xs sm:text-sm cursor-pointer"
+              >
+                {ui("إلغاء")}
+              </button>
+              <button
+                type="button"
+                disabled={permSaving}
+                onClick={() => void handleSavePermissions()}
+                className="min-h-11 sm:min-h-9 px-5 py-1.5 rounded-lg gold-gradient-btn text-xs sm:text-sm font-bold shadow-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {permSaving ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                    <span>{text("جاري الحفظ...", "Saving...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{text("حفظ الصلاحيات", "Save Permissions")}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

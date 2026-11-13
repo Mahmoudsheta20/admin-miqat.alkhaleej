@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
 import { useStoredPreference, setStoredPreference } from "@/lib/useStoredPreference";
 import type { SystemUser } from "@/lib/types";
+import { defaultAdminRoute } from "@/lib/permissions";
 import AuthShell from "@/app/_components/AuthShell";
 import { CustomInput } from "@/app/_components/form/CustomInput";
 import { Checkbox } from "@/app/_components/ui";
@@ -27,7 +28,11 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
-  useEffect(() => { if (user && !user.mustChangePassword) router.replace(user.role === "ADMIN" ? "/admin" : "/captain"); }, [user, router]);
+  useEffect(() => {
+    if (user && !user.mustChangePassword) {
+      router.replace(user.role === "ADMIN" ? defaultAdminRoute(user) : "/captain");
+    }
+  }, [user, router]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting.current) return;

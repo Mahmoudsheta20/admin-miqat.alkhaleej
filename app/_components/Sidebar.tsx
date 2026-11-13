@@ -7,6 +7,7 @@ import { PanelLeftClose, PanelLeftOpen, Plus, X } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
 import { isSuperAdmin } from "@/lib/adminConstants";
+import { defaultAdminRoute, hasClientPermission } from "@/lib/permissions";
 import { NAVIGATION_GROUPS, navigationFor, routeInfo } from "@/lib/navigation";
 import { Card } from "@/components/ui/card";
 import NavigationIcon from "./NavigationIcon";
@@ -37,16 +38,19 @@ export default function Sidebar({
 
   if (!user) return null;
 
-  const items = navigationFor(user.role, isSuperAdmin(user.email));
+  const items = navigationFor(user.role, isSuperAdmin(user.email), user.permissions);
   const active = routeInfo(pathname)?.href;
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const homeHref = user.role === "ADMIN" ? defaultAdminRoute(user) : "/captain";
+  const canCreateContract = user.role === "ADMIN" && hasClientPermission(user, "contracts", "write");
+  const canCreateInvoice = user.role === "ADMIN" && hasClientPermission(user, "invoices", "write");
 
   function desktopContent(isCollapsed: boolean) {
     return (
       <>
         <div className="sidebar-brand">
           <Link
-            href={user?.role === "ADMIN" ? "/admin" : "/captain"}
+            href={homeHref}
             onClick={onMobileClose}
             aria-label={text("ميقات الخليج — الرئيسية", "Miqat Al Khaleej — Home")}
           >
@@ -157,25 +161,29 @@ export default function Sidebar({
           </header>
 
           <div className="flex-1 overflow-y-auto overscroll-y-contain p-4 space-y-5">
-            {user.role === "ADMIN" && (
+            {user.role === "ADMIN" && (canCreateContract || canCreateInvoice) && (
               <section aria-label={text("اختصارات الإنشاء", "Quick create actions")} className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/admin/contracts/new"
-                    onClick={onMobileClose}
-                    className="min-h-11 rounded-xl button-primary px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
-                  >
-                    <Plus size={15} aria-hidden="true" />
-                    <span>{text("عقد نقل جديد", "New contract")}</span>
-                  </Link>
-                  <Link
-                    href="/admin/invoices/new"
-                    onClick={onMobileClose}
-                    className="min-h-11 rounded-xl secondary-btn px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
-                  >
-                    <Plus size={15} aria-hidden="true" />
-                    <span>{text("فاتورة جديدة", "New invoice")}</span>
-                  </Link>
+                  {canCreateContract && (
+                    <Link
+                      href="/admin/contracts/new"
+                      onClick={onMobileClose}
+                      className="min-h-11 rounded-xl button-primary px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
+                    >
+                      <Plus size={15} aria-hidden="true" />
+                      <span>{text("عقد نقل جديد", "New contract")}</span>
+                    </Link>
+                  )}
+                  {canCreateInvoice && (
+                    <Link
+                      href="/admin/invoices/new"
+                      onClick={onMobileClose}
+                      className="min-h-11 rounded-xl secondary-btn px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
+                    >
+                      <Plus size={15} aria-hidden="true" />
+                      <span>{text("فاتورة جديدة", "New invoice")}</span>
+                    </Link>
+                  )}
                 </div>
               </section>
             )}

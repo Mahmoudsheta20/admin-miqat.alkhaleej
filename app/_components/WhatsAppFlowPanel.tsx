@@ -28,6 +28,14 @@ import {
 
 const DEFAULT_ADMIN_PHONE = "+966577842926";
 
+/** Prefix a captain step label with its reaction emoji without duplicating leading emoji. */
+function formatCaptainStepLabel(emoji: string | undefined, label: string): string {
+  const cleanEmoji = emoji?.trim();
+  const cleanLabel = label.trim();
+  if (!cleanEmoji || cleanLabel.startsWith(cleanEmoji)) return cleanLabel;
+  return `${cleanEmoji} ${cleanLabel}`;
+}
+
 const STATUS_BADGE_MAP: Record<
   WhatsAppFlowStatus,
   { ar: string; en: string; cls: string }
@@ -704,7 +712,7 @@ export default function WhatsAppFlowPanel({
                                 }
                                 className="min-h-11 px-3 py-2 rounded-lg border theme-border bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[11px] font-semibold text-[var(--text-main)] transition cursor-pointer disabled:opacity-50"
                               >
-                                {busy ? "..." : text(btn.labelAr, btn.labelEn)}
+                                {busy ? "..." : formatCaptainStepLabel(btn.emoji, text(btn.labelAr, btn.labelEn))}
                               </button>
                             );
                           })}

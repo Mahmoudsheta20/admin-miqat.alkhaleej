@@ -23,6 +23,8 @@ import {
   FilePlus2,
 } from "lucide-react";
 import { useLanguage } from "@/lib/languageContext";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import { useApiQuery } from "@/lib/use-api-query";
 import { currentSaudiPeriod, type FinancialReport, type PurchaseList } from "@/lib/accounting";
 import {
@@ -92,9 +94,24 @@ interface CustomerListResponse {
 type FeedTab = "contracts" | "upcoming" | "invoices" | "readiness";
 
 export default function AdminDashboardPage() {
+  const { user } = useAuth();
   const { language } = useLanguage();
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
   const Arrow = language === "ar" ? ArrowUpLeft : ArrowUpRight;
+
+  const canDashboard = hasClientPermission(user, "dashboard", "view");
+  const canContracts = hasClientPermission(user, "contracts", "view");
+  const canContractsWrite = hasClientPermission(user, "contracts", "write");
+  const canInspections = hasClientPermission(user, "inspections", "view");
+  const canFleet = hasClientPermission(user, "fleet", "view");
+  const canCaptains = hasClientPermission(user, "captains", "view");
+  const canInvoices = hasClientPermission(user, "invoices", "view");
+  const canInvoicesWrite = hasClientPermission(user, "invoices", "write");
+  const canCustomers = hasClientPermission(user, "customers", "view");
+  const canStaff = hasClientPermission(user, "staff", "view");
+  const canPurchases = hasClientPermission(user, "purchases", "view");
+  const canAccounting = hasClientPermission(user, "accounting", "view");
+  const canVat = hasClientPermission(user, "vatReturns", "view");
 
   const period = currentSaudiPeriod();
   const todayIso = period.day;
@@ -106,15 +123,15 @@ export default function AdminDashboardPage() {
   const [invoiceDownloadError, setInvoiceDownloadError] = useState("");
   const [preview, setPreview] = useState<{ id: string; referenceNumber: string } | null>(null);
 
-  const stats = useApiQuery<DashboardStats>("/dashboard/stats", refreshTick);
-  const readiness = useApiQuery<ReadinessOverview>("/inspections/overview", refreshTick);
-  const contractsQuery = useApiQuery<Contract[]>("/contracts", refreshTick);
-  const fleetQuery = useApiQuery<Vehicle[]>("/fleet", refreshTick);
-  const invoicesQuery = useApiQuery<InvoiceListResponse>("/invoices?page=1", refreshTick);
-  const customersQuery = useApiQuery<CustomerListResponse>("/workforce/customers?page=1", refreshTick);
-  const purchasesQuery = useApiQuery<PurchaseList>("/accounting/purchases?page=1", refreshTick);
+  const stats = useApiQuery<DashboardStats>(canDashboard ? "/dashboard/stats" : null, refreshTick);
+  const readiness = useApiQuery<ReadinessOverview>(canInspections ? "/inspections/overview" : null, refreshTick);
+  const contractsQuery = useApiQuery<Contract[]>(canContracts ? "/contracts" : null, refreshTick);
+  const fleetQuery = useApiQuery<Vehicle[]>(canFleet ? "/fleet" : null, refreshTick);
+  const invoicesQuery = useApiQuery<InvoiceListResponse>(canInvoices ? "/invoices?page=1" : null, refreshTick);
+  const customersQuery = useApiQuery<CustomerListResponse>(canCustomers ? "/workforce/customers?page=1" : null, refreshTick);
+  const purchasesQuery = useApiQuery<PurchaseList>(canPurchases ? "/accounting/purchases?page=1" : null, refreshTick);
   const reportQuery = useApiQuery<FinancialReport>(
-    `/accounting/financial-report?mode=QUARTER&year=${period.year}&quarter=${period.quarter}`,
+    canAccounting ? `/accounting/financial-report?mode=QUARTER&year=${period.year}&quarter=${period.quarter}` : null,
     refreshTick
   );
 
@@ -276,76 +293,108 @@ export default function AdminDashboardPage() {
     fleetQuery.data ? fleetAnalytics.total : (stats.data?.totalVehicles ?? 0);
 
   const shortcuts = [
-    {
-      title: text("عقود النقل", "Contracts"),
-      meta: text("إصدار ومتابعة", "Issue & track"),
-      href: "/admin/contracts",
-      icon: FileText,
-      pill: stats.data ? String(stats.data.totalContracts) : "—",
-      pillVariant: "gold" as const,
-    },
-    {
-      title: text("الفواتير", "Invoices"),
-      meta: text("ضريبية وحجوزات", "Tax & booking"),
-      href: "/admin/invoices",
-      icon: ReceiptText,
-      pill: invoicesQuery.data ? String(invoicesQuery.data.total) : "—",
-      pillVariant: "secondary" as const,
-    },
-    {
-      title: text("الفحوصات", "Inspections"),
-      meta: pendingTodayCount > 0 ? text("بانتظار الفحص", "Needs check") : text("مكتمل اليوم", "Ready today"),
-      href: "/admin/inspections",
-      icon: ClipboardCheck,
-      pill: readiness.data ? (pendingTodayCount > 0 ? `${pendingTodayCount}` : "✓") : "—",
-      pillVariant: pendingTodayCount > 0 ? ("warning" as const) : ("success" as const),
-    },
-    {
-      title: text("الأسطول", "Fleet"),
-      meta: text("الحافلات والوثائق", "Vehicles & docs"),
-      href: "/admin/fleet",
-      icon: Car,
-      pill: `${availableVehiclesCount}/${totalVehiclesCount}`,
-      pillVariant: fleetAnalytics.alerts.length > 0 ? ("destructive" as const) : ("outline" as const),
-    },
-    {
-      title: text("الكباتن", "Captains"),
-      meta: text("السائقون النشطون", "Active drivers"),
-      href: "/admin/captains",
-      icon: UserCheck,
-      pill: String(totalCaptainsCount),
-      pillVariant: "secondary" as const,
-    },
-    {
-      title: text("العملاء", "Customers"),
-      meta: text("جهات وشركات", "Clients ledger"),
-      href: "/admin/customers",
-      icon: Users,
-      pill: customersQuery.data ? String(customersQuery.data.total) : "—",
-      pillVariant: "outline" as const,
-    },
-    {
-      title: text("العاملون", "Staff"),
-      meta: text("عهد، سلف، عمولات", "Salaries & dues"),
-      href: "/admin/staff",
-      icon: Wallet,
-      pill: text("إدارة", "Open"),
-      pillVariant: "outline" as const,
-    },
-    {
-      title: text("الضريبة", "VAT & tax"),
-      meta: text("إقرارات القيمة المضافة", "Returns & ZATCA"),
-      href: "/admin/vat-returns",
-      icon: ShieldCheck,
-      pill:
-        reportQuery.data && reportQuery.data.unpostedInvoices.length > 0
-          ? `${reportQuery.data.unpostedInvoices.length} !`
-          : `Q${period.quarter}`,
-      pillVariant:
-        reportQuery.data && reportQuery.data.unpostedInvoices.length > 0
-          ? ("warning" as const)
-          : ("outline" as const),
-    },
+    ...(canContracts
+      ? [
+          {
+            title: text("عقود النقل", "Contracts"),
+            meta: text("إصدار ومتابعة", "Issue & track"),
+            href: "/admin/contracts",
+            icon: FileText,
+            pill: stats.data ? String(stats.data.totalContracts) : "—",
+            pillVariant: "gold" as const,
+          },
+        ]
+      : []),
+    ...(canInvoices
+      ? [
+          {
+            title: text("الفواتير", "Invoices"),
+            meta: text("ضريبية وحجوزات", "Tax & booking"),
+            href: "/admin/invoices",
+            icon: ReceiptText,
+            pill: invoicesQuery.data ? String(invoicesQuery.data.total) : "—",
+            pillVariant: "secondary" as const,
+          },
+        ]
+      : []),
+    ...(canInspections
+      ? [
+          {
+            title: text("الفحوصات", "Inspections"),
+            meta: pendingTodayCount > 0 ? text("بانتظار الفحص", "Needs check") : text("مكتمل اليوم", "Ready today"),
+            href: "/admin/inspections",
+            icon: ClipboardCheck,
+            pill: readiness.data ? (pendingTodayCount > 0 ? `${pendingTodayCount}` : "✓") : "—",
+            pillVariant: pendingTodayCount > 0 ? ("warning" as const) : ("success" as const),
+          },
+        ]
+      : []),
+    ...(canFleet
+      ? [
+          {
+            title: text("الأسطول", "Fleet"),
+            meta: text("الحافلات والوثائق", "Vehicles & docs"),
+            href: "/admin/fleet",
+            icon: Car,
+            pill: `${availableVehiclesCount}/${totalVehiclesCount}`,
+            pillVariant: fleetAnalytics.alerts.length > 0 ? ("destructive" as const) : ("outline" as const),
+          },
+        ]
+      : []),
+    ...(canCaptains
+      ? [
+          {
+            title: text("الكباتن", "Captains"),
+            meta: text("السائقون النشطون", "Active drivers"),
+            href: "/admin/captains",
+            icon: UserCheck,
+            pill: String(totalCaptainsCount),
+            pillVariant: "secondary" as const,
+          },
+        ]
+      : []),
+    ...(canCustomers
+      ? [
+          {
+            title: text("العملاء", "Customers"),
+            meta: text("جهات وشركات", "Clients ledger"),
+            href: "/admin/customers",
+            icon: Users,
+            pill: customersQuery.data ? String(customersQuery.data.total) : "—",
+            pillVariant: "outline" as const,
+          },
+        ]
+      : []),
+    ...(canStaff
+      ? [
+          {
+            title: text("العاملون", "Staff"),
+            meta: text("عهد، سلف، عمولات", "Salaries & dues"),
+            href: "/admin/staff",
+            icon: Wallet,
+            pill: text("إدارة", "Open"),
+            pillVariant: "outline" as const,
+          },
+        ]
+      : []),
+    ...(canVat
+      ? [
+          {
+            title: text("الضريبة", "VAT & tax"),
+            meta: text("إقرارات القيمة المضافة", "Returns & ZATCA"),
+            href: "/admin/vat-returns",
+            icon: ShieldCheck,
+            pill:
+              reportQuery.data && reportQuery.data.unpostedInvoices.length > 0
+                ? `${reportQuery.data.unpostedInvoices.length} !`
+                : `Q${period.quarter}`,
+            pillVariant:
+              reportQuery.data && reportQuery.data.unpostedInvoices.length > 0
+                ? ("warning" as const)
+                : ("outline" as const),
+          },
+        ]
+      : []),
   ];
 
   async function handleInvoicePdf(id: string) {
@@ -371,22 +420,40 @@ export default function AdminDashboardPage() {
             "متابعة العقود، جاهزية الكباتن والأسطول، الفواتير، والأداء المالي من مكان واحد.",
             "Follow operational readiness, fleet compliance, contracts, invoices, and financial performance in one workspace."
           )}
-          primaryAction={{
-            label: text("عقد جديد", "New contract"),
-            href: "/admin/contracts/new",
-            icon: Plus,
-          }}
+          primaryAction={
+            canContractsWrite
+              ? {
+                  label: text("عقد جديد", "New contract"),
+                  href: "/admin/contracts/new",
+                  icon: Plus,
+                }
+              : canInvoicesWrite
+                ? {
+                    label: text("فاتورة", "New invoice"),
+                    href: "/admin/invoices/new",
+                    icon: ReceiptText,
+                  }
+                : undefined
+          }
           secondaryActions={[
-            {
-              label: text("فاتورة", "New invoice"),
-              href: "/admin/invoices/new",
-              icon: ReceiptText,
-            },
-            {
-              label: text("مصروف", "Expense"),
-              href: "/admin/purchases",
-              icon: Wallet,
-            },
+            ...(canContractsWrite && canInvoicesWrite
+              ? [
+                  {
+                    label: text("فاتورة", "New invoice"),
+                    href: "/admin/invoices/new",
+                    icon: ReceiptText,
+                  },
+                ]
+              : []),
+            ...(canPurchases
+              ? [
+                  {
+                    label: text("مصروف", "Expense"),
+                    href: "/admin/purchases",
+                    icon: Wallet,
+                  },
+                ]
+              : []),
           ]}
           onRefresh={() => setRefreshTick((v) => v + 1)}
           isRefreshing={stats.isLoading || readiness.isLoading || contractsQuery.isLoading}

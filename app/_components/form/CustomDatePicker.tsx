@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSaudiTodayDateStr } from "@/lib/contractConstants";
 import { useFullscreenDialogClose } from "./FullscreenDialog";
 import ResponsivePickerOverlay, {
   useIsPickerFullscreen,
@@ -93,13 +94,14 @@ function DatePickerModalBody({
   const isBeforeMinDate = (date: string) =>
     Boolean(normalizedMinDate && date < normalizedMinDate);
 
-  const parsed =
-    parseDateStr(value) ||
-    parseDateStr(minDate) || {
-      year: new Date().getFullYear(),
-      month: new Date().getMonth(),
-      day: new Date().getDate(),
-    };
+  const todayStr = getSaudiTodayDateStr();
+  const saudiToday = parseDateStr(todayStr) ?? {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+    day: new Date().getDate(),
+  };
+
+  const parsed = parseDateStr(value) || parseDateStr(minDate) || saudiToday;
 
   const [manualView, setManualView] = useState<{
     year: number;
@@ -124,9 +126,14 @@ function DatePickerModalBody({
   }, []);
 
   const quickDate = (offsetDays: number) => {
-    const date = new Date();
-    date.setDate(date.getDate() + offsetDays);
-    return formatDate(date.getFullYear(), date.getMonth(), date.getDate());
+    const date = new Date(
+      Date.UTC(saudiToday.year, saudiToday.month, saudiToday.day + offsetDays)
+    );
+    return formatDate(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate()
+    );
   };
 
   const handlePrevMonth = () => {
@@ -160,13 +167,6 @@ function DatePickerModalBody({
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstDayIndex = new Date(viewYear, viewMonth, 1).getDay();
-
-  const today = new Date();
-  const todayStr = formatDate(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  );
 
   return (
     <div

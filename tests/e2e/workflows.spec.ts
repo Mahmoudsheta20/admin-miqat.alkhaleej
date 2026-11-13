@@ -738,7 +738,7 @@ test("admin WhatsApp flow panel configures +966577842926 and triggers flow steps
       req.method() === "POST" && /\/whatsapp\/flow\/trigger$/.test(req.url()),
   );
   await page
-    .getByRole("button", { name: "وصلت لموقع العميل", exact: true })
+    .getByRole("button", { name: /وصلت لموقع العميل/ })
     .first()
     .click();
   const triggerBody = (await triggerReq).postDataJSON();
@@ -2277,4 +2277,126 @@ test("mobile-only full-screen field/selector/picker popups and desktop inline/an
   await expect(anyFullscreenDialog).toHaveCount(0);
   await expect(captainGuest).toHaveValue("Captain Mobile Guest");
   await expect(captainOpSelect).toHaveAttribute("data-value", "INTERCITY");
+});
+
+test("Super Admin creates and updates scoped Finance Admin permissions via presets and checkboxes", async ({
+  page,
+}) => {
+  await preferences(page, "en", "light");
+  await login(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/admin/admins");
+
+  // Wait for seeded admins table to load (Finance Accountant row + Super Admin row)
+  await expect(page.getByText("Finance Accountant").first()).toBeVisible();
+
+  // Edit existing Finance Accountant permissions via modal and verify PUT payload
+  await page
+    .getByRole("button", { name: /Edit permissions — Finance Accountant/ })
+    .first()
+    .click();
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog).toBeVisible();
+
+  // Uncheck ZATCA view and check Contracts view, verify PUT payload
+  await editDialog.locator('[data-perm="contracts:view"] input[type="checkbox"]').check();
+  const putReq = page.waitForRequest(
+    (req) =>
+      req.method() === "PUT" &&
+      /\/admins\/admin-finance-fixture\/permissions$/.test(req.url()),
+  );
+  await editDialog.getByRole("button", { name: /Save Permissions/ }).click();
+  const putBody = (await putReq).postDataJSON();
+  expect(putBody.permissions?.contracts?.view).toBe(true);
+  expect(putBody.permissions?.invoices?.write).toBe(true);
+  await expect(editDialog).toHaveCount(0);
+
+  // Restore Finance preset cleanly
+  await page
+    .getByRole("button", { name: /Edit permissions — Finance Accountant/ })
+    .first()
+    .click();
+  const restoreDialog = page.getByRole("dialog");
+  await restoreDialog.locator('button[data-preset="finance_accounts"]').click();
+  const restorePut = page.waitForResponse(
+    (res) =>
+      res.request().method() === "PUT" &&
+      /\/admins\/admin-finance-fixture\/permissions$/.test(res.url()),
+  );
+  await restoreDialog.getByRole("button", { name: /Save Permissions/ }).click();
+  await restorePut;
+  await expect(restoreDialog).toHaveCount(0);
+
+  // Create a brand new scoped Admin using Accounting & Invoices preset + POST payload check
+  await page.getByRole("button", { name: "Add administrator" }).click();
+  const createDialog = page.getByRole("dialog");
+  await expect(createDialog).toBeVisible();
+  await createDialog.locator('input[autocomplete="name"]').fill("Accounts Clerk");
+  await createDialog.locator('input[autocomplete="email"]').fill("clerk@example.test");
+  await createDialog.locator('button[data-preset="finance_accounts"]').click();
+
+  // Explicitly ensure Contracts stays unchecked and ZATCA is checked
+  await expect(
+    createDialog.locator('[data-perm="contracts:view"] input[type="checkbox"]'),
+  ).not.toBeChecked();
+  await expect(
+    createDialog.locator('[data-perm="invoices:write"] input[type="checkbox"]'),
+  ).toBeChecked();
+
+  const createReq = page.waitForRequest(
+    (req) => req.method() === "POST" && /\/admins$/.test(req.url()),
+  );
+  await createDialog.locator('button[type="submit"]').click();
+  const createBody = (await createReq).postDataJSON();
+  expect(createBody.email).toBe("clerk@example.test");
+  expect(createBody.permissions?.invoices?.write).toBe(true);
+  expect(createBody.permissions?.accounting?.approve).toBe(true);
+  expect(createBody.permissions?.contracts).toBeUndefined();
+});
+
+test("Scoped Finance Admin lands on Finance workspace, sees filtered navigation, and gets restricted alert on unauthorized routes", async ({
+  page,
+}) => {
+  await preferences(page, "en", "light");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+
+  await page.goto("/login");
+  await page.locator("#email").fill("finance@example.test");
+  await page.locator("#password").fill("fixture-password");
+  await page.locator('button[type="submit"]').click();
+
+  // Finance-only admin automatically lands on /admin/invoices instead of /admin
+  await expect(page).toHaveURL(/\/admin\/invoices$/);
+  const pageErrors: string[] = [];
+  const consoleErrors: string[] = [];
+  page.on("pageerror", (err) => pageErrors.push(err.message));
+  page.on("console", (msg) => {
+    if (msg.type() === "error") consoleErrors.push(msg.text());
+  });
+  await expect(
+    page.locator("#main-content").getByRole("heading").first(),
+  ).toBeVisible();
+
+  // Navigation shows permitted finance items and hides restricted operational/admin items
+  const desktopNav = page.locator("aside").getByRole("navigation");
+  await expect(desktopNav.locator('a[href="/admin/invoices"]')).toBeVisible();
+  await expect(desktopNav.locator('a[href="/admin/accounting"]')).toBeVisible();
+  await expect(desktopNav.locator('a[href="/admin/contracts"]')).toHaveCount(0);
+  await expect(desktopNav.locator('a[href="/admin/whatsapp"]')).toHaveCount(0);
+  await expect(desktopNav.locator('a[href="/admin/admins"]')).toHaveCount(0);
+
+  // Direct URL visit to unauthorized section displays localized Access Restricted alert
+  await page.goto("/admin/contracts");
+  const alertBox = page.locator('#main-content [role="alert"]');
+  await expect(alertBox).toBeVisible();
+  await expect(
+    alertBox.getByRole("heading", { name: "Access restricted for this account" }),
+  ).toBeVisible();
+  const returnLink = alertBox.getByRole("link", { name: "Go to available workspace" });
+  await expect(returnLink).toHaveAttribute("href", "/admin/invoices");
+  await returnLink.click();
+  await expect(page).toHaveURL(/\/admin\/invoices$/);
+
+  expect(pageErrors).toEqual([]);
+  expect(consoleErrors).toEqual([]);
 });

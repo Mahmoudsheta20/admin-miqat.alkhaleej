@@ -1,4 +1,5 @@
 import type { WhatsAppAutoSendResult } from "./whatsapp";
+import type { AdminPermissions } from "./permissions";
 
 export type UserRole = "ADMIN" | "CAPTAIN";
 
@@ -15,6 +16,8 @@ export interface SystemUser {
   avatarUrl?: string | null;
   active: boolean;
   mustChangePassword?: boolean;
+  permissions?: AdminPermissions | null;
+  isSuperAdmin?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }

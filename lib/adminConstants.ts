@@ -1,3 +1,4 @@
+import type { AdminPermissions } from "./permissions";
 import { SystemUser } from "./types";
 
 export const SUPER_ADMIN_EMAIL = "miqatalkhaleej@gmail.com";
@@ -15,4 +16,5 @@ export interface CreateAdminPayload {
   name: string;
   email: string;
   phone?: string;
+  permissions?: AdminPermissions | null;
 }

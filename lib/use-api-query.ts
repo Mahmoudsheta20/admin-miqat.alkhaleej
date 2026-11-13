@@ -3,12 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import { backendRequest } from "./backend";
 import { fetchCached, invalidateClientCache } from "./clientCache";
 interface QueryState<T> { identity: string; path: string; data: T | null; error: string; isLoading: boolean; status?: number }
-export function useApiQuery<T>(path: string, revision = 0) {
+export function useApiQuery<T>(path: string | null, revision = 0) {
   const [generation, setGeneration] = useState(0);
-  const identity = `${path}:${revision}:${generation}`;
-  const [state, setState] = useState<QueryState<T>>({ identity: "", path: "", data: null, error: "", isLoading: true });
-  const key = `api:${path}`;
+  const identity = path ? `${path}:${revision}:${generation}` : "__disabled__";
+  const [state, setState] = useState<QueryState<T>>({ identity: "", path: "", data: null, error: "", isLoading: Boolean(path) });
+  const key = path ? `api:${path}` : "";
   useEffect(() => {
+    if (!path) return;
     let active = true;
     void fetchCached(key, () => backendRequest<T>(path), { forceRefresh: revision > 0 || generation > 0 }).then(result => {
       if (active) setState({ identity, path, data: result.success ? result.data ?? null : null, error: result.error || "", isLoading: false, status: result.status });
@@ -17,8 +18,26 @@ export function useApiQuery<T>(path: string, revision = 0) {
     });
     return () => { active = false; };
   }, [identity, key, path, revision, generation]);
-  const refetch = useCallback(() => { invalidateClientCache(key); setGeneration(value => value + 1); }, [key]);
-  useEffect(() => { window.addEventListener("miqat:mutation", refetch); return () => window.removeEventListener("miqat:mutation", refetch); }, [refetch]);
+  const refetch = useCallback(() => {
+    if (!key) return;
+    invalidateClientCache(key);
+    setGeneration(value => value + 1);
+  }, [key]);
+  useEffect(() => {
+    if (!path) return;
+    window.addEventListener("miqat:mutation", refetch);
+    return () => window.removeEventListener("miqat:mutation", refetch);
+  }, [path, refetch]);
+  if (!path) {
+    return {
+      data: null as T | null,
+      error: "",
+      isLoading: false,
+      isFetching: false,
+      status: undefined as number | undefined,
+      refetch,
+    };
+  }
   const isCurrent = state.identity === identity;
   const isSamePath = state.path === path;
   if (isCurrent) {

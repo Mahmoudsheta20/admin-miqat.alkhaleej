@@ -74,10 +74,22 @@ test("fetchWhatsAppFlowOverview requests /api/proxy/whatsapp/flow with credentia
           autoReplyToCaptain: true,
           includeActionMenuOnContract: true,
           includeAdminActionButtons: true,
-          interactiveMode: "poll_and_text",
+          interactiveMode: "reactions_and_links",
           autoSendContractDefault: false,
           autoSendInvoiceDefault: false,
-          captainButtons: [],
+          captainButtons: [
+            {
+              id: "confirm_receipt",
+              emoji: "👍",
+              code: "1",
+              labelAr: "تأكيد استلام العقد",
+              labelEn: "Confirm Receipt",
+              replyTextAr: "تم تسجيل تأكيد استلام العقد",
+              adminNoticeTitleAr: "أكد الكابتن استلام العقد",
+              targetStatus: "ACKNOWLEDGED",
+              enabled: true,
+            },
+          ],
           adminActionButtons: [],
         },
         sessions: [],
@@ -93,6 +105,8 @@ test("fetchWhatsAppFlowOverview requests /api/proxy/whatsapp/flow with credentia
   assert.equal(calls[0].url, "/api/proxy/whatsapp/flow");
   assert.equal(calls[0].init.credentials, "include");
   assert.equal(overview.config.adminPhone, "+966577842926");
+  assert.equal(overview.config.interactiveMode, "reactions_and_links");
+  assert.equal(overview.config.captainButtons[0]?.emoji, "👍");
 });
 
 test("updateWhatsAppFlowConfig sends PUT payload and returns updated config", async () => {

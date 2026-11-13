@@ -2,10 +2,17 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu, Plus, FileText, ReceiptText, Wallet, ClipboardCheck, X } from "lucide-react";
+import { Menu, Plus, FileText, ReceiptText, Wallet, ClipboardCheck, ShieldAlert, X } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
+import { isSuperAdmin } from "@/lib/adminConstants";
 import { navigationFor, routeInfo, routeLabel } from "@/lib/navigation";
+import {
+  canAccessAdminPath,
+  defaultAdminRoute,
+  hasClientPermission,
+  type PermissionModule,
+} from "@/lib/permissions";
 import type { UserRole } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import Header from "./Header";
@@ -29,9 +36,15 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
 
   const isMenuOpen = drawerPath === pathname;
   const isQuickCreateOpen = quickCreatePath === pathname;
-  const links = navigationFor(role).filter((item) => item.mobile);
+  const links = navigationFor(
+    role,
+    isSuperAdmin(user?.email),
+    user?.permissions
+  ).filter((item) => item.mobile);
   const active = routeInfo(pathname)?.href;
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const adminAuthorized = role !== "ADMIN" || !user || canAccessAdminPath(user, pathname);
+  const fallbackAdminPath = role === "ADMIN" && user ? defaultAdminRoute(user) : "/admin";
   const isWideCreationRoute =
     pathname.startsWith("/admin/contracts/new") ||
     pathname.startsWith("/admin/invoices/new") ||
@@ -127,8 +140,16 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
   useEffect(() => {
     if (isLoading) return;
     if (!user) router.replace("/login");
-    else if (user.role !== role) router.replace(user.role === "ADMIN" ? "/admin" : "/captain");
-  }, [isLoading, user, role, router]);
+    else if (user.role !== role) router.replace(user.role === "ADMIN" ? defaultAdminRoute(user) : "/captain");
+    else if (
+      role === "ADMIN" &&
+      !canAccessAdminPath(user, pathname) &&
+      (pathname === "/admin" || pathname === "/admin/") &&
+      fallbackAdminPath !== "/admin"
+    ) {
+      router.replace(fallbackAdminPath);
+    }
+  }, [isLoading, user, role, pathname, fallbackAdminPath, router]);
 
   useEffect(() => {
     document.title = `${routeLabel(pathname, language)} | ${language === "ar" ? "ميقات الخليج" : "Miqat Al Khaleej"}`;
@@ -154,8 +175,16 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
   const adminBeforeCenter = role === "ADMIN" ? links.slice(0, 2) : links;
   const adminAfterCenter = role === "ADMIN" ? links.slice(2) : [];
 
-  const quickActions = [
+  const quickActions: Array<{
+    module: PermissionModule;
+    href: string;
+    title: string;
+    subtitle: string;
+    icon: typeof FileText;
+    accent: string;
+  }> = [
     {
+      module: "contracts",
       href: "/admin/contracts/new",
       title: text("عقد نقل جديد", "New contract"),
       subtitle: text("إصدار وتوثيق رحلة جديدة", "Issue & assign trip contract"),
@@ -163,6 +192,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
       accent: "bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 border-emerald-600/30",
     },
     {
+      module: "invoices",
       href: "/admin/invoices/new",
       title: text("فاتورة عميل جديدة", "New invoice"),
       subtitle: text("ضريبية، مبدئية، أو إشعار", "Tax, proforma, or credit note"),
@@ -170,6 +200,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
       accent: "bg-[var(--accent-surface)] text-[var(--accent-gold)] border-[var(--accent-gold)]/30",
     },
     {
+      module: "purchases",
       href: "/admin/purchases",
       title: text("مصروفات ومشتريات", "Purchases & expenses"),
       subtitle: text("تسجيل فواتير الموردين", "Log supplier bills & VAT"),
@@ -177,6 +208,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
       accent: "bg-sky-500/12 text-sky-800 dark:text-sky-300 border-sky-600/30",
     },
     {
+      module: "inspections",
       href: "/admin/inspections",
       title: text("فحوصات المركبات", "Fleet inspections"),
       subtitle: text("اعتماد ومتابعة الفحص اليومي", "Daily safety readiness"),
@@ -184,6 +216,9 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
       accent: "bg-indigo-500/12 text-indigo-800 dark:text-indigo-300 border-indigo-600/30",
     },
   ];
+  const visibleQuickActions = quickActions.filter((act) =>
+    hasClientPermission(user, act.module, "write")
+  );
 
   return (
     <div ref={shellRef} className="app-shell flex h-dvh overflow-hidden">
@@ -215,7 +250,37 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
                   : "max-w-5xl"
             }`}
           >
-            {children}
+            {adminAuthorized ? (
+              children
+            ) : (
+              <Card
+                role="alert"
+                className="theme-card border theme-border p-6 sm:p-8 max-w-lg mx-auto my-8 text-center space-y-4 shadow-sm"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] flex items-center justify-center mx-auto">
+                  <ShieldAlert className="w-6 h-6" aria-hidden="true" />
+                </div>
+                <div className="space-y-1.5">
+                  <h1 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                    {text("ليس لديك صلاحية للوصول إلى هذا القسم", "Access restricted for this account")}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                    {text(
+                      "تم تقييد صلاحيات هذا الحساب على أقسام محددة من قِبل المدير العام الأساسي.",
+                      "This administrator account is scoped to specific sections by the Super Admin."
+                    )}
+                  </p>
+                </div>
+                <div className="pt-1">
+                  <Link
+                    href={fallbackAdminPath}
+                    className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-xl button-primary text-xs sm:text-sm font-semibold"
+                  >
+                    {text("الانتقال إلى الأقسام المتاحة", "Go to available workspace")}
+                  </Link>
+                </div>
+              </Card>
+            )}
           </div>
         </main>
 
@@ -235,7 +300,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
             </Link>
           ))}
 
-          {role === "ADMIN" && (
+          {role === "ADMIN" && visibleQuickActions.length > 0 && (
             <button
               type="button"
               className="mobile-quick-create-btn cursor-pointer"
@@ -318,7 +383,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {quickActions.map((act) => {
+              {visibleQuickActions.map((act) => {
                 const Icon = act.icon;
                 return (
                   <Link

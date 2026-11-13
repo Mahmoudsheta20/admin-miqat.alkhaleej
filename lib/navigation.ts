@@ -1,8 +1,9 @@
 import type { UserRole } from "./types";
+import type { AdminPermissions, PermissionModule } from "./permissions";
 export type NavigationGroup = "overview" | "operations" | "people" | "finance" | "settings" | "captain";
 export interface NavigationItem {
   href: string; ar: string; en: string; icon: string; group: NavigationGroup;
-  roles: UserRole[]; superAdminOnly?: boolean; mobile?: boolean;
+  roles: UserRole[]; module?: PermissionModule; superAdminOnly?: boolean; mobile?: boolean;
   action?: { href: string; ar: string; en: string };
 }
 export const NAVIGATION_GROUPS: Record<NavigationGroup, { ar: string; en: string }> = {
@@ -11,30 +12,40 @@ export const NAVIGATION_GROUPS: Record<NavigationGroup, { ar: string; en: string
   settings: { ar: "الإعدادات", en: "Settings" }, captain: { ar: "مساحة الكابتن", en: "Captain workspace" },
 };
 export const NAVIGATION: NavigationItem[] = [
-  { href: "/admin", ar: "لوحة التحكم", en: "Dashboard", icon: "dashboard", group: "overview", roles: ["ADMIN"], mobile: true },
-  { href: "/admin/contracts", ar: "العقود", en: "Contracts", icon: "contracts", group: "operations", roles: ["ADMIN"], mobile: true, action: { href: "/admin/contracts/new", ar: "إنشاء عقد", en: "Create contract" } },
-  { href: "/admin/inspections", ar: "فحص المركبات", en: "Inspections", icon: "inspection", group: "operations", roles: ["ADMIN"] },
-  { href: "/admin/fleet", ar: "أسطول المركبات", en: "Fleet", icon: "fleet", group: "operations", roles: ["ADMIN"] },
-  { href: "/admin/captains", ar: "الكباتن", en: "Captains", icon: "captain", group: "operations", roles: ["ADMIN"] },
-  { href: "/admin/customers", ar: "العملاء", en: "Customers", icon: "customers", group: "people", roles: ["ADMIN"] },
-  { href: "/admin/staff", ar: "حسابات العاملين", en: "Staff accounts", icon: "staff", group: "people", roles: ["ADMIN"] },
-  { href: "/admin/representatives", ar: "المناديب والعمولات", en: "Representatives", icon: "representatives", group: "people", roles: ["ADMIN"] },
-  { href: "/admin/invoices", ar: "الفواتير", en: "Invoices", icon: "invoice", group: "finance", roles: ["ADMIN"], mobile: true, action: { href: "/admin/invoices/new", ar: "إنشاء فاتورة", en: "Create invoice" } },
-  { href: "/admin/purchases", ar: "المشتريات والمصروفات", en: "Purchases & expenses", icon: "purchase", group: "finance", roles: ["ADMIN"] },
-  { href: "/admin/accounting", ar: "المحاسبة", en: "Accounting", icon: "accounting", group: "finance", roles: ["ADMIN"] },
-  { href: "/admin/accounts", ar: "دليل الحسابات", en: "Chart of accounts", icon: "accounts", group: "finance", roles: ["ADMIN"] },
-  { href: "/admin/vat-returns", ar: "الإقرار الضريبي", en: "VAT returns", icon: "vat", group: "finance", roles: ["ADMIN"] },
-  { href: "/admin/invoices/settings", ar: "الشركة والبنك", en: "Company & bank", icon: "company", group: "settings", roles: ["ADMIN"] },
-  { href: "/admin/zatca", ar: "إعدادات ZATCA", en: "ZATCA settings", icon: "tax", group: "settings", roles: ["ADMIN"] },
-  { href: "/admin/whatsapp", ar: "ربط الواتساب", en: "WhatsApp connection", icon: "whatsapp", group: "settings", roles: ["ADMIN"] },
+  { href: "/admin", ar: "لوحة التحكم", en: "Dashboard", icon: "dashboard", group: "overview", roles: ["ADMIN"], module: "dashboard", mobile: true },
+  { href: "/admin/contracts", ar: "العقود", en: "Contracts", icon: "contracts", group: "operations", roles: ["ADMIN"], module: "contracts", mobile: true, action: { href: "/admin/contracts/new", ar: "إنشاء عقد", en: "Create contract" } },
+  { href: "/admin/inspections", ar: "فحص المركبات", en: "Inspections", icon: "inspection", group: "operations", roles: ["ADMIN"], module: "inspections" },
+  { href: "/admin/fleet", ar: "أسطول المركبات", en: "Fleet", icon: "fleet", group: "operations", roles: ["ADMIN"], module: "fleet" },
+  { href: "/admin/captains", ar: "الكباتن", en: "Captains", icon: "captain", group: "operations", roles: ["ADMIN"], module: "captains" },
+  { href: "/admin/customers", ar: "العملاء", en: "Customers", icon: "customers", group: "people", roles: ["ADMIN"], module: "customers" },
+  { href: "/admin/staff", ar: "حسابات العاملين", en: "Staff accounts", icon: "staff", group: "people", roles: ["ADMIN"], module: "staff" },
+  { href: "/admin/representatives", ar: "المناديب والعمولات", en: "Representatives", icon: "representatives", group: "people", roles: ["ADMIN"], module: "staff" },
+  { href: "/admin/invoices", ar: "الفواتير", en: "Invoices", icon: "invoice", group: "finance", roles: ["ADMIN"], module: "invoices", mobile: true, action: { href: "/admin/invoices/new", ar: "إنشاء فاتورة", en: "Create invoice" } },
+  { href: "/admin/purchases", ar: "المشتريات والمصروفات", en: "Purchases & expenses", icon: "purchase", group: "finance", roles: ["ADMIN"], module: "purchases" },
+  { href: "/admin/accounting", ar: "المحاسبة", en: "Accounting", icon: "accounting", group: "finance", roles: ["ADMIN"], module: "accounting" },
+  { href: "/admin/accounts", ar: "دليل الحسابات", en: "Chart of accounts", icon: "accounts", group: "finance", roles: ["ADMIN"], module: "accounts" },
+  { href: "/admin/vat-returns", ar: "الإقرار الضريبي", en: "VAT returns", icon: "vat", group: "finance", roles: ["ADMIN"], module: "vatReturns" },
+  { href: "/admin/invoices/settings", ar: "الشركة والبنك", en: "Company & bank", icon: "company", group: "settings", roles: ["ADMIN"], module: "companySettings" },
+  { href: "/admin/zatca", ar: "إعدادات ZATCA", en: "ZATCA settings", icon: "tax", group: "settings", roles: ["ADMIN"], module: "zatca" },
+  { href: "/admin/whatsapp", ar: "ربط الواتساب", en: "WhatsApp connection", icon: "whatsapp", group: "settings", roles: ["ADMIN"], module: "whatsapp" },
   { href: "/admin/admins", ar: "المسؤولون", en: "Administrators", icon: "shield", group: "settings", roles: ["ADMIN"], superAdminOnly: true },
   { href: "/captain", ar: "الرئيسية", en: "Home", icon: "dashboard", group: "captain", roles: ["CAPTAIN"], mobile: true },
   { href: "/captain/inspection", ar: "الفحص اليومي", en: "Inspection", icon: "inspection", group: "captain", roles: ["CAPTAIN"], mobile: true },
   { href: "/captain/contract", ar: "العقود", en: "Contracts", icon: "contracts", group: "captain", roles: ["CAPTAIN"], mobile: true },
   { href: "/captain/account", ar: "حسابي", en: "Account", icon: "accounting", group: "captain", roles: ["CAPTAIN"], mobile: true },
 ];
-export function navigationFor(role: UserRole, isSuperAdmin = false): NavigationItem[] {
-  return NAVIGATION.filter(item => item.roles.includes(role) && (!item.superAdminOnly || isSuperAdmin));
+export function navigationFor(
+  role: UserRole,
+  isSuperAdmin = false,
+  permissions?: AdminPermissions | null
+): NavigationItem[] {
+  return NAVIGATION.filter((item) => {
+    if (!item.roles.includes(role)) return false;
+    if (item.superAdminOnly) return isSuperAdmin;
+    if (role !== "ADMIN" || isSuperAdmin || permissions == null || !item.module) return true;
+    const mod = permissions[item.module];
+    return Boolean(mod && (mod.view || mod.write || mod.delete || mod.approve));
+  });
 }
 export function routeInfo(pathname: string): NavigationItem | undefined {
   return [...NAVIGATION].sort((a, b) => b.href.length - a.href.length)

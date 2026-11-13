@@ -3,7 +3,10 @@ import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 const day = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const id='11111111-1111-4111-8111-111111111111';
-const admin={id:'admin-fixture',name:'Fixture Administrator',email:'miqatalkhaleej@gmail.com',role:'ADMIN',active:true,mustChangePassword:false};
+const admin={id:'admin-fixture',name:'Fixture Administrator',email:'miqatalkhaleej@gmail.com',role:'ADMIN',active:true,mustChangePassword:false,isSuperAdmin:true,permissions:null};
+const financePerms={customers:{view:true},invoices:{view:true,write:true,delete:true},purchases:{view:true,write:true,delete:true},accounting:{view:true,write:true,approve:true},accounts:{view:true,write:true},vatReturns:{view:true,write:true},companySettings:{view:true,write:true},zatca:{view:true,write:true,approve:true}};
+const financeAdmin={id:'admin-finance-fixture',name:'Finance Accountant',email:'finance@example.test',role:'ADMIN',active:true,mustChangePassword:false,phone:'+966501112233',isSuperAdmin:false,permissions:financePerms};
+let fixtureAdmins=[admin,financeAdmin];
 const captain={id,name:'Fixture Captain',email:'captain@example.test',role:'CAPTAIN',active:true,mustChangePassword:false,phone:'0551234567',nationalId:'1234567890',licenseNumber:'FIX-001',licenseExpiry:'2028-12-31',assignedVehiclePlate:'أ ب ج 1234',hasTodayInspection:true,contractCount:1};
 const vehicle={id,plateNumberAr:'أ ب ج 1234',plateNumberEn:'ABC 1234',make:'Toyota',model:'Hiace',category:'VAN',year:2025,capacity:12,status:'AVAILABLE',registrationExpiry:'2028-12-31',insuranceExpiry:'2028-12-31'};
 const checks=Object.fromEntries(['fuelGauge','tempGauge','oilPressure','checkEngine','absLight','warningLights','tires','headlights','signals','mirrors','noLeaks','fireExtinguisher','warningTriangle','firstAidKit','glassHammer','seatBelts'].map(key=>[key,true]));
@@ -94,28 +97,76 @@ const server=createServer(async(req,res)=>{
  if(path==='/health')return json({status:'ok'});
  if(path==='/auth/login'){
   if(body.password!=='fixture-password')return json('بيانات الدخول غير صحيحة',401);
-  const role=body.email==='captain@example.test'?'CAPTAIN':'ADMIN',temporary=body.email==='temporary@example.test';
-  res.setHeader('set-cookie',`miqat_token=fixture-${temporary?'temporary':role}; Path=/; HttpOnly; SameSite=Lax${body.rememberMe?'; Max-Age=3600':''}`);
-  return json({user:{...(role==='ADMIN'?admin:captain),mustChangePassword:temporary},mustChangePassword:temporary});
+  const email=String(body.email||'').trim().toLowerCase();
+  const role=email==='captain@example.test'?'CAPTAIN':'ADMIN',temporary=email==='temporary@example.test';
+  const matchedAdmin=fixtureAdmins.find(a=>a.email.toLowerCase()===email);
+  const loginAdmin=(matchedAdmin&&!matchedAdmin.isSuperAdmin)?matchedAdmin:admin;
+  const tokenVal=temporary?'fixture-temporary':role==='CAPTAIN'?'fixture-CAPTAIN':loginAdmin.isSuperAdmin?'fixture-ADMIN':`fixture-ADMIN:${loginAdmin.id}`;
+  res.setHeader('set-cookie',`miqat_token=${tokenVal}; Path=/; HttpOnly; SameSite=Lax${body.rememberMe?'; Max-Age=3600':''}`);
+  return json({user:{...(role==='ADMIN'?loginAdmin:captain),mustChangePassword:temporary},mustChangePassword:temporary});
  }
  if(path==='/auth/logout'){res.setHeader('set-cookie','miqat_token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');return json({});}
  if(['/auth/forgot-password','/auth/verify-reset-token','/auth/reset-password'].includes(path))return json({valid:true,message:'تم تنفيذ الطلب'});
  const cookie=req.headers.cookie||'',role=cookie.includes('fixture-CAPTAIN')?'CAPTAIN':cookie.includes('fixture-ADMIN')?'ADMIN':null;
+ const adminIdMatch=cookie.match(/fixture-ADMIN:([^;\s]+)/);
+ const currentAdmin=(adminIdMatch&&fixtureAdmins.find(a=>a.id===adminIdMatch[1]))||admin;
+ const hasPerm=(mod,act='view')=>{
+  if(role!=='ADMIN')return false;
+  if(currentAdmin.isSuperAdmin||!currentAdmin.permissions)return true;
+  const entry=currentAdmin.permissions[mod];
+  if(!entry)return false;
+  if(entry[act]===true)return true;
+  return act==='view'&&Boolean(entry.write||entry.delete||entry.approve);
+ };
  if(path==='/auth/complete-password-change'&&cookie.includes('fixture-temporary')){res.setHeader('set-cookie','miqat_token=fixture-ADMIN; Path=/; HttpOnly; SameSite=Lax');return json({user:admin});}
  if(path==='/contracts/verify/MQ-FIXTURE-001')return json({referenceNumber:contract.referenceNumber,status:'APPROVED',issueDate:day});
  if(path===`/inspections/verify/${id}`)return json({id,inspectionDate:inspection.inspectionDate,driverDeclared:true});
  if(path===`/invoices/verify/${id}`||path===`/invoices/public/${id}`)return json({invoiceNumber:'TAX-000001',invoiceDate:invoice.invoiceDate,companyName:company.legalName,currency:'SAR',totals:invoice.snapshot.totals,documentType:'TAX',taxDocument:invoice.taxDocument});
  if(!role)return json('يرجى تسجيل الدخول',401);
- if(path==='/auth/session')return json(role==='ADMIN'?admin:captain);
- if(path==='/auth/change-password'||path==='/auth/profile')return json(role==='ADMIN'?admin:captain);
+ if(path==='/auth/session')return json(role==='ADMIN'?currentAdmin:captain);
+ if(path==='/auth/change-password'||path==='/auth/profile')return json(role==='ADMIN'?currentAdmin:captain);
  if(role==='CAPTAIN'&&['/admins','/dashboard/stats','/accounting/financial-report','/invoices'].includes(path))return json('غير مصرح',403);
+ if(role==='ADMIN'&&!currentAdmin.isSuperAdmin){
+  if(path==='/admins'||path.startsWith('/admins/'))return json('محصور بالمدير العام الأساسي',403);
+  if(path==='/dashboard/stats'&&!hasPerm('dashboard','view'))return json('ليس لديك صلاحية لوحة التحكم',403);
+  if((path==='/contracts'||path.startsWith('/contracts/'))&&!hasPerm('contracts',req.method==='GET'?'view':'write'))return json('ليس لديك صلاحية العقود',403);
+  if(path.startsWith('/whatsapp')&&!hasPerm('whatsapp',req.method==='GET'?'view':'write'))return rawJson({success:false,error:'ليس لديك صلاحية الواتساب'},403);
+ }
  if(path.endsWith('/pdf')||path.endsWith('/receipt')){res.writeHead(200,{'content-type':'application/pdf','content-disposition':'inline; filename="fixture.pdf"'});return res.end(minimalPdf());}
  if(path.endsWith('qr.png')){res.writeHead(200,{'content-type':'image/png'});return res.end(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jI2YAAAAASUVORK5CYII=','base64'));}
  if(path==='/dashboard/stats')return json({totalCaptains:1,totalVehicles:vehicles.length,activeVehicles:vehicles.length,totalContracts:contracts.length,todayInspections:inspections.length,recentContracts:contracts.map(c=>({...c,captainName:captain.name,passengersCount:1}))});
  if(path==='/fleet'){if(req.method==='POST'){const row={...vehicle,...body,id:randomUUID()};vehicles.push(row);return json(row,201);}return json(vehicles);}
  if(path.startsWith('/fleet/')){const target=path.split('/').at(-1);if(req.method==='DELETE')vehicles=vehicles.filter(v=>v.id!==target);if(req.method==='PUT')vehicles=vehicles.map(v=>v.id===target?{...v,...body}:v);return json(vehicles.find(v=>v.id===target)||{});}
  if(path==='/captains')return json([captain]);
- if(path==='/admins')return json({admins:[{...admin,isSuperAdmin:true}],total:1,isCallerSuperAdmin:true});
+ if(path==='/admins'){
+  if(req.method==='POST'){
+   const created={id:randomUUID(),name:body.name||'Scoped Admin',email:String(body.email||'').trim().toLowerCase(),phone:body.phone||undefined,role:'ADMIN',active:true,mustChangePassword:true,isSuperAdmin:false,permissions:body.permissions??null};
+   fixtureAdmins.push(created);
+   return json({admin:created,temporaryPassword:'TempPass#2026!'},201);
+  }
+  return json({admins:fixtureAdmins,total:fixtureAdmins.length,isCallerSuperAdmin:currentAdmin.isSuperAdmin});
+ }
+ if(path.startsWith('/admins/')){
+  const parts=path.split('/').filter(Boolean);const targetId=parts[1];const action=parts[2];
+  if(req.method==='PUT'&&action==='permissions'){
+   let updated=null;
+   fixtureAdmins=fixtureAdmins.map(a=>{if(a.id!==targetId||a.isSuperAdmin)return a;updated={...a,permissions:body.permissions??null};return updated;});
+   return updated?json({admin:updated}):json('المسؤول غير موجود',404);
+  }
+  if(req.method==='PATCH'&&action==='status'){
+   let nextActive=false;
+   fixtureAdmins=fixtureAdmins.map(a=>{if(a.id!==targetId||a.isSuperAdmin)return a;nextActive=!a.active;return {...a,active:nextActive};});
+   return json({active:nextActive});
+  }
+  if(req.method==='POST'&&action==='reset-password'){
+   const target=fixtureAdmins.find(a=>a.id===targetId);
+   return target?json({temporaryPassword:'ResetPass#2026!',adminName:target.name,email:target.email}):json('المسؤول غير موجود',404);
+  }
+  if(req.method==='DELETE'&&!action){
+   fixtureAdmins=fixtureAdmins.filter(a=>a.id!==targetId||a.isSuperAdmin);
+   return json({});
+  }
+ }
  if(path==='/inspections/today')return json(inspections.at(-1)||null);
  if(path==='/inspections/overview')return json({captains:[{...captain,todayInspection:inspections.at(-1),hasTodayInspection:inspections.length>0,totalInspections:inspections.length}],stats:{totalCaptains:1,inspectedToday:inspections.length?1:0,pendingToday:inspections.length?0:1,totalInspections:inspections.length}});
  if(path==='/inspections'){if(req.method==='POST'){const row={...inspection,...body,id:randomUUID()};inspections.push(row);return json(row,201);}return json(inspections);}
