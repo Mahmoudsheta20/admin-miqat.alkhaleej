@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Sparkles, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight, Briefcase, PenLine } from "lucide-react";
+import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Sparkles, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight, Briefcase, PenLine, MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getCaptains } from "@/app/_actions/captain";
 import { getVehicles } from "@/app/_actions/fleet";
@@ -27,6 +27,7 @@ import {
 } from "@/lib/contractConstants";
 import { CustomInput } from "@/app/_components/form/CustomInput";
 const PdfPreviewModal = dynamic(() => import("@/app/_components/PdfPreviewModal"), { ssr: false });
+const SendWhatsAppModal = dynamic(() => import("@/app/_components/SendWhatsAppModal"), { ssr: false });
 import ReverseTripModal from "@/app/_components/ReverseTripModal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 
@@ -77,6 +78,7 @@ export default function EditContractPage({ params }: PageProps) {
   const [successMessage, setSuccessMessage] = useState("");
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [isReverseOpen, setIsReverseOpen] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -411,6 +413,15 @@ export default function EditContractPage({ params }: PageProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsWhatsAppOpen(true)}
+            disabled={isSubmitting}
+            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+            <span>{ui("إرسال عبر واتساب")}</span>
+          </button>
           <button
             type="button"
             onClick={() => setIsPdfOpen(true)}
@@ -819,6 +830,18 @@ export default function EditContractPage({ params }: PageProps) {
 
       {isReverseOpen && contract && (
         <ReverseTripModal isOpen onClose={() => setIsReverseOpen(false)} contract={contract} />
+      )}
+
+      {isWhatsAppOpen && contract && (
+        <SendWhatsAppModal
+          isOpen
+          onClose={() => setIsWhatsAppOpen(false)}
+          type="CONTRACT"
+          targetId={contract.id}
+          targetTitle={contract.referenceNumber}
+          recipientName={contract.captain?.name || ""}
+          defaultPhone={contract.captain?.phone || ""}
+        />
       )}
 
       {/* PDF Preview Modal */}

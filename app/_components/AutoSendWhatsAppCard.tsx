@@ -15,6 +15,8 @@ interface AutoSendWhatsAppCardProps {
   recipientLabel: string;
   titleAr: string;
   subtitleAr: string;
+  titleEn?: string;
+  subtitleEn?: string;
   waConnected: boolean | null;
   adminFlowPhone?: string | null;
   disabled?: boolean;
@@ -29,6 +31,8 @@ export default function AutoSendWhatsAppCard({
   recipientLabel,
   titleAr,
   subtitleAr,
+  titleEn,
+  subtitleEn,
   waConnected,
   adminFlowPhone = "+966577842926",
   disabled = false,
@@ -63,16 +67,16 @@ export default function AutoSendWhatsAppCard({
               <span>
                 {text(
                   titleAr,
-                  titleAr.includes("العقد")
+                  titleEn || (titleAr.includes("العقد")
                     ? "Auto-send contract via WhatsApp on save"
-                    : "Auto-send invoice via WhatsApp on issue",
+                    : "Auto-send invoice via WhatsApp on issue"),
                 )}
               </span>
             </span>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">
               {text(
                 subtitleAr,
-                "Saving the document never fails if WhatsApp is offline; dispatch status is reported immediately.",
+                subtitleEn || "Saving the document never fails if WhatsApp is offline; dispatch status is reported immediately.",
               )}
             </p>
           </div>

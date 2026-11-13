@@ -3,8 +3,9 @@ import { useUiText } from "@/lib/ui-text";
 
 
 import React, { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { ArrowLeftRight, AlertCircle, CheckCircle2, MessageSquare, X } from "lucide-react";
 import type { Contract, SystemUser, Vehicle } from "@/lib/types";
 import { submitContract } from "@/app/_actions/contract";
 import { getCaptains } from "@/app/_actions/captain";
@@ -18,6 +19,10 @@ import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/lib/languageContext";
+import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
+import AutoSendWhatsAppCard from "@/app/_components/AutoSendWhatsAppCard";
+
+const SendWhatsAppModal = dynamic(() => import("@/app/_components/SendWhatsAppModal"), { ssr: false });
 
 interface ReverseTripModalProps {
   isOpen: boolean;
@@ -54,9 +59,14 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
   const [error, setError] = useState("");
   const [loadError, setLoadError] = useState("");
   const [createdContract, setCreatedContract] = useState<Contract | null>(null);
+  const [autoSendWhatsApp, setAutoSendWhatsApp] = useState(false);
+  const [whatsAppPhone, setWhatsAppPhone] = useState("");
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const whatsAppStatus = useWhatsAppStatus();
   const submitLock = useRef(false);
   const originalDate = contract.tripDate.replace(/\//g, "-").split("T")[0];
   const isOriginalCaptainActive = captains.some(captain => captain.id === contract.captainId);
+  const selectedCaptain = captains.find(captain => captain.id === captainId);
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -100,7 +110,13 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
       const payload = returnTripPayload(contract, {
         origin, destination, tripDate, tripTime, captainId, vehiclePlate,
       });
-      const result = await submitContract(payload);
+      const result = await submitContract({
+        ...payload,
+        ...(autoSendWhatsApp ? {
+          autoSendWhatsApp: true,
+          ...(whatsAppPhone.trim() ? { whatsAppPhone: whatsAppPhone.trim() } : {}),
+        } : {}),
+      });
       if (!result.success || !result.contract) {
         setError(result.error || (isRTL ? "تعذر إنشاء رحلة العودة." : "Failed to create return trip."));
         return;
@@ -142,6 +158,19 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
             <h3 className="text-base sm:text-lg font-bold">{ui(isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully")}</h3>
             <p className="font-mono text-sm text-[var(--text-muted)]" dir="ltr">{createdContract.referenceNumber}</p>
             {!createdContract.pdfPath && <p className="text-xs sm:text-sm text-[var(--accent-gold)]">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
+            {createdContract.whatsAppAutoSend?.attempted && (
+              <p role={createdContract.whatsAppAutoSend.success ? "status" : "alert"} className="break-words text-sm text-[var(--text-main)]">
+                {createdContract.whatsAppAutoSend.success
+                  ? (isRTL ? "تم إرسال عقد العودة إلى واتساب." : "Return contract dispatched to WhatsApp.")
+                  : (isRTL ? "تم حفظ عقد العودة، لكن تعذر إرساله عبر واتساب." : "Return contract saved, but WhatsApp sending failed.")}
+                {createdContract.whatsAppAutoSend.phone && <bdi dir="ltr" className="mx-1 font-mono">{createdContract.whatsAppAutoSend.phone}</bdi>}
+                {!createdContract.whatsAppAutoSend.success && createdContract.whatsAppAutoSend.error && <span className="mt-1 block text-[var(--text-muted)]">{createdContract.whatsAppAutoSend.error}</span>}
+              </p>
+            )}
+            <button type="button" onClick={() => setIsWhatsAppOpen(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border theme-border px-4 text-sm font-semibold cursor-pointer">
+              <MessageSquare aria-hidden="true" className="h-4 w-4" />
+              {ui("إرسال عبر واتساب")}
+            </button>
             <button type="button" onClick={() => { onClose(); router.push(`/admin/contracts/${createdContract.id}/edit`); }} className="min-h-11 sm:min-h-9 w-full rounded-lg gold-gradient-btn px-4 text-xs sm:text-sm font-bold cursor-pointer">{ui(isRTL ? "عرض وتعديل عقد العودة" : "View & Edit Return Contract")}</button>
           </div>
         ) : (
@@ -242,6 +271,20 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
                   <span className="text-xs sm:text-sm leading-relaxed text-[var(--text-main)]">{ui(isRTL ? "أؤكد إجراء الفحص الفني فعلياً واجتياز جميع بنوده للمركبة والكابتن المختارين، وصحة بيانات رحلة العودة. سيكون تاريخ إصدار العقد وتاريخ الفحص مطابقين لتاريخ رحلة العودة المختار." : "I confirm that safety inspection passed all 16 points for the selected vehicle and captain, and return details are accurate. Issue and inspection dates will match the return date.")}</span>
                 </label>
               </fieldset>
+              <AutoSendWhatsAppCard
+                checked={autoSendWhatsApp}
+                onCheckedChange={setAutoSendWhatsApp}
+                phone={whatsAppPhone}
+                onPhoneChange={setWhatsAppPhone}
+                defaultPhoneHint={selectedCaptain?.phone || ""}
+                recipientLabel={isRTL ? "هاتف الكابتن" : "Captain Phone"}
+                titleAr="إرسال عقد العودة تلقائياً للكابتن عبر واتساب عند الحفظ"
+                subtitleAr="يُرسل العقد إلى الكابتن المختار. سيبقى العقد محفوظاً إذا تعذر الإرسال."
+                titleEn="Auto-send return contract via WhatsApp on save"
+                subtitleEn="Send to the selected captain. The contract stays saved if sending fails."
+                waConnected={whatsAppStatus.data ? whatsAppStatus.data.status === "connected" : null}
+                disabled={isSubmitting || isLoading || Boolean(loadError)}
+              />
               {isLoading && <p role="status" className="text-xs sm:text-sm text-[var(--text-muted)]">{ui(isRTL ? "جاري تحميل الكباتن والمركبات..." : "Loading captains and vehicles...")}</p>}
               {(error || loadError) && <p role="alert" className="flex items-start gap-2 rounded-xl bg-rose-500/10 p-3 text-xs sm:text-sm text-rose-700 dark:text-rose-300"><AlertCircle aria-hidden="true" className="h-4 w-4 shrink-0" /><span>{error || loadError}</span></p>}
             </form>
@@ -252,6 +295,17 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
           </>
         )}
       </div>
+      {createdContract && isWhatsAppOpen && (
+        <SendWhatsAppModal
+          isOpen
+          onClose={() => setIsWhatsAppOpen(false)}
+          type="CONTRACT"
+          targetId={createdContract.id}
+          targetTitle={createdContract.referenceNumber}
+          recipientName={createdContract.captain?.name || selectedCaptain?.name || (isRTL ? "الكابتن" : "Captain")}
+          defaultPhone={createdContract.whatsAppAutoSend?.phone || whatsAppPhone.trim() || createdContract.captain?.phone || selectedCaptain?.phone || ""}
+        />
+      )}
     </dialog>
   );
 }
