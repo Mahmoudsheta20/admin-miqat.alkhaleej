@@ -45,7 +45,14 @@ import {
   ChevronUp,
   Sparkles,
   Edit3,
+  MessageSquare,
 } from "lucide-react";
+import {
+  fetchWhatsAppFlowOverview,
+  fetchWhatsAppStatus,
+  type WhatsAppAutoSendResult,
+} from "@/lib/whatsapp";
+import AutoSendWhatsAppCard from "@/app/_components/AutoSendWhatsAppCard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/lib/languageContext";
 import { getCaptains } from "@/app/_actions/captain";
@@ -72,6 +79,10 @@ import {
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 const PdfPreviewModal = dynamic(
   () => import("@/app/_components/PdfPreviewModal"),
+  { ssr: false },
+);
+const SendWhatsAppModal = dynamic(
+  () => import("@/app/_components/SendWhatsAppModal"),
   { ssr: false },
 );
 import {
@@ -151,10 +162,21 @@ export default function AdminContractBuilder({
     id: string;
     referenceNumber: string;
     pdfPath?: string | null;
+    captainName?: string;
+    captainPhone?: string;
+    whatsAppAutoSend?: WhatsAppAutoSendResult;
   } | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [confirmError, setConfirmError] = useState("");
+  const [autoSendWhatsApp, setAutoSendWhatsApp] = useState(false);
+  const [whatsAppPhoneOverride, setWhatsAppPhoneOverride] = useState("");
+  const [whatsAppMeta, setWhatsAppMeta] = useState<{
+    connected: boolean;
+    adminFlowPhone: string;
+  } | null>(null);
+  const [whatsAppModalOpen, setWhatsAppModalOpen] = useState(false);
+  const autoSendTouchedRef = useRef(false);
 
   // Captain & Admin Inspection States
   const [captainInspection, setCaptainInspection] =
@@ -239,6 +261,30 @@ export default function AdminContractBuilder({
 
   // Auto-sync lead guest name into primary passenger when primary passenger is empty or matches prior synced name
   const syncedPrimaryGuestRef = useRef("");
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([
+      fetchWhatsAppStatus(),
+      fetchWhatsAppFlowOverview(),
+    ]).then(([statusRes, flowRes]) => {
+      if (!active) return;
+      const connected =
+        statusRes.status === "fulfilled" && statusRes.value.status === "connected";
+      const flowConfig =
+        flowRes.status === "fulfilled" ? flowRes.value.config : null;
+      setWhatsAppMeta({
+        connected,
+        adminFlowPhone: flowConfig?.adminPhone || "+966577842926",
+      });
+      if (flowConfig?.autoSendContractDefault && !autoSendTouchedRef.current) {
+        setAutoSendWhatsApp(true);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     const nextGuest = (watchedCustomerName ?? "").trim();
     const currentPrimary = (getValues("passengers.0.name") ?? "").trim();
@@ -541,6 +587,14 @@ export default function AdminContractBuilder({
       const res = await submitContract({
         ...payload,
         commercial: normalizeCommercialInput(commercial),
+        ...(autoSendWhatsApp
+          ? {
+              autoSendWhatsApp: true,
+              ...(whatsAppPhoneOverride.trim()
+                ? { whatsAppPhone: whatsAppPhoneOverride.trim() }
+                : {}),
+            }
+          : {}),
       });
       setIsSubmitting(false);
 
@@ -552,6 +606,13 @@ export default function AdminContractBuilder({
           id: res.contract.id,
           referenceNumber: res.contract.referenceNumber,
           pdfPath: res.contract.pdfPath || null,
+          captainName: currentCaptain?.name || res.contract.captain?.name,
+          captainPhone:
+            whatsAppPhoneOverride.trim() ||
+            res.contract.captain?.phone ||
+            currentCaptain?.phone ||
+            "",
+          whatsAppAutoSend: res.contract.whatsAppAutoSend,
         };
         setCreatedContract(created);
         setIsPdfOpen(true);
@@ -568,6 +629,8 @@ export default function AdminContractBuilder({
 
   const handleResetForm = () => {
     setCreatedContract(null);
+    setWhatsAppModalOpen(false);
+    setWhatsAppPhoneOverride("");
     setCommercial(emptyCommercial());
     setIsConfirmed(true);
     setConfirmError("");
@@ -628,6 +691,18 @@ export default function AdminContractBuilder({
     />
   );
 
+  const whatsAppModal = createdContract && whatsAppModalOpen && (
+    <SendWhatsAppModal
+      isOpen={whatsAppModalOpen}
+      onClose={() => setWhatsAppModalOpen(false)}
+      type="CONTRACT"
+      targetId={createdContract.id}
+      targetTitle={createdContract.referenceNumber}
+      recipientName={createdContract.captainName || text("الكابتن", "Captain")}
+      defaultPhone={createdContract.captainPhone || ""}
+    />
+  );
+
   if (isLoadingCaptains) {
     return inModal ? (
       loadingView
@@ -655,7 +730,49 @@ export default function AdminContractBuilder({
         {createdContract.referenceNumber}
       </div>
 
-      <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+      {createdContract.whatsAppAutoSend?.attempted && (
+        <div
+          className={`rounded-2xl border px-4 py-3 text-xs sm:text-sm text-start flex flex-wrap items-center justify-between gap-2 ${
+            createdContract.whatsAppAutoSend.success
+              ? "border-emerald-600/35 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : "border-amber-500/35 bg-amber-500/10 text-amber-900 dark:text-amber-300"
+          }`}
+        >
+          <div className="space-y-0.5">
+            <p className="font-bold">
+              {createdContract.whatsAppAutoSend.success
+                ? text(
+                    `تم إرسال العقد تلقائياً عبر واتساب إلى ${createdContract.whatsAppAutoSend.phone || createdContract.captainPhone || "الكابتن"}`,
+                    `Contract auto-sent via WhatsApp to ${createdContract.whatsAppAutoSend.phone || createdContract.captainPhone || "captain"}`,
+                  )
+                : text(
+                    `تم حفظ العقد، لكن تعذّر الإرسال التلقائي عبر واتساب: ${createdContract.whatsAppAutoSend.error || ""}`,
+                    `Contract saved, but WhatsApp auto-send failed: ${createdContract.whatsAppAutoSend.error || ""}`,
+                  )}
+            </p>
+            {createdContract.whatsAppAutoSend.success &&
+              createdContract.whatsAppAutoSend.adminNotified && (
+                <p className="text-xs opacity-90">
+                  {text(
+                    `تمت جدولة إشعار الإدارة (${createdContract.whatsAppAutoSend.adminPhone || "+966577842926"}). تابع سجل الأحداث لتأكيد الإرسال.`,
+                    `Admin notification queued for ${createdContract.whatsAppAutoSend.adminPhone || "+966577842926"}. Check the event log for dispatch confirmation.`,
+                  )}
+                </p>
+              )}
+          </div>
+          {!createdContract.whatsAppAutoSend.success && (
+            <button
+              type="button"
+              onClick={() => setWhatsAppModalOpen(true)}
+              className="min-h-9 px-3 py-1 rounded-lg border border-current/30 font-bold text-xs hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+            >
+              {text("إعادة المحاولة", "Retry WhatsApp")}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="pt-4 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => setIsPdfOpen(true)}
@@ -663,6 +780,15 @@ export default function AdminContractBuilder({
         >
           <FileText className="w-4 h-4" />
           {ui("معاينة وتحميل العقد (PDF)")}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setWhatsAppModalOpen(true)}
+          className="w-full sm:w-auto min-h-11 sm:min-h-9 px-4 py-2 rounded-xl border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold hover:bg-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <MessageSquare className="w-4 h-4" />
+          {text("إرسال عبر واتساب", "Send via WhatsApp")}
         </button>
 
         <button
@@ -1527,6 +1653,24 @@ export default function AdminContractBuilder({
         />
       </MobileCollapsibleSection>
 
+      {/* Auto-Send Contract via WhatsApp + Flow Option */}
+      <AutoSendWhatsAppCard
+        checked={autoSendWhatsApp}
+        onCheckedChange={(next) => {
+          autoSendTouchedRef.current = true;
+          setAutoSendWhatsApp(next);
+        }}
+        phone={whatsAppPhoneOverride}
+        onPhoneChange={setWhatsAppPhoneOverride}
+        defaultPhoneHint={currentCaptain?.phone || ""}
+        recipientLabel={text("هاتف الكابتن", "Captain Phone")}
+        titleAr="إرسال العقد تلقائياً للكابتن عبر واتساب فور التوثيق"
+        subtitleAr="عند التفعيل سيُرسل ملف العقد مع أزرار المتابعة التفاعلية للكابتن ويُخطر رقم الإدارة ضمن مسار التدفق دون تعطيل حفظ العقد إذا كان الواتساب غير متصل."
+        waConnected={whatsAppMeta ? whatsAppMeta.connected : null}
+        adminFlowPhone={whatsAppMeta?.adminFlowPhone}
+        disabled={isSubmitting}
+      />
+
       {/* Form Bottom Submission Bar */}
       <div className="contract-submit-bar">
         <p className="hidden sm:block flex-1 text-xs sm:text-sm text-[var(--text-muted)]">
@@ -1577,6 +1721,7 @@ export default function AdminContractBuilder({
       <div className="creation-workspace max-w-[1640px] mx-auto pb-6 space-y-5">
         {createdView || formBody}
         {pdfModal}
+        {whatsAppModal}
       </div>
     );
   }
@@ -1615,6 +1760,7 @@ export default function AdminContractBuilder({
 
       {createdView || formBody}
       {pdfModal}
+      {whatsAppModal}
     </div>
   );
 }

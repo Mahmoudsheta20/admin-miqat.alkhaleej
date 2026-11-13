@@ -3443,6 +3443,7 @@ export const UI_PHRASES: Record<string, string> = {
   "الخدمات والضريبة:": "Services & tax:",
   "بند بدون وصف": "Missing service description",
   "ضريبة القيمة المضافة (0%)": "Value added tax (0%)",
+  "هاتف العميل": "Customer phone",
 };
 export const UI_TEMPLATES: Record<string, string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",

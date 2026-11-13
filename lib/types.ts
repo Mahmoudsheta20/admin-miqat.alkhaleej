@@ -1,3 +1,5 @@
+import type { WhatsAppAutoSendResult } from "./whatsapp";
+
 export type UserRole = "ADMIN" | "CAPTAIN";
 
 export interface SystemUser {
@@ -112,4 +114,5 @@ export interface Contract {
   updatedAt?: string | Date;
   passengers?: Passenger[];
   inspection?: VehicleInspection | null;
+  whatsAppAutoSend?: WhatsAppAutoSendResult;
 }

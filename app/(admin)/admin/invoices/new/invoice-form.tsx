@@ -88,6 +88,12 @@ import { moneyDecimal, moneyMinor } from "@/lib/money";
 import { MobileStickyActionBar } from "@/app/_components/mobile";
 import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
+import AutoSendWhatsAppCard from "@/app/_components/AutoSendWhatsAppCard";
+import {
+  fetchWhatsAppFlowOverview,
+  fetchWhatsAppStatus,
+  type WhatsAppAutoSendResult,
+} from "@/lib/whatsapp";
 
 interface OriginalInvoiceOption {
   id: string;
@@ -232,6 +238,37 @@ export default function InvoiceForm({
   const [isSaving, setIsSaving] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState("");
   const [isReviewed, setIsReviewed] = useState(false);
+  const [autoSendWhatsApp, setAutoSendWhatsApp] = useState(false);
+  const [whatsAppPhoneOverride, setWhatsAppPhoneOverride] = useState("");
+  const [whatsAppMeta, setWhatsAppMeta] = useState<{
+    connected: boolean;
+    adminFlowPhone: string;
+  } | null>(null);
+  const autoSendTouchedRef = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([
+      fetchWhatsAppStatus(),
+      fetchWhatsAppFlowOverview(),
+    ]).then(([statusRes, flowRes]) => {
+      if (!active) return;
+      const connected =
+        statusRes.status === "fulfilled" && statusRes.value.status === "connected";
+      const flowConfig =
+        flowRes.status === "fulfilled" ? flowRes.value.config : null;
+      setWhatsAppMeta({
+        connected,
+        adminFlowPhone: flowConfig?.adminPhone || "+966577842926",
+      });
+      if (flowConfig?.autoSendInvoiceDefault && !autoSendTouchedRef.current) {
+        setAutoSendWhatsApp(true);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Simplified Payment UX: "هل دفع العميل؟"
   const [paymentStatusChoice, setPaymentStatusChoice] = useState<
@@ -894,7 +931,10 @@ export default function InvoiceForm({
 
       if (!operationKey.current) operationKey.current = crypto.randomUUID();
 
-      const result = await invoiceRequest<{ id: string }>("", "POST", {
+      const result = await invoiceRequest<{
+        id: string;
+        whatsAppAutoSend?: WhatsAppAutoSendResult;
+      }>("", "POST", {
         documentType,
         ...(isTaxMode
           ? {
@@ -974,6 +1014,14 @@ export default function InvoiceForm({
               : {}),
           };
         }),
+        ...(autoSendWhatsApp
+          ? {
+              autoSendWhatsApp: true,
+              ...(whatsAppPhoneOverride.trim()
+                ? { whatsAppPhone: whatsAppPhoneOverride.trim() }
+                : {}),
+            }
+          : {}),
       });
 
       if (result.data) {
@@ -1005,7 +1053,19 @@ export default function InvoiceForm({
         if (onCreated) {
           onCreated(result.data.id);
         } else {
-          router.push(`/admin/invoices/${encodeURIComponent(result.data.id)}`);
+          const waAuto = result.data.whatsAppAutoSend;
+          let waQuery = "";
+          if (waAuto?.attempted) {
+            const sp = new URLSearchParams();
+            sp.set("waAuto", waAuto.success ? "sent" : "error");
+            if (waAuto.phone) sp.set("waPhone", waAuto.phone);
+            if (waAuto.error) sp.set("waMsg", waAuto.error);
+            if (waAuto.adminPhone && waAuto.adminNotified) {
+              sp.set("waAdmin", waAuto.adminPhone);
+            }
+            waQuery = `?${sp.toString()}`;
+          }
+          router.push(`/admin/invoices/${encodeURIComponent(result.data.id)}${waQuery}`);
         }
       } else {
         showError(result.error || "تعذر حفظ الفاتورة. حاول مرة أخرى.");
@@ -2441,6 +2501,26 @@ export default function InvoiceForm({
                         ))}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Auto-Send Invoice via WhatsApp Option */}
+                  <div className="mt-4">
+                    <AutoSendWhatsAppCard
+                      checked={autoSendWhatsApp}
+                      onCheckedChange={(next) => {
+                        autoSendTouchedRef.current = true;
+                        setAutoSendWhatsApp(next);
+                      }}
+                      phone={whatsAppPhoneOverride}
+                      onPhoneChange={setWhatsAppPhoneOverride}
+                      defaultPhoneHint={contactPhone || ""}
+                      recipientLabel={ui("هاتف العميل")}
+                      titleAr="إرسال الفاتورة تلقائياً للعميل عبر واتساب فور الإصدار"
+                      subtitleAr="عند التفعيل سيُرسل ملف الفاتورة (PDF) للعميل مع إخطار رقم الإدارة ضمن مسار التدفق، دون تعطيل حفظ الفاتورة إذا كان الواتساب غير متصل."
+                      waConnected={whatsAppMeta ? whatsAppMeta.connected : null}
+                      adminFlowPhone={whatsAppMeta?.adminFlowPhone}
+                      disabled={isSaving}
+                    />
                   </div>
 
                   {/* Review Checkbox */}

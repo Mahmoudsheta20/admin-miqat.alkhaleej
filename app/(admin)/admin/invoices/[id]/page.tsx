@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import InvoiceVisibilityAction from "../invoice-visibility-action";
 import { ArrowRight, Building2, Check, CheckCircle2, Copy, CreditCard, Download, ExternalLink, FileText, Landmark, Loader2, Plus, QrCode, ReceiptText, User, AlertCircle, HelpCircle, FileMinus, FilePlus, ShieldCheck, Clock, MessageSquare } from "lucide-react";
@@ -18,6 +18,11 @@ import { accountingRequest } from "@/lib/accounting";
 import { signedMoneyMinor } from "@/lib/dashboard-analytics";
 import { moneyDecimal } from "@/lib/money";
 import RecordPaymentModal from "../record-payment-modal";
+
+const subscribeSearch = (onStoreChange: () => void) => {
+  window.addEventListener("popstate", onStoreChange);
+  return () => window.removeEventListener("popstate", onStoreChange);
+};
 
 interface InvoicePageProps {
   params: Promise<{ id: string }>;
@@ -44,6 +49,24 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [waAutoDismissed, setWaAutoDismissed] = useState(false);
+  const searchSnapshot = useSyncExternalStore(
+    subscribeSearch,
+    () => window.location.search,
+    () => "",
+  );
+  const waAutoNotice = (() => {
+    if (waAutoDismissed || !searchSnapshot) return null;
+    const sp = new URLSearchParams(searchSnapshot);
+    const status = sp.get("waAuto");
+    if (status !== "sent" && status !== "error") return null;
+    return {
+      status,
+      phone: sp.get("waPhone") || undefined,
+      message: sp.get("waMsg") || undefined,
+      adminPhone: sp.get("waAdmin") || undefined,
+    } as const;
+  })();
 
   const loadBalance = useCallback(async () => {
     setIsLoadingBalance(true);
@@ -255,6 +278,61 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           </button>
         </div>
       </div>
+
+      {waAutoNotice && (
+        <div
+          role="status"
+          className={`p-3.5 rounded-2xl border text-xs sm:text-sm flex flex-wrap items-center justify-between gap-2 ${
+            waAutoNotice.status === "sent"
+              ? "border-emerald-600/35 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : "border-amber-500/35 bg-amber-500/10 text-amber-900 dark:text-amber-300"
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            {waAutoNotice.status === "sent" ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+            )}
+            <div className="space-y-0.5">
+              <p className="font-bold">
+                {waAutoNotice.status === "sent"
+                  ? ui.language === "ar"
+                    ? `تم إرسال الفاتورة تلقائياً عبر واتساب${waAutoNotice.phone ? ` إلى ${waAutoNotice.phone}` : ""}`
+                    : `Invoice auto-sent via WhatsApp${waAutoNotice.phone ? ` to ${waAutoNotice.phone}` : ""}`
+                  : ui.language === "ar"
+                    ? `تم إصدار الفاتورة، لكن تعذّر الإرسال التلقائي عبر واتساب: ${waAutoNotice.message || ""}`
+                    : `Invoice issued, but WhatsApp auto-send failed: ${waAutoNotice.message || ""}`}
+              </p>
+              {waAutoNotice.status === "sent" && waAutoNotice.adminPhone && (
+                <p className="text-xs opacity-90">
+                  {ui.language === "ar"
+                    ? `تمت جدولة إشعار الإدارة (${waAutoNotice.adminPhone}). تابع سجل الأحداث لتأكيد الإرسال.`
+                    : `Admin notification queued for ${waAutoNotice.adminPhone}. Check the event log for dispatch confirmation.`}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {waAutoNotice.status === "error" && (
+              <button
+                type="button"
+                onClick={() => setShowWhatsAppModal(true)}
+                className="min-h-9 px-3 py-1 rounded-lg border border-current/30 font-bold text-xs hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+              >
+                {ui.language === "ar" ? "إعادة الإرسال" : "Retry WhatsApp"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setWaAutoDismissed(true)}
+              className="min-h-9 px-2.5 py-1 rounded-lg text-xs font-bold opacity-80 hover:opacity-100 cursor-pointer"
+            >
+              {ui("إغلاق")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div

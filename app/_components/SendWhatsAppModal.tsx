@@ -1,9 +1,11 @@
 "use client";
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useId, useState } from "react";
 import Link from "next/link";
 import { MessageSquare, X, Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useUiText } from "@/lib/ui-text";
-import { sendContractWhatsApp, sendInvoiceWhatsApp } from "@/lib/whatsapp";
+import { sendContractWhatsApp, sendInvoiceWhatsApp, type WhatsAppDispatchResult } from "@/lib/whatsapp";
+import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
+import { useLanguage } from "@/lib/languageContext";
 import Modal from "./Modal";
 
 interface SendWhatsAppModalProps {
@@ -35,38 +37,31 @@ function SendWhatsAppModalContent({
   defaultPhone = "",
 }: SendWhatsAppModalProps) {
   const ui = useUiText();
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => language === "ar" ? ar : en;
+  const statusQuery = useWhatsAppStatus();
   const phoneId = useId();
   const phoneHintId = useId();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [phone, setPhone] = useState(defaultPhone);
   const [sending, setSending] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<WhatsAppDispatchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (sending) return;
+    if (sending || !statusQuery.canSend) return;
     setSending(true);
     setError(null);
     try {
-      if (type === "CONTRACT") {
-        await sendContractWhatsApp(targetId, phone.trim() || undefined);
-      } else {
-        await sendInvoiceWhatsApp(targetId, phone.trim() || undefined);
-      }
-      setSuccess(true);
-      timerRef.current = setTimeout(() => {
-        setSuccess(false);
-        onClose();
-      }, 2200);
+      const result = type === "CONTRACT"
+        ? await sendContractWhatsApp(targetId, phone.trim() || undefined)
+        : await sendInvoiceWhatsApp(targetId, phone.trim() || undefined);
+      setSuccess(result);
     } catch (err: unknown) {
-      const msg = err instanceof Error && err.message ? err.message : ui("حدث خطأ أثناء الإرسال");
+      const uncertain = err instanceof Error && ["TimeoutError", "AbortError", "TypeError"].includes(err.name);
+      const msg = uncertain
+        ? text("تعذر تأكيد نتيجة الإرسال. تحقق من الاستلام قبل إعادة المحاولة لتجنب التكرار.", "The send result could not be confirmed. Check receipt before retrying to avoid duplicates.")
+        : err instanceof Error && err.message ? err.message : ui("حدث خطأ أثناء الإرسال");
       setError(msg);
     } finally {
       setSending(false);
@@ -110,8 +105,12 @@ function SendWhatsAppModalContent({
           <div role="status" className="py-6 text-center space-y-3">
             <CheckCircle2 className="w-12 h-12 text-emerald-700 dark:text-emerald-300 mx-auto" aria-hidden="true" />
             <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
-              {ui("تم إرسال الرسالة عبر الواتساب بنجاح!")}
+              {text("تم إرسال الرسالة إلى واتساب.", "Message dispatched to WhatsApp.")}
             </p>
+            {success.phone && <p dir="ltr" className="break-all text-sm font-mono text-[var(--text-main)]">{success.phone}</p>}
+            <p className="text-sm text-[var(--text-muted)]">{text("استلام الرسالة أو قراءتها على هاتف المستلم غير مؤكد.", "Delivery and reading on the recipient’s phone are not confirmed.")}</p>
+            {success.hasPdfAttachment === false && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">{text("أُرسل الملخص النصي فقط؛ تعذّر إرفاق PDF. تحقق من الملف قبل إرسال نسخة أخرى.", "Only the text summary was sent; the PDF attachment was unavailable. Check the document before sending another copy.")}</p>}
+            <button type="button" onClick={onClose} className="gold-gradient-btn min-h-11 rounded-lg px-5 py-2 text-sm font-semibold">{text("تم", "Done")}</button>
           </div>
         ) : (
           <form onSubmit={handleSend} className="space-y-4">
@@ -132,6 +131,7 @@ function SendWhatsAppModalContent({
                 inputMode="tel"
                 autoComplete="tel"
                 required
+                disabled={sending}
                 dir="ltr"
                 placeholder="05xxxxxxxx or 201xxxxxxxxx"
                 aria-describedby={phoneHintId}
@@ -143,6 +143,15 @@ function SendWhatsAppModalContent({
                 {ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
               </span>
             </div>
+
+            {!statusQuery.canSend && (
+              <div role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3 text-sm text-[var(--text-muted)]">
+                <p>{statusQuery.isLoading
+                  ? text("جارٍ التحقق من اتصال واتساب…", "Checking WhatsApp connection…")
+                  : statusQuery.data?.antiBan?.haltReason || statusQuery.error || text("الإرسال غير متاح حالياً. راجع الاتصال وحدود المحاولات.", "Sending is unavailable. Check the connection and attempt limits.")}</p>
+                {!statusQuery.isLoading && <Link href="/admin/whatsapp" className="inline-flex min-h-11 items-center text-[var(--accent-gold)] underline" onClick={onClose}>{ui("إعدادات ربط الواتساب (QR)")}</Link>}
+              </div>
+            )}
 
             {error && (
               <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-300 space-y-2">
@@ -163,7 +172,7 @@ function SendWhatsAppModalContent({
             <div className="flex items-center gap-2 pt-2">
               <button
                 type="submit"
-                disabled={sending}
+                disabled={sending || !statusQuery.canSend}
                 className="flex-1 min-h-11 sm:min-h-9 py-1.5 px-4 rounded-lg text-xs sm:text-sm font-bold gold-gradient-btn transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {sending ? (

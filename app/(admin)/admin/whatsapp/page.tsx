@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import Image from "next/image";
 import {
   AlertCircle,
@@ -17,13 +17,13 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/app/_components/ui";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import WhatsAppFlowPanel from "@/app/_components/WhatsAppFlowPanel";
 import { useLanguage } from "@/lib/languageContext";
+import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import {
-  fetchWhatsAppStatus,
   logoutWhatsApp,
   reconnectWhatsApp,
   sendWhatsAppMessage,
-  type WhatsAppStatus,
 } from "@/lib/whatsapp";
 
 function formatAccountPhone(meId?: string): string | null {
@@ -39,12 +39,14 @@ export default function AdminWhatsAppSettingsPage() {
     [language]
   );
 
-  const [waState, setWaState] = useState<WhatsAppStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const statusQuery = useWhatsAppStatus();
+  const waState = statusQuery.data;
+  const isLoading = statusQuery.isLoading;
+  const isRefreshing = statusQuery.isFetching;
+  const refreshStatus = statusQuery.refetch;
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const loadError = statusQuery.error;
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
 
@@ -55,100 +57,32 @@ export default function AdminWhatsAppSettingsPage() {
   const [sendSuccess, setSendSuccess] = useState("");
   const [sendError, setSendError] = useState("");
 
-  const mountedRef = useRef(true);
-
-  const refreshStatus = useCallback(async () => {
-    setIsRefreshing(true);
-    setActionError("");
-    try {
-      const next = await fetchWhatsAppStatus();
-      if (!mountedRef.current) return;
-      setWaState(next);
-      setLoadError("");
-    } catch (err) {
-      if (!mountedRef.current) return;
-      setLoadError(
-        err instanceof Error
-          ? err.message
-          : text("تعذر جلب حالة اتصال الواتساب", "Failed to load WhatsApp connection status")
-      );
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-        setIsRefreshing(false);
-      }
-    }
-  }, [text]);
-
-  // Poll automatically: every 3s while connecting / waiting for QR scan, every 15s when connected
-  useEffect(() => {
-    mountedRef.current = true;
-    let active = true;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const runPoll = () => {
-      void fetchWhatsAppStatus()
-        .then((next) => {
-          if (!active) return;
-          setWaState(next);
-          setLoadError("");
-          setIsLoading(false);
-          const intervalMs = next.status === "connected" ? 15000 : 3000;
-          timer = setTimeout(runPoll, intervalMs);
-        })
-        .catch((err) => {
-          if (!active) return;
-          setLoadError(
-            err instanceof Error
-              ? err.message
-              : text("تعذر جلب حالة اتصال الواتساب", "Failed to load WhatsApp connection status")
-          );
-          setIsLoading(false);
-          timer = setTimeout(runPoll, 5000);
-        });
-    };
-
-    runPoll();
-
-    return () => {
-      active = false;
-      mountedRef.current = false;
-      if (timer) clearTimeout(timer);
-    };
-  }, [text]);
-
   async function handleReconnect() {
     setIsReconnecting(true);
     setActionError("");
     setActionMessage("");
     try {
       const next = await reconnectWhatsApp();
-      if (!mountedRef.current) return;
-      setWaState(next);
-      setActionMessage(
-        text(
-          "تم بدء تهيئة الاتصال، يرجى الانتظار قليلاً لظهور رمز QR.",
-          "Connection initialization started. Please wait briefly for the QR code."
-        )
-      );
+      refreshStatus();
+      setActionMessage(next.status === "connected"
+        ? text("جلسة واتساب متصلة بالفعل.", "WhatsApp is already connected.")
+        : text("تم طلب إعادة الاتصال. تابع الحالة؛ قد يُطلب مسح رمز QR.", "Reconnect requested. Follow the status; QR pairing may be required."));
     } catch (err) {
-      if (!mountedRef.current) return;
       setActionError(
         err instanceof Error
           ? err.message
           : text("تعذر إعادة الاتصال بالواتساب", "Failed to reconnect WhatsApp")
       );
     } finally {
-      if (mountedRef.current) setIsReconnecting(false);
+      setIsReconnecting(false);
     }
   }
 
   async function handleConfirmLogout() {
     setActionError("");
     setActionMessage("");
-    const next = await logoutWhatsApp();
-    if (!mountedRef.current) return;
-    setWaState(next);
+    await logoutWhatsApp();
+    refreshStatus();
     setIsLogoutModalOpen(false);
     setActionMessage(
       text(
@@ -160,7 +94,7 @@ export default function AdminWhatsAppSettingsPage() {
 
   async function handleSendTestMessage(e: FormEvent) {
     e.preventDefault();
-    if (isSending) return;
+    if (isSending || !statusQuery.canSend) return;
     setSendError("");
     setSendSuccess("");
 
@@ -175,10 +109,10 @@ export default function AdminWhatsAppSettingsPage() {
       setSendSuccess(
         res.data
           ? text(
-              `تمت إضافة الرسالة إلى طابور الإرسال الآمن (الترتيب: ${res.data.position}).`,
-              `Message queued in anti-ban FIFO queue (position: ${res.data.position}).`
+              `تمت إضافة الرسالة إلى طابور الإرسال (الترتيب: ${res.data.position}).`,
+              `Message queued for dispatch (position: ${res.data.position}).`
             )
-          : text("تم إرسال الرسالة بنجاح.", "Message queued successfully.")
+          : text("تم قبول طلب الإرسال. استلام الرسالة على الهاتف غير مؤكد.", "Send request accepted. Recipient delivery is not confirmed.")
       );
       setMessageText("");
       void refreshStatus();
@@ -235,7 +169,7 @@ export default function AdminWhatsAppSettingsPage() {
           <button
             type="button"
             onClick={() => void refreshStatus()}
-            className="min-h-11 sm:min-h-9 rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs font-bold hover:bg-rose-500/10 transition cursor-pointer"
+            className="min-h-11 sm:min-h-11 rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs font-bold hover:bg-rose-500/10 transition cursor-pointer"
           >
             {text("إعادة المحاولة", "Retry")}
           </button>
@@ -375,7 +309,8 @@ export default function AdminWhatsAppSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsLogoutModalOpen(true)}
-                  className="min-h-11 sm:min-h-9 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition inline-flex items-center gap-2 cursor-pointer"
+                  disabled={waState?.recovery?.canRelink === false}
+                  className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition inline-flex items-center gap-2 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" aria-hidden="true" />
                   <span>{text("تسجيل الخروج وتبديل الرقم", "Logout & Link Another Number")}</span>
@@ -468,21 +403,22 @@ export default function AdminWhatsAppSettingsPage() {
               <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                 <button
                   type="button"
-                  disabled={isReconnecting}
+                  disabled={isReconnecting || waState?.recovery?.canReconnect === false}
                   onClick={() => void handleReconnect()}
-                  className="gold-gradient-btn min-h-11 sm:min-h-9 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                  className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isReconnecting ? (
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                   ) : (
                     <RefreshCw className="w-4 h-4" aria-hidden="true" />
                   )}
-                  <span>{text("إعادة الاتصال وتوليد رمز QR", "Reconnect & Generate QR")}</span>
+                  <span>{text("إعادة الاتصال", "Reconnect")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsLogoutModalOpen(true)}
-                  className="min-h-11 sm:min-h-9 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
+                  disabled={waState?.recovery?.canRelink === false}
+                  className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
                 >
                   {text("مسح الجلسة السابقة", "Reset Session")}
                 </button>
@@ -493,8 +429,8 @@ export default function AdminWhatsAppSettingsPage() {
           <div className="border-t theme-border pt-4 text-xs text-[var(--text-muted)] flex flex-wrap items-center justify-between gap-2">
             <span>
               {text(
-                "حماية الحظر: فاصل زمني عشوائي 1.5 – 3.5 ثانية بين الرسائل",
-                "Anti-ban FIFO queue: 1.5–3.5s randomized delay between messages"
+                "طابور موحّد للرسائل والمستندات مع حدود للمحاولات",
+                "One queue for messages and documents with bounded send attempts"
               )}
             </span>
             <span className="font-mono" dir="ltr">
@@ -520,7 +456,7 @@ export default function AdminWhatsAppSettingsPage() {
           </div>
 
           <form onSubmit={handleSendTestMessage} className="space-y-4">
-            <fieldset disabled={status !== "connected" || isSending} className="space-y-4 disabled:opacity-65">
+            <fieldset disabled={!statusQuery.canSend || isSending} className="space-y-4 disabled:opacity-65">
               <div>
                 <label
                   htmlFor="wa-test-phone"
@@ -537,7 +473,7 @@ export default function AdminWhatsAppSettingsPage() {
                   placeholder="05xxxxxxxx or +9665xxxxxxxx"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono text-start"
+                  className="theme-input w-full min-h-11 sm:min-h-11 px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono text-start"
                 />
                 <span className="mt-1 block text-xs text-[var(--text-muted)]">
                   {text(
@@ -599,7 +535,7 @@ export default function AdminWhatsAppSettingsPage() {
 
               <button
                 type="submit"
-                disabled={status !== "connected" || isSending}
+                disabled={!statusQuery.canSend || isSending}
                 className="gold-gradient-btn w-full min-h-11 sm:min-h-10 rounded-lg px-4 py-2 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {isSending ? (
@@ -619,31 +555,35 @@ export default function AdminWhatsAppSettingsPage() {
         </section>
       </div>
 
+      {/* WhatsApp Interactive Flow Designer & Monitor (+966577842926) */}
+      <WhatsAppFlowPanel waConnected={statusQuery.canSend} />
+
       {/* Anti-Ban Safeguards Summary */}
       <section className="theme-card rounded-2xl p-5 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-3">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
-              {text("منظومة حماية الرقم من الحظر (Anti-Ban)", "Active Number Anti-Ban Protections")}
+              {text("ضوابط الإرسال والمحاولات", "Sending Safeguards")}
             </h2>
           </div>
           {antiBan && (
             <span className="text-xs font-mono text-[var(--text-muted)]" dir="ltr">
-              {`${antiBan.sentLastMinute}/${antiBan.perMinuteLimit} / min · ${antiBan.sentLast24Hours}/${antiBan.dailyLimit} / 24h`}
+              {`${antiBan.attemptedLastMinute ?? antiBan.sentLastMinute}/${antiBan.perMinuteLimit} / min · ${antiBan.attemptedLast24Hours ?? antiBan.sentLast24Hours}/${antiBan.dailyLimit} / 24h`}
             </span>
           )}
         </div>
 
+        <p className="text-sm text-[var(--text-muted)]">{text("هذه ضوابط داخلية لتقليل الأخطاء والتكرار، ولا تضمن عدم تقييد الحساب. أرسل فقط للمستلمين الموافقين على التواصل.", "These internal safeguards reduce errors and duplicates; they cannot guarantee an unrestricted account. Message only recipients who agreed to contact.")}</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
           <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-1">
             <p className="font-bold text-[var(--text-main)]">
-              {text("تأخير بشري عشوائي + مؤشر كتابة", "Randomized Delay & Typing")}
+              {text("تباعد محاولات الإرسال", "Send Attempt Pacing")}
             </p>
             <p className="text-[var(--text-muted)] leading-relaxed">
               {text(
-                "فاصل 1.5 إلى 3.5 ثانية بين كل رسالة وملف PDF مع محاكاة الكتابة (composing).",
-                "1.5–3.5s random gap across texts & PDFs with natural composing indicator."
+                "تباعد الرسائل والمستندات وفق الإعدادات؛ المحاولات الفاشلة تُحتسب أيضاً.",
+                "Configured pacing applies to texts and PDFs. Failed attempts count toward limits too."
               )}
             </p>
           </div>
@@ -664,8 +604,8 @@ export default function AdminWhatsAppSettingsPage() {
             </p>
             <p className="text-[var(--text-muted)] leading-relaxed">
               {text(
-                "حظر إرسال نفس الرسالة مرتين خلال 20 ثانية وتخزين نتيجة فحص الأرقام مؤقتاً.",
-                "Blocks duplicate sends within 20s and caches WhatsApp number checks for 24h."
+                "منع تكرار نفس الرسالة لمدة خمس دقائق، مع حفظ حدود المحاولات بعد إعادة التشغيل.",
+                "Identical sends are held for five minutes. Attempt limits survive server restarts."
               )}
             </p>
           </div>

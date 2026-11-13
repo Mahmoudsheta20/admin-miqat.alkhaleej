@@ -687,6 +687,169 @@ test("admin WhatsApp settings page displays QR code from backend status", async 
   await expect(qrImg).toBeVisible();
   await expect(qrImg).toHaveAttribute("src", /^data:image\/png;base64,/);
 });
+test("admin WhatsApp flow panel configures +966577842926 and triggers flow steps cleanly", async ({
+  page,
+}) => {
+  await preferences(page, "ar");
+  await login(page);
+  const pageErrors: string[] = [];
+  const consoleErrors: string[] = [];
+  page.on("pageerror", (err) => pageErrors.push(err.message));
+  page.on("console", (msg) => {
+    if (msg.type() === "error") consoleErrors.push(msg.text());
+  });
+  await page.goto("/admin/whatsapp");
+
+  const adminPhoneInput = page.locator("#wa-flow-admin-phone");
+  await expect(adminPhoneInput).toBeVisible();
+  await expect(adminPhoneInput).toHaveValue("+966577842926");
+  await expect(page.getByText("MQ-FIXTURE-001").first()).toBeVisible();
+
+  await adminPhoneInput.fill("+966500000001");
+  const configUpdate = page.waitForRequest(
+    (req) =>
+      req.method() === "PUT" && /\/whatsapp\/flow\/config$/.test(req.url()),
+  );
+  await page
+    .getByRole("button", { name: "حفظ إعدادات التدفق والأزرار" })
+    .click();
+  const updateBody = (await configUpdate).postDataJSON();
+  expect(updateBody.adminPhone).toBe("+966500000001");
+  await expect(
+    page.getByText("تم حفظ إعدادات نظام التدفق والأزرار التفاعلية بنجاح."),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "+966577842926", exact: true })
+    .click();
+  await expect(adminPhoneInput).toHaveValue("+966577842926");
+  const restoreSave = page.waitForResponse(
+    (res) =>
+      res.request().method() === "PUT" &&
+      /\/whatsapp\/flow\/config$/.test(res.url()),
+  );
+  await page
+    .getByRole("button", { name: "حفظ إعدادات التدفق والأزرار" })
+    .click();
+  await restoreSave;
+
+  const triggerReq = page.waitForRequest(
+    (req) =>
+      req.method() === "POST" && /\/whatsapp\/flow\/trigger$/.test(req.url()),
+  );
+  await page
+    .getByRole("button", { name: "وصلت لموقع العميل", exact: true })
+    .first()
+    .click();
+  const triggerBody = (await triggerReq).postDataJSON();
+  expect(triggerBody.role).toBe("CAPTAIN");
+  expect(triggerBody.actionId).toBe("captain_arrived");
+  await expect(page.getByText("وصل للموقع", { exact: true }).first()).toBeVisible();
+  expect(pageErrors).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+});
+test("admin contract creation supports WhatsApp auto-send and shows confirmation notice", async ({
+  page,
+}) => {
+  await preferences(page, "en");
+  await login(page);
+  await page.goto("/admin/contracts/new");
+
+  const captainPickerButton = page
+    .locator('button[data-search-select="true"]')
+    .first();
+  await captainPickerButton.click();
+  const captainPopover = page.locator(".picker-popover:popover-open");
+  await captainPopover.getByRole("button", { name: /Fixture Captain/ }).click();
+
+  await page.getByLabel("Lead guest name").fill("AutoSend Fixture Guest");
+  await page
+    .locator('input[name="passengers.0.name"]')
+    .fill("AutoSend Fixture Passenger");
+  await page.getByRole("button", { name: "+ City tour" }).click();
+
+  const autoSendCheckbox = page.getByRole("checkbox", {
+    name: /Auto-send contract via WhatsApp on save/,
+  });
+  await autoSendCheckbox.check();
+  await page
+    .getByLabel("Recipient WhatsApp phone (optional override)")
+    .fill("+966551234567");
+
+  const saved = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && /\/contracts$/.test(request.url()),
+  );
+  await page.locator('form button[type="submit"]').click();
+  const payload = (await saved).postDataJSON();
+  expect(payload.autoSendWhatsApp).toBe(true);
+  expect(payload.whatsAppPhone).toBe("+966551234567");
+
+  const previewDialog = page.getByRole("dialog", { name: "Contract preview" });
+  await expect(previewDialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(previewDialog).not.toBeVisible();
+
+  await expect(
+    page.getByText("Contract auto-sent via WhatsApp to +966551234567"),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Admin notification queued for +966577842926. Check the event log for dispatch confirmation.",
+    ),
+  ).toBeVisible();
+});
+test("admin invoice creation supports WhatsApp auto-send and shows notice on invoice page", async ({
+  page,
+}) => {
+  await preferences(page, "ar");
+  await login(page);
+  await page.goto("/admin/invoices/new?type=TAX");
+
+  await page.locator('input[name="customerName"]').fill("عميل الإرسال التلقائي");
+  await page.locator('input[type="tel"]').fill("551234567");
+  await page.locator("#main-content nav button").nth(1).click();
+  await page.getByLabel("عنوان الانطلاق", { exact: false }).fill("مطار جدة");
+  await page.getByLabel("عنوان الوصول", { exact: false }).fill("مكة");
+  await page.locator("#main-content nav button").nth(2).click();
+  await page
+    .getByLabel("وصف الخدمة", { exact: false })
+    .fill("خدمة نقل مع إرسال تلقائي");
+  await page.getByLabel("السعر (ر.س)", { exact: false }).fill("100");
+  await page.getByLabel("المعاملة الضريبية", { exact: false }).click();
+  const vatSelectPopover = page.locator(".picker-popover:popover-open");
+  await vatSelectPopover
+    .getByRole("button", { name: /خاضع لضريبة ١٥٪/ })
+    .click();
+  await page.locator("#main-content nav button").nth(3).click();
+
+  const autoSendCheckbox = page.getByRole("checkbox", {
+    name: /إرسال الفاتورة تلقائياً للعميل عبر واتساب فور الإصدار/,
+  });
+  await autoSendCheckbox.check();
+  await page
+    .getByLabel("رقم الواتساب المستهدف (هاتف العميل)")
+    .fill("+966559998877");
+
+  await page.getByRole("checkbox", { name: /أقر بأنني راجعت/ }).check();
+  const saved = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && /\/invoices$/.test(request.url()),
+  );
+  await page.locator('button[type="submit"]').click();
+  const payload = (await saved).postDataJSON();
+  expect(payload.autoSendWhatsApp).toBe(true);
+  expect(payload.whatsAppPhone).toBe("+966559998877");
+
+  await expect(page).toHaveURL(/\/admin\/invoices\/.*waAuto=sent/);
+  const statusBanner = page
+    .getByRole("status")
+    .filter({ hasText: "تم إرسال الفاتورة تلقائياً عبر واتساب" });
+  await expect(statusBanner).toContainText(
+    "تم إرسال الفاتورة تلقائياً عبر واتساب إلى +966559998877",
+  );
+  await expect(statusBanner).toContainText("+966577842926");
+});
 test("expense entry saves supplier details and exact amounts in the isolated backend", async ({
   page,
 }) => {
