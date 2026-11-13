@@ -52,10 +52,10 @@ export function createHelpGuide(isRTL: boolean): HelpGuideData { return ({
               : "Allows operations supervisor to pass an active captain and assigned vehicle with one click.",
           },
           {
-            label: isRTL ? "تقرير الفحص الرسمي PDF" : "Official Inspection PDF",
+            label: isRTL ? "تقرير الفحص الرسمي PDF وواتساب" : "Official Inspection PDF & WhatsApp",
             description: isRTL
-              ? "يُصدر النظام شهادة فحص يومية قابلة للطباعة وتُربط تلقائياً بعقود الرحلات الصادرة في نفس اليوم."
-              : "Generates an official printable PDF certificate automatically attached to daily contracts.",
+              ? "يُصدر النظام شهادة فحص يومية قابلة للطباعة وتربط بالعقود، مع إمكانية إرسالها مباشرة عبر واتساب للكابتن."
+              : "Generates an official printable PDF certificate linked to daily contracts, with direct WhatsApp sharing to the captain.",
           },
         ],
       },

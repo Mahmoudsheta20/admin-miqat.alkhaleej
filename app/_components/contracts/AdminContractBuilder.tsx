@@ -733,7 +733,7 @@ export default function AdminContractBuilder({
         {createdContract.referenceNumber}
       </div>
 
-      {driverPollMode && <p className="rounded-xl border theme-border p-3 text-sm">{text("تم حفظ العقد. تابع إرسال استطلاع السائق وتحديثات الرحلة من صفحة واتساب.", "Contract saved. Track the driver poll and trip updates on the WhatsApp page.")} <Link className="underline min-h-11 inline-flex items-center" href="/admin/whatsapp">{text("متابعة الرحلة", "Track trip")}</Link></p>}
+      {driverPollMode && <p className="rounded-xl border theme-border p-3 text-sm">{text("تم حفظ العقد. يُرسل ملف العقد PDF واستطلاع السائق عند الإسناد وتُتابع التحديثات من صفحة واتساب.", "Contract saved. The contract PDF and driver poll dispatch on assignment; track trip updates on the WhatsApp page.")} <Link className="underline min-h-11 inline-flex items-center" href="/admin/whatsapp">{text("متابعة الرحلة", "Track trip")}</Link></p>}
       {createdContract.whatsAppAutoSend?.attempted && (
         <div
           className={`rounded-2xl border px-4 py-3 text-xs sm:text-sm text-start flex flex-wrap items-center justify-between gap-2 ${

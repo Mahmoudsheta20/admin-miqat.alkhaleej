@@ -297,9 +297,6 @@ body:has(.app-shell) {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  scrollbar-width: auto;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   padding-bottom: 0;
   scroll-padding-block: 1rem calc(var(--mobile-nav-height) + 4rem);
 }

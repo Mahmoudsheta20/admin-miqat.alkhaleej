@@ -43,7 +43,7 @@ export interface WhatsAppQrResponse {
 }
 
 export interface WhatsAppDispatchResult {
-  dispatchKind?: "driver_poll" | "contract_document";
+  dispatchKind?: "driver_poll" | "contract_document" | "invoice_document" | "inspection_document";
   success: boolean;
   preview?: string;
   messageId?: string;
@@ -81,46 +81,68 @@ export async function fetchWhatsAppQr(): Promise<WhatsAppQrResponse> {
   return res.json();
 }
 
-export async function sendContractWhatsApp(
-  contractId: string,
-  phone?: string
+async function dispatchWhatsAppTarget(
+  endpoint: string,
+  payload: Record<string, unknown>,
+  fallbackError: string
 ): Promise<WhatsAppDispatchResult> {
-  const res = await fetch(backendUrl("/whatsapp/send-contract"), {
+  const res = await fetch(backendUrl(endpoint), {
     method: "POST",
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ contractId, phone }),
+    body: JSON.stringify(payload),
     signal: AbortSignal.timeout(120000),
   });
-  const data = (await res.json().catch(() => null)) as (WhatsAppDispatchResult & { error?: string; message?: string }) | null;
+  const data = (await res.json().catch(() => null)) as
+    | (WhatsAppDispatchResult & { error?: string; message?: string })
+    | null;
   if (!res.ok || !data?.success) {
-    throw new Error(data?.error || data?.message || "تعذر تأكيد إرسال العقد. تحقق من الاستلام قبل إعادة المحاولة");
+    throw new Error(data?.error || data?.message || fallbackError);
   }
   notifyWhatsAppMutation();
-  return { success: true, dispatchKind: data.dispatchKind, preview: data.preview, messageId: data.messageId, phone: data.phone, hasPdfAttachment: data.hasPdfAttachment };
+  return {
+    success: true,
+    dispatchKind: data.dispatchKind,
+    preview: data.preview,
+    messageId: data.messageId,
+    phone: data.phone,
+    hasPdfAttachment: data.hasPdfAttachment,
+  };
+}
+
+export async function sendContractWhatsApp(
+  contractId: string,
+  phone?: string
+): Promise<WhatsAppDispatchResult> {
+  return dispatchWhatsAppTarget(
+    "/whatsapp/send-contract",
+    { contractId, phone },
+    "تعذر تأكيد إرسال العقد. تحقق من الاستلام قبل إعادة المحاولة"
+  );
 }
 
 export async function sendInvoiceWhatsApp(
   invoiceId: string,
   phone?: string
 ): Promise<WhatsAppDispatchResult> {
-  const res = await fetch(backendUrl("/whatsapp/send-invoice"), {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ invoiceId, phone }),
-    signal: AbortSignal.timeout(120000),
-  });
-  const data = (await res.json().catch(() => null)) as (WhatsAppDispatchResult & { error?: string; message?: string }) | null;
-  if (!res.ok || !data?.success) {
-    throw new Error(data?.error || data?.message || "تعذر تأكيد إرسال الفاتورة. تحقق من الاستلام قبل إعادة المحاولة");
-  }
-  notifyWhatsAppMutation();
-  return { success: true, dispatchKind: data.dispatchKind, preview: data.preview, messageId: data.messageId, phone: data.phone, hasPdfAttachment: data.hasPdfAttachment };
+  return dispatchWhatsAppTarget(
+    "/whatsapp/send-invoice",
+    { invoiceId, phone },
+    "تعذر تأكيد إرسال الفاتورة. تحقق من الاستلام قبل إعادة المحاولة"
+  );
+}
+
+export async function sendInspectionWhatsApp(
+  inspectionId: string,
+  phone?: string
+): Promise<WhatsAppDispatchResult> {
+  return dispatchWhatsAppTarget(
+    "/whatsapp/send-inspection",
+    { inspectionId, phone },
+    "تعذر تأكيد إرسال تقرير الفحص. تحقق من الاستلام قبل إعادة المحاولة"
+  );
 }
 
 export async function sendWhatsAppMessage(
@@ -165,6 +187,8 @@ export interface WhatsAppAutoSendResult {
   attempted: boolean;
   success: boolean;
   phone?: string;
+  hasPdfAttachment?: boolean;
+  preview?: string;
   messageId?: string;
   flowSessionId?: string;
   interactiveSent?: boolean;

@@ -212,3 +212,46 @@ test("document adapters preserve PDF fallback metadata and prefer server error r
   }));
   await assert.rejects(() => failed.sendInvoiceWhatsApp("fixture-invoice"), /account review required/);
 });
+
+test("sendInspectionWhatsApp posts to /api/proxy/whatsapp/send-inspection and returns dispatch metadata", async () => {
+  let reqInfo;
+  const okApi = setup(async (url, init) => {
+    reqInfo = {
+      url,
+      method: init.method,
+      credentials: init.credentials,
+      body: JSON.parse(init.body),
+    };
+    return new Response(
+      JSON.stringify({
+        success: true,
+        dispatchKind: "inspection_document",
+        hasPdfAttachment: true,
+        phone: "+966559876543",
+        messageId: "wa-insp-1",
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  });
+
+  const sent = await okApi.sendInspectionWhatsApp("fixture-inspection", "+966559876543");
+  assert.equal(reqInfo.url, "/api/proxy/whatsapp/send-inspection");
+  assert.equal(reqInfo.method, "POST");
+  assert.equal(reqInfo.credentials, "include");
+  assert.deepEqual(reqInfo.body, {
+    inspectionId: "fixture-inspection",
+    phone: "+966559876543",
+  });
+  assert.equal(sent.dispatchKind, "inspection_document");
+  assert.equal(sent.hasPdfAttachment, true);
+  assert.equal(sent.phone, "+966559876543");
+  assert.equal(sent.messageId, "wa-insp-1");
+
+  const errApi = setup(async () =>
+    new Response(
+      JSON.stringify({ success: false, error: "تقرير الفحص غير موجود" }),
+      { status: 400, headers: { "content-type": "application/json" } },
+    ),
+  );
+  await assert.rejects(() => errApi.sendInspectionWhatsApp("missing"), /تقرير الفحص غير موجود/);
+});

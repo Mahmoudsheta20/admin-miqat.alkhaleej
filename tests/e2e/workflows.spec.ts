@@ -2480,7 +2480,7 @@ test("dashboard uses single main scroll container, keyboard scrolling, sidebar s
     page.locator("#main-content").getByRole("heading").first(),
   ).toBeVisible();
 
-  const sidebarBox = await page.locator(".workspace-sidebar").boundingBox();
+  const sidebarBox = await page.locator(".sidebar-navigation").boundingBox();
   expect(sidebarBox).not.toBeNull();
   if (sidebarBox) {
     await page.mouse.move(
@@ -2490,20 +2490,15 @@ test("dashboard uses single main scroll container, keyboard scrolling, sidebar s
     await page.mouse.wheel(0, 220);
     await expect
       .poll(() =>
-        page.evaluate(() => ({
-          sidebarTop: document.querySelector(".sidebar-navigation")?.scrollTop ?? 0,
-          mainTop: document.querySelector("#main-content")?.scrollTop ?? -1,
-        })),
+        page.evaluate(
+          () => document.querySelector(".sidebar-navigation")?.scrollTop ?? 0,
+        ),
       )
-      .toEqual(
-        expect.objectContaining({
-          mainTop: 0,
-        }),
-      );
-    const sidebarTop = await page.evaluate(
-      () => document.querySelector(".sidebar-navigation")?.scrollTop ?? 0,
+      .toBeGreaterThan(0);
+    const mainTopAfterSidebarScroll = await page.evaluate(
+      () => document.querySelector("#main-content")?.scrollTop ?? -1,
     );
-    expect(sidebarTop).toBeGreaterThan(0);
+    expect(mainTopAfterSidebarScroll).toBe(0);
   }
 
   await page.evaluate(() => {
@@ -2528,4 +2523,134 @@ test("dashboard uses single main scroll container, keyboard scrolling, sidebar s
       })),
     )
     .toEqual({ mainTop: 0, winY: 0 });
+});
+
+test("admin sends inspection report via WhatsApp from captains tab, history tab, details modal, and mobile view", async ({
+  page,
+}) => {
+  const sentPayloads: Array<{ inspectionId?: string; phone?: string }> = [];
+  await page.route("**/api/proxy/whatsapp/status", async (route) => {
+    await route.fulfill({
+      json: { success: true, status: "connected", data: { status: "connected" } },
+    });
+  });
+  await page.route("**/api/proxy/whatsapp/send-inspection", async (route) => {
+    const body = route.request().postDataJSON() as {
+      inspectionId?: string;
+      phone?: string;
+    };
+    sentPayloads.push(body);
+    await route.continue();
+  });
+
+  await preferences(page, "ar", "light");
+  await login(page);
+  const overviewRes = await page.request.get("/api/proxy/inspections/overview");
+  const overviewJson = (await overviewRes.json()) as {
+    data?: { captains?: Array<{ todayInspection?: { id?: string } | null }> };
+    captains?: Array<{ todayInspection?: { id?: string } | null }>;
+  };
+  const overviewCaptains = overviewJson.data?.captains ?? overviewJson.captains;
+  const targetInspectionId =
+    overviewCaptains?.[0]?.todayInspection?.id || ID;
+  const targetShort = targetInspectionId.slice(0, 8);
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/admin/inspections");
+
+  // 1) Captains Today desktop row WhatsApp action with custom override phone
+  const captainsWaBtn = page.getByRole("button", {
+    name: "إرسال الفحص عبر واتساب — Fixture Captain",
+  });
+  await expect(captainsWaBtn).toBeVisible();
+  await captainsWaBtn.click();
+
+  let dialog = page.getByRole("dialog", {
+    name: "إرسال تقرير الفحص للكابتن عبر واتساب",
+  });
+  await expect(dialog).toBeVisible();
+  const phoneInput = dialog.locator('input[type="tel"]');
+  await expect(phoneInput).toHaveValue("0551234567");
+  await phoneInput.fill("+966559876543");
+  await dialog.getByRole("button", { name: "إرسال الآن" }).click();
+
+  await expect(dialog.getByText("+966559876543")).toBeVisible();
+  await expect(
+    dialog.getByText("تم إرفاق ملف PDF الرسمي مع الرسالة."),
+  ).toBeVisible();
+  await expect(dialog.getByText(/تقرير الفحص اليومي للمركبة/)).toBeVisible();
+  expect(sentPayloads[0]).toEqual({
+    inspectionId: targetInspectionId,
+    phone: "+966559876543",
+  });
+  await dialog.getByRole("button", { name: "تم" }).click();
+  await expect(dialog).toBeHidden();
+
+  // 2) History tab table row WhatsApp button & Details modal WhatsApp button
+  await page.getByRole("button", { name: /سجل الفحوصات التشغيلية/ }).click();
+  const historyWaBtn = page.getByRole("button", {
+    name: `إرسال الفحص عبر واتساب #${targetShort}`,
+  });
+  await expect(historyWaBtn).toBeVisible();
+  await historyWaBtn.click();
+  dialog = page.getByRole("dialog", {
+    name: "إرسال تقرير الفحص للكابتن عبر واتساب",
+  });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('input[type="tel"]')).toHaveValue("0551234567");
+  await dialog.getByRole("button", { name: "إلغاء" }).click();
+  await expect(dialog).toBeHidden();
+
+  // Open details modal -> click "إرسال عبر واتساب" -> details modal closes and WhatsApp modal opens
+  await page
+    .getByRole("button", { name: `عرض تفاصيل الفحص #${targetShort}` })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await page.getByRole("button", { name: "إرسال عبر واتساب" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  dialog = page.getByRole("dialog", {
+    name: "إرسال تقرير الفحص للكابتن عبر واتساب",
+  });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "إرسال الآن" }).click();
+  await expect(dialog.getByText("0551234567")).toBeVisible();
+  await expect(
+    dialog.getByText("تم إرفاق ملف PDF الرسمي مع الرسالة."),
+  ).toBeVisible();
+  await expect(dialog.getByText(/تقرير الفحص مرفق بصيغة PDF/)).toBeVisible();
+  expect(sentPayloads[1]).toEqual({
+    inspectionId: targetInspectionId,
+    phone: "0551234567",
+  });
+  await dialog.getByRole("button", { name: "تم" }).click();
+
+  // 3) Mobile viewport & English LTR overflow + min 44px touch target check
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Switch to English" }).click();
+  const historyMobileWaBtn = page.getByRole("button", {
+    name: `Send inspection via WhatsApp #${targetShort}`,
+  });
+  await expect(historyMobileWaBtn).toBeVisible();
+  const historyBox = await historyMobileWaBtn.boundingBox();
+  expect(historyBox).not.toBeNull();
+  expect(historyBox!.height).toBeGreaterThanOrEqual(44);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    ),
+  ).toBe(false);
+
+  await page.getByRole("button", { name: /Captains and today/i }).click();
+  const captainsMobileWaBtn = page.getByRole("button", {
+    name: /Send inspection via WhatsApp/i,
+  });
+  await expect(captainsMobileWaBtn).toBeVisible();
+  const captainsBox = await captainsMobileWaBtn.boundingBox();
+  expect(captainsBox).not.toBeNull();
+  expect(captainsBox!.height).toBeGreaterThanOrEqual(44);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    ),
+  ).toBe(false);
 });

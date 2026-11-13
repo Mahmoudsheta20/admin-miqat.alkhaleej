@@ -79,6 +79,7 @@ test("send dialog reports text-only dispatch and stays open for explicit acknowl
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Send Now", exact: true }).click();
   await expect(dialog.getByText("Message dispatched to WhatsApp.")).toBeVisible();
+  await expect(dialog.getByText("Official PDF document attached with message.")).toHaveCount(0);
   await expect(dialog.getByText(/Only the text summary was sent/)).toBeVisible();
   await expect(dialog.getByText(/Delivery and reading on the recipient/)).toBeVisible();
   await dialog.getByRole("button", { name: "Done", exact: true }).click();

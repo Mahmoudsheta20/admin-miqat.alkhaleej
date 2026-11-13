@@ -539,6 +539,8 @@ export const UI_PHRASES: Record<string, string> = {
   "إرسال عبر واتساب": "Send via WhatsApp",
   "إرسال العقد للكابتن عبر واتساب": "Send contract to captain via WhatsApp",
   "إرسال الفاتورة للعميل عبر واتساب": "Send invoice to customer via WhatsApp",
+  "إرسال تقرير الفحص للكابتن عبر واتساب": "Send inspection report to captain via WhatsApp",
+  "إرسال الفحص عبر واتساب": "Send inspection via WhatsApp",
   "تم إرسال الرسالة عبر الواتساب بنجاح!":
     "Message sent via WhatsApp successfully!",
   "رقم هاتف الواتساب": "WhatsApp Phone Number",

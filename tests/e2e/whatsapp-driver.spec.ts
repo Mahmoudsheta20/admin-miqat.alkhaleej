@@ -103,6 +103,7 @@ test("manual contract send accepts a different number while driver polls are ena
   await dialog.getByRole("button", { name: "Send Now", exact: true }).click();
   await expect(dialog.getByText("Message dispatched to WhatsApp.")).toBeVisible();
   await expect(dialog.getByText("+966500000009", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Official PDF document attached with message.", { exact: true })).toBeVisible();
   await expect(dialog.getByText(/Only the text summary was sent/)).toHaveCount(0);
 });
 

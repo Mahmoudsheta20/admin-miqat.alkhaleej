@@ -1,9 +1,14 @@
 "use client";
 import React, { useId, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, X, Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { MessageSquare, X, Send, CheckCircle2, AlertCircle, Loader2, FileText } from "lucide-react";
 import { useUiText } from "@/lib/ui-text";
-import { sendContractWhatsApp, sendInvoiceWhatsApp, type WhatsAppDispatchResult } from "@/lib/whatsapp";
+import {
+  sendContractWhatsApp,
+  sendInspectionWhatsApp,
+  sendInvoiceWhatsApp,
+  type WhatsAppDispatchResult,
+} from "@/lib/whatsapp";
 import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import { useLanguage } from "@/lib/languageContext";
 import Modal from "./Modal";
@@ -11,12 +16,21 @@ import Modal from "./Modal";
 interface SendWhatsAppModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: "CONTRACT" | "INVOICE";
+  type: "CONTRACT" | "INVOICE" | "INSPECTION";
   targetId: string;
   targetTitle: string;
   recipientName: string;
   defaultPhone?: string;
 }
+
+const WHATSAPP_TARGET_SENDERS: Record<
+  SendWhatsAppModalProps["type"],
+  (targetId: string, phone?: string) => Promise<WhatsAppDispatchResult>
+> = {
+  CONTRACT: sendContractWhatsApp,
+  INVOICE: sendInvoiceWhatsApp,
+  INSPECTION: sendInspectionWhatsApp,
+};
 
 export default function SendWhatsAppModal(props: SendWhatsAppModalProps) {
   if (!props.isOpen) return null;
@@ -54,9 +68,7 @@ function SendWhatsAppModalContent({
     setSending(true);
     setError(null);
     try {
-      const result = type === "CONTRACT"
-        ? await sendContractWhatsApp(targetId, phone.trim() || undefined)
-        : await sendInvoiceWhatsApp(targetId, phone.trim() || undefined);
+      const result = await WHATSAPP_TARGET_SENDERS[type](targetId, phone.trim() || undefined);
       setSuccess(result);
     } catch (err: unknown) {
       const uncertain = err instanceof Error && ["TimeoutError", "AbortError", "TypeError"].includes(err.name);
@@ -69,10 +81,11 @@ function SendWhatsAppModalContent({
     }
   }
 
-  const modalTitle =
-    type === "CONTRACT"
-      ? ui("إرسال العقد للكابتن عبر واتساب")
-      : ui("إرسال الفاتورة للعميل عبر واتساب");
+  const modalTitle = {
+    CONTRACT: ui("إرسال العقد للكابتن عبر واتساب"),
+    INVOICE: ui("إرسال الفاتورة للعميل عبر واتساب"),
+    INSPECTION: ui("إرسال تقرير الفحص للكابتن عبر واتساب"),
+  }[type];
 
   return (
     <Modal label={modalTitle} onClose={onClose} isBusy={sending}>
@@ -103,15 +116,42 @@ function SendWhatsAppModalContent({
         </div>
 
         {success ? (
-          <div role="status" className="py-6 text-center space-y-3">
+          <div role="status" className="py-4 text-center space-y-3">
             <CheckCircle2 className="w-12 h-12 text-emerald-700 dark:text-emerald-300 mx-auto" aria-hidden="true" />
             <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
               {text("تم إرسال الرسالة إلى واتساب.", "Message dispatched to WhatsApp.")}
             </p>
             {success.phone && <p dir="ltr" className="break-all text-sm font-mono text-[var(--text-main)]">{success.phone}</p>}
+            {success.hasPdfAttachment === true && (
+              <p className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500/12 border border-emerald-600/30 px-3 py-1.5 text-xs sm:text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                <FileText className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>{text("تم إرفاق ملف PDF الرسمي مع الرسالة.", "Official PDF document attached with message.")}</span>
+              </p>
+            )}
+            {success.hasPdfAttachment === false && (
+              <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+                {text("أُرسل الملخص النصي فقط؛ تعذّر إرفاق PDF. تحقق من الملف قبل إرسال نسخة أخرى.", "Only the text summary was sent; the PDF attachment was unavailable. Check the document before sending another copy.")}
+              </p>
+            )}
+            {success.dispatchKind === "driver_poll" && (
+              <p className="text-sm text-[var(--text-muted)]">
+                {text("أُرسل استطلاع السائق. تتابع الإدارة تحديثاته بالرد على إشعار العقد الأصلي.", "Driver poll dispatched. Management updates quote the original contract notice.")}
+              </p>
+            )}
+            {success.preview?.trim() && (
+              <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3 text-start space-y-1.5">
+                <p className="text-xs font-bold text-[var(--text-muted)]">
+                  {text("نص الرسالة المرسلة:", "Dispatched message:")}
+                </p>
+                <pre
+                  dir="auto"
+                  className="max-h-52 overflow-y-auto whitespace-pre-wrap break-words font-sans text-xs sm:text-[13px] leading-relaxed text-[var(--text-main)] m-0"
+                >
+                  {success.preview}
+                </pre>
+              </div>
+            )}
             <p className="text-sm text-[var(--text-muted)]">{text("استلام الرسالة أو قراءتها على هاتف المستلم غير مؤكد.", "Delivery and reading on the recipient’s phone are not confirmed.")}</p>
-            {success.dispatchKind === "driver_poll" && <p className="text-sm text-[var(--text-muted)]">{text("أُرسل استطلاع السائق. تتابع الإدارة تحديثاته بالرد على إشعار العقد الأصلي.", "Driver poll dispatched. Management updates quote the original contract notice.")}</p>}
-            {success.hasPdfAttachment === false && success.dispatchKind !== "driver_poll" && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">{text("أُرسل الملخص النصي فقط؛ تعذّر إرفاق PDF. تحقق من الملف قبل إرسال نسخة أخرى.", "Only the text summary was sent; the PDF attachment was unavailable. Check the document before sending another copy.")}</p>}
             <button type="button" onClick={onClose} className="gold-gradient-btn min-h-11 rounded-lg px-5 py-2 text-sm font-semibold">{text("تم", "Done")}</button>
           </div>
         ) : (
@@ -123,7 +163,7 @@ function SendWhatsAppModalContent({
               </div>
             </div>
 
-            {pollMode && <p className="text-sm text-[var(--text-muted)]">{text("أرسل نسخة العقد إلى الرقم الذي تختاره لهذه الرسالة. يستمر استطلاع الرحلة على رقم السائق الحالي.", "Send a contract copy to the number you choose for this message. Trip polls continue on the current driver’s number.")}</p>}
+            {pollMode && <p className="text-sm text-[var(--text-muted)]">{text("أرسل نسخة العقد PDF إلى الرقم الذي تختاره لهذه الرسالة. يستمر استطلاع الرحلة على رقم السائق الحالي.", "Send a contract PDF copy to the number you choose for this message. Trip polls continue on the current driver’s number.")}</p>}
             <div>
               <label htmlFor={phoneId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("رقم هاتف الواتساب")}

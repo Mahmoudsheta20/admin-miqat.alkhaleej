@@ -159,7 +159,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
             <h3 className="text-base sm:text-lg font-bold">{ui(isRTL ? "تم إنشاء رحلة العودة بنجاح" : "Return Trip Created Successfully")}</h3>
             <p className="font-mono text-sm text-[var(--text-muted)]" dir="ltr">{createdContract.referenceNumber}</p>
             {!createdContract.pdfPath && <p className="text-xs sm:text-sm text-[var(--accent-gold)]">{ui(isRTL ? "تم حفظ العقد، لكن تعذر تجهيز PDF. يمكنك إعادة المحاولة من المعاينة." : "Contract saved, but PDF generation failed. You can retry from preview.")}</p>}
-            {driverPollMode && <p className="text-sm text-[var(--text-muted)]">{isRTL ? "تابع إرسال استطلاع السائق وتحديثات رحلة العودة من صفحة واتساب." : "Track the driver poll and return-trip updates on the WhatsApp page."}</p>}
+            {driverPollMode && <p className="text-sm text-[var(--text-muted)]">{isRTL ? "عند الإسناد يُرسل ملف عقد العودة PDF مع استطلاع السائق. تابع التحديثات من صفحة واتساب." : "Assignment sends the return contract PDF and driver poll. Track updates on the WhatsApp page."}</p>}
             {createdContract.whatsAppAutoSend?.attempted && (
               <p role={createdContract.whatsAppAutoSend.success ? "status" : "alert"} className="break-words text-sm text-[var(--text-main)]">
                 {createdContract.whatsAppAutoSend.success

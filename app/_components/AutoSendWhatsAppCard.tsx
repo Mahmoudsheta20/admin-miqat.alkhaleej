@@ -48,7 +48,7 @@ export default function AutoSendWhatsAppCard({
   if (documentType === "CONTRACT" && wa.data?.driverWorkflow?.enabled) return (
     <div className="rounded-xl border theme-border p-4 space-y-2 text-sm">
       <p className="font-semibold">{text("متابعة السائق عبر واتساب", "Driver tracking on WhatsApp")}</p>
-      <p className="text-[var(--text-muted)]">{text("عند إسناد العقد يُرسل استطلاع واحد إلى رقم السائق المسجل. تتلقى الإدارة تحديثاته كردود على إشعار العقد الأصلي.", "Assignment sends one poll to the registered driver. Management receives status updates as replies to the original contract notice.")}</p>
+      <p className="text-[var(--text-muted)]">{text("عند إسناد العقد يُرسل ملف العقد PDF مع التفاصيل واستطلاع الحالة إلى رقم السائق المسجل. تتلقى الإدارة تحديثاته كردود على إشعار العقد الأصلي.", "Assignment sends the contract PDF with trip details and one status poll to the registered driver. Management receives status updates as replies to the original contract notice.")}</p>
       <p className="text-[var(--text-muted)]">{text("وجهة الإدارة:", "Management destination:")} <bdi dir="ltr" className="break-all">{wa.data.driverWorkflow.managementTarget}</bdi></p>
       <Link href="/admin/whatsapp" className="min-h-11 inline-flex items-center text-[var(--accent-gold)] underline">{text("متابعة إرسال الاستطلاع وحالة الرحلة", "Track poll dispatch and trip status")}</Link>
     </div>

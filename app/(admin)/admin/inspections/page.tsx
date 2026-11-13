@@ -11,11 +11,12 @@ import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
 
 import React, { useState, useEffect, useId, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
-import { ClipboardCheck, CheckCircle2, XCircle, AlertCircle, Zap, Search, RefreshCw, Plus, Eye, Trash2, Check, ShieldCheck, Car, Phone, Calendar, X, FileText, AlertTriangle, UserCheck, Gauge, ShieldAlert, Sparkles, Edit3 } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, XCircle, AlertCircle, Zap, Search, RefreshCw, Plus, Eye, Trash2, Check, ShieldCheck, Car, Phone, Calendar, X, FileText, AlertTriangle, UserCheck, Gauge, ShieldAlert, Sparkles, Edit3, MessageSquare } from "lucide-react";
 import { getCaptainsInspectionOverview, directPassInspection, getAllInspectionsList, deleteInspection, submitInspection, CaptainInspectionItem, InspectionWithMeta } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
 const InspectionPdfPreviewModal = dynamic(() => import("@/app/_components/InspectionPdfPreviewModal"), { ssr: false });
+const SendWhatsAppModal = dynamic(() => import("@/app/_components/SendWhatsAppModal"), { ssr: false });
 import { CustomDatePicker } from "@/app/_components/form/CustomDatePicker";
 import {
   PageHeader,
@@ -108,6 +109,12 @@ export default function AdminInspectionsPage() {
     vehiclePlate?: string;
     pdfPath?: string | null;
   } | null>(null);
+  const [whatsAppInspection, setWhatsAppInspection] = useState<{
+    id: string;
+    targetTitle: string;
+    recipientName: string;
+    defaultPhone?: string;
+  } | null>(null);
 
   // Custom Form state
   const [customCaptainId, setCustomCaptainId] = useState("");
@@ -127,6 +134,40 @@ export default function AdminInspectionsPage() {
   const safeCaptains = captains;
   const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
   const safeInspections = inspections;
+
+  const captainPhoneById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const captain of safeCaptains) {
+      if (captain.id && captain.phone) {
+        map.set(captain.id, captain.phone);
+      }
+    }
+    return map;
+  }, [safeCaptains]);
+
+  const openInspectionWhatsApp = useCallback(
+    (params: {
+      id: string;
+      captainId?: string | null;
+      captainName?: string | null;
+      captainPhone?: string | null;
+      vehiclePlate?: string | null;
+    }) => {
+      const shortCode = params.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+      const defaultPhone =
+        params.captainPhone ||
+        (params.captainId ? captainPhoneById.get(params.captainId) : undefined) ||
+        "";
+      setSelectedInspectionForView(null);
+      setWhatsAppInspection({
+        id: params.id,
+        targetTitle: `INSP-${shortCode}${params.vehiclePlate ? ` · ${params.vehiclePlate}` : ""}`,
+        recipientName: params.captainName || ui("كابتن غير محدد"),
+        defaultPhone,
+      });
+    },
+    [captainPhoneById, ui]
+  );
 
   // Fetch inspection datasets (shared between mount effect and user-triggered refresh)
   const fetchInspectionDatasets = useCallback((forceRefresh: boolean) => {
@@ -1008,6 +1049,27 @@ export default function AdminInspectionsPage() {
 
                                   <button
                                     type="button"
+                                    onClick={() => {
+                                      if (c.todayInspection?.id) {
+                                        openInspectionWhatsApp({
+                                          id: c.todayInspection.id,
+                                          captainId: c.id,
+                                          captainName: c.name,
+                                          captainPhone: c.phone,
+                                          vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                        });
+                                      }
+                                    }}
+                                    aria-label={`${ui("إرسال الفحص عبر واتساب")} — ${c.name}`}
+                                    className="min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition shadow-xs cursor-pointer"
+                                    title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>{ui("واتساب")}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
                                     onClick={() => handleDirectPass(c)}
                                     disabled={isExecutingThis}
                                     aria-label={`${ui("إعادة الفحص المباشر وتحديث التوقيت")} — ${c.name}`}
@@ -1157,6 +1219,28 @@ export default function AdminInspectionsPage() {
                             >
                               <FileText className="w-4 h-4" aria-hidden="true" />
                               <span>PDF</span>
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (c.todayInspection?.id) {
+                                  openInspectionWhatsApp({
+                                    id: c.todayInspection.id,
+                                    captainId: c.id,
+                                    captainName: c.name,
+                                    captainPhone: c.phone,
+                                    vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                  });
+                                }
+                              }}
+                              aria-label={`${ui("إرسال الفحص عبر واتساب")} — ${c.name}`}
+                              className="min-h-11 px-3.5 gap-1.5 border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
+                            >
+                              <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                              <span>{ui("واتساب")}</span>
                             </Button>
 
                             <Button
@@ -1349,6 +1433,25 @@ export default function AdminInspectionsPage() {
 
                             <button
                               type="button"
+                              onClick={() =>
+                                openInspectionWhatsApp({
+                                  id: insp.id,
+                                  captainId: insp.captainId,
+                                  captainName: insp.captainName,
+                                  captainPhone: insp.captainPhone,
+                                  vehiclePlate: insp.vehiclePlate,
+                                })
+                              }
+                              aria-label={`${ui("إرسال الفحص عبر واتساب")} #${insp.id.slice(0, 8)}`}
+                              className="min-h-9 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+                              title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>{ui("واتساب")}</span>
+                            </button>
+
+                            <button
+                              type="button"
                               aria-label={`${ui("حذف سجل الفحص")} #${insp.id.slice(0, 8)}`}
                               onClick={() => setDeleteConfirmId(insp.id)}
                               className="min-h-9 min-w-9 p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 text-rose-700 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center justify-center transition cursor-pointer"
@@ -1428,6 +1531,26 @@ export default function AdminInspectionsPage() {
                         >
                           <FileText className="w-4 h-4" aria-hidden="true" />
                           <span>{ui("وثيقة PDF")}</span>
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            openInspectionWhatsApp({
+                              id: insp.id,
+                              captainId: insp.captainId,
+                              captainName: insp.captainName,
+                              captainPhone: insp.captainPhone,
+                              vehiclePlate: insp.vehiclePlate,
+                            })
+                          }
+                          aria-label={`${ui("إرسال الفحص عبر واتساب")} #${insp.id.slice(0, 8)}`}
+                          className="min-h-11 px-3.5 gap-1.5 border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
+                        >
+                          <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                          <span>{ui("واتساب")}</span>
                         </Button>
 
                         <Button
@@ -1638,7 +1761,28 @@ export default function AdminInspectionsPage() {
               <span className="text-xs text-[var(--text-muted)] flex items-center gap-1.5 font-bold">
                 <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 {ui("معتمد رسمياً في نظام ميقات الخليج")}</span>
-              <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() =>
+                    openInspectionWhatsApp({
+                      id: selectedInspectionForView.id,
+                      captainId: selectedInspectionForView.captainId,
+                      captainName: selectedInspectionForView.captainName,
+                      captainPhone:
+                        "captainPhone" in selectedInspectionForView &&
+                        typeof selectedInspectionForView.captainPhone === "string"
+                          ? selectedInspectionForView.captainPhone
+                          : undefined,
+                      vehiclePlate: selectedInspectionForView.vehiclePlate,
+                    })
+                  }
+                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold transition cursor-pointer"
+                  title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
+                >
+                  <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                  <span>{ui("إرسال عبر واتساب")}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -2016,6 +2160,17 @@ export default function AdminInspectionsPage() {
           captainName={previewPdfInspection.captainName}
           vehiclePlate={previewPdfInspection.vehiclePlate}
           pdfUrl={previewPdfInspection.pdfPath}
+        />
+      )}
+      {whatsAppInspection && (
+        <SendWhatsAppModal
+          isOpen={Boolean(whatsAppInspection)}
+          onClose={() => setWhatsAppInspection(null)}
+          type="INSPECTION"
+          targetId={whatsAppInspection.id}
+          targetTitle={whatsAppInspection.targetTitle}
+          recipientName={whatsAppInspection.recipientName}
+          defaultPhone={whatsAppInspection.defaultPhone}
         />
       )}
     </div>
