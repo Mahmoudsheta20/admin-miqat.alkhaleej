@@ -31,6 +31,7 @@ export interface WhatsAppStatus {
   me_id?: string;
   me_push_name?: string;
   status_message?: string;
+  driverWorkflow?: { enabled: boolean; managementTarget: string | null };
   recovery?: { canReconnect: boolean; canRelink: boolean };
 }
 
@@ -42,6 +43,7 @@ export interface WhatsAppQrResponse {
 }
 
 export interface WhatsAppDispatchResult {
+  dispatchKind?: "driver_poll";
   success: boolean;
   preview?: string;
   messageId?: string;
@@ -97,7 +99,7 @@ export async function sendContractWhatsApp(
     throw new Error(data?.error || data?.message || "تعذر تأكيد إرسال العقد. تحقق من الاستلام قبل إعادة المحاولة");
   }
   notifyWhatsAppMutation();
-  return { success: true, preview: data.preview, messageId: data.messageId, phone: data.phone, hasPdfAttachment: data.hasPdfAttachment };
+  return { success: true, dispatchKind: data.dispatchKind, preview: data.preview, messageId: data.messageId, phone: data.phone, hasPdfAttachment: data.hasPdfAttachment };
 }
 
 export async function sendInvoiceWhatsApp(
@@ -118,7 +120,7 @@ export async function sendInvoiceWhatsApp(
     throw new Error(data?.error || data?.message || "تعذر تأكيد إرسال الفاتورة. تحقق من الاستلام قبل إعادة المحاولة");
   }
   notifyWhatsAppMutation();
-  return { success: true, preview: data.preview, messageId: data.messageId, phone: data.phone, hasPdfAttachment: data.hasPdfAttachment };
+  return { success: true, dispatchKind: data.dispatchKind, preview: data.preview, messageId: data.messageId, phone: data.phone, hasPdfAttachment: data.hasPdfAttachment };
 }
 
 export async function sendWhatsAppMessage(

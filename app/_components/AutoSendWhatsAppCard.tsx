@@ -1,5 +1,6 @@
 "use client";
 
+import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import Link from "next/link";
 import { CheckCircle2, MessageSquare, WifiOff } from "lucide-react";
 import { useId } from "react";
@@ -7,6 +8,7 @@ import { useLanguage } from "@/lib/languageContext";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AutoSendWhatsAppCardProps {
+  documentType?: "CONTRACT" | "INVOICE";
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   phone: string;
@@ -23,6 +25,7 @@ interface AutoSendWhatsAppCardProps {
 }
 
 export default function AutoSendWhatsAppCard({
+  documentType = "INVOICE",
   checked,
   onCheckedChange,
   phone,
@@ -41,6 +44,15 @@ export default function AutoSendWhatsAppCard({
   const isAr = language === "ar";
   const text = (ar: string, en: string) => (isAr ? ar : en);
   const inputId = useId();
+  const wa = useWhatsAppStatus();
+  if (documentType === "CONTRACT" && wa.data?.driverWorkflow?.enabled) return (
+    <div className="rounded-xl border theme-border p-4 space-y-2 text-sm">
+      <p className="font-semibold">{text("متابعة السائق عبر واتساب", "Driver tracking on WhatsApp")}</p>
+      <p className="text-[var(--text-muted)]">{text("عند إسناد العقد يُرسل استطلاع واحد إلى رقم السائق المسجل. تتلقى الإدارة تحديثاته كردود على إشعار العقد الأصلي.", "Assignment sends one poll to the registered driver. Management receives status updates as replies to the original contract notice.")}</p>
+      <p className="text-[var(--text-muted)]">{text("وجهة الإدارة:", "Management destination:")} <bdi dir="ltr" className="break-all">{wa.data.driverWorkflow.managementTarget}</bdi></p>
+      <Link href="/admin/whatsapp" className="min-h-11 inline-flex items-center text-[var(--accent-gold)] underline">{text("متابعة إرسال الاستطلاع وحالة الرحلة", "Track poll dispatch and trip status")}</Link>
+    </div>
+  );
 
   return (
     <div

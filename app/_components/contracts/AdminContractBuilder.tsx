@@ -5,6 +5,7 @@ import {
   ContractIssueDate,
 } from "@/app/_components/form/ContractFields";
 import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
+import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import { useUiText } from "@/lib/ui-text";
 
 import dynamic from "next/dynamic";
@@ -121,6 +122,8 @@ export default function AdminContractBuilder({
   onCreated,
 }: AdminContractBuilderProps) {
   const ui = useUiText();
+  const whatsappStatus = useWhatsAppStatus();
+  const driverPollMode = whatsappStatus.data?.driverWorkflow?.enabled === true;
   const { isRTL, language } = useLanguage();
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
   const [commercial, setCommercial] =
@@ -587,7 +590,7 @@ export default function AdminContractBuilder({
       const res = await submitContract({
         ...payload,
         commercial: normalizeCommercialInput(commercial),
-        ...(autoSendWhatsApp
+        ...(autoSendWhatsApp && !driverPollMode
           ? {
               autoSendWhatsApp: true,
               ...(whatsAppPhoneOverride.trim()
@@ -730,6 +733,7 @@ export default function AdminContractBuilder({
         {createdContract.referenceNumber}
       </div>
 
+      {driverPollMode && <p className="rounded-xl border theme-border p-3 text-sm">{text("تم حفظ العقد. تابع إرسال استطلاع السائق وتحديثات الرحلة من صفحة واتساب.", "Contract saved. Track the driver poll and trip updates on the WhatsApp page.")} <Link className="underline min-h-11 inline-flex items-center" href="/admin/whatsapp">{text("متابعة الرحلة", "Track trip")}</Link></p>}
       {createdContract.whatsAppAutoSend?.attempted && (
         <div
           className={`rounded-2xl border px-4 py-3 text-xs sm:text-sm text-start flex flex-wrap items-center justify-between gap-2 ${
@@ -1655,6 +1659,7 @@ export default function AdminContractBuilder({
 
       {/* Auto-Send Contract via WhatsApp + Flow Option */}
       <AutoSendWhatsAppCard
+        documentType="CONTRACT"
         checked={autoSendWhatsApp}
         onCheckedChange={(next) => {
           autoSendTouchedRef.current = true;

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/app/_components/ui";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import WhatsAppDriverTrips from "@/app/_components/WhatsAppDriverTrips";
 import WhatsAppFlowPanel from "@/app/_components/WhatsAppFlowPanel";
 import { useLanguage } from "@/lib/languageContext";
 import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
@@ -556,7 +557,9 @@ export default function AdminWhatsAppSettingsPage() {
       </div>
 
       {/* WhatsApp Interactive Flow Designer & Monitor (+966577842926) */}
-      <WhatsAppFlowPanel waConnected={statusQuery.canSend} />
+      {statusQuery.data?.driverWorkflow?.enabled
+        ? <WhatsAppDriverTrips canSend={statusQuery.canSend} managementTarget={statusQuery.data.driverWorkflow.managementTarget} />
+        : statusQuery.data && !statusQuery.error ? <WhatsAppFlowPanel waConnected={statusQuery.canSend} /> : null}
 
       {/* Anti-Ban Safeguards Summary */}
       <section className="theme-card rounded-2xl p-5 sm:p-6 space-y-4">

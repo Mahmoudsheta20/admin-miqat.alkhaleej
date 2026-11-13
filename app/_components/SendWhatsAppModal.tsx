@@ -40,6 +40,7 @@ function SendWhatsAppModalContent({
   const { language } = useLanguage();
   const text = (ar: string, en: string) => language === "ar" ? ar : en;
   const statusQuery = useWhatsAppStatus();
+  const pollMode = type === "CONTRACT" && statusQuery.data?.driverWorkflow?.enabled === true;
   const phoneId = useId();
   const phoneHintId = useId();
   const [phone, setPhone] = useState(defaultPhone);
@@ -54,7 +55,7 @@ function SendWhatsAppModalContent({
     setError(null);
     try {
       const result = type === "CONTRACT"
-        ? await sendContractWhatsApp(targetId, phone.trim() || undefined)
+        ? await sendContractWhatsApp(targetId, pollMode ? undefined : phone.trim() || undefined)
         : await sendInvoiceWhatsApp(targetId, phone.trim() || undefined);
       setSuccess(result);
     } catch (err: unknown) {
@@ -70,7 +71,7 @@ function SendWhatsAppModalContent({
 
   const modalTitle =
     type === "CONTRACT"
-      ? ui("إرسال العقد للكابتن عبر واتساب")
+      ? pollMode ? text("إرسال استطلاع السائق", "Send driver poll") : ui("إرسال العقد للكابتن عبر واتساب")
       : ui("إرسال الفاتورة للعميل عبر واتساب");
 
   return (
@@ -109,7 +110,8 @@ function SendWhatsAppModalContent({
             </p>
             {success.phone && <p dir="ltr" className="break-all text-sm font-mono text-[var(--text-main)]">{success.phone}</p>}
             <p className="text-sm text-[var(--text-muted)]">{text("استلام الرسالة أو قراءتها على هاتف المستلم غير مؤكد.", "Delivery and reading on the recipient’s phone are not confirmed.")}</p>
-            {success.hasPdfAttachment === false && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">{text("أُرسل الملخص النصي فقط؛ تعذّر إرفاق PDF. تحقق من الملف قبل إرسال نسخة أخرى.", "Only the text summary was sent; the PDF attachment was unavailable. Check the document before sending another copy.")}</p>}
+            {success.dispatchKind === "driver_poll" && <p className="text-sm text-[var(--text-muted)]">{text("أُرسل استطلاع السائق. تتابع الإدارة تحديثاته بالرد على إشعار العقد الأصلي.", "Driver poll dispatched. Management updates quote the original contract notice.")}</p>}
+            {success.hasPdfAttachment === false && success.dispatchKind !== "driver_poll" && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">{text("أُرسل الملخص النصي فقط؛ تعذّر إرفاق PDF. تحقق من الملف قبل إرسال نسخة أخرى.", "Only the text summary was sent; the PDF attachment was unavailable. Check the document before sending another copy.")}</p>}
             <button type="button" onClick={onClose} className="gold-gradient-btn min-h-11 rounded-lg px-5 py-2 text-sm font-semibold">{text("تم", "Done")}</button>
           </div>
         ) : (
@@ -121,6 +123,7 @@ function SendWhatsAppModalContent({
               </div>
             </div>
 
+            {pollMode && <p className="text-sm text-[var(--text-muted)]">{text("يُرسل استطلاع واحد إلى رقم السائق المسجل. لا يُرفق PDF مع الاستطلاع.", "One poll goes to the assigned driver’s registered phone. The poll does not include a PDF.")}</p>}
             <div>
               <label htmlFor={phoneId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("رقم هاتف الواتساب")}
@@ -130,17 +133,18 @@ function SendWhatsAppModalContent({
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
-                required
+                required={!pollMode}
                 disabled={sending}
+                readOnly={pollMode}
                 dir="ltr"
                 placeholder="05xxxxxxxx or 201xxxxxxxxx"
                 aria-describedby={phoneHintId}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono text-start"
+                className="theme-input w-full min-h-11 px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono text-start"
               />
               <span id={phoneHintId} className="text-xs text-[var(--text-muted)] mt-1.5 block">
-                {ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
+                {pollMode ? text("الرقم المسجل للسائق؛ لتغييره حدّث ملف السائق أولاً.", "Assigned driver’s phone. Update the driver profile to change it.") : ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
               </span>
             </div>
 
@@ -173,7 +177,7 @@ function SendWhatsAppModalContent({
               <button
                 type="submit"
                 disabled={sending || !statusQuery.canSend}
-                className="flex-1 min-h-11 sm:min-h-9 py-1.5 px-4 rounded-lg text-xs sm:text-sm font-bold gold-gradient-btn transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                className="flex-1 min-h-11 py-1.5 px-4 rounded-lg text-xs sm:text-sm font-bold gold-gradient-btn transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {sending ? (
                   <>
@@ -191,7 +195,7 @@ function SendWhatsAppModalContent({
                 type="button"
                 disabled={sending}
                 onClick={onClose}
-                className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
+                className="min-h-11 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
               >
                 {ui("إلغاء")}
               </button>
