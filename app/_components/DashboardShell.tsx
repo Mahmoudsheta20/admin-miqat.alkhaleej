@@ -151,9 +151,122 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
     }
   }, [isLoading, user, role, pathname, fallbackAdminPath, router]);
 
+  const mainRef = useRef<HTMLElement | null>(null);
+  const previousPathnameRef = useRef(pathname);
+
   useEffect(() => {
     document.title = `${routeLabel(pathname, language)} | ${language === "ar" ? "ميقات الخليج" : "Miqat Al Khaleej"}`;
   }, [pathname, language]);
+
+  useEffect(() => {
+    if (previousPathnameRef.current === pathname) return;
+    previousPathnameRef.current = pathname;
+
+    window.scrollTo(0, 0);
+    const main = mainRef.current;
+    if (!main) return;
+
+    const rawHash = window.location.hash;
+    if (rawHash && rawHash !== "#main-content") {
+      try {
+        const hashId = decodeURIComponent(rawHash.slice(1));
+        const target = hashId ? document.getElementById(hashId) : null;
+        if (target && main.contains(target)) {
+          target.scrollIntoView({ block: "start", behavior: "auto" });
+          return;
+        }
+      } catch {
+        // Ignore malformed URL hash fragments and fall back to top scroll.
+      }
+    }
+    main.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+
+  useEffect(() => {
+    const isScrollableAncestor = (start: HTMLElement | null, boundary: HTMLElement) => {
+      let node: HTMLElement | null = start;
+      while (node && node !== boundary && node !== document.body && node !== document.documentElement) {
+        const style = window.getComputedStyle(node);
+        if (
+          (style.overflowY === "auto" || style.overflowY === "scroll") &&
+          node.scrollHeight > node.clientHeight + 1
+        ) {
+          return true;
+        }
+        node = node.parentElement;
+      }
+      return false;
+    };
+
+    const hasOpenFloatingLayer = () => {
+      if (document.querySelector("dialog[open], [role='menu'], [role='listbox']")) {
+        return true;
+      }
+      const popovers = document.querySelectorAll(".picker-popover");
+      for (const popover of popovers) {
+        if (popover.getAttribute("data-open") === "true") return true;
+        try {
+          if (popover.matches(":popover-open")) return true;
+        } catch {
+          // Environments without :popover-open selector support fall back to content check.
+          if (popover.childElementCount > 0 && !popover.classList.contains("hidden")) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      const main = mainRef.current;
+      if (!main || main.scrollHeight <= main.clientHeight + 1) return;
+      if (hasOpenFloatingLayer()) return;
+
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (
+        target?.closest(
+          "input, textarea, select, [contenteditable='true'], [contenteditable=''], [role='textbox'], [role='combobox'], [role='listbox'], [role='menu'], [role='slider'], [role='spinbutton'], .workspace-sidebar, .navigation-drawer",
+        )
+      ) {
+        return;
+      }
+      if (isScrollableAncestor(target, main)) return;
+
+      const isPagingKey = event.key === "PageDown" || event.key === "PageUp";
+      if (
+        !isPagingKey &&
+        target?.closest(
+          "a, button, summary, label, [role='button'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='menuitem'], [role='option'], [role='treeitem'], [tabindex]:not(#main-content)",
+        )
+      ) {
+        return;
+      }
+
+      const pageStep = Math.max(200, Math.round(main.clientHeight * 0.85));
+      const scrollActions: Record<string, { top: number; mode: "by" | "to" }> = {
+        PageDown: { top: pageStep, mode: "by" },
+        PageUp: { top: -pageStep, mode: "by" },
+        " ": { top: event.shiftKey ? -pageStep : pageStep, mode: "by" },
+        ArrowDown: { top: 64, mode: "by" },
+        ArrowUp: { top: -64, mode: "by" },
+        Home: { top: 0, mode: "to" },
+        End: { top: main.scrollHeight, mode: "to" },
+      };
+      const action = scrollActions[event.key];
+      if (!action) return;
+
+      event.preventDefault();
+      if (action.mode === "to") {
+        main.scrollTo({ top: action.top, behavior: "auto" });
+      } else {
+        main.scrollBy({ top: action.top, behavior: "auto" });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const dialog = quickCreateDialog.current;
@@ -221,7 +334,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
   );
 
   return (
-    <div ref={shellRef} className="app-shell flex h-dvh overflow-hidden">
+    <div ref={shellRef} className="app-shell flex h-dvh overflow-clip">
       <a href="#main-content" className="skip-link">
         {text("الانتقال إلى المحتوى", "Skip to content")}
       </a>
@@ -231,15 +344,16 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
         mobileOpen={isMenuOpen}
         onMobileClose={() => setDrawerPath(null)}
       />
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-clip">
         <Header
           isMenuOpen={isMenuOpen}
           onMenuToggle={() => setDrawerPath(isMenuOpen ? null : pathname)}
         />
         <main
+          ref={mainRef}
           id="main-content"
           tabIndex={-1}
-          className="app-main min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-scroll"
+          className="app-main relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain touch-scroll"
         >
           <div
             className={`app-content mx-auto w-full min-w-0 ${

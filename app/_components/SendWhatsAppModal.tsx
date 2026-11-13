@@ -55,7 +55,7 @@ function SendWhatsAppModalContent({
     setError(null);
     try {
       const result = type === "CONTRACT"
-        ? await sendContractWhatsApp(targetId, pollMode ? undefined : phone.trim() || undefined)
+        ? await sendContractWhatsApp(targetId, phone.trim() || undefined)
         : await sendInvoiceWhatsApp(targetId, phone.trim() || undefined);
       setSuccess(result);
     } catch (err: unknown) {
@@ -71,7 +71,7 @@ function SendWhatsAppModalContent({
 
   const modalTitle =
     type === "CONTRACT"
-      ? pollMode ? text("إرسال استطلاع السائق", "Send driver poll") : ui("إرسال العقد للكابتن عبر واتساب")
+      ? ui("إرسال العقد للكابتن عبر واتساب")
       : ui("إرسال الفاتورة للعميل عبر واتساب");
 
   return (
@@ -123,7 +123,7 @@ function SendWhatsAppModalContent({
               </div>
             </div>
 
-            {pollMode && <p className="text-sm text-[var(--text-muted)]">{text("يُرسل استطلاع واحد إلى رقم السائق المسجل. لا يُرفق PDF مع الاستطلاع.", "One poll goes to the assigned driver’s registered phone. The poll does not include a PDF.")}</p>}
+            {pollMode && <p className="text-sm text-[var(--text-muted)]">{text("أرسل نسخة العقد إلى الرقم الذي تختاره لهذه الرسالة. يستمر استطلاع الرحلة على رقم السائق الحالي.", "Send a contract copy to the number you choose for this message. Trip polls continue on the current driver’s number.")}</p>}
             <div>
               <label htmlFor={phoneId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("رقم هاتف الواتساب")}
@@ -133,9 +133,8 @@ function SendWhatsAppModalContent({
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
-                required={!pollMode}
+                required
                 disabled={sending}
-                readOnly={pollMode}
                 dir="ltr"
                 placeholder="05xxxxxxxx or 201xxxxxxxxx"
                 aria-describedby={phoneHintId}
@@ -144,7 +143,7 @@ function SendWhatsAppModalContent({
                 className="theme-input w-full min-h-11 px-3 py-1.5 rounded-lg text-base sm:text-[0.8125rem] font-mono text-start"
               />
               <span id={phoneHintId} className="text-xs text-[var(--text-muted)] mt-1.5 block">
-                {pollMode ? text("الرقم المسجل للسائق؛ لتغييره حدّث ملف السائق أولاً.", "Assigned driver’s phone. Update the driver profile to change it.") : ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
+                {pollMode ? text("يمكن تعديل الرقم لهذا الإرسال فقط؛ لن يتغير رقم الكابتن في ملفه.", "You can change this number for this send only. The captain profile is not changed.") : ui("يقبل الأرقام بصيغة محلية (05...) أو دولية (+966... / +20...)")}
               </span>
             </div>
 

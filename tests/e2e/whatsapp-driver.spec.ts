@@ -80,21 +80,29 @@ test("offline and failed tracking queries prevent sending and can recover", asyn
   await page.getByRole("button", { name: "Refresh tracking" }).click();
   await expect(page.getByRole("button", { name: "Send driver poll", exact: true })).toBeDisabled();
 });
-test("poll dispatch dialog uses the assigned driver and does not report a missing PDF", async ({ page }) => {
+test("manual contract send accepts a different number while driver polls are enabled", async ({ page }) => {
   await page.route("**/api/proxy/whatsapp/trips", route => route.fulfill({ json: { success: true, data: [] } }));
   await page.route("**/api/proxy/whatsapp/trips/notices", route => route.fulfill({ json: { success: true, data: [] } }));
   await page.route("**/api/proxy/whatsapp/send-contract", route => {
-    expect(route.request().postDataJSON()).toEqual({ contractId: ID });
-    return route.fulfill({ json: { success: true, dispatchKind: "driver_poll", phone: "966551234567", hasPdfAttachment: false } });
+    expect(route.request().postDataJSON()).toEqual({ contractId: ID, phone: "+966500000009" });
+    return route.fulfill({ json: { success: true, dispatchKind: "contract_document", phone: "+966500000009", hasPdfAttachment: true } });
   });
   await open(page);
   await page.goto("/admin/contracts/" + ID);
   await page.getByRole("button", { name: "Send via WhatsApp", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("heading", { name: "Send driver poll" })).toBeVisible();
-  await expect(dialog.getByRole("textbox")).toHaveAttribute("readonly", "");
+  await expect(dialog.getByRole("heading", { name: "Send Contract to Captain via WhatsApp" })).toBeVisible();
+  await expect(dialog.getByRole("textbox")).toBeEditable();
+  await dialog.getByRole("textbox").fill("+966500000009");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(dialog.getByRole("textbox")).toHaveValue("+966500000009");
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await page.screenshot({ path: "/tmp/miqat-manual-contract-mobile.png" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: "/tmp/miqat-manual-contract-desktop.png" });
   await dialog.getByRole("button", { name: "Send Now", exact: true }).click();
-  await expect(dialog.getByText(/Driver poll dispatched/)).toBeVisible();
+  await expect(dialog.getByText("Message dispatched to WhatsApp.")).toBeVisible();
+  await expect(dialog.getByText("+966500000009", { exact: true })).toBeVisible();
   await expect(dialog.getByText(/Only the text summary was sent/)).toHaveCount(0);
 });
 

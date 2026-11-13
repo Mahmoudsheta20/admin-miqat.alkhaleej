@@ -2400,3 +2400,132 @@ test("Scoped Finance Admin lands on Finance workspace, sees filtered navigation,
   expect(pageErrors).toEqual([]);
   expect(consoleErrors).toEqual([]);
 });
+
+test("dashboard uses single main scroll container, keyboard scrolling, sidebar scroll, and route scroll reset", async ({
+  page,
+}) => {
+  await preferences(page, "ar", "light");
+  await login(page);
+
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 1280, height: 600 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/admin");
+    await expect(
+      page.locator("#main-content").getByRole("heading").first(),
+    ).toBeVisible();
+
+    const layoutMetrics = await page.evaluate(() => {
+      const main = document.querySelector("#main-content");
+      return {
+        htmlSH: document.documentElement.scrollHeight,
+        innerH: window.innerHeight,
+        htmlSW: document.documentElement.scrollWidth,
+        innerW: window.innerWidth,
+        mainSH: main?.scrollHeight ?? 0,
+        mainCH: main?.clientHeight ?? 0,
+        mainPos: main ? getComputedStyle(main).position : "",
+      };
+    });
+    expect(layoutMetrics.htmlSH).toBe(layoutMetrics.innerH);
+    expect(layoutMetrics.htmlSW).toBeLessThanOrEqual(layoutMetrics.innerW);
+    expect(layoutMetrics.mainSH).toBeGreaterThan(layoutMetrics.mainCH);
+    expect(layoutMetrics.mainPos).toBe("relative");
+
+    await page.keyboard.press("PageDown");
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          winY: window.scrollY,
+          mainTop: document.querySelector("#main-content")?.scrollTop ?? 0,
+          headerTop: Math.round(
+            document.querySelector(".workspace-header")?.getBoundingClientRect().top ?? -1,
+          ),
+        })),
+      )
+      .toEqual(
+        expect.objectContaining({
+          winY: 0,
+          headerTop: 0,
+        }),
+      );
+    const afterPageDown = await page.evaluate(
+      () => document.querySelector("#main-content")?.scrollTop ?? 0,
+    );
+    expect(afterPageDown).toBeGreaterThan(150);
+
+    await page.keyboard.press("End");
+    const afterEnd = await page.evaluate(
+      () => document.querySelector("#main-content")?.scrollTop ?? 0,
+    );
+    expect(afterEnd).toBeGreaterThan(afterPageDown);
+
+    await page.keyboard.press("Home");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.querySelector("#main-content")?.scrollTop ?? -1,
+        ),
+      )
+      .toBe(0);
+  }
+
+  // Verify independent sidebar navigation scrolling and route navigation scroll reset on short desktop
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.goto("/admin");
+  await expect(
+    page.locator("#main-content").getByRole("heading").first(),
+  ).toBeVisible();
+
+  const sidebarBox = await page.locator(".workspace-sidebar").boundingBox();
+  expect(sidebarBox).not.toBeNull();
+  if (sidebarBox) {
+    await page.mouse.move(
+      sidebarBox.x + sidebarBox.width / 2,
+      sidebarBox.y + sidebarBox.height / 2,
+    );
+    await page.mouse.wheel(0, 220);
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          sidebarTop: document.querySelector(".sidebar-navigation")?.scrollTop ?? 0,
+          mainTop: document.querySelector("#main-content")?.scrollTop ?? -1,
+        })),
+      )
+      .toEqual(
+        expect.objectContaining({
+          mainTop: 0,
+        }),
+      );
+    const sidebarTop = await page.evaluate(
+      () => document.querySelector(".sidebar-navigation")?.scrollTop ?? 0,
+    );
+    expect(sidebarTop).toBeGreaterThan(0);
+  }
+
+  await page.evaluate(() => {
+    document.querySelector("#main-content")?.scrollTo({ top: 500, behavior: "auto" });
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => document.querySelector("#main-content")?.scrollTop ?? 0),
+    )
+    .toBeGreaterThan(400);
+
+  await page.locator('aside a[href="/admin/whatsapp"]').click();
+  await expect(page).toHaveURL(/\/admin\/whatsapp$/);
+  await expect(
+    page.locator("#main-content").getByRole("heading").first(),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        mainTop: document.querySelector("#main-content")?.scrollTop ?? -1,
+        winY: window.scrollY,
+      })),
+    )
+    .toEqual({ mainTop: 0, winY: 0 });
+});

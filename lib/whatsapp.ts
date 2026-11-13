@@ -43,7 +43,7 @@ export interface WhatsAppQrResponse {
 }
 
 export interface WhatsAppDispatchResult {
-  dispatchKind?: "driver_poll";
+  dispatchKind?: "driver_poll" | "contract_document";
   success: boolean;
   preview?: string;
   messageId?: string;
