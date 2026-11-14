@@ -38,6 +38,9 @@ import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 import { CaptainSelector, CaptainWithMeta } from "@/app/_components/form/CaptainSelector";
 import { VehicleSelector } from "@/app/_components/form/VehicleSelector";
 import { PassengerManifestManager } from "@/app/_components/form/PassengerManifestManager";
+import { useAuth } from "@/lib/authContext";
+import { useLanguage } from "@/lib/languageContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,6 +48,13 @@ interface PageProps {
 
 export default function EditContractPage({ params }: PageProps) {
   const ui = useUiText();
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const { user: authUser } = useAuth();
+  const canWriteContracts = hasClientPermission(authUser, "contracts", "write");
+  const canDeleteContracts = hasClientPermission(authUser, "contracts", "delete");
+  const canSendContractWhatsApp =
+    hasClientPermission(authUser, "whatsapp", "write") || canWriteContracts;
   const operationTypeId = useId();
 
   const { id } = use(params);
@@ -83,7 +93,7 @@ export default function EditContractPage({ params }: PageProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteContract = async () => {
-    if (!contract) return;
+    if (!contract || !canDeleteContracts) return;
     setIsDeleting(true);
     try {
       const res = await deleteContract(contract.id);
@@ -274,6 +284,7 @@ export default function EditContractPage({ params }: PageProps) {
 
   // Form Submission
   const onFormSubmit = async (data: AdminContractFormValues) => {
+    if (!canWriteContracts) return;
     try {
       setIsSubmitting(true);
       setIsPdfOpen(false);
@@ -413,15 +424,17 @@ export default function EditContractPage({ params }: PageProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsWhatsAppOpen(true)}
-            disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
-          >
-            <MessageSquare className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-            <span>{ui("إرسال عبر واتساب")}</span>
-          </button>
+          {canSendContractWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setIsWhatsAppOpen(true)}
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-initial flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
+            >
+              <MessageSquare className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>{ui("إرسال عبر واتساب")}</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setIsPdfOpen(true)}
@@ -431,27 +444,38 @@ export default function EditContractPage({ params }: PageProps) {
             <Eye className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
             <span>{ui("معاينة")}</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
-            title={ui("حذف هذا العقد نهائياً")}
-          >
-            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>{ui("حذف")}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsReverseOpen(true)}
-            disabled={isSubmitting}
-            className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
-          >
-            <ArrowLeftRight className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-            <span>{ui("رحلة عودة")}</span>
-          </button>
+          {canDeleteContracts && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-rose-500 hover:bg-rose-500/10 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
+              title={ui("حذف هذا العقد نهائياً")}
+            >
+              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{ui("حذف")}</span>
+            </button>
+          )}
+          {canWriteContracts && (
+            <button
+              type="button"
+              onClick={() => setIsReverseOpen(true)}
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-initial flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] theme-card hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition shadow-2xs cursor-pointer"
+            >
+              <ArrowLeftRight className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>{ui("رحلة عودة")}</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {!canWriteContracts && (
+        <div role="status" className="p-3.5 rounded-2xl border border-amber-500/35 bg-amber-500/10 text-xs font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>{text("صلاحية عرض فقط — لا تملك إذن تعديل العقود.", "View-only access — contract write permission is required to save edits.")}</span>
+        </div>
+      )}
 
       {/* Success Alert Banner */}
       {successMessage && (
@@ -488,7 +512,7 @@ export default function EditContractPage({ params }: PageProps) {
 
       {/* Form Container */}
       <form onSubmit={handleSubmit(onFormSubmit)} aria-busy={isSubmitting} className="space-y-6">
-        <fieldset disabled={isSubmitting} className={`min-w-0 border-0 p-0 m-0 ${isSubmitting ? "pointer-events-none" : ""}`}>
+        <fieldset disabled={isSubmitting || !canWriteContracts} className={`min-w-0 border-0 p-0 m-0 ${isSubmitting ? "pointer-events-none" : ""}`}>
         <div className="space-y-4 sm:space-y-6">
         {/* Section 1: Operation & Client Info */}
         <div className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-4 sm:p-6 space-y-5">
@@ -817,22 +841,28 @@ export default function EditContractPage({ params }: PageProps) {
 
         {/* Inline submit bar on mobile/tablet so form fields stay clear; sticky on desktop lg+. */}
         <div className="contract-submit-bar">
-          <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">{ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")}</p>
+          <p className="hidden sm:block flex-1 text-xs text-[var(--text-muted)]">
+            {canWriteContracts
+              ? ui("سيُحفظ العقد وتُحدّث وثيقة PDF في التخزين.")
+              : text("صلاحية عرض فقط.", "View-only access.")}
+          </p>
           <Link href="/admin/contracts" className="inline-flex min-h-11 sm:min-h-10 w-full sm:w-auto items-center justify-center rounded-lg secondary-btn px-4 py-1.5 text-xs sm:text-sm font-bold">{ui("إلغاء")}</Link>
-          <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-11 sm:min-h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-lg gold-gradient-btn px-5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer">
-            <Save className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>
-          </button>
+          {canWriteContracts && (
+            <button type="submit" disabled={isSubmitting || !driverDeclared} className="inline-flex min-h-11 sm:min-h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-lg gold-gradient-btn px-5 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer">
+              <Save className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{ui(isSubmitting ? "جاري الحفظ وتحديث PDF..." : "حفظ وتحديث PDF")}</span>
+            </button>
+          )}
         </div>
         </div>
         </fieldset>
       </form>
 
-      {isReverseOpen && contract && (
+      {canWriteContracts && isReverseOpen && contract && (
         <ReverseTripModal isOpen onClose={() => setIsReverseOpen(false)} contract={contract} />
       )}
 
-      {isWhatsAppOpen && contract && (
+      {canSendContractWhatsApp && isWhatsAppOpen && contract && (
         <SendWhatsAppModal
           isOpen
           onClose={() => setIsWhatsAppOpen(false)}
@@ -857,7 +887,7 @@ export default function EditContractPage({ params }: PageProps) {
 
       {/* Confirm Delete Dialog */}
       <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
+        isOpen={canDeleteContracts && isDeleteDialogOpen}
         title={ui("تأكيد حذف العقد")}
         message={
           contract

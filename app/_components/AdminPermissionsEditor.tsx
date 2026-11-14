@@ -100,7 +100,7 @@ export default function AdminPermissionsEditor({
           type="button"
           disabled={disabled}
           onClick={() => onChange({})}
-          className="min-h-8 px-2.5 py-1 rounded-lg border theme-border text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer disabled:opacity-50"
+          className="min-h-11 px-3 py-1 rounded-lg border theme-border text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer disabled:opacity-50"
         >
           {text("إلغاء التحديد", "Clear all")}
         </button>
@@ -160,7 +160,7 @@ export default function AdminPermissionsEditor({
                           type="button"
                           disabled={disabled}
                           onClick={() => toggleModuleAll(mod.id, mod.actions, !allSelected)}
-                          className="min-h-8 px-2 py-1 rounded-md border theme-border text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition shrink-0 cursor-pointer disabled:opacity-50"
+                          className="min-h-11 px-2.5 py-1 rounded-md border theme-border text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition shrink-0 cursor-pointer disabled:opacity-50"
                         >
                           {text(allSelected ? "إلغاء القسم" : "كل القسم", allSelected ? "Uncheck" : "Select all")}
                         </button>
@@ -174,7 +174,7 @@ export default function AdminPermissionsEditor({
                             <label
                               key={action}
                               data-perm={`${mod.id}:${action}`}
-                              className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ${
+                              className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ${
                                 checked
                                   ? "border-[var(--accent-gold)]/55 bg-[var(--accent-surface)] text-[var(--text-main)]"
                                   : "theme-border bg-[var(--bg-card-subtle)] text-[var(--text-muted)]"

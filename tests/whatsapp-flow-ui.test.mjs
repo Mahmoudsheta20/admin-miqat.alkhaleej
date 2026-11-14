@@ -14,7 +14,7 @@ function transpile(relativePath) {
   }).outputText;
 }
 
-function setup(fetchImpl) {
+function setup(fetchImpl, options = {}) {
   const storage = () => {
     const values = new Map();
     return {
@@ -42,7 +42,7 @@ function setup(fetchImpl) {
 
   const waExports = {};
   const waModule = { exports: waExports };
-  vm.runInNewContext(transpile("../lib/whatsapp.ts"), {
+  const waContext = {
     exports: waExports,
     module: waModule,
     require: (specifier) => {
@@ -53,7 +53,11 @@ function setup(fetchImpl) {
     URLSearchParams,
     FormData,
     AbortSignal,
-  });
+  };
+  if (options.lang) {
+    waContext.document = { documentElement: { lang: options.lang } };
+  }
+  vm.runInNewContext(transpile("../lib/whatsapp.ts"), waContext);
 
   return waModule.exports;
 }
@@ -254,4 +258,95 @@ test("sendInspectionWhatsApp posts to /api/proxy/whatsapp/send-inspection and re
     ),
   );
   await assert.rejects(() => errApi.sendInspectionWhatsApp("missing"), /تقرير الفحص غير موجود/);
+});
+
+test("fetchWhatsAppStatus unwraps nested data with recovery metrics and surfaces non-JSON 502 errors cleanly", async () => {
+  const okApi = setup(
+    async () =>
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            status: "connected",
+            qrImage: null,
+            queueLength: 2,
+            recovery: {
+              failedQueueJobs: 1,
+              pendingDriverReplies: 3,
+              pausedContracts: 0,
+            },
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+  );
+
+  const status = await okApi.fetchWhatsAppStatus();
+  assert.equal(status.status, "connected");
+  assert.equal(status.queueLength, 2);
+  assert.deepEqual(status.recovery, {
+    failedQueueJobs: 1,
+    pendingDriverReplies: 3,
+    pausedContracts: 0,
+  });
+
+  const htmlGatewayAr = setup(
+    async () =>
+      new Response("<html><body>Bad Gateway</body></html>", {
+        status: 502,
+        headers: { "content-type": "text/html" },
+      }),
+  );
+  await assert.rejects(() => htmlGatewayAr.fetchWhatsAppStatus(), /بوابة الخادم/);
+
+  const htmlGatewayEn = setup(
+    async () =>
+      new Response("<html><body>Gateway Timeout</body></html>", {
+        status: 504,
+        headers: { "content-type": "text/html" },
+      }),
+    { lang: "en" },
+  );
+  await assert.rejects(
+    () => htmlGatewayEn.fetchWhatsAppStatus(),
+    /Gateway unavailable or request timed out/,
+  );
+});
+
+test("reconnectWhatsApp posts with credentials and unwraps nested status payload", async () => {
+  let reqInfo;
+  const okApi = setup(
+    async (url, init) => {
+      reqInfo = { url, method: init.method, credentials: init.credentials };
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            status: "qr_ready",
+            qrImage: "data:image/png;base64,abc",
+            queueLength: 0,
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    },
+    { lang: "en" },
+  );
+
+  const res = await okApi.reconnectWhatsApp();
+  assert.equal(reqInfo.url, "/api/proxy/whatsapp/reconnect");
+  assert.equal(reqInfo.method, "POST");
+  assert.equal(reqInfo.credentials, "include");
+  assert.equal(res.status, "qr_ready");
+  assert.equal(res.qrImage, "data:image/png;base64,abc");
+
+  const errApi = setup(
+    async () =>
+      new Response("<html>502</html>", {
+        status: 500,
+        headers: { "content-type": "text/html" },
+      }),
+    { lang: "en" },
+  );
+  await assert.rejects(() => errApi.reconnectWhatsApp(), /Unable to reconnect WhatsApp/);
 });

@@ -12,6 +12,7 @@ export interface ContractFormPayload {
   notes?: string; issueDate?: string; captainId: string; vehiclePlate: string; inspectionId?: string;
   passengers: PassengerInput[]; inspectionData?: InspectionPayload;
   autoSendWhatsApp?: boolean; whatsAppPhone?: string;
+  includeGuestPhoneInWhatsApp?: boolean; sendWhatsAppToGuest?: boolean; guestWhatsAppPhone?: string;
 }
 export async function submitContract(data: ContractFormPayload) {
   const result = await backendRequest<Contract>("/contracts", "POST", data);

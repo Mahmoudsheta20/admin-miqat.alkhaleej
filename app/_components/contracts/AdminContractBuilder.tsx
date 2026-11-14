@@ -6,6 +6,8 @@ import {
 } from "@/app/_components/form/ContractFields";
 import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
 import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import { useUiText } from "@/lib/ui-text";
 
 import dynamic from "next/dynamic";
@@ -167,6 +169,8 @@ export default function AdminContractBuilder({
     pdfPath?: string | null;
     captainName?: string;
     captainPhone?: string;
+    customerName?: string;
+    customerPhone?: string;
     whatsAppAutoSend?: WhatsAppAutoSendResult;
   } | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
@@ -174,6 +178,8 @@ export default function AdminContractBuilder({
   const [confirmError, setConfirmError] = useState("");
   const [autoSendWhatsApp, setAutoSendWhatsApp] = useState(false);
   const [whatsAppPhoneOverride, setWhatsAppPhoneOverride] = useState("");
+  const [includeGuestPhoneInWhatsApp, setIncludeGuestPhoneInWhatsApp] = useState(true);
+  const [sendWhatsAppToGuest, setSendWhatsAppToGuest] = useState(false);
   const [whatsAppMeta, setWhatsAppMeta] = useState<{
     connected: boolean;
     adminFlowPhone: string;
@@ -258,23 +264,27 @@ export default function AdminContractBuilder({
   const selectedVehiclePlate = useWatch({ control, name: "vehiclePlate" });
   const watchedOperationType = useWatch({ control, name: "operationType" });
   const watchedCustomerName = useWatch({ control, name: "customerName" });
+  const watchedCustomerPhone = useWatch({ control, name: "customerPhone" });
   const watchedOrigin = useWatch({ control, name: "origin" });
   const watchedDestination = useWatch({ control, name: "destination" });
   const watchedPassengers = useWatch({ control, name: "passengers" });
 
   // Auto-sync lead guest name into primary passenger when primary passenger is empty or matches prior synced name
+  const { user, isLoading: authLoading } = useAuth();
+  const canViewWhatsApp = hasClientPermission(user, "whatsapp", "view");
   const syncedPrimaryGuestRef = useRef("");
   useEffect(() => {
+    if (authLoading) return;
     let active = true;
     void Promise.allSettled([
       fetchWhatsAppStatus(),
-      fetchWhatsAppFlowOverview(),
+      canViewWhatsApp ? fetchWhatsAppFlowOverview() : Promise.resolve(null),
     ]).then(([statusRes, flowRes]) => {
       if (!active) return;
       const connected =
         statusRes.status === "fulfilled" && statusRes.value.status === "connected";
       const flowConfig =
-        flowRes.status === "fulfilled" ? flowRes.value.config : null;
+        flowRes.status === "fulfilled" ? flowRes.value?.config ?? null : null;
       setWhatsAppMeta({
         connected,
         adminFlowPhone: flowConfig?.adminPhone || "+966577842926",
@@ -286,7 +296,7 @@ export default function AdminContractBuilder({
     return () => {
       active = false;
     };
-  }, []);
+  }, [authLoading, canViewWhatsApp]);
 
   useEffect(() => {
     const nextGuest = (watchedCustomerName ?? "").trim();
@@ -586,10 +596,18 @@ export default function AdminContractBuilder({
       }
 
       const payload = sanitizeContractPayload(data, resolvedInspectionId);
+      const cleanedGuestPhone = (data.customerPhone || "").trim();
 
       const res = await submitContract({
         ...payload,
         commercial: normalizeCommercialInput(commercial),
+        includeGuestPhoneInWhatsApp,
+        ...(sendWhatsAppToGuest
+          ? {
+              sendWhatsAppToGuest: true,
+              ...(cleanedGuestPhone ? { guestWhatsAppPhone: cleanedGuestPhone } : {}),
+            }
+          : {}),
         ...(autoSendWhatsApp && !driverPollMode
           ? {
               autoSendWhatsApp: true,
@@ -615,6 +633,8 @@ export default function AdminContractBuilder({
             res.contract.captain?.phone ||
             currentCaptain?.phone ||
             "",
+          customerName: res.contract.customerName || data.customerName,
+          customerPhone: res.contract.customerPhone || cleanedGuestPhone || "",
           whatsAppAutoSend: res.contract.whatsAppAutoSend,
         };
         setCreatedContract(created);
@@ -634,6 +654,8 @@ export default function AdminContractBuilder({
     setCreatedContract(null);
     setWhatsAppModalOpen(false);
     setWhatsAppPhoneOverride("");
+    setIncludeGuestPhoneInWhatsApp(true);
+    setSendWhatsAppToGuest(false);
     setCommercial(emptyCommercial());
     setIsConfirmed(true);
     setConfirmError("");
@@ -703,6 +725,8 @@ export default function AdminContractBuilder({
       targetTitle={createdContract.referenceNumber}
       recipientName={createdContract.captainName || text("الكابتن", "Captain")}
       defaultPhone={createdContract.captainPhone || ""}
+      guestPhone={createdContract.customerPhone || undefined}
+      guestName={createdContract.customerName || undefined}
     />
   );
 
@@ -773,6 +797,28 @@ export default function AdminContractBuilder({
               {text("إعادة المحاولة", "Retry WhatsApp")}
             </button>
           )}
+        </div>
+      )}
+
+      {createdContract.whatsAppAutoSend?.guestSend?.attempted && (
+        <div
+          className={`rounded-2xl border px-4 py-3 text-xs sm:text-sm text-start flex flex-wrap items-center justify-between gap-2 ${
+            createdContract.whatsAppAutoSend.guestSend.success
+              ? "border-emerald-600/35 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : "border-amber-500/35 bg-amber-500/10 text-amber-900 dark:text-amber-300"
+          }`}
+        >
+          <p className="font-bold">
+            {createdContract.whatsAppAutoSend.guestSend.success
+              ? text(
+                  `تم إرسال نسخة العقد للضيف عبر واتساب (${createdContract.whatsAppAutoSend.guestSend.phone || createdContract.customerPhone || ""})`,
+                  `Contract copy sent via WhatsApp to guest (${createdContract.whatsAppAutoSend.guestSend.phone || createdContract.customerPhone || ""})`,
+                )
+              : text(
+                  `تعذّر إرسال نسخة العقد لجوال الضيف: ${createdContract.whatsAppAutoSend.guestSend.error || ""}`,
+                  `Could not send contract copy to guest phone: ${createdContract.whatsAppAutoSend.guestSend.error || ""}`,
+                )}
+          </p>
         </div>
       )}
 
@@ -1674,6 +1720,17 @@ export default function AdminContractBuilder({
         waConnected={whatsAppMeta ? whatsAppMeta.connected : null}
         adminFlowPhone={whatsAppMeta?.adminFlowPhone}
         disabled={isSubmitting}
+        guestPhone={watchedCustomerPhone ?? ""}
+        onGuestPhoneChange={(nextPhone) =>
+          setValue("customerPhone", nextPhone, {
+            shouldDirty: true,
+            shouldValidate: isSubmitted,
+          })
+        }
+        includeGuestPhoneInCaptainMsg={includeGuestPhoneInWhatsApp}
+        onIncludeGuestPhoneChange={setIncludeGuestPhoneInWhatsApp}
+        sendToGuest={sendWhatsAppToGuest}
+        onSendToGuestChange={setSendWhatsAppToGuest}
       />
 
       {/* Form Bottom Submission Bar */}

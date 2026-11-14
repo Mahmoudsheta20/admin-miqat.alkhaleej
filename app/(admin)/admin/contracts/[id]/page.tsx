@@ -17,6 +17,9 @@ import { Contract, ContractStatus } from "@/lib/types";
 import { getContractById, updateContractStatusAction } from "@/app/_actions/contract";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { extractContractServiceType, cleanContractNotes } from "@/lib/contractConstants";
+import { useAuth } from "@/lib/authContext";
+import { useLanguage } from "@/lib/languageContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 interface ContractReviewPageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +27,14 @@ interface ContractReviewPageProps {
 
 export default function ContractReviewPage({ params }: ContractReviewPageProps) {
   const ui = useUiText();
+  const { language } = useLanguage();
+  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const { user: authUser } = useAuth();
+  const canApproveContracts = hasClientPermission(authUser, "contracts", "approve");
+  const canCreateInvoices = hasClientPermission(authUser, "invoices", "write");
+  const canSendContractWhatsApp =
+    hasClientPermission(authUser, "whatsapp", "write") ||
+    hasClientPermission(authUser, "contracts", "write");
   const rejectNotesId = useId();
 
   const resolvedParams = use(params);
@@ -71,7 +82,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
   }, [fetchContract]);
 
   const handleUpdateStatus = async (newStatus: ContractStatus, notes?: string) => {
-    if (!contract) return;
+    if (!contract || !canApproveContracts) return;
     setActionLoading(true);
     setNotificationMsg(null);
 
@@ -231,13 +242,15 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
-            className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
-          >
-            <ReceiptText className="w-4 h-4 text-[var(--accent-gold)] shrink-0" />
-            <span>{ui("إنشاء فاتورة مرتبطة بالعقد")}</span>
-          </Link>
+          {canCreateInvoices && (
+            <Link
+              href={`/admin/invoices/new?contractId=${encodeURIComponent(contract.id)}`}
+              className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+            >
+              <ReceiptText className="w-4 h-4 text-[var(--accent-gold)] shrink-0" />
+              <span>{ui("إنشاء فاتورة مرتبطة بالعقد")}</span>
+            </Link>
+          )}
 
           <button
             type="button"
@@ -248,15 +261,17 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
             <span>{ui("طباعة / معاينة PDF")}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setWhatsAppModalOpen(true)}
-            className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
-            title={ui("إرسال العقد للكابتن عبر واتساب")}
-          >
-            <MessageSquare className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span>{ui("إرسال عبر واتساب")}</span>
-          </button>
+          {canSendContractWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setWhatsAppModalOpen(true)}
+              className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+              title={ui("إرسال العقد للكابتن عبر واتساب")}
+            >
+              <MessageSquare className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{ui("إرسال عبر واتساب")}</span>
+            </button>
+          )}
 
           <Link
             href="/admin/contracts"
@@ -294,43 +309,49 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {currentStatus !== "APPROVED" && (
-              <button
-                type="button"
-                disabled={actionLoading}
-                onClick={() => handleUpdateStatus("APPROVED")}
-                className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>{ui("اعتماد وتوثيق العقد")}</span>
-              </button>
-            )}
+          {canApproveContracts ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {currentStatus !== "APPROVED" && (
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => handleUpdateStatus("APPROVED")}
+                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{ui("اعتماد وتوثيق العقد")}</span>
+                </button>
+              )}
 
-            {currentStatus !== "REJECTED" && (
-              <button
-                type="button"
-                disabled={actionLoading}
-                onClick={() => setRejectModalOpen(true)}
-                className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg danger-btn text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
-              >
-                <XCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>{ui("رفض العقد")}</span>
-              </button>
-            )}
+              {currentStatus !== "REJECTED" && (
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => setRejectModalOpen(true)}
+                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg danger-btn text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{ui("رفض العقد")}</span>
+                </button>
+              )}
 
-            {currentStatus !== "PENDING_REVIEW" && (
-              <button
-                type="button"
-                disabled={actionLoading}
-                onClick={() => handleUpdateStatus("PENDING_REVIEW")}
-                className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg secondary-btn text-xs font-bold transition cursor-pointer"
-                title={ui("إعادة العقد لحالة قيد المراجعة")}
-              >
-                <span>{ui("إعادة للمراجعة")}</span>
-              </button>
-            )}
-          </div>
+              {currentStatus !== "PENDING_REVIEW" && (
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => handleUpdateStatus("PENDING_REVIEW")}
+                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 justify-center px-3.5 py-1.5 rounded-lg secondary-btn text-xs font-bold transition cursor-pointer"
+                  title={ui("إعادة العقد لحالة قيد المراجعة")}
+                >
+                  <span>{ui("إعادة للمراجعة")}</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs font-semibold text-[var(--text-muted)]">
+              {text("صلاحية عرض فقط — يلزم إذن الاعتماد لتغيير الحالة.", "View-only access — contract approval permission is required to change status.")}
+            </p>
+          )}
         </div>
 
         {notificationMsg && (
@@ -571,7 +592,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
       </div>
 
       {/* Reject Modal (Native <dialog> via Modal) */}
-      {rejectModalOpen && (
+      {canApproveContracts && rejectModalOpen && (
         <Modal
           label={ui("تأكيد رفض العقد")}
           onClose={() => !actionLoading && setRejectModalOpen(false)}
@@ -630,7 +651,7 @@ export default function ContractReviewPage({ params }: ContractReviewPageProps) 
           pdfUrl={contract.pdfPath}
         />
       )}
-      {whatsAppModalOpen && (
+      {canSendContractWhatsApp && whatsAppModalOpen && (
         <SendWhatsAppModal
           isOpen={true}
           onClose={() => setWhatsAppModalOpen(false)}

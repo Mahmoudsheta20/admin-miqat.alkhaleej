@@ -3,6 +3,8 @@ import React, { useId, useState } from "react";
 import Link from "next/link";
 import { MessageSquare, X, Send, CheckCircle2, AlertCircle, Loader2, FileText } from "lucide-react";
 import { useUiText } from "@/lib/ui-text";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import {
   sendContractWhatsApp,
   sendInspectionWhatsApp,
@@ -21,6 +23,8 @@ interface SendWhatsAppModalProps {
   targetTitle: string;
   recipientName: string;
   defaultPhone?: string;
+  guestPhone?: string;
+  guestName?: string;
 }
 
 const WHATSAPP_TARGET_SENDERS: Record<
@@ -49,10 +53,14 @@ function SendWhatsAppModalContent({
   targetTitle,
   recipientName,
   defaultPhone = "",
+  guestPhone = "",
+  guestName = "",
 }: SendWhatsAppModalProps) {
   const ui = useUiText();
+  const { user } = useAuth();
   const { language } = useLanguage();
   const text = (ar: string, en: string) => language === "ar" ? ar : en;
+  const canViewWhatsApp = hasClientPermission(user, "whatsapp", "view");
   const statusQuery = useWhatsAppStatus();
   const pollMode = type === "CONTRACT" && statusQuery.data?.driverWorkflow?.enabled === true;
   const phoneId = useId();
@@ -164,6 +172,39 @@ function SendWhatsAppModalContent({
             </div>
 
             {pollMode && <p className="text-sm text-[var(--text-muted)]">{text("أرسل نسخة العقد PDF إلى الرقم الذي تختاره لهذه الرسالة. يستمر استطلاع الرحلة على رقم السائق الحالي.", "Send a contract PDF copy to the number you choose for this message. Trip polls continue on the current driver’s number.")}</p>}
+            {type === "CONTRACT" && guestPhone.trim() && (
+              <div className="flex flex-wrap items-center gap-2">
+                {defaultPhone.trim() && (
+                  <button
+                    type="button"
+                    disabled={sending}
+                    onClick={() => setPhone(defaultPhone.trim())}
+                    className={`min-h-11 sm:min-h-9 rounded-lg border px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                      phone.trim() === defaultPhone.trim()
+                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                        : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
+                    }`}
+                  >
+                    {text(`الكابتن: ${defaultPhone.trim()}`, `Captain: ${defaultPhone.trim()}`)}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={sending}
+                  onClick={() => setPhone(guestPhone.trim())}
+                  className={`min-h-11 sm:min-h-9 rounded-lg border px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    phone.trim() === guestPhone.trim()
+                      ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                      : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)]"
+                  }`}
+                >
+                  {text(
+                    `الضيف${guestName ? ` (${guestName})` : ""}: ${guestPhone.trim()}`,
+                    `Guest${guestName ? ` (${guestName})` : ""}: ${guestPhone.trim()}`,
+                  )}
+                </button>
+              </div>
+            )}
             <div>
               <label htmlFor={phoneId} className="block text-xs font-bold text-[var(--text-main)] mb-1.5">
                 {ui("رقم هاتف الواتساب")}
@@ -192,7 +233,13 @@ function SendWhatsAppModalContent({
                 <p>{statusQuery.isLoading
                   ? text("جارٍ التحقق من اتصال واتساب…", "Checking WhatsApp connection…")
                   : statusQuery.data?.antiBan?.haltReason || statusQuery.error || text("الإرسال غير متاح حالياً. راجع الاتصال وحدود المحاولات.", "Sending is unavailable. Check the connection and attempt limits.")}</p>
-                {!statusQuery.isLoading && <Link href="/admin/whatsapp" className="inline-flex min-h-11 items-center text-[var(--accent-gold)] underline" onClick={onClose}>{ui("إعدادات ربط الواتساب (QR)")}</Link>}
+                {!statusQuery.isLoading && (
+                  canViewWhatsApp ? (
+                    <Link href="/admin/whatsapp" className="inline-flex min-h-11 items-center text-[var(--accent-gold)] underline" onClick={onClose}>{ui("إعدادات ربط الواتساب (QR)")}</Link>
+                  ) : (
+                    <p className="mt-1 text-xs">{text("تواصل مع مسؤول قسم الواتساب للتحقق من حالة الربط.", "Contact a WhatsApp administrator to verify the session connection.")}</p>
+                  )
+                )}
               </div>
             )}
 
@@ -202,13 +249,15 @@ function SendWhatsAppModalContent({
                   <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{error}</span>
                 </div>
-                <Link
-                  href="/admin/whatsapp"
-                  onClick={onClose}
-                  className="inline-flex items-center gap-1 text-[var(--accent-gold)] hover:underline"
-                >
-                  <span>{ui("إعدادات ربط الواتساب (QR)")}</span>
-                </Link>
+                {canViewWhatsApp && (
+                  <Link
+                    href="/admin/whatsapp"
+                    onClick={onClose}
+                    className="inline-flex min-h-11 items-center gap-1 text-[var(--accent-gold)] hover:underline"
+                  >
+                    <span>{ui("إعدادات ربط الواتساب (QR)")}</span>
+                  </Link>
+                )}
               </div>
             )}
 

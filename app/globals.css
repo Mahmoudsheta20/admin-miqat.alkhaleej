@@ -324,9 +324,6 @@ body:has(.app-shell) {
   overscroll-behavior: contain;
 }
 .mobile-drawer::backdrop { background: rgb(0 0 0 / 0.6); }
-.return-trip-dialog::backdrop { background: rgb(0 0 0 / 0.6); }
-.return-trip-dialog[open] { display: flex; align-items: center; justify-content: center; }
-.return-trip-dialog .mobile-dialog-panel { overflow: hidden; }
 .contract-submit-bar {
   display: flex;
   flex-direction: column;
@@ -392,7 +389,7 @@ body:has(.app-shell) {
   .mobile-dialog-panel > .overflow-y-auto { min-height: 0; }
   .mobile-dialog-panel button:is([aria-label="إغلاق"], [aria-label="Close"]) { min-width: 44px; min-height: 44px; }
   .form-popover { width: 100%; max-width: 100%; }
-  .form-popover button { min-height: 40px; }
+  .form-popover button { min-height: 44px; }
   .header-popover {
     max-height: calc(100dvh - 9rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
@@ -566,10 +563,17 @@ button, a { text-underline-offset: .2em; }
   .filter-tab,
   .filter-search input,
   .sidebar-link,
+  .form-popover button,
+  .app-content :where(button, [role="button"], a[href], label:has(input[type="checkbox"], input[type="radio"])),
+  .app-modal :where(button, [role="button"], a[href], label:has(input[type="checkbox"], input[type="radio"])),
+  .mobile-dialog-panel :where(button, [role="button"], a[href], label:has(input[type="checkbox"], input[type="radio"])),
   .app-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.stepper-count-input), select),
   .creation-workspace :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.stepper-count-input), select),
   dialog.fullscreen-dialog :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.stepper-count-input), select) {
     min-height: 44px;
+  }
+  .icon-button {
+    min-width: 44px;
   }
 }
 .auth-shell { min-height:100dvh; display:flex; flex-direction:column; background:var(--bg-main); }

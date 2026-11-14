@@ -5,6 +5,7 @@ import { useUiText } from "@/lib/ui-text";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
+import { defaultAdminRoute } from "@/lib/permissions";
 
 export default function RootPage() {
   const ui = useUiText();
@@ -17,7 +18,7 @@ export default function RootPage() {
       if (!user) {
         router.push("/login");
       } else if (user.role === "ADMIN") {
-        router.push("/admin");
+        router.push(defaultAdminRoute(user));
       } else if (user.role === "CAPTAIN") {
         router.push("/captain");
       }

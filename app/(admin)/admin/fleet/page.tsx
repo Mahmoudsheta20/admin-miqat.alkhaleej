@@ -28,11 +28,16 @@ import {
 import { MobileCardField, MobileCardMetaGrid } from "@/app/_components/mobile";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 export default function FleetManagementPage() {
   const ui = useUiText();
 
   const { t, isRTL } = useLanguage();
+  const { user } = useAuth();
+  const canWriteFleet = hasClientPermission(user, "fleet", "write");
+  const canDeleteFleet = hasClientPermission(user, "fleet", "delete");
   const cachedFleet =
     getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
@@ -103,6 +108,7 @@ export default function FleetManagementPage() {
   }, []);
 
   const openAddModal = () => {
+    if (!canWriteFleet) return;
     const defaultYear = new Date().getFullYear();
     setFormData({
       plateNumberAr: "",
@@ -125,6 +131,7 @@ export default function FleetManagementPage() {
   };
 
   const openEditModal = (v: Vehicle) => {
+    if (!canWriteFleet) return;
     setEditingVehicle(v);
     setFormData({
       plateNumberAr: v.plateNumberAr,
@@ -147,6 +154,7 @@ export default function FleetManagementPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canWriteFleet) return;
     if (
       !formData.plateNumberAr.trim() ||
       !formData.plateNumberEn.trim() ||
@@ -219,7 +227,7 @@ export default function FleetManagementPage() {
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (!canDeleteFleet || !deleteId) return;
     const res = await deleteVehicle(deleteId);
     if (!res.success) {
       throw new Error(res.error || (isRTL ? "تعذر حذف المركبة" : "Failed to delete vehicle"));
@@ -278,12 +286,16 @@ export default function FleetManagementPage() {
           setSeedMessage("");
           setLoadError(err);
         }}
-        primaryAction={{
-          label: t("fleet.add"),
-          onClick: openAddModal,
-          icon: Plus,
-          variant: "primary",
-        }}
+        primaryAction={
+          canWriteFleet
+            ? {
+                label: t("fleet.add"),
+                onClick: openAddModal,
+                icon: Plus,
+                variant: "primary",
+              }
+            : undefined
+        }
       />
 
       {seedMessage && (
@@ -389,28 +401,34 @@ export default function FleetManagementPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="mt-0 px-5 py-3 border-t theme-border flex items-center justify-between gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditModal(v)}
-                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 gap-1.5 text-xs font-bold"
-                >
-                  <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>{ui("تعديل")}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeleteId(v.id)}
-                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:border-rose-500"
-                >
-                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>{ui("حذف")}</span>
-                </Button>
-              </CardFooter>
+              {(canWriteFleet || canDeleteFleet) && (
+                <CardFooter className="mt-0 px-5 py-3 border-t theme-border flex items-center justify-between gap-2">
+                  {canWriteFleet && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditModal(v)}
+                      className="flex-1 sm:flex-initial min-h-11 gap-1.5 text-xs font-bold"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{ui("تعديل")}</span>
+                    </Button>
+                  )}
+                  {canDeleteFleet && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteId(v.id)}
+                      className="flex-1 sm:flex-initial min-h-11 gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:border-rose-500"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{ui("حذف")}</span>
+                    </Button>
+                  )}
+                </CardFooter>
+              )}
             </Card>
           ))}
         </div>

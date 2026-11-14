@@ -65,6 +65,11 @@ export default function Sidebar({
           </Link>
         </div>
         <nav aria-label={text("القائمة الرئيسية", "Main navigation")} className="sidebar-navigation">
+          {items.length === 0 && !isCollapsed && (
+            <p className="px-3 py-2 text-xs text-[var(--text-muted)]">
+              {text("لا توجد أقسام مفعّلة", "No sections enabled")}
+            </p>
+          )}
           {Object.entries(NAVIGATION_GROUPS).map(([group, label]) => {
             const entries = items.filter((item) => item.group === group);
             if (!entries.length) return null;
@@ -189,6 +194,11 @@ export default function Sidebar({
             )}
 
             <nav aria-label={text("القائمة الرئيسية", "Main navigation")} className="space-y-4">
+              {items.length === 0 && (
+                <p className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 text-center text-xs text-[var(--text-muted)]">
+                  {text("لا توجد أقسام مفعّلة لهذا الحساب", "No sections are enabled for this account")}
+                </p>
+              )}
               {Object.entries(NAVIGATION_GROUPS).map(([group, label]) => {
                 const entries = items.filter((item) => item.group === group);
                 if (!entries.length) return null;

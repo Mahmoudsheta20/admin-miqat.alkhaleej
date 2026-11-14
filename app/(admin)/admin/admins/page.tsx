@@ -7,7 +7,7 @@ import Modal from "@/app/_components/Modal";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
 import { Badge } from "@/app/_components/ui";
 
-import React, { useState, useEffect, useId, useRef } from "react";
+import React, { useState, useEffect, useCallback, useId, useRef } from "react";
 import { Shield, ShieldCheck, UserPlus, Crown, Users, CheckCircle2, Trash2, Power, Copy, Check, AlertCircle, Sparkles, Mail, Phone, User, X, Lock, KeyRound } from "lucide-react";
 import AdminPermissionsEditor from "@/app/_components/AdminPermissionsEditor";
 import {
@@ -18,7 +18,8 @@ import {
   deleteAdminUserAction,
   resetAdminTemporaryPasswordAction,
 } from "@/app/_actions/adminManagement";
-import { AdminUserItem, SUPER_ADMIN_EMAIL } from "@/lib/adminConstants";
+import { AdminUserItem, SUPER_ADMIN_EMAIL, isSuperAdmin } from "@/lib/adminConstants";
+import { useAuth } from "@/lib/authContext";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
 import {
@@ -31,15 +32,30 @@ import {
 export default function AdminManagementPage() {
   const ui = useUiText();
   const { language } = useLanguage();
-  const text = (ar: string, en: string) => (language === "ar" ? ar : en);
+  const { user: authUser } = useAuth();
+  const text = useCallback(
+    (ar: string, en: string) => (language === "ar" ? ar : en),
+    [language],
+  );
 
 
-  const cachedAdmins = getCachedData<{ success: boolean; admins?: AdminUserItem[] }>("admins_list");
+  const cachedAdmins = getCachedData<{
+    success: boolean;
+    admins?: AdminUserItem[];
+    isCallerSuperAdmin?: boolean;
+  }>("admins_list");
   const [admins, setAdmins] = useState<AdminUserItem[]>(() =>
     Array.isArray(cachedAdmins?.admins) ? cachedAdmins.admins : []
   );
   const [loading, setLoading] = useState(() => !cachedAdmins);
-  const [isSuper, setIsSuper] = useState(false);
+  const [isSuper, setIsSuper] = useState<boolean>(() =>
+    cachedAdmins?.isCallerSuperAdmin !== undefined
+      ? Boolean(cachedAdmins.isCallerSuperAdmin)
+      : isSuperAdmin(authUser?.email)
+  );
+  const [hasVerifiedSuper, setHasVerifiedSuper] = useState<boolean>(
+    () => cachedAdmins?.isCallerSuperAdmin !== undefined
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Modal State
@@ -89,7 +105,7 @@ export default function AdminManagementPage() {
     };
   }, []);
 
-  const fetchAdmins = async (forceRefresh = false) => {
+  const fetchAdmins = useCallback(async (forceRefresh = false) => {
     return fetchCached("admins_list", getAdminsListAction, {
         ttlMs: 120_000,
         forceRefresh,
@@ -98,19 +114,22 @@ export default function AdminManagementPage() {
       if (res.success && res.admins) {
         setAdmins(res.admins);
         setIsSuper(Boolean(res.isCallerSuperAdmin));
+        setHasVerifiedSuper(true);
       } else {
-        setError(res.error || "تعذر تحميل قائمة المسؤولين");
+        setError(res.error || text("تعذر تحميل قائمة المسؤولين", "Unable to load administrators"));
       }
     }).catch(() => {
-      setError("حدث خطأ أثناء الاتصال بقاعدة البيانات");
+      setError(text("حدث خطأ أثناء الاتصال بالخادم", "Unable to connect to the server"));
     }).finally(() => {
       setLoading(false);
     });
-  };
+  }, [text]);
 
   useEffect(() => {
     fetchAdmins();
-  }, []);
+  }, [fetchAdmins]);
+
+  const canManageAdmins = hasVerifiedSuper ? isSuper : isSuperAdmin(authUser?.email);
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,10 +157,10 @@ export default function AdminManagementPage() {
         setCreatePermissions(buildFullPermissions());
         fetchAdmins(true);
       } else {
-        setFormError(res.error || "فشل إنشاء حساب المسؤول");
+        setFormError(res.error || text("فشل إنشاء حساب المسؤول", "Failed to create administrator account"));
       }
     } catch {
-      setFormError("حدث خطأ غير متوقع أثناء إنشاء الحساب");
+      setFormError(text("حدث خطأ غير متوقع أثناء إنشاء الحساب", "Unexpected error while creating account"));
     } finally {
       setFormLoading(false);
     }
@@ -202,20 +221,19 @@ export default function AdminManagementPage() {
         setActionBanner({
           type: "success",
           message: nextActive
-            ? "تم تفعيل حساب المسؤول بنجاح."
-            : "تم تعطيل حساب المسؤول بنجاح.",
+            ? text("تم تفعيل حساب المسؤول بنجاح.", "Admin account activated.")
+            : text("تم تعطيل حساب المسؤول بنجاح.", "Admin account deactivated."),
         });
       } else {
         setActionBanner({
           type: "error",
-          message: res.error || ui("فشل تعديل حالة المسؤول"),
-          dynamic: Boolean(res.error),
+          message: res.error || text("فشل تعديل حالة المسؤول", "Failed to update admin status"),
         });
       }
     } catch {
       setActionBanner({
         type: "error",
-        message: "تعذر تعديل الحالة",
+        message: text("تعذر تعديل الحالة", "Unable to update status"),
       });
     }
   };
@@ -232,38 +250,42 @@ export default function AdminManagementPage() {
         setDeleteTarget(null);
         setActionBanner({
           type: "success",
-          message: "تم حذف حساب المسؤول بنجاح.",
+          message: text("تم حذف حساب المسؤول بنجاح.", "Admin account deleted."),
         });
       } else {
         setActionBanner({
           type: "error",
-          message: res.error || ui("فشل حذف حساب المسؤول"),
-          dynamic: Boolean(res.error),
+          message: res.error || text("فشل حذف حساب المسؤول", "Failed to delete admin account"),
         });
       }
     } catch {
       setActionBanner({
         type: "error",
-        message: "تعذر حذف حساب المسؤول",
+        message: text("تعذر حذف حساب المسؤول", "Unable to delete admin account"),
       });
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  const handleCopy = async (text: string) => {
+  const handleCopy = async (value: string) => {
     setCopyError(null);
     try {
       if (!navigator.clipboard?.writeText) {
         throw new Error("clipboard unavailable");
       }
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(value);
       setCopiedPass(true);
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       copyTimerRef.current = setTimeout(() => setCopiedPass(false), 2000);
     } catch {
       setCopiedPass(false);
-      setCopyError("تعذر النسخ التلقائي — يرجى نسخ كلمة المرور يدوياً");
+      setCopyError(
+        text(
+          "تعذر النسخ التلقائي — يرجى نسخ كلمة المرور يدوياً",
+          "Auto-copy unavailable — please copy the password manually"
+        )
+      );
     }
   };
 
@@ -290,15 +312,14 @@ export default function AdminManagementPage() {
         setResetTarget(null);
         setActionBanner({
           type: "error",
-          message: res.error || ui("فشل إعادة تعيين كلمة المرور"),
-          dynamic: Boolean(res.error),
+          message: res.error || text("فشل إعادة تعيين كلمة المرور", "Failed to reset temporary password"),
         });
       }
     } catch {
       setResetTarget(null);
       setActionBanner({
         type: "error",
-        message: "حدث خطأ في الاتصال بالسيرفر",
+        message: text("حدث خطأ في الاتصال بالسيرفر", "Server connection error"),
       });
     } finally {
       setResetLoadingAdminId(null);
@@ -324,7 +345,7 @@ export default function AdminManagementPage() {
             {ui("التحكم في حسابات الإدارة وإضافة مسؤولين جدد بصلاحيات كاملة على النظام.")}</p>
         </div>
 
-        {isSuper && (
+        {canManageAdmins && (
           <button
             type="button"
             onClick={() => {
@@ -357,13 +378,13 @@ export default function AdminManagementPage() {
             ) : (
               <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
             )}
-            <span>{actionBanner.dynamic ? actionBanner.message : ui(actionBanner.message)}</span>
+            <span>{actionBanner.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setActionBanner(null)}
             aria-label={ui("إغلاق")}
-            className="min-h-10 min-w-10 inline-flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer shrink-0"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -371,7 +392,7 @@ export default function AdminManagementPage() {
       )}
 
       {/* Access Guard Notice for regular admins */}
-      {!isSuper && !loading && (
+      {!canManageAdmins && hasVerifiedSuper && !loading && !error && (
         <div className="p-4 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--text-main)] text-xs flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-[var(--accent-gold)] shrink-0 mt-0.5" aria-hidden="true" />
           <div className="space-y-1">
@@ -540,12 +561,12 @@ export default function AdminManagementPage() {
                     </td>
 
                     <td className="py-3 px-4 text-end">
-                      {isSuper && !adm.isSuperAdmin ? (
+                      {canManageAdmins && !adm.isSuperAdmin ? (
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => openPermissionsModal(adm)}
-                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
                             title={text("تعديل الصلاحيات", "Edit permissions")}
                             aria-label={`${text("تعديل الصلاحيات", "Edit permissions")} — ${adm.name}`}
                           >
@@ -556,7 +577,7 @@ export default function AdminManagementPage() {
                             type="button"
                             onClick={() => setResetTarget(adm)}
                             disabled={resetLoadingAdminId === adm.id}
-                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
                             title={ui("إعادة تعيين كلمة المرور المؤقتة")}
                             aria-label={`${ui("إعادة تعيين كلمة المرور المؤقتة")} — ${adm.name}`}
                           >
@@ -566,7 +587,7 @@ export default function AdminManagementPage() {
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(adm)}
-                            className={`min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border text-xs transition cursor-pointer ${
+                            className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border text-xs transition cursor-pointer ${
                               adm.active
                                 ? "border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]"
                                 : "border-emerald-600/40 text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 hover:bg-emerald-500/20"
@@ -580,7 +601,7 @@ export default function AdminManagementPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(adm)}
-                            className="min-h-9 min-w-9 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:border-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-400 hover:border-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
                             title={ui("حذف المسؤول")}
                             aria-label={`${ui("حذف المسؤول")} — ${adm.name}`}
                           >
@@ -640,7 +661,7 @@ export default function AdminManagementPage() {
                   </Badge>
                 }
                 footer={
-                  isSuper && !adm.isSuperAdmin ? (
+                  canManageAdmins && !adm.isSuperAdmin ? (
                     <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">
                       <button
                         type="button"
@@ -750,8 +771,11 @@ export default function AdminManagementPage() {
               <button
                 type="button"
                 aria-label={ui("إغلاق")}
-                onClick={() => setModalOpen(false)}
-                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
+                disabled={formLoading}
+                onClick={() => {
+                  if (!formLoading) setModalOpen(false);
+                }}
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card-subtle)] transition cursor-pointer disabled:opacity-50"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -776,7 +800,16 @@ export default function AdminManagementPage() {
                         : "تم إنشاء حساب المسؤول بنجاح!"
                     )}</h3>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {ui("احفظ بيانات الدخول وشاركها مع المسؤول الجديد بطريقة آمنة. لن يتم إرسالها بالبريد الإلكتروني.")}</p>
+                    {createdAdmin.isReset
+                      ? text(
+                          "تم إرسال كلمة المرور المؤقتة إلى البريد الإلكتروني المسجل للمسؤول. احتفظ بنسخة آمنة أيضاً إذا لزم الأمر.",
+                          "A temporary password email was sent to the administrator's address. Keep a secure copy here if needed."
+                        )
+                      : text(
+                          "احفظ بيانات الدخول وشاركها مع المسؤول الجديد بطريقة آمنة. لن يتم إرسالها بالبريد الإلكتروني.",
+                          "Save and share these login details securely with the new administrator. They are not emailed automatically."
+                        )}
+                  </p>
                 </div>
 
                 <div className="p-4 rounded-2xl theme-card-subtle space-y-3">
@@ -802,7 +835,7 @@ export default function AdminManagementPage() {
                       <button
                         type="button"
                         onClick={() => void handleCopy(createdAdmin.temporaryPassword)}
-                        className="min-h-11 sm:min-h-8 px-3 py-1 rounded-lg gold-gradient-btn text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
+                        className="min-h-11 px-3 py-1 rounded-lg gold-gradient-btn text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
                       >
                         {copiedPass ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}
                         <span>{ui(copiedPass ? "تم النسخ" : "نسخ")}</span>
@@ -810,7 +843,7 @@ export default function AdminManagementPage() {
                     </div>
                     {copyError && (
                       <p role="alert" className="mt-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400">
-                        {ui(copyError)}
+                        {copyError}
                       </p>
                     )}
                   </div>

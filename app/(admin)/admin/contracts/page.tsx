@@ -62,11 +62,16 @@ import {
   invalidateClientCache,
 } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 export default function AdminContractsPage() {
   const ui = useUiText();
 
   const { t, isRTL } = useLanguage();
+  const { user: authUser } = useAuth();
+  const canWriteContracts = hasClientPermission(authUser, "contracts", "write");
+  const canDeleteContracts = hasClientPermission(authUser, "contracts", "delete");
   const cachedContracts =
     getCachedData<Awaited<ReturnType<typeof getContracts>>>(
       "contracts_ALL_ALL_",
@@ -189,7 +194,7 @@ export default function AdminContractsPage() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!contractToDelete) return;
+    if (!contractToDelete || !canDeleteContracts) return;
     setIsDeleting(true);
     try {
       const res = await deleteContract(contractToDelete.id);
@@ -507,12 +512,16 @@ export default function AdminContractsPage() {
           void fetchContractsData(undefined, true);
         }}
         onSeedError={(err) => setSyncStatus(err)}
-        primaryAction={{
-          label: `+ ${t("contracts.newContract")}`,
-          href: "/admin/contracts/new",
-          icon: FileText,
-          variant: "primary",
-        }}
+        primaryAction={
+          canWriteContracts
+            ? {
+                label: `+ ${t("contracts.newContract")}`,
+                href: "/admin/contracts/new",
+                icon: FileText,
+                variant: "primary",
+              }
+            : undefined
+        }
       />
 
       {/* KPI Stats Ribbon */}
@@ -929,7 +938,7 @@ export default function AdminContractsPage() {
               >
                 {ui("إلغاء عوامل التصفية")}
               </button>
-            ) : (
+            ) : canWriteContracts ? (
               <Link
                 href="/admin/contracts/new"
                 className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg gold-gradient-btn transition shadow-xs"
@@ -937,7 +946,7 @@ export default function AdminContractsPage() {
                 <FileText className="w-4 h-4" aria-hidden="true" />
                 {ui("+ إنشاء أول عقد")}
               </Link>
-            )}
+            ) : null}
           </div>
         ) : (
           <>
@@ -1228,7 +1237,7 @@ export default function AdminContractsPage() {
                           <ContractActions
                             contractId={c.id}
                             onPreview={() => openPdf(c)}
-                            onReverse={() => setReverseContract(c)}
+                            onReverse={canWriteContracts ? () => setReverseContract(c) : undefined}
                           />
                         </TableCell>
                       </TableRow>
@@ -1248,7 +1257,7 @@ export default function AdminContractsPage() {
                   isCopied={copiedRef === c.referenceNumber}
                   onCopyRef={handleCopyRef}
                   onPreviewPdf={openPdf}
-                  onReverseTrip={setReverseContract}
+                  onReverseTrip={canWriteContracts ? setReverseContract : undefined}
                   onInspectOrManifest={openContractDetails}
                 />
               ))}
@@ -1754,34 +1763,38 @@ export default function AdminContractsPage() {
                   <FileText className="w-4 h-4" aria-hidden="true" />
                   <span>{ui("استعراض الـ PDF")}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const c = selectedContract;
-                    setSelectedContract(null);
-                    setContractModalFocus(null);
-                    setReverseContract(c);
-                  }}
-                  className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg border border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:border-sky-500 hover:bg-sky-500/15 transition cursor-pointer"
-                  title={ui("إنشاء رحلة عكسية من هذا العقد")}
-                >
-                  <ArrowLeftRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>{ui("رحلة عكسية")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const c = selectedContract;
-                    setSelectedContract(null);
-                    setContractModalFocus(null);
-                    setContractToDelete(c);
-                  }}
-                  className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg danger-btn transition cursor-pointer"
-                  title={ui("حذف العقد نهائياً")}
-                >
-                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>{ui("حذف العقد")}</span>
-                </button>
+                {canWriteContracts && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = selectedContract;
+                      setSelectedContract(null);
+                      setContractModalFocus(null);
+                      setReverseContract(c);
+                    }}
+                    className="min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg border border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:border-sky-500 hover:bg-sky-500/15 transition cursor-pointer"
+                    title={ui("إنشاء رحلة عكسية من هذا العقد")}
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{ui("رحلة عكسية")}</span>
+                  </button>
+                )}
+                {canDeleteContracts && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = selectedContract;
+                      setSelectedContract(null);
+                      setContractModalFocus(null);
+                      setContractToDelete(c);
+                    }}
+                    className="col-span-2 sm:col-span-1 min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg danger-btn transition cursor-pointer"
+                    title={ui("حذف العقد نهائياً")}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{ui("حذف العقد")}</span>
+                  </button>
+                )}
               </div>
               <button
                 type="button"

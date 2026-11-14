@@ -87,13 +87,29 @@ function flowOverview(){
  return {success:true,config:waFixtureFlow.config,sessions:waFixtureFlow.sessions,events:waFixtureFlow.events,stats:{activeSessions,arrivedSessions,totalEvents:waFixtureFlow.events.length}};
 }
 function minimalPdf(){const objects=['<</Type /Catalog /Pages 2 0 R>>','<</Type /Pages /Kids [3 0 R] /Count 1>>','<</Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Resources <</Font <</F1 4 0 R>>>> /Contents 5 0 R>>','<</Type /Font /Subtype /Type1 /BaseFont /Helvetica>>','<</Length 48>>\nstream\nBT /F1 14 Tf 20 100 Td (Fixture document) Tj ET\nendstream'];let s='%PDF-1.4\n',offsets=[0];for(let i=0;i<objects.length;i++){offsets.push(Buffer.byteLength(s));s+=`${i+1} 0 obj\n${objects[i]}\nendobj\n`;}const xref=Buffer.byteLength(s);s+=`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map(o=>String(o).padStart(10,'0')+' 00000 n ').join('\n')}\ntrailer <</Root 1 0 R /Size 6>>\nstartxref\n${xref}\n%%EOF`;return s;}
+const fixtureQrDataUrl='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jI2YAAAAASUVORK5CYII=';
+let waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0,recovery:{failedQueueJobs:0,pendingDriverReplies:0,pausedContracts:0}};
+const waFixtureTrips=[{
+ id:'11111111-1111-4111-8111-111111111111',
+ contractId:id,
+ tripId:id,
+ driverName:captain.name,
+ driverPhone:captain.phone,
+ status:'ASSIGNED',
+ scheduledAt:`${day}T12:00:00+03:00`,
+ updatedAt:nowIso,
+ arrivedAt:null,
+ completedAt:null,
+ lateAlerted:false,
+ pollDispatch:'PENDING',
+ masterDispatch:'PENDING',
+ contract:{referenceNumber:contract.referenceNumber,origin:contract.origin,destination:contract.destination},
+}];
 const server=createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1'),path=url.pathname.replace(/^\/api/,'');let body={};
  for await(const chunk of req){body.raw=(body.raw||'')+chunk;}try{body=JSON.parse(body.raw||'{}');}catch{body={};}
  const json=(data,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({success:status<400,...(status<400?{data}:{error:typeof data==='string'?data:'Fixture error'})}));};
  const rawJson=(payload,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(payload));};
- const fixtureQrDataUrl='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jI2YAAAAASUVORK5CYII=';
- let waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0};
  if(path==='/health')return json({status:'ok'});
  if(path==='/auth/login'){
   if(body.password!=='fixture-password')return json('بيانات الدخول غير صحيحة',401);
@@ -151,7 +167,7 @@ const server=createServer(async(req,res)=>{
    fixtureAdmins.push(created);
    return json({admin:created,temporaryPassword:'TempPass#2026!'},201);
   }
-  return json({admins:fixtureAdmins,total:fixtureAdmins.length,isCallerSuperAdmin:currentAdmin.isSuperAdmin});
+  return json({admins:fixtureAdmins,isCallerSuperAdmin:currentAdmin.isSuperAdmin});
  }
  if(path.startsWith('/admins/')){
   const parts=path.split('/').filter(Boolean);const targetId=parts[1];const action=parts[2];
@@ -167,7 +183,7 @@ const server=createServer(async(req,res)=>{
   }
   if(req.method==='POST'&&action==='reset-password'){
    const target=fixtureAdmins.find(a=>a.id===targetId);
-   return target?json({temporaryPassword:'ResetPass#2026!',adminName:target.name,email:target.email}):json('المسؤول غير موجود',404);
+   return target?json({temporaryPassword:'ResetPass#2026!'}):json('المسؤول غير موجود',404);
   }
   if(req.method==='DELETE'&&!action){
    fixtureAdmins=fixtureAdmins.filter(a=>a.id!==targetId||a.isSuperAdmin);
@@ -186,7 +202,15 @@ const server=createServer(async(req,res)=>{
  if(path.startsWith('/invoices/transport-defaults/')){const targetId=path.split('/')[3];const target=contracts.find(c=>c.id===targetId)||contract;return json({customerName:target.customerName,transport:{serviceType:target.operationType||'AIRPORT_TRANSFER',contractReference:target.referenceNumber,origin:target.origin||'',destination:target.destination||'',tripDate:target.tripDate||day,departureTime:(target.tripTime||'12:00').slice(0,5),contactName:target.customerName,contactPhone:target.customerPhone,vehiclePlate:target.vehiclePlate,distanceUnit:'KM',passengers:target.passengers||[]}});}
  if(path.startsWith('/invoices/'))return json(invoice);
  if(path==='/zatca/settings')return json({issuers:[],egs:[],sdkConfigured:false,productionPermitted:false});
- if(path==='/whatsapp/status')return rawJson({success:true,...waFixtureState,data:waFixtureState});
+ if(path==='/whatsapp/status')return rawJson({success:true,data:waFixtureState});
+ if(path==='/whatsapp/trips'&&req.method==='GET')return json(waFixtureTrips);
+ if(path==='/whatsapp/trips/notices'&&req.method==='GET')return json([]);
+ if(path.startsWith('/whatsapp/trips/')&&path.endsWith('/assign')&&req.method==='POST'){
+  const contractId=path.split('/')[3];
+  const trip=waFixtureTrips.find(t=>t.contractId===contractId)||waFixtureTrips[0];
+  if(trip){trip.pollDispatch='SENT';trip.masterDispatch='SENT';trip.status='IN_PROGRESS';trip.updatedAt=new Date().toISOString();}
+  return json({pollMessageId:'wa_poll_fixture_1',managementDispatched:true});
+ }
  if(path==='/whatsapp/qr')return rawJson({success:true,status:waFixtureState.status,qr:waFixtureState.qrImage,qrImage:waFixtureState.qrImage});
  if(path==='/whatsapp/send'&&req.method==='POST')return rawJson({success:true,message:'تمت إضافة الرسالة إلى طابور الإرسال الآمن بنجاح',data:{jobId:'wa_fixture_1',position:1,status:waFixtureState.status}});
  if(path==='/whatsapp/send-contract'&&req.method==='POST'){const targetContract=contracts.find(c=>c.id===body.contractId)||contract;const phone=body.phone||targetContract.captain?.phone||captain.phone;return rawJson({success:true,dispatchKind:'contract_document',messageId:'wa_contract_1',phone,hasPdfAttachment:true,preview:`*شركة ميقات الخليج للنقل البري*\n🚘 *تفاصيل رحلة النقل*\nرقم العقد: *${targetContract.referenceNumber}*\n📎 عقد النقل مرفق بصيغة PDF للاطلاع على التفاصيل.`,message:'تم إرسال العقد عبر الواتساب بنجاح',data:{jobId:'wa_contract_1',position:1,status:waFixtureState.status}});}
@@ -217,8 +241,8 @@ const server=createServer(async(req,res)=>{
   waFixtureFlow.events.unshift({id:`flow_evt_${randomUUID()}`,entityType:'SYSTEM',type:'TEST_SENT',actorRole:'ADMIN',actorPhone:waFixtureFlow.config.adminPhone,label:'رسالة اختبار التدفق',summary:`تمت جدولة رسالة اختبار إلى ${waFixtureFlow.config.adminPhone}`,timestamp:ts});
   return rawJson({success:true,message:`تمت إضافة رسالة اختبار التدفق إلى الطابور (${waFixtureFlow.config.adminPhone})`,data:{jobId:'wa_flow_test_1',position:1,adminPhone:waFixtureFlow.config.adminPhone}});
  }
- if(path==='/whatsapp/logout'&&req.method==='POST'){waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0};return rawJson({success:true,message:'تم تسجيل الخروج من الواتساب',status:waFixtureState.status,qrImage:waFixtureState.qrImage,data:waFixtureState});}
- if(path==='/whatsapp/reconnect'&&req.method==='POST'){waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0};return rawJson({success:true,status:waFixtureState.status,qrImage:waFixtureState.qrImage,data:waFixtureState});}
+ if(path==='/whatsapp/logout'&&req.method==='POST'){waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0,recovery:{failedQueueJobs:0,pendingDriverReplies:0,pausedContracts:0}};return rawJson({success:true,message:'تم تسجيل الخروج من الواتساب',data:waFixtureState});}
+ if(path==='/whatsapp/reconnect'&&req.method==='POST'){waFixtureState={status:'qr_ready',qrImage:fixtureQrDataUrl,queueLength:0,recovery:{failedQueueJobs:0,pendingDriverReplies:0,pausedContracts:0}};return rawJson({success:true,data:waFixtureState});}
  if(path==='/accounting/financial-report')return json(financial);
  if(path==='/accounting/vat-return')return json({year:Number(day.slice(0,4)),quarter:1,period:{start:day,endExclusive:day,endInclusive:day,dueDate:day},company,generatedAt:new Date().toISOString(),settings:{version:1,previousCorrection:'0',carriedCredit:'0',notes:'',filedOn:null,updatedAt:null},rows:Array.from({length:16},(_,i)=>({box:i+1,label:`Fixture VAT ${i+1}`,section:i<6?'SALES':i<12?'PURCHASES':'NET',amount:'0.00',adjustment:'0.00',vat:'0.00',isTotal:[6,12,16].includes(i+1)})),sales:[],purchases:[],warnings:[],coverage:{legacyCount:0,proformaCount:0,otherIssuerCount:0,basis:'Fixture',domesticPurchasesOnly:true},summary:{netSales:'0.00',outputVat:'0.00',netPurchases:'0.00',recordedInputVat:'0.00',recoverableInputVat:'0.00',nonRecoverableInputVat:'0.00',currentVatDue:'0.00',netVatDue:'0.00',creditNet:'0.00',debitNet:'0.00',excludedOutsideScope:'0.00'}});
  if((path.startsWith('/accounting/balance')||path.startsWith('/accounting/document-balance')))return json({balance:'115.00',direction:'RECEIVABLE'});

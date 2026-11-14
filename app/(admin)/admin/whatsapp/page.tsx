@@ -19,7 +19,9 @@ import { PageHeader } from "@/app/_components/ui";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import WhatsAppDriverTrips from "@/app/_components/WhatsAppDriverTrips";
 import WhatsAppFlowPanel from "@/app/_components/WhatsAppFlowPanel";
+import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
+import { hasClientPermission } from "@/lib/permissions";
 import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import {
   logoutWhatsApp,
@@ -34,7 +36,9 @@ function formatAccountPhone(meId?: string): string | null {
 }
 
 export default function AdminWhatsAppSettingsPage() {
+  const { user } = useAuth();
   const { language } = useLanguage();
+  const canWrite = hasClientPermission(user, "whatsapp", "write");
   const text = useCallback(
     (ar: string, en: string) => (language === "ar" ? ar : en),
     [language]
@@ -59,6 +63,7 @@ export default function AdminWhatsAppSettingsPage() {
   const [sendError, setSendError] = useState("");
 
   async function handleReconnect() {
+    if (!canWrite) return;
     setIsReconnecting(true);
     setActionError("");
     setActionMessage("");
@@ -80,6 +85,7 @@ export default function AdminWhatsAppSettingsPage() {
   }
 
   async function handleConfirmLogout() {
+    if (!canWrite) return;
     setActionError("");
     setActionMessage("");
     await logoutWhatsApp();
@@ -95,7 +101,7 @@ export default function AdminWhatsAppSettingsPage() {
 
   async function handleSendTestMessage(e: FormEvent) {
     e.preventDefault();
-    if (isSending || !statusQuery.canSend) return;
+    if (!canWrite || isSending || !statusQuery.canSend) return;
     setSendError("");
     setSendSuccess("");
 
@@ -145,18 +151,28 @@ export default function AdminWhatsAppSettingsPage() {
         onRefresh={() => void refreshStatus()}
         isRefreshing={isRefreshing}
         secondaryActions={
-          status === "connected" || status === "qr_ready"
+          canWrite && (status === "connected" || status === "qr_ready")
             ? [
                 {
                   label: text("تسجيل الخروج وتبديل الرقم", "Logout & Switch Number"),
                   icon: LogOut,
                   variant: "danger",
+                  disabled: waState?.recovery?.canRelink === false,
                   onClick: () => setIsLogoutModalOpen(true),
                 },
               ]
             : undefined
         }
       />
+
+      {!canWrite && (
+        <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm text-[var(--text-muted)]">
+          {text(
+            "وضع العرض فقط: يلزم صلاحية تعديل الواتساب لتغيير الربط أو إرسال الرسائل.",
+            "View-only access: WhatsApp write permission is required to manage connections or send messages."
+          )}
+        </p>
+      )}
 
       {loadError && (
         <div
@@ -306,17 +322,19 @@ export default function AdminWhatsAppSettingsPage() {
                 </div>
               </dl>
 
-              <div className="pt-2 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsLogoutModalOpen(true)}
-                  disabled={waState?.recovery?.canRelink === false}
-                  className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" aria-hidden="true" />
-                  <span>{text("تسجيل الخروج وتبديل الرقم", "Logout & Link Another Number")}</span>
-                </button>
-              </div>
+              {canWrite && (
+                <div className="pt-2 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsLogoutModalOpen(true)}
+                    disabled={waState?.recovery?.canRelink === false}
+                    className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <LogOut className="w-4 h-4" aria-hidden="true" />
+                    <span>{text("تسجيل الخروج وتبديل الرقم", "Logout & Link Another Number")}</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : status === "qr_ready" && qrImage ? (
             <div className="grid gap-6 sm:grid-cols-[auto_1fr] items-center">
@@ -401,29 +419,31 @@ export default function AdminWhatsAppSettingsPage() {
                   )}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                <button
-                  type="button"
-                  disabled={isReconnecting || waState?.recovery?.canReconnect === false}
-                  onClick={() => void handleReconnect()}
-                  className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
-                >
-                  {isReconnecting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" aria-hidden="true" />
-                  )}
-                  <span>{text("إعادة الاتصال", "Reconnect")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsLogoutModalOpen(true)}
-                  disabled={waState?.recovery?.canRelink === false}
-                  className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer"
-                >
-                  {text("مسح الجلسة السابقة", "Reset Session")}
-                </button>
-              </div>
+              {canWrite && (
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    disabled={isReconnecting || waState?.recovery?.canReconnect === false}
+                    onClick={() => void handleReconnect()}
+                    className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {isReconnecting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                    )}
+                    <span>{text("إعادة الاتصال", "Reconnect")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsLogoutModalOpen(true)}
+                    disabled={waState?.recovery?.canRelink === false}
+                    className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer disabled:opacity-50"
+                  >
+                    {text("مسح الجلسة السابقة", "Reset Session")}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -457,7 +477,7 @@ export default function AdminWhatsAppSettingsPage() {
           </div>
 
           <form onSubmit={handleSendTestMessage} className="space-y-4">
-            <fieldset disabled={!statusQuery.canSend || isSending} className="space-y-4 disabled:opacity-65">
+            <fieldset disabled={!canWrite || !statusQuery.canSend || isSending} className="space-y-4 disabled:opacity-65">
               <div>
                 <label
                   htmlFor="wa-test-phone"

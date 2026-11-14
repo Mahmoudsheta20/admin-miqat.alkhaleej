@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/lib/languageContext";
 import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import AutoSendWhatsAppCard from "@/app/_components/AutoSendWhatsAppCard";
+import Modal from "@/app/_components/Modal";
 
 const SendWhatsAppModal = dynamic(() => import("@/app/_components/SendWhatsAppModal"), { ssr: false });
 
@@ -44,7 +45,6 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
 
   const router = useRouter();
   const { t, isRTL } = useLanguage();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [origin, setOrigin] = useState(contract.destination);
   const [destination, setDestination] = useState(contract.origin);
   const [tripDate, setTripDate] = useState("");
@@ -70,7 +70,6 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
   const selectedCaptain = captains.find(captain => captain.id === captainId);
 
   useEffect(() => {
-    dialogRef.current?.showModal();
     let isActive = true;
     // Recheck active captains instead of using stale availability from the list page.
     void Promise.all([getCaptains(), getVehicles()]).then(([caps, fleet]) => {
@@ -137,13 +136,10 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      dir={isRTL ? "rtl" : "ltr"}
-      aria-labelledby="return-trip-title"
-      onCancel={event => { if (isSubmitting) event.preventDefault(); else onClose(); }}
-      onClick={event => { if (event.target === event.currentTarget && !isSubmitting) onClose(); }}
-      className="return-trip-dialog fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-2 sm:p-6"
+    <Modal
+      label={isRTL ? "رحلة عودة" : "Return Trip"}
+      onClose={onClose}
+      isBusy={isSubmitting}
     >
       <div className="mobile-dialog-panel mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-2xl border theme-border theme-card shadow-2xl">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b theme-border p-4 sm:px-5">
@@ -151,7 +147,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
             <h2 id="return-trip-title" className="flex items-center gap-2 text-base sm:text-lg font-bold"><ArrowLeftRight aria-hidden="true" className="h-4 w-4 text-[var(--accent-gold)]" />{ui(isRTL ? "رحلة عودة" : "Return Trip")}</h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">{ui(isRTL ? "من العقد " : "From Contract ")}<span className="font-mono" dir="ltr">{contract.referenceNumber}</span></p>
           </div>
-          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={ui(t("common.close"))} className="flex h-11 w-11 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] cursor-pointer"><X aria-hidden="true" className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} disabled={isSubmitting} aria-label={ui(t("common.close"))} className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--table-row-hover)] cursor-pointer"><X aria-hidden="true" className="h-5 w-5" /></button>
         </header>
         {createdContract ? (
           <div className="space-y-4 p-6 text-center" role="status">
@@ -309,6 +305,6 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
           defaultPhone={createdContract.whatsAppAutoSend?.phone || whatsAppPhone.trim() || createdContract.captain?.phone || selectedCaptain?.phone || ""}
         />
       )}
-    </dialog>
+    </Modal>
   );
 }

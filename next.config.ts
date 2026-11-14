@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   distDir: process.env.MIQAT_E2E === "1" ? ".next-e2e" : ".next",
   devIndicators: false,
+  experimental: {
+    proxyTimeout: 150_000,
+  },
   images: {
     remotePatterns: [
       {

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu, Plus, FileText, ReceiptText, Wallet, ClipboardCheck, ShieldAlert, X } from "lucide-react";
+import { Menu, Plus, FileText, ReceiptText, Wallet, ClipboardCheck, ShieldAlert, X, UserRound, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
 import { isSuperAdmin } from "@/lib/adminConstants";
@@ -10,6 +10,7 @@ import { navigationFor, routeInfo, routeLabel } from "@/lib/navigation";
 import {
   canAccessAdminPath,
   defaultAdminRoute,
+  hasAnyAdminModule,
   hasClientPermission,
   type PermissionModule,
 } from "@/lib/permissions";
@@ -18,6 +19,7 @@ import { Card } from "@/components/ui/card";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import NavigationIcon from "./NavigationIcon";
+import ProfileModal from "./ProfileModal";
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -27,11 +29,13 @@ interface DashboardShellProps {
 export default function DashboardShell({ children, role }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const { language, dir } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const [quickCreatePath, setQuickCreatePath] = useState<string | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const quickCreateDialog = useRef<HTMLDialogElement>(null);
 
   const isMenuOpen = drawerPath === pathname;
@@ -44,6 +48,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
   const active = routeInfo(pathname)?.href;
   const text = (ar: string, en: string) => (language === "ar" ? ar : en);
   const adminAuthorized = role !== "ADMIN" || !user || canAccessAdminPath(user, pathname);
+  const canAccessAnyModule = role !== "ADMIN" || !user || hasAnyAdminModule(user);
   const fallbackAdminPath = role === "ADMIN" && user ? defaultAdminRoute(user) : "/admin";
   const isWideCreationRoute =
     pathname.startsWith("/admin/contracts/new") ||
@@ -374,25 +379,69 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
                 <div className="w-12 h-12 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/35 text-[var(--accent-gold)] flex items-center justify-center mx-auto">
                   <ShieldAlert className="w-6 h-6" aria-hidden="true" />
                 </div>
-                <div className="space-y-1.5">
-                  <h1 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                    {text("ليس لديك صلاحية للوصول إلى هذا القسم", "Access restricted for this account")}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                    {text(
-                      "تم تقييد صلاحيات هذا الحساب على أقسام محددة من قِبل المدير العام الأساسي.",
-                      "This administrator account is scoped to specific sections by the Super Admin."
-                    )}
-                  </p>
-                </div>
-                <div className="pt-1">
-                  <Link
-                    href={fallbackAdminPath}
-                    className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-xl button-primary text-xs sm:text-sm font-semibold"
-                  >
-                    {text("الانتقال إلى الأقسام المتاحة", "Go to available workspace")}
-                  </Link>
-                </div>
+                {canAccessAnyModule ? (
+                  <>
+                    <div className="space-y-1.5">
+                      <h1 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                        {text("ليس لديك صلاحية للوصول إلى هذا القسم", "Access restricted for this account")}
+                      </h1>
+                      <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                        {text(
+                          "تم تقييد صلاحيات هذا الحساب على أقسام محددة من قِبل المدير العام الأساسي.",
+                          "This administrator account is scoped to specific sections by the Super Admin."
+                        )}
+                      </p>
+                    </div>
+                    <div className="pt-1">
+                      <Link
+                        href={fallbackAdminPath}
+                        className="min-h-11 inline-flex items-center justify-center px-5 py-2 rounded-xl button-primary text-xs sm:text-sm font-semibold"
+                      >
+                        {text("الانتقال إلى الأقسام المتاحة", "Go to available workspace")}
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <h1 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                        {text("لم يتم تفعيل أي أقسام لهذا الحساب", "No sections are enabled for this account")}
+                      </h1>
+                      <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                        {text(
+                          "هذا الحساب لا يملك حالياً صلاحية عرض أي قسم. تواصل مع المدير العام الأساسي لمنح الصلاحيات المطلوبة، أو راجع ملفك الشخصي.",
+                          "This administrator account does not currently have view permission for any section. Contact the Super Admin to grant access, or open your profile."
+                        )}
+                      </p>
+                    </div>
+                    <div className="pt-1 flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsProfileOpen(true)}
+                        className="min-h-11 inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl button-primary text-xs sm:text-sm font-semibold cursor-pointer"
+                      >
+                        <UserRound className="w-4 h-4" aria-hidden="true" />
+                        <span>{text("الملف الشخصي", "Profile")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSigningOut}
+                        onClick={async () => {
+                          setIsSigningOut(true);
+                          try {
+                            await logout();
+                          } finally {
+                            setIsSigningOut(false);
+                          }
+                        }}
+                        className="min-h-11 inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl secondary-btn text-xs sm:text-sm font-semibold cursor-pointer disabled:opacity-50"
+                      >
+                        <LogOut className="w-4 h-4" aria-hidden="true" />
+                        <span>{text("تسجيل الخروج", "Sign out")}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
               </Card>
             )}
           </div>
@@ -528,6 +577,7 @@ export default function DashboardShell({ children, role }: DashboardShellProps) 
           </div>
         </dialog>
       )}
+      {isProfileOpen && <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} initialTab="profile" />}
     </div>
   );
 }

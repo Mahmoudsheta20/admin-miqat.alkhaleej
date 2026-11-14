@@ -10,6 +10,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useUiText } from "@/lib/ui-text";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import {
   ActionMenu,
   ActionMenuItem,
@@ -32,6 +34,12 @@ export default function ContractActions({
   isFullWidth = false,
 }: ContractActionsProps) {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canEdit = hasClientPermission(user, "contracts", "write");
+  const canCreateInvoice = hasClientPermission(user, "invoices", "write");
+  const hasPrimaryMenuItems = canEdit || canCreateInvoice;
+  const hasSecondaryMenuItems = Boolean(onReverse || onWhatsApp);
+  const hasMenu = hasPrimaryMenuItems || hasSecondaryMenuItems;
   const detailHref = `/admin/contracts/${encodeURIComponent(contractId)}`;
   const editHref = `/admin/contracts/${encodeURIComponent(contractId)}/edit`;
   const invoiceHref = `/admin/invoices/new?contractId=${encodeURIComponent(contractId)}`;
@@ -47,7 +55,7 @@ export default function ContractActions({
       <Link
         href={detailHref}
         className={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--text-main)] text-xs font-semibold transition-colors ${
-          isFullWidth ? "flex-1 min-h-11 px-3" : "h-9 px-2.5"
+          isFullWidth ? "flex-1 min-h-11 px-3" : "min-h-11 sm:min-h-9 px-2.5"
         }`}
         title={ui("التفاصيل")}
       >
@@ -62,7 +70,7 @@ export default function ContractActions({
         type="button"
         onClick={onPreview}
         className={`inline-flex items-center justify-center gap-1.5 rounded-lg gold-gradient-btn text-xs font-semibold cursor-pointer ${
-          isFullWidth ? "flex-1 min-h-11 px-3" : "h-9 px-2.5"
+          isFullWidth ? "flex-1 min-h-11 px-3" : "min-h-11 sm:min-h-9 px-2.5"
         }`}
         title={ui("معاينة العقد وتحميله وطباعته")}
       >
@@ -70,47 +78,57 @@ export default function ContractActions({
         <span>PDF</span>
       </button>
 
-      <ActionMenu
-        label={ui("المزيد من الإجراءات")}
-        triggerClassName={isFullWidth ? "min-h-11 w-11 shrink-0" : "h-9 w-9"}
-      >
-        <ActionMenuItem
-          href={editHref}
-          icon={<Edit2 className="h-3.5 w-3.5" aria-hidden="true" />}
+      {hasMenu && (
+        <ActionMenu
+          label={ui("المزيد من الإجراءات")}
+          triggerClassName={
+            isFullWidth
+              ? "min-h-11 w-11 shrink-0"
+              : "min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 sm:h-9 sm:w-9"
+          }
         >
-          {ui("تعديل")}
-        </ActionMenuItem>
+          {canEdit && (
+            <ActionMenuItem
+              href={editHref}
+              icon={<Edit2 className="h-3.5 w-3.5" aria-hidden="true" />}
+            >
+              {ui("تعديل")}
+            </ActionMenuItem>
+          )}
 
-        <ActionMenuItem
-          href={invoiceHref}
-          icon={<ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />}
-          tone="gold"
-        >
-          {ui("إنشاء فاتورة")}
-        </ActionMenuItem>
+          {canCreateInvoice && (
+            <ActionMenuItem
+              href={invoiceHref}
+              icon={<ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />}
+              tone="gold"
+            >
+              {ui("إنشاء فاتورة")}
+            </ActionMenuItem>
+          )}
 
-        {(onReverse || onWhatsApp) && <ActionMenuSeparator />}
+          {hasPrimaryMenuItems && hasSecondaryMenuItems && <ActionMenuSeparator />}
 
-        {onReverse && (
-          <ActionMenuItem
-            onClick={onReverse}
-            icon={<ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />}
-            tone="blue"
-          >
-            {ui("رحلة عكسية")}
-          </ActionMenuItem>
-        )}
+          {onReverse && (
+            <ActionMenuItem
+              onClick={onReverse}
+              icon={<ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />}
+              tone="blue"
+            >
+              {ui("رحلة عكسية")}
+            </ActionMenuItem>
+          )}
 
-        {onWhatsApp && (
-          <ActionMenuItem
-            onClick={onWhatsApp}
-            icon={<MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />}
-            tone="emerald"
-          >
-            {ui("إرسال عبر واتساب")}
-          </ActionMenuItem>
-        )}
-      </ActionMenu>
+          {onWhatsApp && (
+            <ActionMenuItem
+              onClick={onWhatsApp}
+              icon={<MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />}
+              tone="emerald"
+            >
+              {ui("إرسال عبر واتساب")}
+            </ActionMenuItem>
+          )}
+        </ActionMenu>
+      )}
     </div>
   );
 }

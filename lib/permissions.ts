@@ -459,6 +459,18 @@ const ADMIN_ROUTE_FALLBACK_ORDER: ReadonlyArray<{
   { module: "whatsapp", href: "/admin/whatsapp" },
 ];
 
+export function hasAnyAdminModule(
+  user: Pick<SystemUser, "role" | "email" | "permissions"> | null | undefined
+): boolean {
+  if (!user || user.role !== "ADMIN") return false;
+  if (isSuperAdmin(user.email) || user.permissions === null || user.permissions === undefined) {
+    return true;
+  }
+  return ADMIN_ROUTE_FALLBACK_ORDER.some((item) =>
+    hasClientPermission(user, item.module, "view")
+  );
+}
+
 export function defaultAdminRoute(
   user: Pick<SystemUser, "role" | "email" | "permissions"> | null | undefined
 ): string {
@@ -469,7 +481,7 @@ export function defaultAdminRoute(
   const match = ADMIN_ROUTE_FALLBACK_ORDER.find((item) =>
     hasClientPermission(user, item.module, "view")
   );
-  return match ? match.href : "/profile";
+  return match ? match.href : "/admin";
 }
 
 export function summarizeAdminPermissions(

@@ -20,5 +20,5 @@ export function toggleAdminStatusAction(id: string) {
 }
 export function deleteAdminUserAction(id: string) { return backendFields(`/admins/${encodeURIComponent(id)}`, "DELETE"); }
 export function resetAdminTemporaryPasswordAction(id: string) {
-  return backendFields<{ temporaryPassword: string; adminName: string; email: string }>(`/admins/${encodeURIComponent(id)}/reset-password`, "POST");
+  return backendFields<{ temporaryPassword: string }>(`/admins/${encodeURIComponent(id)}/reset-password`, "POST");
 }

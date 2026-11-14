@@ -39,12 +39,19 @@ import {
 import { getSaudiTodayDateStr, formatOfficialDate } from "@/lib/contractConstants";
 import { fetchCached, getCachedData, invalidateClientCache } from "@/lib/clientCache";
 import { useLanguage } from "@/lib/languageContext";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 // Checklist Definitions
 export default function AdminInspectionsPage() {
   const ui = useUiText();
 
   const { t, isRTL } = useLanguage();
+  const { user } = useAuth();
+  const canWriteInspection = hasClientPermission(user, "inspections", "write");
+  const canDeleteInspection = hasClientPermission(user, "inspections", "delete");
+  const canSendWhatsAppInspection =
+    hasClientPermission(user, "whatsapp", "write") || canWriteInspection;
   const cachedOverview = getCachedData<Awaited<ReturnType<typeof getCaptainsInspectionOverview>>>("inspections_overview");
   const cachedHistory = getCachedData<Awaited<ReturnType<typeof getAllInspectionsList>>>("inspections_history");
   const cachedVehicles = getCachedData<Awaited<ReturnType<typeof getVehicles>>>("fleet_vehicles");
@@ -275,6 +282,7 @@ export default function AdminInspectionsPage() {
 
   // 1-Click Direct Inspection Finish Action
   const handleDirectPass = async (captain: CaptainInspectionItem) => {
+    if (!canWriteInspection) return;
     setExecutingCaptainId(captain.id);
     try {
       const res = await directPassInspection(
@@ -337,6 +345,7 @@ export default function AdminInspectionsPage() {
   // Submit custom inspection modal
   const handleCustomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canWriteInspection) return;
     if (!customCaptainId) {
       showBanner("error", isRTL ? "يرجى اختيار الكابتن" : "Please select a captain");
       return;
@@ -415,7 +424,7 @@ export default function AdminInspectionsPage() {
   };
 
   const handleDeleteInspection = async () => {
-    if (!deleteConfirmId) return;
+    if (!canDeleteInspection || !deleteConfirmId) return;
     setIsDeleting(true);
     try {
       const res = await deleteInspection(deleteConfirmId);
@@ -526,17 +535,19 @@ export default function AdminInspectionsPage() {
         }}
         onSeedError={(err) => showBanner("error", err)}
         actions={
-          <button
-            type="button"
-            onClick={() => {
-              resetCustomForm();
-              setIsCustomModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] transition shadow-xs cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-            <span>{ui(t("inspections.customInspection"))}</span>
-          </button>
+          canWriteInspection ? (
+            <button
+              type="button"
+              onClick={() => {
+                resetCustomForm();
+                setIsCustomModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 min-h-11 sm:min-h-9 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-main)] transition shadow-xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>{ui(t("inspections.customInspection"))}</span>
+            </button>
+          ) : undefined
         }
       />
 
@@ -980,49 +991,55 @@ export default function AdminInspectionsPage() {
                             <div className="flex items-center justify-center gap-2">
                               {/* IF NOT INSPECTED TODAY: Show Prominent Direct 1-Click Pass Button + Manual Date Option */}
                               {!c.hasTodayInspection ? (
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDirectPass(c)}
-                                    disabled={isExecutingThis}
-                                    className="min-h-9 flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-semibold shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
-                                    title={ui("إتمام واعتماد الفحص المباشر فوراً بضغطة زر")}
-                                  >
-                                    {isExecutingThis ? (
-                                      <>
-                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                                        {ui("جاري الاعتماد...")}</>
-                                    ) : (
-                                      <>
-                                        <Zap className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
-                                        {ui("إتمام الفحص المباشر")}</>
-                                    )}
-                                  </button>
+                                canWriteInspection ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDirectPass(c)}
+                                      disabled={isExecutingThis}
+                                      className="min-h-11 sm:min-h-9 flex items-center gap-1.5 px-3 py-1.5 rounded-xl gold-gradient-btn text-xs font-semibold shadow-sm transition hover:shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+                                      title={ui("إتمام واعتماد الفحص المباشر فوراً بضغطة زر")}
+                                    >
+                                      {isExecutingThis ? (
+                                        <>
+                                          <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                                          {ui("جاري الاعتماد...")}</>
+                                      ) : (
+                                        <>
+                                          <Zap className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
+                                          {ui("إتمام الفحص المباشر")}</>
+                                      )}
+                                    </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      resetCustomForm();
-                                      setCustomCaptainId(c.id);
-                                      if (c.assignedVehiclePlate) {
-                                        setCustomVehiclePlate(c.assignedVehiclePlate);
-                                      }
-                                      setCustomInspectionDateMode("MANUAL");
-                                      setIsCustomModalOpen(true);
-                                    }}
-                                    aria-label={`${ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")} — ${c.name}`}
-                                    className="min-h-9 min-w-9 p-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition shadow-2xs cursor-pointer"
-                                    title={ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")}
-                                  >
-                                    <Calendar className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-                                  </button>
-                                </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        resetCustomForm();
+                                        setCustomCaptainId(c.id);
+                                        if (c.assignedVehiclePlate) {
+                                          setCustomVehiclePlate(c.assignedVehiclePlate);
+                                        }
+                                        setCustomInspectionDateMode("MANUAL");
+                                        setIsCustomModalOpen(true);
+                                      }}
+                                      aria-label={`${ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")} — ${c.name}`}
+                                      className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                      title={ui("إجراء فحص مخصص وتحديد تاريخ يدوي للكابتن")}
+                                    >
+                                      <Calendar className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-[var(--text-muted)]">
+                                    {ui("غير مفحوص")}
+                                  </span>
+                                )
                               ) : (
                                 <>
                                   <button
                                     type="button"
                                     onClick={() => setSelectedInspectionForView(c.todayInspection)}
-                                    className="min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] text-xs font-bold transition shadow-xs cursor-pointer"
+                                    className="min-h-11 sm:min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-main)] text-xs font-bold transition shadow-xs cursor-pointer"
                                     title={ui("عرض تفاصيل كشف الفحص التشغيلي")}
                                   >
                                     <Eye className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
@@ -1040,44 +1057,48 @@ export default function AdminInspectionsPage() {
                                         });
                                       }
                                     }}
-                                    className="min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition shadow-xs cursor-pointer"
+                                    className="min-h-11 sm:min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition shadow-xs cursor-pointer"
                                     title={ui("توليد ومعاينة مستند PDF الرسمي للفحص")}
                                   >
                                     <FileText className="w-3.5 h-3.5" aria-hidden="true" />
                                     <span>PDF</span>
                                   </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (c.todayInspection?.id) {
-                                        openInspectionWhatsApp({
-                                          id: c.todayInspection.id,
-                                          captainId: c.id,
-                                          captainName: c.name,
-                                          captainPhone: c.phone,
-                                          vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                        });
-                                      }
-                                    }}
-                                    aria-label={`${ui("إرسال الفحص عبر واتساب")} — ${c.name}`}
-                                    className="min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition shadow-xs cursor-pointer"
-                                    title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
-                                  >
-                                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-                                    <span>{ui("واتساب")}</span>
-                                  </button>
+                                  {canSendWhatsAppInspection && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (c.todayInspection?.id) {
+                                          openInspectionWhatsApp({
+                                            id: c.todayInspection.id,
+                                            captainId: c.id,
+                                            captainName: c.name,
+                                            captainPhone: c.phone,
+                                            vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                          });
+                                        }
+                                      }}
+                                      aria-label={`${ui("إرسال الفحص عبر واتساب")} — ${c.name}`}
+                                      className="min-h-11 sm:min-h-9 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition shadow-xs cursor-pointer"
+                                      title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                                      <span>{ui("واتساب")}</span>
+                                    </button>
+                                  )}
 
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDirectPass(c)}
-                                    disabled={isExecutingThis}
-                                    aria-label={`${ui("إعادة الفحص المباشر وتحديث التوقيت")} — ${c.name}`}
-                                    className="min-h-9 min-w-9 p-1.5 rounded-lg border border-transparent text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--control-border)] hover:bg-[var(--bg-card-subtle)] inline-flex items-center justify-center transition cursor-pointer"
-                                    title={ui("إعادة الفحص المباشر وتحديث التوقيت")}
-                                  >
-                                    <RefreshCw className={`w-3.5 h-3.5 ${isExecutingThis ? "animate-spin text-[var(--accent-gold)]" : ""}`} aria-hidden="true" />
-                                  </button>
+                                  {canWriteInspection && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDirectPass(c)}
+                                      disabled={isExecutingThis}
+                                      aria-label={`${ui("إعادة الفحص المباشر وتحديث التوقيت")} — ${c.name}`}
+                                      className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-1.5 rounded-lg border border-transparent text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:border-[var(--control-border)] hover:bg-[var(--bg-card-subtle)] inline-flex items-center justify-center transition cursor-pointer"
+                                      title={ui("إعادة الفحص المباشر وتحديث التوقيت")}
+                                    >
+                                      <RefreshCw className={`w-3.5 h-3.5 ${isExecutingThis ? "animate-spin text-[var(--accent-gold)]" : ""}`} aria-hidden="true" />
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -1146,48 +1167,50 @@ export default function AdminInspectionsPage() {
                       }
                       footer={
                         !c.hasTodayInspection ? (
-                          <>
-                            <Button
-                              type="button"
-                              variant="gold"
-                              size="sm"
-                              onClick={() => handleDirectPass(c)}
-                              disabled={isExecutingThis}
-                              className="flex-1 min-h-11 gap-1.5 text-xs font-semibold"
-                            >
-                              {isExecutingThis ? (
-                                <>
-                                  <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
-                                  <span>{ui("جاري الاعتماد...")}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Zap className="w-4 h-4 fill-current" aria-hidden="true" />
-                                  <span>{ui("إتمام الفحص المباشر")}</span>
-                                </>
-                              )}
-                            </Button>
+                          canWriteInspection ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="gold"
+                                size="sm"
+                                onClick={() => handleDirectPass(c)}
+                                disabled={isExecutingThis}
+                                className="flex-1 min-h-11 gap-1.5 text-xs font-semibold"
+                              >
+                                {isExecutingThis ? (
+                                  <>
+                                    <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
+                                    <span>{ui("جاري الاعتماد...")}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Zap className="w-4 h-4 fill-current" aria-hidden="true" />
+                                    <span>{ui("إتمام الفحص المباشر")}</span>
+                                  </>
+                                )}
+                              </Button>
 
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                resetCustomForm();
-                                setCustomCaptainId(c.id);
-                                if (c.assignedVehiclePlate) {
-                                  setCustomVehiclePlate(c.assignedVehiclePlate);
-                                }
-                                setCustomInspectionDateMode("MANUAL");
-                                setIsCustomModalOpen(true);
-                              }}
-                              className="min-h-11 w-11 p-0 shrink-0"
-                              aria-label={`${ui("تحديد تاريخ يدوي")} — ${c.name}`}
-                              title={ui("تحديد تاريخ يدوي")}
-                            >
-                              <Calendar className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-                            </Button>
-                          </>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  resetCustomForm();
+                                  setCustomCaptainId(c.id);
+                                  if (c.assignedVehiclePlate) {
+                                    setCustomVehiclePlate(c.assignedVehiclePlate);
+                                  }
+                                  setCustomInspectionDateMode("MANUAL");
+                                  setIsCustomModalOpen(true);
+                                }}
+                                className="min-h-11 w-11 p-0 shrink-0"
+                                aria-label={`${ui("تحديد تاريخ يدوي")} — ${c.name}`}
+                                title={ui("تحديد تاريخ يدوي")}
+                              >
+                                <Calendar className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+                              </Button>
+                            </>
+                          ) : undefined
                         ) : (
                           <>
                             <Button
@@ -1221,40 +1244,44 @@ export default function AdminInspectionsPage() {
                               <span>PDF</span>
                             </Button>
 
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                if (c.todayInspection?.id) {
-                                  openInspectionWhatsApp({
-                                    id: c.todayInspection.id,
-                                    captainId: c.id,
-                                    captainName: c.name,
-                                    captainPhone: c.phone,
-                                    vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
-                                  });
-                                }
-                              }}
-                              aria-label={`${ui("إرسال الفحص عبر واتساب")} — ${c.name}`}
-                              className="min-h-11 px-3.5 gap-1.5 border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
-                            >
-                              <MessageSquare className="w-4 h-4" aria-hidden="true" />
-                              <span>{ui("واتساب")}</span>
-                            </Button>
+                            {canSendWhatsAppInspection && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (c.todayInspection?.id) {
+                                    openInspectionWhatsApp({
+                                      id: c.todayInspection.id,
+                                      captainId: c.id,
+                                      captainName: c.name,
+                                      captainPhone: c.phone,
+                                      vehiclePlate: c.assignedVehiclePlate || c.todayInspection.vehiclePlate,
+                                    });
+                                  }
+                                }}
+                                aria-label={`${ui("إرسال الفحص عبر واتساب")} — ${c.name}`}
+                                className="min-h-11 px-3.5 gap-1.5 border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
+                              >
+                                <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                                <span>{ui("واتساب")}</span>
+                              </Button>
+                            )}
 
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDirectPass(c)}
-                              disabled={isExecutingThis}
-                              className="min-h-11 w-11 p-0 shrink-0"
-                              aria-label={`${ui("إعادة الفحص")} — ${c.name}`}
-                              title={ui("إعادة الفحص")}
-                            >
-                              <RefreshCw className={`w-4 h-4 ${isExecutingThis ? "animate-spin text-[var(--accent-gold)]" : ""}`} aria-hidden="true" />
-                            </Button>
+                            {canWriteInspection && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDirectPass(c)}
+                                disabled={isExecutingThis}
+                                className="min-h-11 w-11 p-0 shrink-0"
+                                aria-label={`${ui("إعادة الفحص")} — ${c.name}`}
+                                title={ui("إعادة الفحص")}
+                              >
+                                <RefreshCw className={`w-4 h-4 ${isExecutingThis ? "animate-spin text-[var(--accent-gold)]" : ""}`} aria-hidden="true" />
+                              </Button>
+                            )}
                           </>
                         )
                       }
@@ -1408,7 +1435,7 @@ export default function AdminInspectionsPage() {
                               type="button"
                               aria-label={`${ui("عرض تفاصيل الفحص")} #${insp.id.slice(0, 8)}`}
                               onClick={() => setSelectedInspectionForView(insp)}
-                              className="min-h-9 min-w-9 p-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition cursor-pointer"
+                              className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--bg-card-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition cursor-pointer"
                               title={ui("عرض تفاصيل الفحص")}
                             >
                               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1424,41 +1451,45 @@ export default function AdminInspectionsPage() {
                                   pdfPath: insp.pdfPath,
                                 })
                               }
-                              className="min-h-9 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
+                              className="min-h-11 sm:min-h-9 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:bg-amber-500/15 text-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
                               title={ui("توليد وتحميل مستند PDF الرسمي للفحص")}
                             >
                               <FileText className="w-3.5 h-3.5" aria-hidden="true" />
                               <span>PDF</span>
                             </button>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openInspectionWhatsApp({
-                                  id: insp.id,
-                                  captainId: insp.captainId,
-                                  captainName: insp.captainName,
-                                  captainPhone: insp.captainPhone,
-                                  vehiclePlate: insp.vehiclePlate,
-                                })
-                              }
-                              aria-label={`${ui("إرسال الفحص عبر واتساب")} #${insp.id.slice(0, 8)}`}
-                              className="min-h-9 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
-                              title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
-                            >
-                              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span>{ui("واتساب")}</span>
-                            </button>
+                            {canSendWhatsAppInspection && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openInspectionWhatsApp({
+                                    id: insp.id,
+                                    captainId: insp.captainId,
+                                    captainName: insp.captainName,
+                                    captainPhone: insp.captainPhone,
+                                    vehiclePlate: insp.vehiclePlate,
+                                  })
+                                }
+                                aria-label={`${ui("إرسال الفحص عبر واتساب")} #${insp.id.slice(0, 8)}`}
+                                className="min-h-11 sm:min-h-9 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+                                title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span>{ui("واتساب")}</span>
+                              </button>
+                            )}
 
-                            <button
-                              type="button"
-                              aria-label={`${ui("حذف سجل الفحص")} #${insp.id.slice(0, 8)}`}
-                              onClick={() => setDeleteConfirmId(insp.id)}
-                              className="min-h-9 min-w-9 p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 text-rose-700 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center justify-center transition cursor-pointer"
-                              title={ui("حذف سجل الفحص")}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                            </button>
+                            {canDeleteInspection && (
+                              <button
+                                type="button"
+                                aria-label={`${ui("حذف سجل الفحص")} #${insp.id.slice(0, 8)}`}
+                                onClick={() => setDeleteConfirmId(insp.id)}
+                                className="min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 text-rose-700 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center justify-center transition cursor-pointer"
+                                title={ui("حذف سجل الفحص")}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1533,37 +1564,41 @@ export default function AdminInspectionsPage() {
                           <span>{ui("وثيقة PDF")}</span>
                         </Button>
 
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            openInspectionWhatsApp({
-                              id: insp.id,
-                              captainId: insp.captainId,
-                              captainName: insp.captainName,
-                              captainPhone: insp.captainPhone,
-                              vehiclePlate: insp.vehiclePlate,
-                            })
-                          }
-                          aria-label={`${ui("إرسال الفحص عبر واتساب")} #${insp.id.slice(0, 8)}`}
-                          className="min-h-11 px-3.5 gap-1.5 border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
-                        >
-                          <MessageSquare className="w-4 h-4" aria-hidden="true" />
-                          <span>{ui("واتساب")}</span>
-                        </Button>
+                        {canSendWhatsAppInspection && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              openInspectionWhatsApp({
+                                id: insp.id,
+                                captainId: insp.captainId,
+                                captainName: insp.captainName,
+                                captainPhone: insp.captainPhone,
+                                vehiclePlate: insp.vehiclePlate,
+                              })
+                            }
+                            aria-label={`${ui("إرسال الفحص عبر واتساب")} #${insp.id.slice(0, 8)}`}
+                            className="min-h-11 px-3.5 gap-1.5 border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs font-bold"
+                          >
+                            <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                            <span>{ui("واتساب")}</span>
+                          </Button>
+                        )}
 
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setDeleteConfirmId(insp.id)}
-                          className="min-h-11 w-11 p-0 border-rose-500/30 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 shrink-0"
-                          aria-label={`${ui("حذف")} #${insp.id.slice(0, 8)}`}
-                          title={ui("حذف")}
-                        >
-                          <Trash2 className="w-4 h-4" aria-hidden="true" />
-                        </Button>
+                        {canDeleteInspection && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteConfirmId(insp.id)}
+                            className="min-h-11 w-11 p-0 border-rose-500/30 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 shrink-0"
+                            aria-label={`${ui("حذف")} #${insp.id.slice(0, 8)}`}
+                            title={ui("حذف")}
+                          >
+                            <Trash2 className="w-4 h-4" aria-hidden="true" />
+                          </Button>
+                        )}
                       </>
                     }
                   >
@@ -1762,27 +1797,29 @@ export default function AdminInspectionsPage() {
                 <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 {ui("معتمد رسمياً في نظام ميقات الخليج")}</span>
               <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() =>
-                    openInspectionWhatsApp({
-                      id: selectedInspectionForView.id,
-                      captainId: selectedInspectionForView.captainId,
-                      captainName: selectedInspectionForView.captainName,
-                      captainPhone:
-                        "captainPhone" in selectedInspectionForView &&
-                        typeof selectedInspectionForView.captainPhone === "string"
-                          ? selectedInspectionForView.captainPhone
-                          : undefined,
-                      vehiclePlate: selectedInspectionForView.vehiclePlate,
-                    })
-                  }
-                  className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold transition cursor-pointer"
-                  title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
-                >
-                  <MessageSquare className="w-4 h-4" aria-hidden="true" />
-                  <span>{ui("إرسال عبر واتساب")}</span>
-                </button>
+                {canSendWhatsAppInspection && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openInspectionWhatsApp({
+                        id: selectedInspectionForView.id,
+                        captainId: selectedInspectionForView.captainId,
+                        captainName: selectedInspectionForView.captainName,
+                        captainPhone:
+                          "captainPhone" in selectedInspectionForView &&
+                          typeof selectedInspectionForView.captainPhone === "string"
+                            ? selectedInspectionForView.captainPhone
+                            : undefined,
+                        vehiclePlate: selectedInspectionForView.vehiclePlate,
+                      })
+                    }
+                    className="flex-1 sm:flex-initial min-h-11 sm:min-h-9 flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold transition cursor-pointer"
+                    title={ui("إرسال تقرير الفحص للكابتن عبر واتساب")}
+                  >
+                    <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                    <span>{ui("إرسال عبر واتساب")}</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {

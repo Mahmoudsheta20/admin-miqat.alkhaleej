@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/authContext";
 import { useTheme } from "@/lib/themeContext";
 import { useLanguage } from "@/lib/languageContext";
 import { routeInfo, routeLabel, NAVIGATION_GROUPS } from "@/lib/navigation";
+import { defaultAdminRoute } from "@/lib/permissions";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ProfileModal from "./ProfileModal";
 interface HeaderProps { onMenuToggle: () => void; isMenuOpen: boolean }
@@ -23,11 +24,12 @@ export default function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   const text = (ar: string, en: string) => language === "ar" ? ar : en;
   const Chevron = isRTL ? ChevronLeft : ChevronRight;
   if (!user) return null;
+  const homeHref = user.role === "ADMIN" ? defaultAdminRoute(user) : "/captain";
   return <>
     <header className="workspace-header">
       <button type="button" className="icon-button lg:hidden" onClick={onMenuToggle} aria-expanded={isMenuOpen} aria-controls="mobile-navigation" aria-label={text("فتح القائمة", "Open navigation")}><Menu size={21} /></button>
       <nav aria-label={text("مسار الصفحة", "Breadcrumb")} className="workspace-breadcrumb">
-        <Link href={user.role === "ADMIN" ? "/admin" : "/captain"} className="shrink-0">{text("ميقات الخليج", "Miqat Al Khaleej")}</Link>
+        <Link href={homeHref} className="shrink-0">{text("ميقات الخليج", "Miqat Al Khaleej")}</Link>
         {route && <><Chevron size={14} aria-hidden="true" /><span className="hidden sm:inline shrink-0">{NAVIGATION_GROUPS[route.group][language]}</span><Chevron className="hidden sm:block shrink-0" size={14} aria-hidden="true" />{pathname !== route.href && currentLabel !== route[language] ? <Link href={route.href} className="truncate">{route[language]}</Link> : <span aria-current="page" className="truncate">{route[language]}</span>}{pathname !== route.href && currentLabel !== route[language] && <><Chevron size={14} aria-hidden="true" className="shrink-0" /><span aria-current="page" className="truncate">{currentLabel}</span></>}</>}
       </nav>
       <div className="workspace-header-actions">

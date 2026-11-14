@@ -136,6 +136,7 @@ test("canAccessAdminPath enforces companySettings separately from invoices and h
   const {
     canAccessAdminPath,
     defaultAdminRoute,
+    hasAnyAdminModule,
     hasClientPermission,
     summarizeAdminPermissions,
   } = loadPermissionModules();
@@ -148,13 +149,15 @@ test("canAccessAdminPath enforces companySettings separately from invoices and h
   assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/invoices"), true);
   assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/invoices/new"), true);
   assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/invoices/settings"), false);
+  assert.equal(hasAnyAdminModule(invoicesOnlyAdmin), true);
 
   const emptyAdmin = {
     role: "ADMIN",
     email: "locked@example.test",
     permissions: {},
   };
-  assert.equal(defaultAdminRoute(emptyAdmin), "/profile");
+  assert.equal(hasAnyAdminModule(emptyAdmin), false);
+  assert.equal(defaultAdminRoute(emptyAdmin), "/admin");
   assert.equal(summarizeAdminPermissions({}, "en"), "No module access");
 
   const legacyAdmin = {
@@ -165,5 +168,7 @@ test("canAccessAdminPath enforces companySettings separately from invoices and h
   assert.equal(hasClientPermission(legacyAdmin, "contracts", "delete"), true);
   assert.equal(canAccessAdminPath(legacyAdmin, "/admin/contracts"), true);
   assert.equal(canAccessAdminPath(legacyAdmin, "/admin/admins"), false);
+  assert.equal(hasAnyAdminModule(legacyAdmin), true);
   assert.equal(defaultAdminRoute(legacyAdmin), "/admin");
+  assert.equal(hasAnyAdminModule({ role: "ADMIN", email: "miqatalkhaleej@gmail.com", permissions: {} }), true);
 });

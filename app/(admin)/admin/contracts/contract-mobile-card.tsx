@@ -31,7 +31,7 @@ export interface ContractMobileCardProps {
   isCopied: boolean;
   onCopyRef: (ref: string, e: MouseEvent<HTMLButtonElement>) => void;
   onPreviewPdf: (contract: Contract) => void;
-  onReverseTrip: (contract: Contract) => void;
+  onReverseTrip?: (contract: Contract) => void;
   onInspectOrManifest: (contract: Contract, focus?: "inspection" | "passengers") => void;
 }
 
@@ -274,7 +274,7 @@ export default function ContractMobileCard({
           <ContractActions
             contractId={c.id}
             onPreview={() => onPreviewPdf(c)}
-            onReverse={() => onReverseTrip(c)}
+            onReverse={onReverseTrip ? () => onReverseTrip(c) : undefined}
             isFullWidth
           />
         </CardFooter>

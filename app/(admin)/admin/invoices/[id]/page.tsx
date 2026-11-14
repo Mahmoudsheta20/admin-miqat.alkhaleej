@@ -18,6 +18,8 @@ import { accountingRequest } from "@/lib/accounting";
 import { signedMoneyMinor } from "@/lib/dashboard-analytics";
 import { moneyDecimal } from "@/lib/money";
 import RecordPaymentModal from "../record-payment-modal";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 const subscribeSearch = (onStoreChange: () => void) => {
   window.addEventListener("popstate", onStoreChange);
@@ -37,6 +39,12 @@ const PAYMENT_LABELS: Record<string, string> = {
 
 export default function InvoicePage({ params }: InvoicePageProps) {
   const ui = useUiText();
+  const { user: authUser } = useAuth();
+  const canCreateInvoices = hasClientPermission(authUser, "invoices", "write");
+  const canDeleteInvoices = hasClientPermission(authUser, "invoices", "delete");
+  const canWriteAccounting = hasClientPermission(authUser, "accounting", "write");
+  const canSendInvoiceWhatsApp =
+    hasClientPermission(authUser, "whatsapp", "write") || canCreateInvoices;
 
   const { id } = use(params);
   const [data, setData] = useState<InvoiceDetail | null>(null);
@@ -234,15 +242,17 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             </Link>
           )}
 
-          <Link
-            href="/admin/invoices/new"
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition"
-          >
-            <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-            <span>{ui("فاتورة جديدة")}</span>
-          </Link>
+          {canCreateInvoices && (
+            <Link
+              href="/admin/invoices/new"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition"
+            >
+              <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>{ui("فاتورة جديدة")}</span>
+            </Link>
+          )}
 
-          {!data.visibility?.isArchived && !isProforma && !isCredit && balanceData && !isLoadingBalance && !isRefundDue && !isFullyPaid && (
+          {canWriteAccounting && !data.visibility?.isArchived && !isProforma && !isCredit && balanceData && !isLoadingBalance && !isRefundDue && !isFullyPaid && (
             <button
               type="button"
               onClick={() => setShowPaymentModal(true)}
@@ -253,16 +263,20 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             </button>
           )}
 
-          <InvoiceVisibilityAction id={data.id} number={data.invoiceNumber} isArchived={data.visibility?.isArchived} onChanged={()=>void invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(id)}`).then(result=>{if(result.data)setData(result.data);})}/>
-          <button
-            type="button"
-            onClick={() => setShowWhatsAppModal(true)}
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
-            title={ui("إرسال الفاتورة للعميل عبر واتساب")}
-          >
-            <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
-            <span>{ui("إرسال عبر واتساب")}</span>
-          </button>
+          {canDeleteInvoices && (
+            <InvoiceVisibilityAction id={data.id} number={data.invoiceNumber} isArchived={data.visibility?.isArchived} onChanged={()=>void invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(id)}`).then(result=>{if(result.data)setData(result.data);})}/>
+          )}
+          {canSendInvoiceWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setShowWhatsAppModal(true)}
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+              title={ui("إرسال الفاتورة للعميل عبر واتساب")}
+            >
+              <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+              <span>{ui("إرسال عبر واتساب")}</span>
+            </button>
+          )}
           <button
             type="button"
             disabled={isDownloading}
@@ -428,7 +442,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           {/* Quick Actions & Note issuance bar (§7) */}
           <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              {!data.visibility?.isArchived && balanceData && !isFullyPaid && !isRefundDue && !isCredit && (
+              {canWriteAccounting && !data.visibility?.isArchived && balanceData && !isFullyPaid && !isRefundDue && !isCredit && (
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(true)}
@@ -439,7 +453,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 </button>
               )}
 
-              {!isCredit && (
+              {canCreateInvoices && !isCredit && (
                 <Link
                   href={`/admin/invoices/new?type=TAX&kind=CREDIT&originalInvoiceId=${encodeURIComponent(id)}`}
                   className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:border-rose-500 text-rose-700 dark:text-rose-400 text-xs font-bold transition"
@@ -450,14 +464,16 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 </Link>
               )}
 
-              <Link
-                href={`/admin/invoices/new?type=TAX&kind=DEBIT&originalInvoiceId=${encodeURIComponent(id)}`}
-                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition"
-                title={ui("إصدار إشعار مدين لإضافة مبالغ إلى الفاتورة")}
-              >
-                <FilePlus className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
-                <span>{ui("إضافة مبلغ (إشعار مدين)")}</span>
-              </Link>
+              {canCreateInvoices && (
+                <Link
+                  href={`/admin/invoices/new?type=TAX&kind=DEBIT&originalInvoiceId=${encodeURIComponent(id)}`}
+                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition"
+                  title={ui("إصدار إشعار مدين لإضافة مبالغ إلى الفاتورة")}
+                >
+                  <FilePlus className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+                  <span>{ui("إضافة مبلغ (إشعار مدين)")}</span>
+                </Link>
+              )}
             </div>
 
             <div className="text-xs text-[var(--text-muted)] flex items-center gap-1">
@@ -780,7 +796,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       </section>
 
       {/* Record Payment Modal */}
-      {showPaymentModal && (
+      {canWriteAccounting && showPaymentModal && (
         <RecordPaymentModal
           isOpen={showPaymentModal}
           invoiceId={id}
@@ -795,7 +811,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       )}
 
       {/* WhatsApp Modal */}
-      {showWhatsAppModal && (
+      {canSendInvoiceWhatsApp && showWhatsAppModal && (
         <SendWhatsAppModal
           isOpen={showWhatsAppModal}
           onClose={() => setShowWhatsAppModal(false)}

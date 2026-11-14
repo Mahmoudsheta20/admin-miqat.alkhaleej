@@ -89,6 +89,8 @@ import { MobileStickyActionBar } from "@/app/_components/mobile";
 import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
 import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
 import AutoSendWhatsAppCard from "@/app/_components/AutoSendWhatsAppCard";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import {
   fetchWhatsAppFlowOverview,
   fetchWhatsAppStatus,
@@ -205,6 +207,8 @@ export default function InvoiceForm({
   onCreated,
 }: InvoiceFormProps) {
   const ui = useUiText();
+  const { user, isLoading: authLoading } = useAuth();
+  const canViewWhatsApp = hasClientPermission(user, "whatsapp", "view");
 
   const router = useRouter();
 
@@ -247,16 +251,17 @@ export default function InvoiceForm({
   const autoSendTouchedRef = useRef(false);
 
   useEffect(() => {
+    if (authLoading) return;
     let active = true;
     void Promise.allSettled([
       fetchWhatsAppStatus(),
-      fetchWhatsAppFlowOverview(),
+      canViewWhatsApp ? fetchWhatsAppFlowOverview() : Promise.resolve(null),
     ]).then(([statusRes, flowRes]) => {
       if (!active) return;
       const connected =
         statusRes.status === "fulfilled" && statusRes.value.status === "connected";
       const flowConfig =
-        flowRes.status === "fulfilled" ? flowRes.value.config : null;
+        flowRes.status === "fulfilled" ? flowRes.value?.config ?? null : null;
       setWhatsAppMeta({
         connected,
         adminFlowPhone: flowConfig?.adminPhone || "+966577842926",
@@ -268,7 +273,7 @@ export default function InvoiceForm({
     return () => {
       active = false;
     };
-  }, []);
+  }, [authLoading, canViewWhatsApp]);
 
   // Simplified Payment UX: "هل دفع العميل؟"
   const [paymentStatusChoice, setPaymentStatusChoice] = useState<

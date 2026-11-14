@@ -34,6 +34,8 @@ import {
 import InvoiceVisibilityAction from "./invoice-visibility-action";
 import RecordPaymentModal from "./record-payment-modal";
 import { useLanguage } from "@/lib/languageContext";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import {
   PageHeader,
   StatCard,
@@ -72,6 +74,11 @@ export default function InvoicesPage() {
   const ui = useUiText();
 
   const { t, dir, isRTL } = useLanguage();
+  const { user: authUser } = useAuth();
+  const canCreateInvoices = hasClientPermission(authUser, "invoices", "write");
+  const canDeleteInvoices = hasClientPermission(authUser, "invoices", "delete");
+  const canWriteAccounting = hasClientPermission(authUser, "accounting", "write");
+  const canViewCompanySettings = hasClientPermission(authUser, "companySettings", "view");
   const [page, setPage] = useUrlState<number>("page", 1);
   const [isArchived, setIsArchived] = useUrlState<boolean>("archived", false);
 
@@ -298,24 +305,39 @@ export default function InvoicesPage() {
         badge={t("section.financeDaily")}
         title={ui(t("invoice.title"))}
         subtitle={ui(t("invoice.subtitle"))}
-        primaryAction={{
-          label: t("invoice.newInvoice"),
-          href: "/admin/invoices/new",
-          icon: Plus,
-        }}
-        secondaryActions={[
-          {
-            label: `+ ${t("invoice.proforma")}`,
-            href: "/admin/invoices/new?type=PROFORMA",
-            icon: FileSpreadsheet,
-            variant: "subtle",
-          },
-          {
-            label: t("nav.zatca"),
-            href: "/admin/invoices/settings",
-            icon: Building2,
-          },
-        ]}
+        primaryAction={
+          canCreateInvoices
+            ? {
+                label: t("invoice.newInvoice"),
+                href: "/admin/invoices/new",
+                icon: Plus,
+              }
+            : undefined
+        }
+        secondaryActions={(() => {
+          const actions = [
+            ...(canCreateInvoices
+              ? [
+                  {
+                    label: `+ ${t("invoice.proforma")}`,
+                    href: "/admin/invoices/new?type=PROFORMA",
+                    icon: FileSpreadsheet,
+                    variant: "subtle" as const,
+                  },
+                ]
+              : []),
+            ...(canViewCompanySettings
+              ? [
+                  {
+                    label: t("nav.zatca"),
+                    href: "/admin/invoices/settings",
+                    icon: Building2,
+                  },
+                ]
+              : []),
+          ];
+          return actions.length > 0 ? actions : undefined;
+        })()}
         helpGuide={invoiceHelpGuide}
         onRefresh={() => void load(true)}
         isRefreshing={isLoading || isRefreshing}
@@ -498,13 +520,15 @@ export default function InvoicesPage() {
               )}
             </p>
             {items.length === 0 ? (
-              <Link
-                href="/admin/invoices/new"
-                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{ui(t("invoice.newInvoice"))}</span>
-              </Link>
+              canCreateInvoices ? (
+                <Link
+                  href="/admin/invoices/new"
+                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-4 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{ui(t("invoice.newInvoice"))}</span>
+                </Link>
+              ) : null
             ) : (
               <button
                 type="button"
@@ -692,7 +716,7 @@ export default function InvoicesPage() {
                           <div className="inline-flex items-center gap-1.5">
                             <Link
                               href={`/admin/invoices/${row.id}`}
-                              className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-[var(--text-main)] text-xs font-bold transition"
+                              className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-[var(--text-main)] text-xs font-bold transition"
                               title={ui(t("common.view"))}
                             >
                               <Eye
@@ -706,7 +730,7 @@ export default function InvoicesPage() {
                               type="button"
                               disabled={isDownloadingThis}
                               onClick={() => void handleDownloadPdf(row)}
-                              className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                              className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                               title={ui(t("common.downloadPdf"))}
                             >
                               {isDownloadingThis ? (
@@ -723,11 +747,11 @@ export default function InvoicesPage() {
                               <span>PDF</span>
                             </button>
 
-                            {!isArchived && !isProforma && !isCredit && (
+                            {canWriteAccounting && !isArchived && !isProforma && !isCredit && (
                               <button
                                 type="button"
                                 onClick={() => setPaymentModalInvoice(row)}
-                                className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+                                className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
                                 title={ui(t("invoice.recordPayment"))}
                               >
                                 <CreditCard
@@ -737,16 +761,18 @@ export default function InvoicesPage() {
                                 <span>{ui(t("invoice.recordPayment"))}</span>
                               </button>
                             )}
-                            <InvoiceVisibilityAction
-                              id={row.id}
-                              number={row.invoiceNumber}
-                              isArchived={isArchived}
-                              onChanged={() => {
-                                if (filteredItems.length === 1 && page > 1)
-                                  setPage((v) => v - 1);
-                                else void load(true);
-                              }}
-                            />
+                            {canDeleteInvoices && (
+                              <InvoiceVisibilityAction
+                                id={row.id}
+                                number={row.invoiceNumber}
+                                isArchived={isArchived}
+                                onChanged={() => {
+                                  if (filteredItems.length === 1 && page > 1)
+                                    setPage((v) => v - 1);
+                                  else void load(true);
+                                }}
+                              />
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -852,7 +878,7 @@ export default function InvoicesPage() {
                           <span>PDF</span>
                         </Button>
 
-                        {!isArchived && !isProforma && !isCredit && (
+                        {canWriteAccounting && !isArchived && !isProforma && !isCredit && (
                           <Button
                             type="button"
                             variant="outline"
@@ -868,18 +894,20 @@ export default function InvoicesPage() {
                           </Button>
                         )}
 
-                        <div className="w-full flex justify-end">
-                          <InvoiceVisibilityAction
-                            id={row.id}
-                            number={row.invoiceNumber}
-                            isArchived={isArchived}
-                            onChanged={() => {
-                              if (filteredItems.length === 1 && page > 1)
-                                setPage((v) => v - 1);
-                              else void load(true);
-                            }}
-                          />
-                        </div>
+                        {canDeleteInvoices && (
+                          <div className="w-full flex justify-end">
+                            <InvoiceVisibilityAction
+                              id={row.id}
+                              number={row.invoiceNumber}
+                              isArchived={isArchived}
+                              onChanged={() => {
+                                if (filteredItems.length === 1 && page > 1)
+                                  setPage((v) => v - 1);
+                                else void load(true);
+                              }}
+                            />
+                          </div>
+                        )}
                       </>
                     }
                   >
@@ -960,7 +988,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* Quick Record Payment Modal */}
-      {paymentModalInvoice && (
+      {canWriteAccounting && paymentModalInvoice && (
         <RecordPaymentModal
           isOpen={Boolean(paymentModalInvoice)}
           invoiceId={paymentModalInvoice.id}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Activity,
   AlertCircle,
@@ -15,7 +15,9 @@ import {
   Workflow,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
+import { hasClientPermission } from "@/lib/permissions";
 import { useApiQuery } from "@/lib/use-api-query";
 import {
   sendWhatsAppFlowTest,
@@ -82,6 +84,8 @@ export default function WhatsAppFlowPanel({
 }: {
   waConnected: boolean;
 }) {
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "whatsapp", "write");
   const { language } = useLanguage();
   const isAr = language === "ar";
   const text = useCallback(
@@ -98,6 +102,10 @@ export default function WhatsAppFlowPanel({
   const isLoading = flowQuery.isLoading;
   const loadError = flowQuery.error;
   const loadFlow = flowQuery.refetch;
+  const isFetchingRef = useRef(flowQuery.isFetching);
+  useEffect(() => {
+    isFetchingRef.current = flowQuery.isFetching;
+  }, [flowQuery.isFetching]);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [triggerBusyKey, setTriggerBusyKey] = useState<string | null>(null);
@@ -106,21 +114,20 @@ export default function WhatsAppFlowPanel({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      if (document.visibilityState === "visible" && !flowQuery.isFetching) loadFlow();
+      if (document.visibilityState === "visible" && !isFetchingRef.current) loadFlow();
     }, 15000);
     return () => clearInterval(timer);
-  }, [loadFlow, flowQuery.isFetching]);
+  }, [loadFlow]);
 
   async function handleSaveConfig(e: FormEvent) {
     e.preventDefault();
-    if (!draftConfig || isSaving) return;
+    if (!canWrite || !draftConfig || isSaving) return;
     setIsSaving(true);
     setSaveError("");
     setSaveMessage("");
     try {
       const saved = await updateWhatsAppFlowConfig(draftConfig);
       setDraftConfig(saved);
-      loadFlow();
       setSaveMessage(
         text(
           "تم حفظ إعدادات نظام التدفق والأزرار التفاعلية بنجاح.",
@@ -139,7 +146,7 @@ export default function WhatsAppFlowPanel({
   }
 
   async function handleSendFlowTest() {
-    if (isTesting || hasUnsavedChanges || !waConnected) return;
+    if (!canWrite || isTesting || hasUnsavedChanges || !waConnected) return;
     setIsTesting(true);
     setSaveError("");
     setSaveMessage("");
@@ -152,7 +159,6 @@ export default function WhatsAppFlowPanel({
             `Flow test message queued to ${draftConfig?.adminPhone || DEFAULT_ADMIN_PHONE}`,
           ),
       );
-      void loadFlow();
     } catch (err: unknown) {
       setSaveError(
         err instanceof Error
@@ -169,7 +175,7 @@ export default function WhatsAppFlowPanel({
     role: "CAPTAIN" | "ADMIN";
     actionId: string;
   }) {
-    if (triggerBusyKey || isSaving || isTesting) return;
+    if (!canWrite || triggerBusyKey || isSaving || isTesting) return;
     const busyKey = `${params.sessionId}:${params.role}:${params.actionId}`;
     setTriggerBusyKey(busyKey);
     setSaveError("");
@@ -179,7 +185,6 @@ export default function WhatsAppFlowPanel({
       setSaveMessage(params.role === "CAPTAIN"
         ? text("تم تسجيل تحديث الكابتن. راجع سجل الأحداث لتأكيد الإشعارات.", "Captain update recorded. Check the event log for notification results.")
         : text("تم تسجيل إجراء الإدارة. راجع سجل الأحداث لتأكيد إرسال التوجيه.", "Admin action recorded. Check the event log for dispatch confirmation."));
-      await loadFlow();
     } catch (err: unknown) {
       setSaveError(
         err instanceof Error
@@ -245,23 +250,25 @@ export default function WhatsAppFlowPanel({
             <span>{text("تحديث", "Refresh")}</span>
           </button>
 
-          <button
-            type="button"
-            disabled={!waConnected || isTesting || hasUnsavedChanges || isSaving || Boolean(loadError)}
-            onClick={() => void handleSendFlowTest()}
-            className="min-h-11 sm:min-h-11 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20 text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
-          >
-            {isTesting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <Send className="w-3.5 h-3.5" aria-hidden="true" />
-            )}
-            <span>{text("اختبار إشعار الإدارة", "Send Test Flow")}</span>
-          </button>
+          {canWrite && (
+            <button
+              type="button"
+              disabled={!waConnected || isTesting || hasUnsavedChanges || isSaving || Boolean(loadError)}
+              onClick={() => void handleSendFlowTest()}
+              className="min-h-11 sm:min-h-11 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20 text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+            >
+              {isTesting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Send className="w-3.5 h-3.5" aria-hidden="true" />
+              )}
+              <span>{text("اختبار إشعار الإدارة", "Send Test Flow")}</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {hasUnsavedChanges && (
+      {canWrite && hasUnsavedChanges && (
         <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border theme-border bg-[var(--accent-surface)] p-4 text-sm text-[var(--text-main)]">
           <span>{text("تغييرات غير محفوظة. احفظ الإعدادات قبل اختبار إشعار الإدارة.", "Unsaved changes. Save settings before sending a test notification.")}</span>
           <button type="button" disabled={isSaving} onClick={() => setDraftConfig(null)} className="min-h-11 px-3 underline underline-offset-4 disabled:opacity-50">
@@ -292,7 +299,100 @@ export default function WhatsAppFlowPanel({
 
       {draftConfig && (
         <form onSubmit={handleSaveConfig} className="space-y-5">
-          <fieldset disabled={isSaving} className="min-w-0 space-y-5">
+          <fieldset disabled={isSaving || !canWrite} className="min-w-0 space-y-5">
+          {/* Message Style Switcher: Clean Short Messages (Flow Disabled) vs Interactive Flow */}
+          <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-[var(--text-main)]">
+                  {text(
+                    "نمط رسائل الواتساب (الكابتن والإدارة)",
+                    "WhatsApp Message Style (Captain & Admin)",
+                  )}
+                </h3>
+                <p className="text-[11px] text-[var(--text-muted)]">
+                  {!draftConfig.enabled
+                    ? text(
+                        "وضع الرسائل المختصرة مفعّل — تُرسل رسالة قصيرة ومرفق PDF فقط للكابتن وإشعار مختصر للإدارة بدون أزرار أو استطلاع.",
+                        "Clean short mode active — captains receive a short summary + PDF only, and admin receives a clean short alert without flow menus or polls.",
+                      )
+                    : text(
+                        "التدفق التفاعلي مفعّل — يظهر دليل التفاعل أو الاستطلاع التفاعلي لتحديث حالة الرحلة.",
+                        "Interactive flow active — interactive step updates or driver polls are included on contract dispatches.",
+                      )}
+                </p>
+              </div>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                  !draftConfig.enabled
+                    ? "border-emerald-600/35 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                    : "border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                }`}
+              >
+                {!draftConfig.enabled
+                  ? text("رسائل مختصرة نظيفة (بدون تدفق)", "Clean Short Messages (No Flow)")
+                  : text("التدفق التفاعلي مفعّل", "Interactive Flow On")}
+              </span>
+            </div>
+
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              <button
+                type="button"
+                aria-pressed={!draftConfig.enabled}
+                onClick={() =>
+                  setDraftConfig({
+                    ...draftConfig,
+                    enabled: false,
+                    includeActionMenuOnContract: false,
+                    includeAdminActionButtons: false,
+                  })
+                }
+                className={`min-h-11 rounded-xl border p-3 text-start transition cursor-pointer ${
+                  !draftConfig.enabled
+                    ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] shadow-sm"
+                    : "theme-border bg-[var(--bg-card)] hover:border-[var(--accent-gold)]/60"
+                }`}
+              >
+                <p className="text-xs sm:text-sm font-bold text-[var(--text-main)]">
+                  {text("وضع الرسائل المختصرة (بدون تدفق)", "Clean Short Messages (Disable Flow)")}
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {text(
+                    "رسائل قصيرة وواضحة للعقد والفحص مع PDF، بدون قوائم أزرار أو روابط أو استطلاع.",
+                    "Short, clear contract & inspection messages with PDF; no action menus, links, or polls.",
+                  )}
+                </p>
+              </button>
+
+              <button
+                type="button"
+                aria-pressed={draftConfig.enabled}
+                onClick={() =>
+                  setDraftConfig({
+                    ...draftConfig,
+                    enabled: true,
+                    includeActionMenuOnContract: true,
+                  })
+                }
+                className={`min-h-11 rounded-xl border p-3 text-start transition cursor-pointer ${
+                  draftConfig.enabled
+                    ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] shadow-sm"
+                    : "theme-border bg-[var(--bg-card)] hover:border-[var(--accent-gold)]/60"
+                }`}
+              >
+                <p className="text-xs sm:text-sm font-bold text-[var(--text-main)]">
+                  {text("نظام التدفق التفاعلي", "Interactive Flow Mode")}
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {text(
+                    "متابعة خطوات الرحلة عبر تفاعل الكابتن أو استطلاع الحالة وإجراءات الإدارة.",
+                    "Track trip steps with captain reactions, quick links, or polls and admin follow-up actions.",
+                  )}
+                </p>
+              </button>
+            </div>
+          </div>
+
           {/* Core Settings Grid */}
           <div className="grid gap-4 lg:grid-cols-12">
             <div className="lg:col-span-5 rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 space-y-3">
@@ -421,6 +521,11 @@ export default function WhatsAppFlowPanel({
                       "Notify admin when any contract is sent to captain",
                     ],
                     [
+                      "notifyOnInspectionSent",
+                      "إشعار الإدارة عند إرسال أي تقرير فحص",
+                      "Notify admin when any inspection report is sent",
+                    ],
+                    [
                       "notifyOnCaptainAction",
                       "إشعار الإدارة فور تفاعل الكابتن أو وصوله",
                       "Notify admin when the captain reacts or arrives",
@@ -459,10 +564,14 @@ export default function WhatsAppFlowPanel({
                 ).map(([key, arLabel, enLabel]) => (
                   <label
                     key={key}
-                    className="flex min-h-10 items-center gap-2.5 rounded-lg border theme-border bg-[var(--bg-card)] px-3 py-2 cursor-pointer"
+                    className="flex min-h-11 items-center gap-2.5 rounded-lg border theme-border bg-[var(--bg-card)] px-3 py-2 cursor-pointer"
                   >
                     <Checkbox
-                      checked={Boolean(draftConfig[key])}
+                      checked={
+                        key === "notifyOnInspectionSent"
+                          ? (draftConfig.notifyOnInspectionSent ?? true)
+                          : Boolean(draftConfig[key])
+                      }
                       onChange={(e) =>
                         setDraftConfig({
                           ...draftConfig,
@@ -478,6 +587,67 @@ export default function WhatsAppFlowPanel({
               </div>
             </div>
           </div>
+
+          {/* Short Clean Message Preview */}
+          <details className="rounded-xl border theme-border p-4">
+            <summary className="min-h-11 cursor-pointer text-sm font-semibold text-[var(--text-main)]">
+              {text(
+                "معاينة الرسائل المختصرة للكابتن والإدارة (بدون تدفق)",
+                "Preview Short Clean Messages (Captain & Admin)",
+              )}
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-1.5 min-w-0">
+                <p className="text-xs font-bold text-[var(--accent-gold)]">
+                  {text("رسالة العقد — الكابتن", "Contract Message — Captain")}
+                </p>
+                <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-[var(--text-main)]" dir="rtl">
+{`*شركة ميقات الخليج للنقل البري*
+📄 *عقد نقل:* #MQ-2026-00841
+🚗 الكابتن: أحمد العتيبي | 🚐 أ ب ج 1234
+📍 المسار: مطار الملك عبدالعزيز ⬅️ فندق الحرم
+📅 الموعد: 2026-11-15 | ⏰ 09:30 | ✈️ SV · 841
+👥 الضيف: محمد عبدالله (عدد الركاب: 3)
+📎 العقد الرسمي مرفق بصيغة PDF.`}
+                </pre>
+              </div>
+              <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-1.5 min-w-0">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  {text("إشعار العقد — الإدارة", "Contract Alert — Admin")}
+                </p>
+                <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-[var(--text-main)]" dir="rtl">
+{`🔔 *إشعار عقد — #MQ-2026-00841*
+🚗 الكابتن: أحمد العتيبي (+966501234567) | 🚐 أ ب ج 1234
+👤 الضيف: محمد عبدالله
+📍 المسار: مطار الملك عبدالعزيز ⬅️ فندق الحرم
+📅 الموعد: 2026-11-15 — 09:30
+📌 الحالة: مُرسل للكابتن`}
+                </pre>
+              </div>
+              <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-1.5 min-w-0">
+                <p className="text-xs font-bold text-[var(--accent-gold)]">
+                  {text("تقرير الفحص — الكابتن", "Inspection Report — Captain")}
+                </p>
+                <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-[var(--text-main)]" dir="rtl">
+{`*شركة ميقات الخليج للنقل البري*
+🛡️ *تقرير فحص مركبة:* *INSP-1234ABCD*
+🚗 الكابتن: أحمد العتيبي | 🚐 أ ب ج 1234
+📅 التاريخ: 2026-11-15 | 📋 النتيجة: اجتياز كامل (16/16) ✅
+📎 تقرير الفحص مرفق بصيغة PDF.`}
+                </pre>
+              </div>
+              <div className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3.5 space-y-1.5 min-w-0">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  {text("إشعار الفحص — الإدارة", "Inspection Alert — Admin")}
+                </p>
+                <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-[var(--text-main)]" dir="rtl">
+{`🛡️ *إشعار فحص مركبة — #INSP-1234ABCD*
+🚗 الكابتن: أحمد العتيبي (+966501234567) | 🚐 أ ب ج 1234
+📅 التاريخ: 2026-11-15 | 📋 النتيجة: اجتياز كامل (16/16) ✅`}
+                </pre>
+              </div>
+            </div>
+          </details>
 
           {/* Interactive Action Buttons Builder */}
           <details className="rounded-xl border theme-border p-4">
@@ -530,7 +700,7 @@ export default function WhatsAppFlowPanel({
                     <div className="grid gap-2 grid-cols-[4rem_1fr] sm:grid-cols-[4rem_1fr_1fr]">
                       <input
                         type="text"
-                        aria-label={`${btn.code} reaction emoji`}
+                        aria-label={text(`رمز التفاعل للخطوة ${btn.code}`, `${btn.code} reaction emoji`)}
                         value={btn.emoji}
                         maxLength={8}
                         onChange={(e) => {
@@ -542,7 +712,7 @@ export default function WhatsAppFlowPanel({
                       />
                       <input
                         type="text"
-                        aria-label={`${btn.code} button label`}
+                        aria-label={text(`تسمية زر الخطوة ${btn.code}`, `${btn.code} button label`)}
                         value={btn.labelAr}
                         onChange={(e) => {
                           const next = [...draftConfig.captainButtons];
@@ -553,7 +723,7 @@ export default function WhatsAppFlowPanel({
                       />
                       <input
                         type="text"
-                        aria-label={`${btn.code} admin alert`}
+                        aria-label={text(`إشعار الإدارة للخطوة ${btn.code}`, `${btn.code} admin alert`)}
                         value={btn.adminNoticeTitleAr}
                         onChange={(e) => {
                           const next = [...draftConfig.captainButtons];
@@ -609,7 +779,7 @@ export default function WhatsAppFlowPanel({
                     </label>
                     <input
                       type="text"
-                      aria-label={`${btn.code} admin button caption`}
+                      aria-label={text(`تسمية زر الإدارة ${btn.code}`, `${btn.code} admin button caption`)}
                       value={btn.labelAr}
                       onChange={(e) => {
                         const next = [...draftConfig.adminActionButtons];
@@ -625,20 +795,22 @@ export default function WhatsAppFlowPanel({
           </div>
           </details>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
-            >
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Save className="w-4 h-4" aria-hidden="true" />
-              )}
-              <span>{text("حفظ إعدادات التدفق والأزرار", "Save Flow Settings")}</span>
-            </button>
-          </div>
+          {canWrite && (
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="w-4 h-4" aria-hidden="true" />
+                )}
+                <span>{text("حفظ إعدادات التدفق والأزرار", "Save Flow Settings")}</span>
+              </button>
+            </div>
+          )}
           </fieldset>
         </form>
       )}
@@ -660,7 +832,11 @@ export default function WhatsAppFlowPanel({
             ) : (
               <div className="space-y-2.5 max-h-96 overflow-y-auto pe-1">
                 {overview.sessions.slice(0, 12).map((session) => {
-                  const badge = STATUS_BADGE_MAP[session.status];
+                  const badge = STATUS_BADGE_MAP[session.status] ?? {
+                    cls: "bg-slate-500/10 text-[var(--text-muted)] border-[var(--control-border)]",
+                    ar: session.status,
+                    en: session.status,
+                  };
                   const activeCapButtons = (
                     draftConfig?.captainButtons || []
                   ).filter((b) => b.enabled);
@@ -692,46 +868,50 @@ export default function WhatsAppFlowPanel({
                         {session.origin} {" ← "} {session.destination} · {session.tripDate} {session.tripTime}
                       </p>
 
-                      <p className="text-xs text-[var(--text-muted)]">{text("تسجيل تحديث الكابتن يدوياً باسم الإدارة", "Record a captain update on behalf of the admin")}</p>
-                      {activeCapButtons.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {activeCapButtons.map((btn) => {
-                            const key = `${session.id}:CAPTAIN:${btn.id}`;
-                            const busy = triggerBusyKey === key;
-                            return (
-                              <button
-                                key={btn.id}
-                                type="button"
-                                disabled={Boolean(triggerBusyKey) || !overview.config.enabled || session.status === "COMPLETED" || session.status === "CLOSED"}
-                                onClick={() =>
-                                  void handleTriggerStep({
-                                    sessionId: session.id,
-                                    role: "CAPTAIN",
-                                    actionId: btn.id,
-                                  })
-                                }
-                                className="min-h-11 px-3 py-2 rounded-lg border theme-border bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[11px] font-semibold text-[var(--text-main)] transition cursor-pointer disabled:opacity-50"
-                              >
-                                {busy ? "..." : formatCaptainStepLabel(btn.emoji, text(btn.labelAr, btn.labelEn))}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {overview.config.adminActionButtons.some(button => button.enabled) && (
-                        <div className="space-y-2 border-t theme-border pt-3">
-                          <p className="text-xs text-[var(--text-muted)]">{text("توجيه للكابتن", "Send an instruction to the captain")}</p>
-                          <div className="flex flex-wrap gap-2">
-                            {overview.config.adminActionButtons.filter(button => button.enabled).map(button => (
-                              <button key={button.id} type="button"
-                                disabled={Boolean(triggerBusyKey) || !waConnected || !overview.config.enabled || session.status === "CLOSED" || session.status === "COMPLETED" && button.nextStatus !== "CLOSED"}
-                                onClick={() => void handleTriggerStep({ sessionId: session.id, role: "ADMIN", actionId: button.id })}
-                                className="min-h-11 rounded-lg border theme-border bg-[var(--bg-card)] px-3 py-2 text-xs font-medium text-[var(--text-main)] disabled:opacity-50">
-                                {triggerBusyKey === `${session.id}:ADMIN:${button.id}` ? text("جارٍ التنفيذ…", "Working…") : text(button.labelAr, button.labelEn)}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                      {canWrite && (
+                        <>
+                          <p className="text-xs text-[var(--text-muted)]">{text("تسجيل تحديث الكابتن يدوياً باسم الإدارة", "Record a captain update on behalf of the admin")}</p>
+                          {activeCapButtons.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {activeCapButtons.map((btn) => {
+                                const key = `${session.id}:CAPTAIN:${btn.id}`;
+                                const busy = triggerBusyKey === key;
+                                return (
+                                  <button
+                                    key={btn.id}
+                                    type="button"
+                                    disabled={Boolean(triggerBusyKey) || !overview.config.enabled || session.status === "COMPLETED" || session.status === "CLOSED"}
+                                    onClick={() =>
+                                      void handleTriggerStep({
+                                        sessionId: session.id,
+                                        role: "CAPTAIN",
+                                        actionId: btn.id,
+                                      })
+                                    }
+                                    className="min-h-11 px-3 py-2 rounded-lg border theme-border bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[11px] font-semibold text-[var(--text-main)] transition cursor-pointer disabled:opacity-50"
+                                  >
+                                    {busy ? "..." : formatCaptainStepLabel(btn.emoji, text(btn.labelAr, btn.labelEn))}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {overview.config.adminActionButtons.some(button => button.enabled) && (
+                            <div className="space-y-2 border-t theme-border pt-3">
+                              <p className="text-xs text-[var(--text-muted)]">{text("توجيه للكابتن", "Send an instruction to the captain")}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {overview.config.adminActionButtons.filter(button => button.enabled).map(button => (
+                                  <button key={button.id} type="button"
+                                    disabled={Boolean(triggerBusyKey) || !waConnected || !overview.config.enabled || session.status === "CLOSED" || session.status === "COMPLETED" && button.nextStatus !== "CLOSED"}
+                                    onClick={() => void handleTriggerStep({ sessionId: session.id, role: "ADMIN", actionId: button.id })}
+                                    className="min-h-11 rounded-lg border theme-border bg-[var(--bg-card)] px-3 py-2 text-xs font-medium text-[var(--text-main)] disabled:opacity-50">
+                                    {triggerBusyKey === `${session.id}:ADMIN:${button.id}` ? text("جارٍ التنفيذ…", "Working…") : text(button.labelAr, button.labelEn)}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   );
