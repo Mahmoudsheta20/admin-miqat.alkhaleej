@@ -27,7 +27,7 @@ const COMPONENTS: Record<string, string> = {
   OWN_SUPPLY: "توريد المنشأة المباشر",
   SUPPLIER_CHARGE: "تكلفة مورد ضمن الخدمة",
   AGENCY_FEE: "رسوم خدمة وكالة",
-  COMMISSION: "عمولة نقل",
+  COMMISSION: "تريب نقل",
 };
 
 const TAX_OPTIONS: {

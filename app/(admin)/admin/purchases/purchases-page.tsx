@@ -110,8 +110,8 @@ export default function PurchasesPage() {
           {
             label: isRTL ? "الرواتب والرسوم الحكومية" : "Salaries & Government Fees",
             description: isRTL
-              ? "رواتب وعمولات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة."
-              : "Driver salaries & commissions (5105), licensing & government fees (5106); VAT locked at 0.00 SAR.",
+              ? "رواتب وتريبات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة."
+              : "Driver salaries & trips (5105), licensing & government fees (5106); VAT locked at 0.00 SAR.",
           },
         ],
       },

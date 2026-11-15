@@ -404,5 +404,41 @@ export const COMMERCIAL_PHRASES: Record<string,string> = {
   "صافي الأثر": "Net impact",
   "لا توجد حركات تطابق البحث أو التصفية الحالية.": "No transactions match the current search or filter.",
   "إجمالي العمولات": "Total commissions",
-  "بدون ملاحظات": "No notes"
+  "بدون ملاحظات": "No notes",
+  "العميل مسؤول عن الفاتورة. التريب مستقل عن سعر العميل ولا يظهر في مستنداته.":
+    "The customer is responsible for the invoice. Trip is separate from their price and hidden from customer documents.",
+  "تريب السائق": "Driver trip",
+  "تريب المندوب": "Representative trip",
+  "طريقة التريب": "Trip method",
+  "بدون تريب": "No trip",
+  "مبلغ التريب": "Trip amount",
+  "أساس احتساب التريب": "Trip basis",
+  "نسبة التريب %": "Trip percentage %",
+  "تنفيذ الرحلة واستحقاق التريب": "Trip completion and trip accrual",
+  "اعتماد التنفيذ واستحقاق التريب": "Approve completion and accrue trip",
+  "تريب": "Trip",
+  "يستحق تريبات إحالة": "Receives referral trips",
+  "المناديب وتريبات الإحالة": "Representatives and referral trips",
+  "تريبات الرحلات": "Trips",
+  "لا توجد تريبات رحلات": "No trips",
+  "التريب المرتبط": "Linked trip",
+  "اختر التريب": "Choose trip",
+  "المدفوع من التريب": "Trip paid",
+  "المتبقي من التريب": "Trip outstanding",
+  "تريبات الرحلات والمناديب": "Driver and representative trips",
+  "التريبات تُحسب على أساس مستقل ولا تُصرف إلا بعد اعتماد تنفيذ الرحلة.":
+    "Trips calculate on an independent basis and accrue only upon approved trip completion.",
+  "لا توجد تريبات رحلات مسجلة": "No recorded trips",
+  "مؤهل للتريب": "Trip eligible",
+  "تريبات الإحالة": "Referral trips",
+  "التريبات": "Trips",
+  "يؤكد إتمام الرحلة ويفعّل استحقاق التريبات وإمكانية إصدار الفاتورة الضريبية.":
+    "Confirms trip completion, accrues trips, and unlocks tax invoicing.",
+  "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب تريبات.":
+    "Closes the trip execution record with a reason without accruing trips.",
+  "تحديد تريب السائق أو المندوب للرحلة — منفصل عن سعر العميل":
+    "Set driver or representative trip — separate from customer price",
+  "مؤهلون للتريب": "Trip-eligible",
+  "قيمة التريب": "Trip amount",
+  "إجمالي التريبات": "Total trips",
 };

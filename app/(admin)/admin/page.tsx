@@ -369,7 +369,7 @@ export default function AdminDashboardPage() {
       ? [
           {
             title: text("العاملون", "Staff"),
-            meta: text("عهد، سلف، عمولات", "Salaries & dues"),
+            meta: text("عهد، سلف، تريبات", "Salaries & trips"),
             href: "/admin/staff",
             icon: Wallet,
             pill: text("إدارة", "Open"),

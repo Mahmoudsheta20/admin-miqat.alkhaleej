@@ -50,7 +50,7 @@ const STANDARD_CHART_SPECS: AccountSpec[] = [
   { code: "5102", nameAr: "الصيانة وقطع الغيار والإطارات والزيوت", nameEn: "Maintenance Spare Parts Tires and Oil", parentCode: "5100", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
   { code: "5103", nameAr: "استئجار مركبات ومقاولي باطن للنقل", nameEn: "Subcontracted Vehicles and Transport", parentCode: "5100", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
   { code: "5104", nameAr: "تأمين المركبات والفحص الدوري", nameEn: "Vehicle Insurance and Inspection", parentCode: "5100", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
-  { code: "5105", nameAr: "رواتب وعمولات السائقين", nameEn: "Driver Salaries and Trip Bonuses", parentCode: "5100", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
+  { code: "5105", nameAr: "رواتب وتريبات السائقين", nameEn: "Driver Salaries and Trip Bonuses", parentCode: "5100", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
   { code: "5106", nameAr: "الرسوم الحكومية والتراخيص والمخالفات", nameEn: "Government Fees Permits and Fines", parentCode: "5100", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
   { code: "5200", nameAr: "المصروفات العمومية والإدارية والتسويقية", nameEn: "General Admin and Marketing Expenses", parentCode: "5000", type: "EXPENSE", normalBalance: "DEBIT", isPosting: false },
   { code: "5201", nameAr: "الإيجارات والمرافق والاتصالات والإنترنت", nameEn: "Office Rent Utilities and Telecom", parentCode: "5200", type: "EXPENSE", normalBalance: "DEBIT", isPosting: true },
@@ -360,7 +360,7 @@ export async function seedAllSectionsTestData(): Promise<SeedResult> {
   });
   const expPayrollCode = await ensurePostingAccount(allAccounts, {
     code: "5105",
-    nameAr: "رواتب وعمولات السائقين",
+    nameAr: "رواتب وتريبات السائقين",
     nameEn: "Driver Payroll & Commissions",
     type: "EXPENSE",
     normalBalance: "DEBIT",
@@ -1184,7 +1184,7 @@ export async function seedAllSectionsTestData(): Promise<SeedResult> {
   await accountingRequest<PurchaseRow>("/purchases", "POST", {
     operationKey: crypto.randomUUID(),
     purchase: {
-      supplierName: "مسير رواتب وعمولات الكباتن",
+      supplierName: "مسير رواتب وتريبات الكباتن",
       invoiceNumber: `PAYROLL-${suffix}-06`,
       issueDate: today,
       vatDate: today,
@@ -1194,7 +1194,7 @@ export async function seedAllSectionsTestData(): Promise<SeedResult> {
       vatAmount: "0.00",
       recoverablePercent: "0",
       vehiclePlate: "د هـ و 5678",
-      notes: "رواتب وعمولات السائقين للشهر الحالي (خارج نطاق الضريبة)",
+      notes: "رواتب وتريبات السائقين للشهر الحالي (خارج نطاق الضريبة)",
       documentType: "PURCHASE_INVOICE",
       accountCode: expPayrollCode,
       paymentAccountCode: bankCode,

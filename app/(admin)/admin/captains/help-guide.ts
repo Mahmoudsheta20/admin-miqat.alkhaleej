@@ -55,8 +55,8 @@ export function createHelpGuide(isRTL: boolean): HelpGuideData { return ({
             label: isRTL ? "مسير الرواتب والعهد" : "Salaries & Custody",
             code: "5105 / 1104",
             description: isRTL
-              ? "ترتبط مصروفات رواتب وعمولات السائقين في قسم المشتريات بحساب (5105 - رواتب وعمولات السائقين) كمعاملة خارج نطاق الضريبة (0%)."
-              : "Driver salaries and commissions link to account 5105 as non-taxable transactions (0% VAT).",
+              ? "ترتبط مصروفات رواتب وتريبات السائقين في قسم المشتريات بحساب (5105 - رواتب وتريبات السائقين) كمعاملة خارج نطاق الضريبة (0%)."
+              : "Driver salaries and trips link to account 5105 as non-taxable transactions (0% VAT).",
           },
         ],
       },

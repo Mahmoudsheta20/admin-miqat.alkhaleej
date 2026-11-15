@@ -101,7 +101,7 @@ const KIND_LABELS: Record<Member["kind"], string> = {
 
 export const OPERATION_LABELS: Record<string, string> = {
   SALARY: "راتب",
-  COMMISSION: "عمولة رحلة",
+  COMMISSION: "تريب",
   CUSTODY_ISSUE: "صرف عهدة",
   CUSTODY_RETURN: "رد عهدة",
   ADVANCE_ISSUE: "صرف سلفة",
@@ -246,7 +246,7 @@ export function MemberEditor({ member, onSaved, onClose }: { member?: Member; on
                 checked={f.isRepresentative}
                 onChange={(e) => setF({ ...f, isRepresentative: e.target.checked })}
               />
-              <span>{ui("يستحق عمولات إحالة")}</span>
+              <span>{ui("يستحق تريبات إحالة")}</span>
             </label>
             <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium cursor-pointer">
               <Checkbox
@@ -311,12 +311,12 @@ export function MembersPage({ representatives = false }: { representatives?: boo
           ],
         },
         {
-          title: ui("المناديب وعمولات الإحالة"),
+          title: ui("المناديب وتريبات الإحالة"),
           badge: ui("الوسطاء والمناديب"),
           items: [
             {
-              label: ui("عمولات الرحلات والمناديب"),
-              description: ui("العمولات تُحسب على أساس مستقل ولا تُصرف إلا بعد اعتماد تنفيذ الرحلة."),
+              label: ui("تريبات الرحلات والمناديب"),
+              description: ui("التريبات تُحسب على أساس مستقل ولا تُصرف إلا بعد اعتماد تنفيذ الرحلة."),
             },
           ],
         },
@@ -398,7 +398,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
   return (
     <div className="space-y-6">
       <PageHeader
-        title={representatives ? "المناديب وعمولات الإحالة" : "حسابات السائقين والعاملين"}
+        title={representatives ? "المناديب وتريبات الإحالة" : "حسابات السائقين والعاملين"}
         subtitle="المستحقات والعهد والسلف منفصلة، وكل حركة جديدة مرتبطة بدفتر الأستاذ."
         badge={representatives ? "الوسطاء والمناديب" : "إدارة العاملين والسائقين"}
         icon={representatives ? Users : UserCheck}
@@ -422,10 +422,10 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                 [
                   isEn
                     ? representatives
-                      ? "Representatives & Referral Commissions"
+                      ? "Representatives & Referral Trips"
                       : "Staff & Drivers Directory"
                     : representatives
-                      ? "المناديب وعمولات الإحالة"
+                      ? "المناديب وتريبات الإحالة"
                       : "تقرير العاملين",
                   isEn ? `Total: ${filteredItems.length}` : `إجمالي: ${filteredItems.length}`,
                 ],
@@ -438,7 +438,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       "Bank Name",
                       "Account Holder",
                       "IBAN",
-                      "Referral Commissions",
+                      "Referral Trips",
                       "Status",
                     ]
                   : [
@@ -449,7 +449,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       "اسم البنك",
                       "صاحب الحساب",
                       "الآيبان",
-                      "عمولات الإحالة",
+                      "تريبات الإحالة",
                       "الحالة",
                     ],
                 ...filteredItems.map((r) => [
@@ -465,7 +465,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       ? "Eligible"
                       : "Not eligible"
                     : r.isRepresentative
-                      ? "مؤهل للعمولة"
+                      ? "مؤهل للتريب"
                       : "غير مؤهل",
                   isEn ? (r.active ? "Active" : "Inactive") : r.active ? "نشط" : "موقوف",
                 ]),
@@ -482,7 +482,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
       {/* KPI Stats Ribbon */}
       <StatRow columns={4}>
         <StatCard
-          label={ui(representatives ? "المناديب وعمولات الإحالة" : "حسابات السائقين والعاملين")}
+          label={ui(representatives ? "المناديب وتريبات الإحالة" : "حسابات السائقين والعاملين")}
           value={items.length}
           unit={ui("حساب مالي")}
           icon={representatives ? Users : UserCheck}
@@ -501,7 +501,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
           isLoading={list.loading && !list.data}
         />
         <StatCard
-          label={ui("مؤهلون للعمولة")}
+          label={ui("مؤهلون للتريب")}
           value={repCount}
           unit={ui("حساب مالي")}
           icon={Percent}
@@ -648,7 +648,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("الحساب والصفة")}</TableHead>
                       <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("التواصل والهوية")}</TableHead>
                       <TableHead className="py-3 px-3 border-b theme-border whitespace-nowrap">{ui("البيانات البنكية")}</TableHead>
-                      <TableHead className="py-3 px-3 border-b theme-border leading-snug">{ui("عمولات الإحالة")}</TableHead>
+                      <TableHead className="py-3 px-3 border-b theme-border leading-snug">{ui("تريبات الإحالة")}</TableHead>
                       <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                         {ui("الإجراءات")}
                       </TableHead>
@@ -775,7 +775,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("الحساب والصفة")}</TableHead>
                       <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("التواصل والهوية")}</TableHead>
                       <TableHead className="py-3.5 px-3 border-b theme-border whitespace-nowrap">{ui("البيانات البنكية")}</TableHead>
-                      <TableHead className="py-3.5 px-3 border-b theme-border leading-snug">{ui("عمولات الإحالة")}</TableHead>
+                      <TableHead className="py-3.5 px-3 border-b theme-border leading-snug">{ui("تريبات الإحالة")}</TableHead>
                       <TableHead className="sticky end-0 z-20 py-3.5 px-3 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                         {ui("الإجراءات")}
                       </TableHead>
@@ -915,7 +915,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                           <TableCell className="py-3.5 px-3 align-middle border-b theme-border whitespace-nowrap">
                             {r.isRepresentative ? (
                               <Badge variant="gold" className="rounded-lg text-[11px] px-2 py-0.5 whitespace-nowrap">
-                                {ui("مؤهل للعمولة")}
+                                {ui("مؤهل للتريب")}
                               </Badge>
                             ) : (
                               <Badge variant="secondary" className="rounded-lg text-[11px] text-[var(--text-muted)] px-2 py-0.5 whitespace-nowrap">
@@ -991,7 +991,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                         </Badge>
                         {r.isRepresentative && (
                           <Badge variant="gold" className="text-[11px]">
-                            {ui("مؤهل للعمولة")}
+                            {ui("مؤهل للتريب")}
                           </Badge>
                         )}
                       </span>
@@ -1354,7 +1354,7 @@ export function StaffPage({
     { id: "SALARY", label: "الرواتب" },
     { id: "CUSTODY", label: "العهد" },
     { id: "ADVANCE", label: "السلف" },
-    { id: "COMMISSION", label: "عمولات الرحلات" },
+    { id: "COMMISSION", label: "تريبات الرحلات" },
   ];
 
   const entitlementPositive = signedMoneyMinor(d.balances.entitlement) > BigInt(0);
@@ -1731,7 +1731,7 @@ export function StaffPage({
             }`}
           >
             <Percent className="w-4 h-4" aria-hidden="true" />
-            <span>{ui("عمولات الرحلات")}</span>
+            <span>{ui("تريبات الرحلات")}</span>
             <span
               className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
                 activeTab === "COMMISSIONS"
@@ -2630,7 +2630,7 @@ export function StaffPage({
                     id={commissionsHeadingId}
                     className="text-sm sm:text-base font-bold text-[var(--text-main)] leading-tight"
                   >
-                    {ui("عمولات الرحلات")}
+                    {ui("تريبات الرحلات")}
                   </h2>
                   <Badge variant="outline" className="font-mono text-xs tabular-nums">
                     {d.commissions.length}
@@ -2641,7 +2641,7 @@ export function StaffPage({
               {d.commissions.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
                   <Badge variant="outline" className="px-2.5 py-1">
-                    {ui("قيمة العمولة")}: {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
+                    {ui("قيمة التريب")}: {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
                   </Badge>
                   <Badge variant="warning" className="px-2.5 py-1">
                     {ui("المتبقي")}: {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
@@ -2657,7 +2657,7 @@ export function StaffPage({
                     <Percent className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <p className="text-sm font-bold text-[var(--text-main)]">
-                    {ui("لا توجد عمولات رحلات مسجلة")}
+                    {ui("لا توجد تريبات رحلات مسجلة")}
                   </p>
                 </div>
               ) : (
@@ -2670,7 +2670,7 @@ export function StaffPage({
                       className="border-separate border-spacing-0"
                     >
                       <TableCaption className="sr-only">
-                        {ui("عمولات الرحلات")}
+                        {ui("تريبات الرحلات")}
                       </TableCaption>
                       <TableHeader className="bg-[var(--table-header-bg)] text-xs font-bold text-[var(--text-main)]">
                         <TableRow className="hover:bg-transparent">
@@ -2684,13 +2684,13 @@ export function StaffPage({
                             {ui("حالة الصرف")}
                           </TableHead>
                           <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
-                            {ui("قيمة العمولة")}
+                            {ui("قيمة التريب")}
                           </TableHead>
                           <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
-                            {ui("المدفوع من العمولة")}
+                            {ui("المدفوع من التريب")}
                           </TableHead>
                           <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
-                            {ui("المتبقي من العمولة")}
+                            {ui("المتبقي من التريب")}
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -2786,7 +2786,7 @@ export function StaffPage({
                             colSpan={3}
                             className="py-3.5 px-4 text-start font-bold text-[var(--text-main)] border-t theme-border"
                           >
-                            {ui("إجمالي العمولات")} ({d.commissions.length})
+                            {ui("إجمالي التريبات")} ({d.commissions.length})
                           </th>
                           <TableCell
                             className="py-3.5 px-4 text-end font-mono font-bold tabular-nums text-[var(--text-main)] border-t theme-border whitespace-nowrap"
@@ -2874,12 +2874,12 @@ export function StaffPage({
                         >
                           <MobileCardMetaGrid columns={3}>
                             <MobileCardField
-                              label={ui("قيمة العمولة")}
+                              label={ui("قيمة التريب")}
                               mono
                               value={<span dir="ltr">{formatMoneyValue(c.amount)} SAR</span>}
                             />
                             <MobileCardField
-                              label={ui("المدفوع من العمولة")}
+                              label={ui("المدفوع من التريب")}
                               mono
                               value={
                                 <span dir="ltr" className="text-emerald-800 dark:text-emerald-300 font-bold">
@@ -2888,7 +2888,7 @@ export function StaffPage({
                               }
                             />
                             <MobileCardField
-                              label={ui("المتبقي من العمولة")}
+                              label={ui("المتبقي من التريب")}
                               alignEnd
                               mono
                               value={
@@ -2908,22 +2908,22 @@ export function StaffPage({
 
             {d.commissions.length > 0 && (
               <CardFooter className="lg:hidden mt-0 px-4 sm:px-5 py-3 bg-[var(--bg-card-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
-                <span>{ui("إجمالي العمولات")}</span>
+                <span>{ui("إجمالي التريبات")}</span>
                 <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tabular-nums">
                   <span>
-                    {ui("قيمة العمولة")}:{" "}
+                    {ui("قيمة التريب")}:{" "}
                     <bdi dir="ltr" className="font-bold text-[var(--text-main)]">
                       {formatMoneyValue(formatSignedMinor(commTotalMinor))} SAR
                     </bdi>
                   </span>
                   <span>
-                    {ui("المدفوع من العمولة")}:{" "}
+                    {ui("المدفوع من التريب")}:{" "}
                     <bdi dir="ltr" className="font-bold text-emerald-800 dark:text-emerald-300">
                       {formatMoneyValue(formatSignedMinor(commPaidMinor))} SAR
                     </bdi>
                   </span>
                   <span>
-                    {ui("المتبقي من العمولة")}:{" "}
+                    {ui("المتبقي من التريب")}:{" "}
                     <bdi dir="ltr" className="font-bold text-[var(--accent-gold)]">
                       {formatMoneyValue(formatSignedMinor(commRemainingMinor))} SAR
                     </bdi>
@@ -3400,7 +3400,7 @@ function MovementModal({
             )}
 
             {kind === "COMMISSION_BILL" && (
-              <Field label="العمولة المرتبطة">
+              <Field label="التريب المرتبط">
                 <select
                   className={INPUT}
                   required
@@ -3410,7 +3410,7 @@ function MovementModal({
                     setOperationKey(null);
                   }}
                 >
-                  <option value="">{ui("اختر العمولة")}</option>
+                  <option value="">{ui("اختر التريب")}</option>
                   {statement.operations
                     .filter((o) => o.kind === "COMMISSION")
                     .map((o) => (

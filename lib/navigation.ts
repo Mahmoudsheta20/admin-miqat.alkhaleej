@@ -19,7 +19,7 @@ export const NAVIGATION: NavigationItem[] = [
   { href: "/admin/captains", ar: "الكباتن", en: "Captains", icon: "captain", group: "operations", roles: ["ADMIN"], module: "captains" },
   { href: "/admin/customers", ar: "العملاء", en: "Customers", icon: "customers", group: "people", roles: ["ADMIN"], module: "customers" },
   { href: "/admin/staff", ar: "حسابات العاملين", en: "Staff accounts", icon: "staff", group: "people", roles: ["ADMIN"], module: "staff" },
-  { href: "/admin/representatives", ar: "المناديب والعمولات", en: "Representatives", icon: "representatives", group: "people", roles: ["ADMIN"], module: "staff" },
+  { href: "/admin/representatives", ar: "المناديب والتريبات", en: "Representatives", icon: "representatives", group: "people", roles: ["ADMIN"], module: "staff" },
   { href: "/admin/invoices", ar: "الفواتير", en: "Invoices", icon: "invoice", group: "finance", roles: ["ADMIN"], module: "invoices", mobile: true, action: { href: "/admin/invoices/new", ar: "إنشاء فاتورة", en: "Create invoice" } },
   { href: "/admin/purchases", ar: "المشتريات والمصروفات", en: "Purchases & expenses", icon: "purchase", group: "finance", roles: ["ADMIN"], module: "purchases" },
   { href: "/admin/accounting", ar: "المحاسبة", en: "Accounting", icon: "accounting", group: "finance", roles: ["ADMIN"], module: "accounting" },

@@ -137,8 +137,8 @@ export const PERMISSION_MODULE_CATALOG: readonly PermissionModuleDefinition[] = 
     group: "people",
     ar: "حسابات العاملين والمناديب",
     en: "Staff & Representatives",
-    descriptionAr: "الرواتب والعهد والسلف والعمولات واعتماد المسيرات",
-    descriptionEn: "Staff subledgers, commissions, and payroll approval",
+    descriptionAr: "الرواتب والعهد والسلف والتريبات واعتماد المسيرات",
+    descriptionEn: "Staff subledgers, trips, and payroll approval",
     actions: ["view", "write", "approve"],
   },
   {

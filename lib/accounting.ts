@@ -1,5 +1,5 @@
 import { backendUrl, backendRequest } from "./backend";
-export const EXPENSE_CATEGORIES = { FUEL: "وقود", MAINTENANCE_TIRES: "صيانة وإطارات", VEHICLE_INSURANCE: "تأمين المركبات", SUBCONTRACTED_TRANSPORT: "نقل من الباطن", DRIVER_PAYROLL: "رواتب وعمولات السائقين", GOVERNMENT_FEES: "رسوم حكومية وتراخيص", RENT_UTILITIES: "إيجارات ومرافق واتصالات", MARKETING_SOFTWARE: "تسويق واشتراكات تقنية", ADMIN: "مصروفات إدارية" };
+export const EXPENSE_CATEGORIES = { FUEL: "وقود", MAINTENANCE_TIRES: "صيانة وإطارات", VEHICLE_INSURANCE: "تأمين المركبات", SUBCONTRACTED_TRANSPORT: "نقل من الباطن", DRIVER_PAYROLL: "رواتب وتريبات السائقين", GOVERNMENT_FEES: "رسوم حكومية وتراخيص", RENT_UTILITIES: "إيجارات ومرافق واتصالات", MARKETING_SOFTWARE: "تسويق واشتراكات تقنية", ADMIN: "مصروفات إدارية" };
 export const TAX_TREATMENTS = { STANDARD: "خاضع للضريبة 15%", ZERO_RATED: "خاضع للنسبة الصفرية 0%", EXEMPT: "معفى من الضريبة", OUT_OF_SCOPE: "خارج نطاق الضريبة" };
 export interface PurchaseInput { documentType?: "PURCHASE_INVOICE" | "PURCHASE_RETURN"; originalPurchaseId?: string; accountCode?: string; paymentAccountCode?: string; vehicleId?: string; postImmediately?: boolean; supplierName: string; supplierVatNumber?: string | null; invoiceNumber: string; issueDate: string; vatDate: string; category: keyof typeof EXPENSE_CATEGORIES; taxTreatment: keyof typeof TAX_TREATMENTS; netAmount: string; vatAmount: string; recoverablePercent: string; evidenceReference?: string; vehiclePlate?: string; notes?: string }
 export interface PurchaseRow extends PurchaseInput { id: string; voucher: string; postingStatus: "POSTED" | "DRAFT" | "LEGACY"; totalAmount: string; recoverableVat: string; version: number; createdAt: string; updatedAt: string; voidedAt: string | null; voidReason: string | null }
@@ -92,7 +92,7 @@ export function journalSourceTypeLabel(sourceType:string,isEn:boolean):string {
     INVOICE:["فاتورة مبيعات","Sales invoice"],
     PAYMENT:["سند قبض / سداد","Payment voucher"],
     PURCHASE:["فاتورة مشتريات","Purchase invoice"],
-    TRIP_COMMISSION:["عمولة رحلة","Trip commission"],
+    TRIP_COMMISSION:["تريب","Trip"],
     SALARY:["مسير رواتب","Payroll"],
     CREDIT_NOTE:["إشعار دائن","Credit note"],
     DEBIT_NOTE:["إشعار مدين","Debit note"],

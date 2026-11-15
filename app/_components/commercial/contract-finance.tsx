@@ -381,7 +381,7 @@ export function CommercialFields({
               </CardTitle>
               <CardDescription className="mt-0.5 text-xs sm:text-sm">
                 {ui(
-                  "العميل مسؤول عن الفاتورة. العمولة مستقلة عن سعر العميل ولا تظهر في مستنداته.",
+                  "العميل مسؤول عن الفاتورة. التريب مستقل عن سعر العميل ولا يظهر في مستنداته.",
                 )}
               </CardDescription>
             </div>
@@ -755,11 +755,11 @@ export function CommercialFields({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm sm:text-base font-bold text-[var(--text-main)]">
-                      {ui("العمولات")}
+                      {ui("التريبات")}
                     </span>
                     <span className="block text-xs sm:text-sm text-[var(--text-muted)]">
                       {ui(
-                        "تحديد عمولة السائق أو المندوب للرحلة — منفصلة عن سعر العميل",
+                        "تحديد تريب السائق أو المندوب للرحلة — منفصل عن سعر العميل",
                       )}
                     </span>
                   </span>
@@ -824,7 +824,7 @@ export function CommercialFields({
                             aria-hidden="true"
                           />
                           <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">
-                            {ui("عمولة السائق")}
+                            {ui("تريب السائق")}
                           </span>
                         </span>
 
@@ -884,7 +884,7 @@ export function CommercialFields({
                             aria-hidden="true"
                           />
                           <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate">
-                            {ui("عمولة المندوب")}
+                            {ui("تريب المندوب")}
                           </span>
                         </span>
 
@@ -1016,7 +1016,7 @@ function CommissionMethodFields({
 
   if (value.mode === "NONE") {
     return (
-      <p className="text-sm text-[var(--text-muted)]">{ui("بدون عمولة")}</p>
+      <p className="text-sm text-[var(--text-muted)]">{ui("بدون تريب")}</p>
     );
   }
 
@@ -1024,7 +1024,7 @@ function CommissionMethodFields({
     <div className="space-y-3">
       <fieldset className="space-y-1.5">
         <legend className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)]">
-          {ui("طريقة العمولة")}
+          {ui("طريقة التريب")}
         </legend>
         <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-[var(--bg-card-subtle)] p-1 border theme-border">
           {COMMISSION_METHOD_OPTIONS.map((option) => {
@@ -1079,7 +1079,7 @@ function CommissionMethodFields({
 
       {value.mode === "FIXED" && (
         <ExpandableField
-          label={ui("مبلغ العمولة")}
+          label={ui("مبلغ التريب")}
           htmlFor={amountId}
           required
           dir="ltr"
@@ -1111,7 +1111,7 @@ function CommissionMethodFields({
       {value.mode === "PERCENT" && (
         <div className="grid gap-3 sm:grid-cols-2">
           <ExpandableField
-            label={ui("أساس احتساب العمولة")}
+            label={ui("أساس احتساب التريب")}
             htmlFor={basisId}
             required
             dir="ltr"
@@ -1140,7 +1140,7 @@ function CommissionMethodFields({
           </ExpandableField>
 
           <ExpandableField
-            label={ui("نسبة العمولة %")}
+            label={ui("نسبة التريب %")}
             htmlFor={percentId}
             required
             dir="ltr"
@@ -1381,7 +1381,7 @@ function ContractFinanceEditor({
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle className="text-base">
-                      {ui("تنفيذ الرحلة واستحقاق العمولة")}
+                      {ui("تنفيذ الرحلة واستحقاق التريب")}
                     </CardTitle>
 
                     {initial.executionStatus === "COMPLETED" ? (
@@ -1439,11 +1439,11 @@ function ContractFinanceEditor({
                       />
                       <div>
                         <h4 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
-                          {ui("اعتماد التنفيذ واستحقاق العمولة")}
+                          {ui("اعتماد التنفيذ واستحقاق التريب")}
                         </h4>
                         <p className="mt-0.5 text-xs sm:text-sm text-[var(--text-muted)]">
                           {ui(
-                            "يؤكد إتمام الرحلة ويفعّل استحقاق العمولات وإمكانية إصدار الفاتورة الضريبية.",
+                            "يؤكد إتمام الرحلة ويفعّل استحقاق التريبات وإمكانية إصدار الفاتورة الضريبية.",
                           )}
                         </p>
                       </div>
@@ -1478,7 +1478,7 @@ function ContractFinanceEditor({
                     ) : (
                       <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                     )}
-                    <span>{ui("اعتماد التنفيذ واستحقاق العمولة")}</span>
+                    <span>{ui("اعتماد التنفيذ واستحقاق التريب")}</span>
                   </Button>
                 </form>
 
@@ -1499,7 +1499,7 @@ function ContractFinanceEditor({
                         </h4>
                         <p className="mt-0.5 text-xs sm:text-sm text-[var(--text-muted)]">
                           {ui(
-                            "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب عمولات.",
+                            "يغلق سجل التنفيذ للرحلة مع تسجيل السبب دون احتساب تريبات.",
                           )}
                         </p>
                       </div>

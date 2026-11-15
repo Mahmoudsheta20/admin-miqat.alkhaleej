@@ -1385,7 +1385,7 @@ test("contract review page exposes pricing and commissions as optional checkbox 
       name: /^تسعير الرحلة والضريبة/,
     });
     const arCommissionsToggle = mobilePage.getByRole("checkbox", {
-      name: /^العمولات/,
+      name: /^التريبات/,
     });
     await expect(arPricingToggle).not.toBeChecked();
     await expect(arCommissionsToggle).not.toBeChecked();
@@ -1404,8 +1404,8 @@ test("contract review page exposes pricing and commissions as optional checkbox 
       .getByLabel("قيمة الخدمة بعد الخصم وقبل الضريبة")
       .fill("250");
     await arCommissionsToggle.check();
-    await mobilePage.getByRole("checkbox", { name: /^عمولة السائق/ }).check();
-    await mobilePage.getByLabel("مبلغ العمولة").fill("40");
+    await mobilePage.getByRole("checkbox", { name: /^تريب السائق/ }).check();
+    await mobilePage.getByLabel("مبلغ التريب").fill("40");
     await mobilePage.waitForTimeout(150);
     await mobilePage.screenshot({
       path: `${output}/contract-detail-checked-ar-dark-390.png`,

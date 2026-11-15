@@ -3446,6 +3446,14 @@ export const UI_PHRASES: Record<string, string> = {
   "بند بدون وصف": "Missing service description",
   "ضريبة القيمة المضافة (0%)": "Value added tax (0%)",
   "هاتف العميل": "Customer phone",
+  "ترتبط مصروفات رواتب وتريبات السائقين في قسم المشتريات بحساب (5105 - رواتب وتريبات السائقين) كمعاملة خارج نطاق الضريبة (0%).":
+    "Driver salaries and trips link to account 5105 as non-taxable transactions (0% VAT).",
+  "رواتب وتريبات السائقين (5105) والرسوم والتراخيص (5106)؛ وتُضبط ضريبتها على 0.00 ر.س تلقائياً لعدم تضخيم الضريبة.":
+    "Driver salaries & trips (5105), licensing & government fees (5106); VAT locked at 0.00 SAR.",
+  "تريب نقل": "Transport trip",
+  "رواتب وتريبات السائقين": "Driver Salaries and Trip Bonuses",
+  "بيانات داخلية وتريبات (اختياري)": "Internal details & trips (optional)",
+  "المناديب والتريبات": "Representatives & trips",
 };
 export const UI_TEMPLATES: Record<string, string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",

@@ -896,11 +896,11 @@ export default function AdminContractBuilder({
   const section5Parts = [
     hasPositiveMoney(commercial.netAmount) ? `${commercial.netAmount} SAR` : "",
     hasAnyCommission(commercial) && totalCommissionSummary !== "—"
-      ? `${ui("العمولات")}: ${totalCommissionSummary} SAR`
+      ? `${ui("التريبات")}: ${totalCommissionSummary} SAR`
       : "",
   ].filter(Boolean);
   const section5Summary =
-    section5Parts.join(" · ") || ui("بيانات داخلية وعمولات (اختياري)");
+    section5Parts.join(" · ") || ui("بيانات داخلية وتريبات (اختياري)");
 
   const section1Error = Boolean(errors.captainId || errors.vehiclePlate);
   const section2Error = Boolean(
