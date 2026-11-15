@@ -11,7 +11,7 @@ import InspectionChecklist from "@/app/_components/form/InspectionChecklist";
 
 import React, { useState, useEffect, useId, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
-import { ClipboardCheck, CheckCircle2, XCircle, AlertCircle, Zap, Search, RefreshCw, Plus, Eye, Trash2, Check, ShieldCheck, Car, Phone, Calendar, X, FileText, AlertTriangle, UserCheck, Gauge, ShieldAlert, Sparkles, Edit3, MessageSquare } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, XCircle, AlertCircle, Zap, Search, RefreshCw, Plus, Eye, Trash2, Check, ShieldCheck, Car, Phone, Calendar, X, FileText, AlertTriangle, UserCheck, Gauge, ShieldAlert, Edit3, MessageSquare } from "lucide-react";
 import { getCaptainsInspectionOverview, directPassInspection, getAllInspectionsList, deleteInspection, submitInspection, CaptainInspectionItem, InspectionWithMeta } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
 import { Vehicle, VehicleInspection } from "@/lib/types";
@@ -1988,7 +1988,7 @@ export default function AdminInspectionsPage() {
                             : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                         }`}
                       >
-                        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                        <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
                         {ui("اليوم (تلقائي)")}</button>
                       <button
                         type="button"
@@ -2035,7 +2035,7 @@ export default function AdminInspectionsPage() {
                 {/* Quick Toggle All Button */}
                 <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30">
                   <span className="text-xs font-bold text-[var(--accent-gold)] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4" aria-hidden="true" />
+                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                     {ui("تحديد جميع نقاط الفحص (16/16) كسليمة ومجتازة")}</span>
                   <div className="flex items-center gap-2">
                     <button

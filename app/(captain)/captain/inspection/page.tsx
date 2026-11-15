@@ -13,7 +13,7 @@ import React, { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import InspectionDownloadButton from "@/app/_components/InspectionDownloadButton";
 import type { VehicleInspection, Vehicle } from "@/lib/types";
-import { ClipboardCheck, CheckCircle2, AlertCircle, FilePlus2, Check, ArrowRight, Sparkles, Edit3, Calendar, Clock, Eye, RotateCw } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, AlertCircle, FilePlus2, Check, ArrowRight, Edit3, Calendar, Clock, Eye, RotateCw } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { submitInspection, getTodayInspection, getAllInspectionsList, InspectionInput, InspectionWithMeta } from "@/app/_actions/inspection";
 import { getVehicles } from "@/app/_actions/fleet";
@@ -461,7 +461,7 @@ export default function CaptainInspectionPage() {
                           : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                       }`}
                     >
-                      <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      <Clock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       {ui("اليوم (تلقائي)")}</button>
                     <button
                       type="button"

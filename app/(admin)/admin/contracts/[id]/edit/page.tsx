@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Sparkles, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight, Briefcase, PenLine, MessageSquare } from "lucide-react";
+import { FileText, MapPin, CheckCircle2, ArrowRight, AlertCircle, Save, Eye, ChevronRight, ChevronDown, ChevronUp, ClipboardCheck, Car, Trash2, ArrowLeftRight, Briefcase, PenLine, MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getCaptains } from "@/app/_actions/captain";
 import { getVehicles } from "@/app/_actions/fleet";
@@ -519,7 +519,7 @@ export default function EditContractPage({ params }: PageProps) {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-gold)] flex items-center justify-center font-bold shrink-0">
-                <Sparkles className="w-4 h-4" aria-hidden="true" />
+                <Briefcase className="w-4 h-4" aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-[var(--text-main)]">

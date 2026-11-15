@@ -3,7 +3,7 @@ import { useUiText } from "@/lib/ui-text";
 
 
 import { useState } from "react";
-import { Users, Plus, Minus, Trash2, Globe, CreditCard, User, UserPlus, Sparkles, Maximize2, Minimize2 } from "lucide-react";
+import { Users, Plus, Minus, Trash2, Globe, CreditCard, User, UserPlus, SlidersHorizontal, Maximize2, Minimize2 } from "lucide-react";
 import { Control, UseFormRegister, useFieldArray, FieldErrors } from "react-hook-form";
 import { useLanguage } from "@/lib/languageContext";
 import { AdminContractFormValues } from "@/lib/validations/contract";
@@ -219,7 +219,7 @@ export function PassengerManifestManager({
       {/* Quick Capacity Presets */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
         <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] pe-1 shrink-0">
-          <Sparkles className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+          <SlidersHorizontal className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
           <span>{ui("تحديد سريع لسعة المركبة:")}</span>
         </div>
         <MobileHorizontalStrip

@@ -46,7 +46,7 @@ import {
   ClipboardCheck,
   ChevronDown,
   ChevronUp,
-  Sparkles,
+  Clock,
   Edit3,
   MessageSquare,
 } from "lucide-react";
@@ -1312,7 +1312,7 @@ export default function AdminContractBuilder({
                     : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                 }`}
               >
-                <Sparkles
+                <Clock
                   className="w-4 h-4 text-[var(--accent-gold)] shrink-0"
                   aria-hidden="true"
                 />

@@ -52,7 +52,7 @@ import {
   ArrowDownLeft,
   FileText,
   Clock,
-  Sparkles,
+  Percent,
   ExternalLink,
   CheckCircle2,
   Edit2,
@@ -504,7 +504,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
           label={ui("مؤهلون للعمولة")}
           value={repCount}
           unit={ui("حساب مالي")}
-          icon={Sparkles}
+          icon={Percent}
           variant="amber"
           isLoading={list.loading && !list.data}
         />
@@ -1730,7 +1730,7 @@ export function StaffPage({
                 : "border border-[var(--control-border)] theme-card text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)]"
             }`}
           >
-            <Sparkles className="w-4 h-4" aria-hidden="true" />
+            <Percent className="w-4 h-4" aria-hidden="true" />
             <span>{ui("عمولات الرحلات")}</span>
             <span
               className={`px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums ${
@@ -2623,7 +2623,7 @@ export function StaffPage({
             <CardHeader className="p-4 sm:p-5 border-b theme-border bg-[var(--bg-card-subtle)] flex-row flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/25 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4" aria-hidden="true" />
+                  <Percent className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2
@@ -2654,7 +2654,7 @@ export function StaffPage({
               {!d.commissions.length ? (
                 <div className="p-10 sm:p-12 text-center space-y-2">
                   <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/25 text-[var(--accent-gold)] flex items-center justify-center">
-                    <Sparkles className="w-6 h-6" aria-hidden="true" />
+                    <Percent className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <p className="text-sm font-bold text-[var(--text-main)]">
                     {ui("لا توجد عمولات رحلات مسجلة")}
@@ -3103,7 +3103,7 @@ function OperationBadge({ kind }: { kind: string }) {
   if (kind === "COMMISSION" || kind === "COMMISSION_BILL") {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold whitespace-nowrap bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
-        <Sparkles className="w-3 h-3 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+        <Percent className="w-3 h-3 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </span>
     );

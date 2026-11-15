@@ -5,7 +5,7 @@ import { useUiText } from "@/lib/ui-text";
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Send } from "lucide-react";
 import { requestPasswordResetAction } from "@/app/_actions/auth";
 
 export default function ForgotPasswordPage() {
@@ -182,7 +182,7 @@ export default function ForgotPasswordPage() {
                   ) : (
                     <>
                       <span>{ui("إرسال رابط إعادة التعيين")}</span>
-                      <Sparkles className="w-4 h-4" aria-hidden="true" />
+                      <Send className="w-4 h-4" aria-hidden="true" />
                     </>
                   )}
                 </button>

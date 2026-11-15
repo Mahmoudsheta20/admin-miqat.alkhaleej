@@ -3,7 +3,7 @@ import { useUiText } from "@/lib/ui-text";
 
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Database } from "lucide-react";
 import { seedAllSectionsTestData } from "@/lib/seed-test-data";
 import { useLanguage } from "@/lib/languageContext";
 
@@ -60,7 +60,7 @@ export default function SeedTestDataButton({
       {isSeeding ? (
         <Loader2 className="size-3.5 animate-spin" />
       ) : (
-        <Sparkles className="size-3.5 text-[var(--accent-gold)]" />
+        <Database className="size-3.5 text-[var(--accent-gold)]" />
       )}
       <span>
         {ui(isSeeding

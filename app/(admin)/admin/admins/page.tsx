@@ -8,7 +8,7 @@ import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_co
 import { Badge } from "@/app/_components/ui";
 
 import React, { useState, useEffect, useCallback, useId, useRef } from "react";
-import { Shield, ShieldCheck, UserPlus, Crown, Users, CheckCircle2, Trash2, Power, Copy, Check, AlertCircle, Sparkles, Mail, Phone, User, X, Lock, KeyRound } from "lucide-react";
+import { Shield, ShieldCheck, UserPlus, Crown, Users, CheckCircle2, Trash2, Power, Copy, Check, AlertCircle, Mail, Phone, User, X, Lock, KeyRound } from "lucide-react";
 import AdminPermissionsEditor from "@/app/_components/AdminPermissionsEditor";
 import {
   getAdminsListAction,
@@ -971,7 +971,7 @@ export default function AdminManagementPage() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                        <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
                         <span>{ui("إنشاء حساب المسؤول")}</span>
                       </>
                     )}
