@@ -38,6 +38,16 @@ export function queryString(values: object = {}): string {
   return params.size ? `?${params}` : "";
 }
 
+function isReadOnlyPostPath(path: string): boolean {
+  const clean = (path.startsWith("/") ? path : `/${path}`).replace(/^\/api/, "").split("?")[0];
+  return (
+    clean === "/accounting/vat-return/manual" ||
+    clean === "/accounting/vat-return/manual/export" ||
+    clean === "/workforce/selections/report" ||
+    clean === "/workforce/selections/export"
+  );
+}
+
 export async function backendRequest<T>(path: string, method = "GET", body?: unknown): Promise<ApiResult<T>> {
   try {
     const isForm = typeof FormData !== "undefined" && body instanceof FormData;
@@ -56,6 +66,15 @@ export async function backendRequest<T>(path: string, method = "GET", body?: unk
       signal: AbortSignal.timeout(60_000),
     });
 
+    if (response.status === 429) {
+      let rateLimitError = "تم تجاوز حد الطلبات المؤقت، يرجى الانتظار لحظات والمحاولة مرة أخرى";
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        const body429 = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (body429?.error) rateLimitError = body429.error;
+      }
+      return { success: false, status: 429, error: rateLimitError };
+    }
+
     if (!response.headers.get("content-type")?.includes("application/json")) {
       return { success: false, status: response.status, error: "تعذر قراءة استجابة الخادم، يرجى إعادة المحاولة" };
     }
@@ -64,7 +83,14 @@ export async function backendRequest<T>(path: string, method = "GET", body?: unk
     if (!response.ok || !result.success) {
       return { success: false, status: response.status, error: result.error || "تعذر تنفيذ الطلب" };
     }
-    if (method !== "GET" && typeof window !== "undefined" && typeof window.dispatchEvent === "function") window.dispatchEvent(new Event("miqat:mutation"));
+    if (
+      method !== "GET" &&
+      !isReadOnlyPostPath(path) &&
+      typeof window !== "undefined" &&
+      typeof window.dispatchEvent === "function"
+    ) {
+      window.dispatchEvent(new Event("miqat:mutation"));
+    }
     return result;
   } catch (error: unknown) {
     return { success: false, error: error instanceof Error && error.name === "TimeoutError"

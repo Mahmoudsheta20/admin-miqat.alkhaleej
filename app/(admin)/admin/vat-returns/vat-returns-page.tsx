@@ -54,7 +54,7 @@ export default function VatReturnsPage() {
   const [invoiceLookupResults, setInvoiceLookupResults] = useState<InvoiceRow[]>([]);
   const [invoiceLookupLoading, setInvoiceLookupLoading] = useState(false);
   const [invoiceLookupError, setInvoiceLookupError] = useState("");
-  const [manualData, setManualData] = useState<VatReport | null>(null);
+  const [manualData, setManualData] = useState<{ key: string; report: VatReport } | null>(null);
   const [manualLoading, setManualLoading] = useState(false);
   const [manualError, setManualError] = useState("");
   const [savedGroups, setSavedGroups] = useState<SavedSelectionOption[]>([]);
@@ -202,49 +202,86 @@ export default function VatReturnsPage() {
     };
   }, [selectionMode, canSearchInvoices, invoiceLookupQuery, isRTL]);
 
-  // Live backend manual VAT return calculation (falls back gracefully to client BigInt preview if endpoint is unavailable in fixture mode)
+  const periodKey = periodQuery(period);
+  const salesKey = selectedSaleIds.join(",");
+  const purchasesKey = includeAllPurchases ? "ALL" : selectedPurchaseIds.join(",");
+  const hasBaseData = Boolean(validBaseData);
+  const hasExternalSaleIds = useMemo(() => {
+    if (!validBaseData) return false;
+    const known = new Set<string>();
+    for (const row of validBaseData.sales) known.add(row.id);
+    for (const row of extraSales) known.add(row.id);
+    return selectedSaleIds.some((id) => !known.has(id));
+  }, [validBaseData, extraSales, selectedSaleIds]);
+  const selectionRequestKey = `${periodKey}|${salesKey}|${purchasesKey}`;
+
+  // Live backend manual VAT return calculation only when out-of-period invoices or explicit refresh require server state; falls back cleanly to client BigInt preview
   useEffect(() => {
-    if (selectionMode !== "manual" || !validBaseData) return;
+    if (selectionMode !== "manual" || !hasBaseData) return;
+    if (!hasExternalSaleIds && manualReload === 0) return;
     let alive = true;
-    void Promise.resolve()
-      .then(() => {
-        if (!alive) return null;
-        setManualLoading(true);
-        setManualError("");
-        return accountingRequest<VatReport>("/vat-return/manual", "POST", {
-          period: periodBody(period),
-          invoiceIds: selectedSaleIds,
-          ...(includeAllPurchases ? {} : { purchaseIds: selectedPurchaseIds }),
-          includeAllPurchases,
+    const timer = setTimeout(() => {
+      setManualLoading(true);
+      setManualError("");
+      const invoiceIds = salesKey ? salesKey.split(",") : [];
+      const purchaseIds = purchasesKey === "ALL" ? [] : purchasesKey ? purchasesKey.split(",") : [];
+      accountingRequest<VatReport>("/vat-return/manual", "POST", {
+        period: Object.fromEntries(new URLSearchParams(periodKey)),
+        invoiceIds,
+        ...(purchasesKey === "ALL"
+          ? { includeAllPurchases: true }
+          : { includeAllPurchases: false, purchaseIds }),
+      })
+        .then((res) => {
+          if (!alive) return;
+          if (res.success && isValidVatReport(res.data)) {
+            const report = res.data;
+            setManualData({ key: selectionRequestKey, report });
+            setManualError("");
+            const available = report.availableSales || [];
+            if (available.length > 0) {
+              setExtraSales((prev) => {
+                const existing = new Set(prev.map((item) => item.id));
+                const additions = available.filter((item) => !existing.has(item.id));
+                return additions.length > 0 ? [...prev, ...additions] : prev;
+              });
+            }
+          } else {
+            setManualData(null);
+            setManualError("");
+          }
+        })
+        .catch(() => {
+          if (alive) {
+            setManualData(null);
+            setManualError("");
+          }
+        })
+        .finally(() => {
+          if (alive) setManualLoading(false);
         });
-      })
-      .then((res) => {
-        if (!alive || !res) return;
-        if (res.success && isValidVatReport(res.data)) {
-          setManualData(res.data);
-          setManualError("");
-        } else if (res.success || res.status === 404) {
-          setManualData(null);
-          setManualError("");
-        } else {
-          setManualData(null);
-          setManualError(res.error || (isRTL ? "تعذر احتساب الإقرار اليدوي" : "Could not calculate manual VAT return"));
-        }
-      })
-      .catch(() => {
-        if (alive) {
-          setManualData(null);
-        }
-      })
-      .finally(() => {
-        if (alive) setManualLoading(false);
-      });
+    }, 300);
     return () => {
       alive = false;
+      clearTimeout(timer);
     };
-  }, [selectionMode, validBaseData, period, selectedSaleIds, includeAllPurchases, selectedPurchaseIds, manualReload, isRTL]);
+  }, [
+    selectionMode,
+    hasBaseData,
+    hasExternalSaleIds,
+    periodKey,
+    salesKey,
+    purchasesKey,
+    selectionRequestKey,
+    manualReload,
+  ]);
 
-  const activeManualData = selectionMode === "manual" && isValidVatReport(manualData) ? manualData : null;
+  const activeManualData =
+    selectionMode === "manual" &&
+    manualData?.key === selectionRequestKey &&
+    isValidVatReport(manualData.report)
+      ? manualData.report
+      : null;
   const visibleLookupResults = invoiceLookupQuery.trim() ? invoiceLookupResults : [];
   const visibleLookupError = invoiceLookupQuery.trim() ? invoiceLookupError : "";
   const visibleLookupLoading = Boolean(invoiceLookupQuery.trim()) && invoiceLookupLoading;
