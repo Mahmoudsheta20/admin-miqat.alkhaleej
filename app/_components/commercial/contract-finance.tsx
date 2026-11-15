@@ -22,6 +22,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { useUiText } from "@/lib/ui-text";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import {
   commercialRequest,
@@ -1241,6 +1243,9 @@ function ContractFinanceEditor({
   >;
 }) {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "contracts", "write");
+  const canApprove = hasClientPermission(user, "contracts", "approve");
   const baseId = React.useId();
   const executionDayId = `${baseId}-execution-day`;
   const cancelReasonId = `${baseId}-cancel-reason`;
@@ -1338,9 +1343,9 @@ function ContractFinanceEditor({
         <CommercialFields
           value={v}
           onChange={setV}
-          disabled={isCompleted}
+          disabled={!canWrite || isCompleted}
           footer={
-            !isCompleted ? (
+            canWrite && !isCompleted ? (
               <>
                 <div className="flex-1">{renderFeedback("save")}</div>
                 <Button
@@ -1410,6 +1415,16 @@ function ContractFinanceEditor({
 
           <CardContent className="p-4 sm:p-5 space-y-4">
             {initial.executionStatus === "PENDING" ? (
+              !canApprove ? (
+                <div className="flex items-center gap-2 rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 text-xs text-[var(--text-muted)]">
+                  <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    {ui.language === "en"
+                      ? "Contract approval permission is required to complete or cancel trip execution."
+                      : "يتطلب اعتماد التنفيذ أو إلغاؤه صلاحية اعتماد العقود."}
+                  </span>
+                </div>
+              ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Complete & Accrue Commission Card */}
                 <form
@@ -1518,6 +1533,7 @@ function ContractFinanceEditor({
                   </Button>
                 </form>
               </div>
+              )
             ) : initial.executionStatus === "COMPLETED" ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.05] p-4 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-emerald-800 dark:text-emerald-300">

@@ -1,13 +1,24 @@
 "use client";
 import { useUiText } from "@/lib/ui-text";
 
-
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CreditCard, ArrowDownLeft, ArrowUpRight, CheckCircle2, Calendar, Loader2, AlertCircle } from "lucide-react";
-import { accountingRequest, amountLabel, currentSaudiPeriod } from "@/lib/accounting";
+import { CreditCard, ArrowDownLeft, ArrowUpRight, CheckCircle2, Calendar, Loader2, AlertCircle, Search, X } from "lucide-react";
+import {
+  accountingRequest,
+  amountLabel,
+  buildAccountingQuery,
+  currentSaudiPeriod,
+  filterCashBankAccounts,
+  type Account,
+  type PaymentListResponse,
+} from "@/lib/accounting";
 import { moneyDecimal, moneyMinor } from "@/lib/money";
 import { backendRequest } from "@/lib/backend";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
+import { useApiQuery } from "@/lib/use-api-query";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
+import { useUrlState } from "@/lib/use-url-state";
 import { Badge } from "@/app/_components/ui";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
 
@@ -16,16 +27,10 @@ interface Option {
   label: string;
 }
 
-interface Payment {
-  id: string;
-  reference: string;
-  amount: string;
-  paymentDate: string;
-  direction: string;
-  journal: { number: number };
-}
-
 const INPUT = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
+
+const PAYMENT_DIRECTIONS = ["", "RECEIPT", "PAYMENT"] as const;
+const PAYMENT_DOC_TYPES = ["", "SALE", "PURCHASE"] as const;
 
 export default function PaymentPanel({
   reload,
@@ -35,6 +40,9 @@ export default function PaymentPanel({
   onChanged: () => void;
 }) {
   const ui = useUiText();
+  const isEn = ui.language === "en";
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "accounting", "write");
 
   const [type, setType] = useState<"SALE" | "PURCHASE">("SALE");
   const [options, setOptions] = useState<Option[]>([]);
@@ -51,13 +59,59 @@ export default function PaymentPanel({
   const key = useRef("");
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [listPage, setListPage] = useUrlState<number>("payPage", 1);
+  const [payDir, setPayDir] = useUrlState<string>("payDir", "", PAYMENT_DIRECTIONS);
+  const [payDocType, setPayDocType] = useUrlState<string>("payDocType", "", PAYMENT_DOC_TYPES);
+  const [payCash, setPayCash] = useUrlState<string>("payCash", "");
+  const [payFrom, setPayFrom] = useUrlState<string>("payFrom", "");
+  const [payTo, setPayTo] = useUrlState<string>("payTo", "");
+  const [paySearch, setPaySearch] = useUrlState<string>("paySearch", "");
+
   useEffect(() => () => {
     if (successTimerRef.current) clearTimeout(successTimerRef.current);
   }, []);
 
-  const payments = useAccountingQuery<{ items: Payment[] }>("/payments", reload);
-  const balance = useAccountingQuery<{ balance: string; direction: string }>(
-    `/document-balance/${type}/${documentId || "00000000-0000-0000-0000-000000000000"}`,
+  const accountsQuery = useAccountingQuery<{ items: Account[] }>("/accounts", reload);
+  const cashAccountOptions = filterCashBankAccounts(accountsQuery.data?.items);
+  const resolvedCashAccounts =
+    cashAccountOptions.length > 0
+      ? cashAccountOptions
+      : [
+          { code: "1102", nameAr: "تحويل بنكي - البنك الأهلي SNB", nameEn: "Bank transfer - SNB" },
+          { code: "1101", nameAr: "نقداً من الصندوق الرئيسي", nameEn: "Main cash register" },
+        ];
+
+  const payments = useAccountingQuery<PaymentListResponse>(
+    `/payments${buildAccountingQuery({
+      page: listPage,
+      pageSize: 30,
+      direction: payDir,
+      documentType: payDocType,
+      cashAccount: payCash,
+      startDate: payFrom,
+      endDate: payTo,
+      search: paySearch,
+    })}`,
+    reload
+  );
+  const listPageSize = payments.data?.pageSize || 30;
+  const listTotal = payments.data?.total ?? payments.data?.items.length ?? 0;
+  const hasListFilters = Boolean(
+    payDir || payDocType || payCash || payFrom || payTo || paySearch.trim()
+  );
+
+  function clearListFilters() {
+    setPayDir("");
+    setPayDocType("");
+    setPayCash("");
+    setPayFrom("");
+    setPayTo("");
+    setPaySearch("");
+    setListPage(1);
+  }
+
+  const balance = useApiQuery<{ balance: string; direction: string }>(
+    documentId ? `/accounting/document-balance/${type}/${documentId}` : null,
     reload
   );
 
@@ -105,7 +159,16 @@ export default function PaymentPanel({
 
   async function save(e: FormEvent) {
     e.preventDefault();
-    if (!balance.data) return;
+    if (!canWrite) return;
+    if (!balance.data) {
+      setError(
+        balance.error ||
+          (isEn
+            ? "Wait for the document balance to finish loading before posting."
+            : "انتظر اكتمال تحميل رصيد المستند قبل حفظ السند.")
+      );
+      return;
+    }
     const paidMinor = moneyMinor(amount);
     if (paidMinor === null || paidMinor <= BigInt(0)) {
       setError(
@@ -172,127 +235,134 @@ export default function PaymentPanel({
       )}
 
       {/* Payment Entry Form */}
-      <form
-        onSubmit={save}
-        onChange={() => {
-          key.current = "";
-        }}
-        className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-5 sm:p-6 shadow-xs space-y-5"
-      >
-        {/* Direction Switcher (Receipt vs Disbursement) */}
-        <div>
-          <label className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] block mb-2">
-            {ui("نوع العملية *")}</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
-            <button
-              type="button"
-              onClick={() => {
-                setType("SALE");
-                setDocumentId("");
-                setAmount("");
-                setPage(1);
-              }}
-              className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
-                type === "SALE"
-                  ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
-                  : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
-              }`}
-            >
-              <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
-              <div>
-                <strong className="text-xs font-semibold block text-[var(--text-main)]">
-                  {ui("تحصيل من عميل (سند قبض)")}</strong>
-                <span className="text-xs text-[var(--text-muted)]">{ui("إيداع بالبنك وتخفيض ذمة العميل")}</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setType("PURCHASE");
-                setDocumentId("");
-                setAmount("");
-                setPage(1);
-              }}
-              className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
-                type === "PURCHASE"
-                  ? "bg-[var(--accent-surface)] border-amber-600 ring-1 ring-amber-600/30"
-                  : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
-              }`}
-            >
-              <ArrowUpRight className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
-              <div>
-                <strong className="text-xs font-semibold block text-[var(--text-main)]">
-                  {ui("سداد لمورد (سند صرف)")}</strong>
-                <span className="text-xs text-[var(--text-muted)]">{ui("صرف من البنك وسداد مستحقات")}</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Form Inputs Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="sm:col-span-2 space-y-2">
-            <label className="text-xs font-bold text-[var(--text-main)] block">
-              {ui("اختر المستند المطلوب تسويته *")}
-              <select
-                required
-                className={INPUT}
-                value={documentId}
-                onChange={(e) => {
-                  setDocumentId(e.target.value);
+      {canWrite ? (
+        <form
+          onSubmit={save}
+          onChange={() => {
+            key.current = "";
+          }}
+          className="theme-card rounded-2xl sm:rounded-3xl border theme-border p-5 sm:p-6 shadow-xs space-y-5"
+        >
+          {/* Direction Switcher (Receipt vs Disbursement) */}
+          <div>
+            <label className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] block mb-2">
+              {ui("نوع العملية *")}</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
+              <button
+                type="button"
+                onClick={() => {
+                  setType("SALE");
+                  setDocumentId("");
                   setAmount("");
+                  setError("");
+                  setPage(1);
                 }}
+                className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
+                  type === "SALE"
+                    ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
+                    : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
+                }`}
               >
-                <option value="">
-                  {ui(type === "SALE" ? "اختر فاتورة عميل مرحّلة..." : "اختر فاتورة مورد مرحّلة...")}
-                </option>
-                {options.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-              <button
-                type="button"
-                disabled={page === 1}
-                onClick={() => {
-                  setPage((v) => v - 1);
-                  setDocumentId("");
-                }}
-                className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
-              >
-                {ui("السابق")}
+                <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
+                <div>
+                  <strong className="text-xs font-semibold block text-[var(--text-main)]">
+                    {ui("تحصيل من عميل (سند قبض)")}</strong>
+                  <span className="text-xs text-[var(--text-muted)]">{ui("إيداع بالبنك وتخفيض ذمة العميل")}</span>
+                </div>
               </button>
-              <span>
-                {ui("صفحة")} <span className="font-mono">{page}</span>
-              </span>
+
               <button
                 type="button"
-                disabled={!hasMore}
                 onClick={() => {
-                  setPage((v) => v + 1);
+                  setType("PURCHASE");
                   setDocumentId("");
+                  setAmount("");
+                  setError("");
+                  setPage(1);
                 }}
-                className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
+                className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
+                  type === "PURCHASE"
+                    ? "bg-[var(--accent-surface)] border-amber-600 ring-1 ring-amber-600/30"
+                    : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
+                }`}
               >
-                {ui("التالي")}
+                <ArrowUpRight className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                <div>
+                  <strong className="text-xs font-semibold block text-[var(--text-main)]">
+                    {ui("سداد لمورد (سند صرف)")}</strong>
+                  <span className="text-xs text-[var(--text-muted)]">{ui("صرف من البنك وسداد مستحقات")}</span>
+                </div>
               </button>
             </div>
           </div>
 
-          <label className="text-xs font-bold text-[var(--text-main)]">
-            {ui("طريقة الدفع / الحساب المالي *")}<select
-              className={INPUT}
-              value={cashAccount}
-              onChange={(e) => setCashAccount(e.target.value)}
-            >
-              <option value="1102">{ui("تحويل بنكي - البنك الأهلي SNB (1102)")}</option>
-              <option value="1101">{ui("نقداً من الصندوق الرئيسي (1101)")}</option>
-            </select>
-          </label>
+          {/* Form Inputs Grid */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="sm:col-span-2 space-y-2">
+              <label className="text-xs font-bold text-[var(--text-main)] block">
+                {ui("اختر المستند المطلوب تسويته *")}
+                <select
+                  required
+                  className={INPUT}
+                  value={documentId}
+                  onChange={(e) => {
+                    setDocumentId(e.target.value);
+                    setAmount("");
+                    setError("");
+                  }}
+                >
+                  <option value="">
+                    {ui(type === "SALE" ? "اختر فاتورة عميل مرحّلة..." : "اختر فاتورة مورد مرحّلة...")}
+                  </option>
+                  {options.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                <button
+                  type="button"
+                  disabled={page === 1}
+                  onClick={() => {
+                    setPage((v) => v - 1);
+                    setDocumentId("");
+                  }}
+                  className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
+                >
+                  {ui("السابق")}
+                </button>
+                <span>
+                  {ui("صفحة")} <span className="font-mono">{page}</span>
+                </span>
+                <button
+                  type="button"
+                  disabled={!hasMore}
+                  onClick={() => {
+                    setPage((v) => v + 1);
+                    setDocumentId("");
+                  }}
+                  className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
+                >
+                  {ui("التالي")}
+                </button>
+              </div>
+            </div>
+
+            <label className="text-xs font-bold text-[var(--text-main)]">
+              {ui("طريقة الدفع / الحساب المالي *")}<select
+                className={INPUT}
+                value={cashAccount}
+                onChange={(e) => setCashAccount(e.target.value)}
+              >
+                {resolvedCashAccounts.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
+                  </option>
+                ))}
+              </select>
+            </label>
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[var(--text-main)] block">
@@ -390,23 +460,140 @@ export default function PaymentPanel({
           </button>
         </div>
 
-        {(error || payments.error) && (
+        {(error || balance.error || payments.error) && (
           <div
             role="alert"
             className="p-3.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2"
           >
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{ui(error || payments.error)}</span>
+            <span>{ui(error || balance.error || payments.error)}</span>
           </div>
         )}
       </form>
+      ) : (
+        <div className="theme-card rounded-2xl border theme-border p-4 text-xs font-semibold text-[var(--text-muted)]">
+          {isEn
+            ? "Read-only access: creating receipt or payment vouchers requires accounting write permission."
+            : "صلاحية عرض فقط: يتطلب إنشاء سندات القبض والصرف صلاحية التعديل المحاسبي."}
+        </div>
+      )}
+
+      {/* Payment List Filters */}
+      <div className="theme-card rounded-2xl border theme-border p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end">
+        <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Search reference" : "بحث في السندات"}</span>
+          <div className="relative">
+            <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" aria-hidden="true" />
+            <input
+              type="search"
+              className={`${INPUT} ps-9 mt-0!`}
+              placeholder={isEn ? "Reference or voucher..." : "المرجع أو البيان…"}
+              value={paySearch}
+              onChange={(e) => {
+                setPaySearch(e.target.value);
+                setListPage(1);
+              }}
+            />
+          </div>
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Direction" : "الاتجاه"}</span>
+          <select
+            className={`${INPUT} mt-0!`}
+            value={payDir}
+            onChange={(e) => {
+              setPayDir(e.target.value);
+              setListPage(1);
+            }}
+          >
+            <option value="">{isEn ? "All" : "الكل"}</option>
+            <option value="RECEIPT">{isEn ? "Receipt" : "سند قبض"}</option>
+            <option value="PAYMENT">{isEn ? "Disbursement" : "سند صرف"}</option>
+          </select>
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Document type" : "نوع المستند"}</span>
+          <select
+            className={`${INPUT} mt-0!`}
+            value={payDocType}
+            onChange={(e) => {
+              setPayDocType(e.target.value);
+              setListPage(1);
+            }}
+          >
+            <option value="">{isEn ? "All" : "الكل"}</option>
+            <option value="SALE">{isEn ? "Sales" : "مبيعات"}</option>
+            <option value="PURCHASE">{isEn ? "Purchases" : "مشتريات"}</option>
+          </select>
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Cash/Bank account" : "الحساب المالي"}</span>
+          <select
+            className={`${INPUT} mt-0!`}
+            value={payCash}
+            onChange={(e) => {
+              setPayCash(e.target.value);
+              setListPage(1);
+            }}
+          >
+            <option value="">{isEn ? "All accounts" : "كل الحسابات"}</option>
+            {resolvedCashAccounts.map((a) => (
+              <option key={a.code} value={a.code}>
+                {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="lg:col-span-3 flex items-end gap-1.5">
+          <label className="flex-1 text-xs font-bold text-[var(--text-main)] space-y-1">
+            <span>{isEn ? "From" : "من"}</span>
+            <input
+              type="date"
+              dir="ltr"
+              className={`${INPUT} mt-0! font-mono`}
+              value={payFrom}
+              onChange={(e) => {
+                setPayFrom(e.target.value);
+                setListPage(1);
+              }}
+            />
+          </label>
+          <label className="flex-1 text-xs font-bold text-[var(--text-main)] space-y-1">
+            <span>{isEn ? "To" : "إلى"}</span>
+            <input
+              type="date"
+              dir="ltr"
+              className={`${INPUT} mt-0! font-mono`}
+              value={payTo}
+              onChange={(e) => {
+                setPayTo(e.target.value);
+                setListPage(1);
+              }}
+            />
+          </label>
+          {hasListFilters && (
+            <button
+              type="button"
+              onClick={clearListFilters}
+              aria-label={isEn ? "Clear payment filters" : "مسح فلاتر السندات"}
+              className="min-h-11 sm:min-h-9 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-300 hover:border-rose-500 cursor-pointer shrink-0 inline-flex items-center justify-center"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Recent Payments Table */}
       <div className="theme-card overflow-hidden rounded-2xl sm:rounded-3xl border theme-border shadow-xs space-y-0">
         <div className="px-5 py-4 border-b theme-border bg-[var(--table-header-bg)] flex items-center justify-between text-xs">
           <h3 className="font-semibold text-[var(--text-main)] text-sm">
             {ui("سجل سندات القبض والصرف الأخيرة (")}
-            {payments.data?.items.length ?? 0})
+            {listTotal})
           </h3>
           <span className="text-[var(--text-muted)] font-mono">JE Journals</span>
         </div>
@@ -537,6 +724,30 @@ export default function PaymentPanel({
           </table>
         </div>
       </div>
+
+      {listTotal > listPageSize && (
+        <div className="flex items-center justify-between text-xs sm:text-sm font-medium pt-1">
+          <button
+            type="button"
+            className="min-h-11 sm:min-h-9 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-[var(--text-main)] disabled:opacity-40 cursor-pointer hover:border-[var(--accent-gold)] transition-colors"
+            disabled={listPage <= 1}
+            onClick={() => setListPage((v) => Math.max(1, v - 1))}
+          >
+            {ui("السابق")}
+          </button>
+          <p className="font-mono text-[var(--text-muted)]">
+            <bdi>{listTotal}</bdi> {isEn ? "vouchers · Page" : "سند · صفحة"} <bdi>{listPage}</bdi>
+          </p>
+          <button
+            type="button"
+            className="min-h-11 sm:min-h-9 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-[var(--text-main)] disabled:opacity-40 cursor-pointer hover:border-[var(--accent-gold)] transition-colors"
+            disabled={listPage * listPageSize >= listTotal}
+            onClick={() => setListPage((v) => v + 1)}
+          >
+            {ui("التالي")}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

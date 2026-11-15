@@ -60,3 +60,105 @@ test('VAT period display uses the final included day across quarters, leap years
  assert.equal(exports.vatPeriodEnd({endExclusive:'2026-07-01',endInclusive:'2026-06-30'}),'2026-06-30');
  assert.equal(exports.vatPeriodEnd({endExclusive:'invalid'}),'—');
 });
+test('dynamic cash/bank and revenue account filters match backend ledger rules', () => {
+ const accounts = [
+  { code: '1100', type: 'ASSET', isPosting: false, isActive: true },
+  { code: '1101', type: 'ASSET', isPosting: true, isActive: true },
+  { code: '1102', type: 'ASSET', isPosting: true, isActive: true },
+  { code: '1103', type: 'ASSET', isPosting: true, isActive: true },
+  { code: '1104', type: 'ASSET', isPosting: true, isActive: true },
+  { code: '1105', type: 'ASSET', isPosting: true, isActive: true },
+  { code: '1106', type: 'ASSET', isPosting: true, isActive: true },
+  { code: '1107', type: 'ASSET', isPosting: true, isActive: false },
+  { code: '2101', type: 'LIABILITY', isPosting: true, isActive: true },
+  { code: '4101', type: 'REVENUE', isPosting: true, isActive: true },
+  { code: '4103', type: 'REVENUE', isPosting: true, isActive: true },
+  { code: '4104', type: 'REVENUE', isPosting: true, isActive: true },
+  { code: '4105', type: 'REVENUE', isPosting: true, isActive: false },
+ ];
+ assert.deepEqual(exports.filterCashBankAccounts(accounts).map((a) => a.code), ['1101', '1102', '1106']);
+ assert.deepEqual(exports.filterCashBankAccounts(null), []);
+ assert.deepEqual(exports.filterSaleRevenueAccounts(accounts).map((a) => a.code), ['4101', '4104']);
+});
+test('period slugs, query builders, ledger paths, and source labels format consistently', () => {
+ assert.equal(exports.reportPeriodSlug({ mode: 'QUARTER', year: 2026, quarter: 2, startDate: '2026-01-01', endDate: '2026-06-30' }), '2026-Q2');
+ assert.equal(exports.reportPeriodSlug({ mode: 'YEAR', year: 2026, quarter: 2, startDate: '2026-01-01', endDate: '2026-06-30' }), '2026');
+ assert.equal(exports.reportPeriodSlug({ mode: 'CUSTOM', year: 2026, quarter: 2, startDate: '2026-04-01', endDate: '2026-05-15' }), '2026-04-01_2026-05-15');
+ assert.equal(exports.buildAccountingQuery({ page: 1, search: '  ', empty: null }), '?page=1');
+ assert.equal(exports.buildAccountingQuery({ search: '', nothing: undefined }), '');
+ assert.equal(exports.buildAccountLedgerPath(' 1102 ', { page: 1 }), '/accounting/accounts/1102/ledger');
+ assert.equal(exports.buildAccountLedgerPath('1102', { from: '2026-01-01', to: '2026-03-31', page: 2, search: 'SNB' }), '/accounting/accounts/1102/ledger?from=2026-01-01&to=2026-03-31&page=2&search=SNB');
+ assert.equal(exports.journalSourceTypeLabel('PAYMENT', true), 'Payment voucher');
+ assert.equal(exports.journalSourceTypeLabel('CUSTOM_TYPE', false), 'CUSTOM_TYPE');
+});
+test('computeClientManualVatReport calculates exact BigInt Boxes 1-16 for selected sales, extra invoices, and purchases', () => {
+ const base = {
+  year: 2026,
+  quarter: 2,
+  period: { start: '2026-04-01', endExclusive: '2026-07-01', endInclusive: '2026-06-30', dueDate: '2026-07-31' },
+  company: { legalName: 'Miqat', vatNumber: '310000000000003' },
+  generatedAt: '2026-06-30T12:00:00Z',
+  settings: { version: 1, previousCorrection: '10.00', carriedCredit: '20.00', notes: 'Adj', filedOn: null, updatedAt: null },
+  rows: Array.from({ length: 16 }, (_, i) => ({
+   box: i + 1,
+   label: `Box ${i + 1}`,
+   section: i < 6 ? 'SALES' : i < 12 ? 'PURCHASES' : 'NET',
+   amount: i >= 12 ? null : '0.00',
+   adjustment: i >= 12 ? null : '0.00',
+   vat: '0.00',
+   isTotal: [6, 12, 13, 16].includes(i + 1),
+  })),
+  sales: [
+   { id: 's1', number: 'TAX-1', source: 'LOCAL', kind: 'INVOICE', date: '2026-04-10', net: '1000.00', vat: '150.00', isPriorPeriodAdjustment: false },
+   { id: 's2', number: 'TAX-2', source: 'LOCAL', kind: 'INVOICE', date: '2026-04-12', net: '2000.00', vat: '300.00', isPriorPeriodAdjustment: false },
+  ],
+  purchases: [
+   { id: 'p1', supplierName: 'Fuel', invoiceNumber: 'F-1', taxTreatment: 'STANDARD', vatDate: '2026-04-05', netAmount: '400.00', vatAmount: '60.00', recoverableVat: '60.00' },
+  ],
+  warnings: [],
+  coverage: { legacyCount: 0, proformaCount: 0, otherIssuerCount: 0, basis: 'ACCRUAL', domesticPurchasesOnly: true },
+  summary: { netSales: '3000.00', outputVat: '450.00', netPurchases: '400.00', recordedInputVat: '60.00', recoverableInputVat: '60.00', nonRecoverableInputVat: '0.00', currentVatDue: '390.00', netVatDue: '380.00', creditNet: '0.00', debitNet: '0.00', excludedOutsideScope: '0.00' },
+ };
+ const extra = [{ id: 's3', number: 'TAX-3', source: 'LOCAL', kind: 'CREDIT', date: '2026-03-10', net: '-100.00', vat: '-15.00', isPriorPeriodAdjustment: false }];
+ const manual = exports.computeClientManualVatReport(base, ['s1', 's3'], ['p1'], extra);
+ assert.equal(manual.manualSelection, true);
+ assert.equal(manual.sales.length, 2);
+ assert.equal(manual.summary.netSales, '900.00');
+ assert.equal(manual.summary.outputVat, '135.00');
+ assert.equal(manual.summary.recoverableInputVat, '60.00');
+ assert.equal(manual.summary.currentVatDue, '75.00');
+ assert.equal(manual.summary.netVatDue, '65.00');
+ assert.equal(manual.rows[14].displayVat, '20.00');
+ assert.equal(manual.rows[14].vat, '-20.00');
+ assert.equal(manual.rows[15].vat, '65.00');
+  const zeroPurchases = exports.computeClientManualVatReport(base, ['s1'], []);
+  assert.equal(zeroPurchases.summary.recoverableInputVat, '0.00');
+  assert.equal(zeroPurchases.summary.netVatDue, '140.00');
+});
+test('isValidVatReport accepts complete VAT reports and rejects malformed or unrelated payloads', () => {
+  const valid = {
+    year: 2026,
+    quarter: 2,
+    period: { start: '2026-04-01', endExclusive: '2026-07-01', endInclusive: '2026-06-30', dueDate: '2026-07-31' },
+    company: { legalName: 'Miqat', vatNumber: '310000000000003' },
+    generatedAt: '2026-06-30T12:00:00Z',
+    settings: { version: 1, previousCorrection: '0.00', carriedCredit: '0.00', notes: '', filedOn: null, updatedAt: null },
+    rows: [],
+    sales: [],
+    purchases: [],
+    warnings: [],
+    coverage: { legacyCount: 0, proformaCount: 0, otherIssuerCount: 0, basis: 'ACCRUAL', domesticPurchasesOnly: true },
+    summary: { netSales: '0.00', outputVat: '0.00', netPurchases: '0.00', recordedInputVat: '0.00', recoverableInputVat: '0.00', nonRecoverableInputVat: '0.00', currentVatDue: '0.00', netVatDue: '0.00', creditNet: '0.00', debitNet: '0.00', excludedOutsideScope: '0.00' },
+  };
+  assert.equal(exports.isValidVatReport(valid), true);
+  assert.equal(exports.isValidVatReport(null), false);
+  assert.equal(exports.isValidVatReport(undefined), false);
+  assert.equal(exports.isValidVatReport([]), false);
+  assert.equal(exports.isValidVatReport({ items: [], total: 0 }), false);
+  assert.equal(exports.isValidVatReport({ ...valid, summary: undefined }), false);
+  assert.equal(exports.isValidVatReport({ ...valid, summary: { netSales: '0.00' } }), false);
+  assert.equal(exports.isValidVatReport({ ...valid, company: undefined }), false);
+  assert.equal(exports.isValidVatReport({ ...valid, period: undefined }), false);
+  assert.equal(exports.isValidVatReport({ ...valid, rows: null }), false);
+  assert.equal(exports.computeClientManualVatReport({ items: [], total: 0 }, [], null).items.length, 0);
+});

@@ -2,11 +2,22 @@ import { backendRequest } from "./backend";
 export interface Commission {mode:"NONE"|"FIXED"|"PERCENT";amount:string;base:string;percent:string}
 export interface CommercialInput {customerId:string|null;netAmount:string;taxCategory:"S"|"Z"|"E"|"O";exemptionCode?:string;exemptionReason?:string;driverCommission:Commission;representativeId:string|null;representativeCommission:Commission}
 export interface Commercial extends CommercialInput {contractId:string;version:number;executionStatus:"PENDING"|"COMPLETED"|"CANCELLED";reportedAt:string|null;executedOn:string|null}
-export interface Customer {id:string;type:"INDIVIDUAL"|"COMPANY";name:string;phone:string|null;email:string|null;vatRegistered:boolean;vatNumber:string|null;identification:string|null;address:{street:string;building:string;district:string;city:string;postalCode:string;country:"SA"}|null;active:boolean;version:number}
-export interface Member {id:string;captainId:string|null;name:string;kind:"DRIVER"|"EMPLOYEE"|"EXTERNAL_INDIVIDUAL"|"EXTERNAL_COMPANY";isRepresentative:boolean;phone:string|null;vatNumber:string|null;bankDetails:{bankName:string;accountHolder:string;iban:string}|null;active:boolean;version:number}
+export interface CustomerSummary {totalInvoiced:string;totalPaid:string;outstanding:string;invoiceCount:number;unpostedCount:number;unpostedAmount:string;contractCount:number;completedContractsCount:number;unbilledCompletedCount:number;unbilledCompletedAmount:string}
+export interface Customer {id:string;type:"INDIVIDUAL"|"COMPANY";name:string;phone:string|null;email:string|null;vatRegistered:boolean;vatNumber:string|null;identification:string|null;address:{street:string;building:string;district:string;city:string;postalCode:string;country:"SA"}|null;active:boolean;version:number;summary?:CustomerSummary}
+export interface MemberBalances {entitlement:string;custody:string;advance:string}
+export interface Member {id:string;captainId:string|null;name:string;kind:"DRIVER"|"EMPLOYEE"|"EXTERNAL_INDIVIDUAL"|"EXTERNAL_COMPANY";isRepresentative:boolean;phone:string|null;vatNumber:string|null;bankDetails:{bankName:string;accountHolder:string;iban:string}|null;active:boolean;version:number;balances?:MemberBalances}
 export interface StaffOperation {id:string;kind:string;amount:string;entitlementDelta:string;custodyDelta:string;advanceDelta:string;effectiveDate:string;description:string;reversalOfId:string|null}
 export interface Payroll {id:string;month:string;amount:string;adjustmentReason:string;status:"DRAFT"|"APPROVED";version:number}
-export interface StaffStatement {member:Member;balances:{entitlement:string;custody:string;advance:string};operations:StaffOperation[];salaryTerms:{id:string;effectiveFrom:string;amount:string}[];payroll:Payroll[];commissions:{contractId:string;contract?:{referenceNumber:string;tripDate:string};amount:string;status:string;paidAmount:string;remainingAmount:string;paymentStatus:string}[];legacy:{id:string;effectiveDate:string;description:string;direction:string;amount:string}[]}
+export interface StaffStatement {member:Member;balances:MemberBalances;from?:string|null;to?:string|null;operations:StaffOperation[];salaryTerms:{id:string;effectiveFrom:string;amount:string}[];payroll:Payroll[];commissions:{contractId:string;contract?:{referenceNumber:string;tripDate:string};amount:string;status:string;paidAmount:string;remainingAmount:string;paymentStatus:string}[];legacy:{id:string;effectiveDate:string;description:string;direction:string;amount:string}[]}
+export function buildStatementPath(basePath:string,range?:{from?:string|null;to?:string|null}):string {
+  const params=new URLSearchParams();
+  const from=range?.from?.trim();
+  const to=range?.to?.trim();
+  if(from)params.set("from",from);
+  if(to)params.set("to",to);
+  const qs=params.toString();
+  return qs?`${basePath}?${qs}`:basePath;
+}
 export const emptyCommission=():Commission=>({mode:"NONE",amount:"0",base:"0",percent:"0"});
 export const emptyCommercial=():CommercialInput=>({customerId:null,netAmount:"0",taxCategory:"S",driverCommission:emptyCommission(),representativeId:null,representativeCommission:emptyCommission()});
 export async function commercialRequest<T>(path:string,method="GET",body?:unknown):Promise<T>{const r=await backendRequest<T>(`/workforce${path}`,method,body);if(!r.success||r.data===undefined)throw new Error(r.error||"تعذر تحميل البيانات");return r.data;}

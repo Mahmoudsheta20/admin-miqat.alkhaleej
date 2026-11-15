@@ -2,7 +2,7 @@
 import { useUiText } from "@/lib/ui-text";
 
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Check, Copy, HelpCircle } from "lucide-react";
 import { amountLabel, vatCopyPurpose, vatDisplayValue, type VatField, type VatRow } from "@/lib/accounting";
 import { useLanguage } from "@/lib/languageContext";
@@ -20,6 +20,11 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
   const { t, language } = useLanguage();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>("");
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+  }, []);
 
   async function handleCopy(
     row: VatRow,
@@ -42,7 +47,8 @@ export default function VatReturnTable({ rows, domesticPurchasesOnly = true }: V
             ? `تم نسخ ${label} للخانة ${row.box}: ${rawValue}. تحقق من الحقل المقابل قبل الإدخال.`
             : `تم نسخ ${label} للخانة ${row.box}: ${rawValue} للمطابقة مع القيم المحسوبة في البوابة.`,
       );
-      setTimeout(() => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => {
         setCopiedKey((curr) => (curr === key ? null : curr));
         setFeedback("");
       }, 2500);

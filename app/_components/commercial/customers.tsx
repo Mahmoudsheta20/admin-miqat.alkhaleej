@@ -4,10 +4,14 @@ import { useUrlState } from "@/lib/use-url-state";
 import { useState, useMemo, type FormEvent } from "react";
 import Link from "next/link";
 import { useUiText } from "@/lib/ui-text";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import {
   commercialRequest,
   csvDownload,
+  buildStatementPath,
   type Customer,
+  type CustomerSummary,
   type Commercial,
 } from "@/lib/commercial";
 import {
@@ -15,7 +19,7 @@ import {
   type InvoiceDetail,
   type BookingInvoiceInput,
 } from "@/lib/invoices";
-import { currentSaudiPeriod } from "@/lib/accounting";
+import { amountLabel, currentSaudiPeriod } from "@/lib/accounting";
 import {
   PageHeader,
   StatCard,
@@ -373,6 +377,8 @@ export function CustomerEditor({
 
 export function CustomersPage() {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canWriteCustomers = hasClientPermission(user, "customers", "write");
   const [search, setSearch] = useUrlState<string>("q", "");
   const [type, setType] = useUrlState<string>("type", "");
   const [page, setPage] = useUrlState<number>("page", 1);
@@ -381,6 +387,7 @@ export function CustomersPage() {
   const q = new URLSearchParams({
     search,
     page: String(page),
+    includeSummary: "true",
     ...(type ? { type } : {}),
   });
   const list = useCommercialData<{ items: Customer[]; total: number }>(`/customers?${q}`);
@@ -430,36 +437,51 @@ export function CustomersPage() {
 
   function exportCustomersReport() {
     const items = list.data?.items || [];
+    const isEn = ui.language === "en";
     csvDownload(`customers-${new Date().toISOString().slice(0, 10)}.csv`, [
-      ["تقرير العملاء — شركة ميقات الخليج"],
-      ["تاريخ الاستخراج", new Date().toLocaleString("ar-SA")],
-      ["إجمالي العملاء", String(items.length)],
+      [isEn ? "Customers Report — Miqat Al-Khaleej" : "تقرير العملاء — شركة ميقات الخليج"],
+      [isEn ? "Generated At" : "تاريخ الاستخراج", new Date().toLocaleString(ui.locale)],
+      [isEn ? "Total Customers" : "إجمالي العملاء", String(items.length)],
       [],
-      [
-        "اسم العميل",
-        "النوع",
-        "الهاتف",
-        "البريد الإلكتروني",
-        "مسجل ضريبياً",
-        "الرقم الضريبي",
-        "السجل / المعرف",
-        "المدينة",
-        "الحي",
-        "الشارع",
-        "الحالة",
-      ],
+      isEn
+        ? [
+            "Customer Name",
+            "Type",
+            "Phone",
+            "Email",
+            "VAT Registered",
+            "VAT Number",
+            "ID / CRN",
+            "City",
+            "District",
+            "Street",
+            "Status",
+          ]
+        : [
+            "اسم العميل",
+            "النوع",
+            "الهاتف",
+            "البريد الإلكتروني",
+            "مسجل ضريبياً",
+            "الرقم الضريبي",
+            "السجل / المعرف",
+            "المدينة",
+            "الحي",
+            "الشارع",
+            "الحالة",
+          ],
       ...items.map((c) => [
         c.name,
-        c.type === "COMPANY" ? "شركة" : "فرد",
+        isEn ? (c.type === "COMPANY" ? "Company" : "Individual") : c.type === "COMPANY" ? "شركة" : "فرد",
         c.phone || "",
         c.email || "",
-        c.vatRegistered ? "نعم" : "لا",
+        isEn ? (c.vatRegistered ? "Yes" : "No") : c.vatRegistered ? "نعم" : "لا",
         c.vatNumber || "",
         c.identification || "",
         c.address?.city || "",
         c.address?.district || "",
         c.address?.street || "",
-        c.active ? "نشط" : "موقوف",
+        isEn ? (c.active ? "Active" : "Inactive") : c.active ? "نشط" : "موقوف",
       ]),
     ]);
   }
@@ -471,12 +493,16 @@ export function CustomersPage() {
         subtitle="العميل مسؤول عن الحساب، والضيف هو الراكب في الرحلة."
         badge="العملاء والمبيعات"
         icon={Building2}
-        primaryAction={{
-          label: "إضافة عميل",
-          onClick: () => setEditing("NEW"),
-          icon: UserPlus,
-          variant: "primary",
-        }}
+        primaryAction={
+          canWriteCustomers
+            ? {
+                label: "إضافة عميل",
+                onClick: () => setEditing("NEW"),
+                icon: UserPlus,
+                variant: "primary",
+              }
+            : undefined
+        }
         secondaryActions={[
           {
             label: "تصدير تقرير العملاء",
@@ -536,7 +562,7 @@ export function CustomersPage() {
         />
       </StatRow>
 
-      {editing && (
+      {canWriteCustomers && editing && (
         <CustomerEditor
           key={editing === "NEW" ? "new" : editing.id}
           customer={editing === "NEW" ? undefined : editing}
@@ -645,6 +671,11 @@ export function CustomersPage() {
                         >
                           {ui(c.active ? "نشط" : "موقوف")}
                         </Badge>
+                        {c.summary && Number(c.summary.outstanding) > 0 && (
+                          <Badge variant="warning" className="text-[10px] px-1.5 py-0 font-mono">
+                            <bdi dir="ltr">{amountLabel(c.summary.outstanding)} SAR</bdi>
+                          </Badge>
+                        )}
                       </div>
                     }
                     footer={
@@ -660,16 +691,18 @@ export function CustomersPage() {
                             <span>{ui("كشف الحساب والفواتير")}</span>
                           </Link>
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-11 px-3 text-xs gap-1.5"
-                          onClick={() => setEditing(c)}
-                          aria-label={`${ui("تعديل العميل")} ${c.name}`}
-                        >
-                          <Edit className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>{ui("تعديل")}</span>
-                        </Button>
+                        {canWriteCustomers && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="min-h-11 px-3 text-xs gap-1.5"
+                            onClick={() => setEditing(c)}
+                            aria-label={`${ui("تعديل العميل")} ${c.name}`}
+                          >
+                            <Edit className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>{ui("تعديل")}</span>
+                          </Button>
+                        )}
                       </>
                     }
                   >
@@ -736,6 +769,13 @@ export function CustomersPage() {
                             >
                               {ui(c.active ? "نشط" : "موقوف")}
                             </Badge>
+                            {c.summary && Number(c.summary.outstanding) > 0 && (
+                              <Badge variant="warning" className="text-[10px] px-1.5 py-0 font-mono">
+                                <bdi dir="ltr">
+                                  {ui.language === "en" ? "Due" : "المتبقي"}: {amountLabel(c.summary.outstanding)} SAR
+                                </bdi>
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </TableCell>
@@ -820,16 +860,18 @@ export function CustomersPage() {
                               <span>{ui("كشف الحساب والفواتير")}</span>
                             </Link>
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 w-9 p-0 text-[var(--text-muted)] hover:text-[var(--text-main)]"
-                            onClick={() => setEditing(c)}
-                            aria-label={`${ui("تعديل العميل")} ${c.name}`}
-                            title={ui("تعديل العميل")}
-                          >
-                            <Edit className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
+                          {canWriteCustomers && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 w-9 p-0 text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                              onClick={() => setEditing(c)}
+                              aria-label={`${ui("تعديل العميل")} ${c.name}`}
+                              title={ui("تعديل العميل")}
+                            >
+                              <Edit className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -919,11 +961,22 @@ interface CustomerDetail {
     direction?: string;
   }[];
   outstanding: string;
+  summary?: CustomerSummary;
+  from?: string | null;
+  to?: string | null;
 }
 
 export function CustomerDetailPage({ id }: { id: string }) {
   const ui = useUiText();
-  const detail = useCommercialData<CustomerDetail>(`/customers/${id}`);
+  const { user } = useAuth();
+  const canWriteCustomers = hasClientPermission(user, "customers", "write");
+  const canWriteInvoices = hasClientPermission(user, "invoices", "write");
+  const canWritePayments = hasClientPermission(user, "accounting", "write");
+  const [fromDate, setFromDate] = useUrlState<string>("from", "");
+  const [toDate, setToDate] = useUrlState<string>("to", "");
+  const detail = useCommercialData<CustomerDetail>(
+    buildStatementPath(`/customers/${id}`, { from: fromDate, to: toDate })
+  );
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [docType, setDocType] = useState<"TAX" | "PROFORMA">("TAX");
@@ -1014,10 +1067,13 @@ export function CustomerDetailPage({ id }: { id: string }) {
   }
 
   function downloadStatement() {
+    const isEn = ui.language === "en";
     csvDownload(`customer-${id}.csv`, [
-      ["كشف حساب العميل", c.name],
-      ["المتبقي", d.outstanding],
-      ["الفاتورة", "التاريخ", "الصافي", "الضريبة", "الإجمالي", "المتبقي"],
+      [isEn ? "Customer Statement" : "كشف حساب العميل", c.name],
+      [isEn ? "Outstanding" : "المتبقي", d.outstanding],
+      isEn
+        ? ["Invoice", "Date", "Subtotal", "VAT", "Total", "Remaining"]
+        : ["الفاتورة", "التاريخ", "الصافي", "الضريبة", "الإجمالي", "المتبقي"],
       ...d.invoices.map((i) => [
         i.number,
         i.invoiceDate.slice(0, 10),
@@ -1027,9 +1083,11 @@ export function CustomerDetailPage({ id }: { id: string }) {
         d.balances.find((b) => b.invoiceId === i.id)?.balance || "",
       ]),
       [],
-      ["التحصيل / الاسترداد", "التاريخ", "المبلغ", "المرجع"],
+      isEn
+        ? ["Receipt / Disbursement", "Date", "Amount", "Reference"]
+        : ["التحصيل / الاسترداد", "التاريخ", "المبلغ", "المرجع"],
       ...d.payments.map((p) => [
-        p.direction,
+        isEn ? (p.direction === "RECEIPT" ? "Receipt" : "Disbursement") : p.direction === "RECEIPT" ? "قبض" : "صرف",
         p.paymentDate.slice(0, 10),
         p.amount,
         p.reference,
@@ -1069,21 +1127,25 @@ export function CustomerDetailPage({ id }: { id: string }) {
           icon: Download,
           variant: "secondary",
         }}
-        secondaryActions={[
-          {
-            label: "تعديل بيانات العميل",
-            onClick: () => setEditing(!editing),
-            icon: Edit,
-            variant: "subtle",
-          },
-        ]}
+        secondaryActions={
+          canWriteCustomers
+            ? [
+                {
+                  label: "تعديل بيانات العميل",
+                  onClick: () => setEditing(!editing),
+                  icon: Edit,
+                  variant: "subtle",
+                },
+              ]
+            : []
+        }
         onRefresh={detail.reload}
         isRefreshing={detail.loading}
       />
 
       <Notice message={detail.error} error />
 
-      {editing && (
+      {canWriteCustomers && editing && (
         <CustomerEditor
           customer={c}
           onSaved={() => {
@@ -1093,6 +1155,73 @@ export function CustomerDetailPage({ id }: { id: string }) {
           onClose={() => setEditing(false)}
         />
       )}
+
+      {/* Period Filter & Summary Strip */}
+      <div className="theme-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border theme-border px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
+            <span>{ui.language === "en" ? "From" : "من"}</span>
+            <input
+              type="date"
+              dir="ltr"
+              aria-label={ui.language === "en" ? "From date" : "من تاريخ"}
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] px-2.5 py-1 text-xs font-mono text-[var(--text-main)] outline-none focus:border-[var(--focus-color)]"
+            />
+          </label>
+          <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
+            <span>{ui.language === "en" ? "To" : "إلى"}</span>
+            <input
+              type="date"
+              dir="ltr"
+              aria-label={ui.language === "en" ? "To date" : "إلى تاريخ"}
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] px-2.5 py-1 text-xs font-mono text-[var(--text-main)] outline-none focus:border-[var(--focus-color)]"
+            />
+          </label>
+          {(fromDate || toDate) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFromDate("");
+                setToDate("");
+              }}
+              className="min-h-11 sm:min-h-9 text-xs font-bold text-rose-700 dark:text-rose-300"
+            >
+              <X className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+              {ui.language === "en" ? "Clear dates" : "مسح التواريخ"}
+            </Button>
+          )}
+        </div>
+        {d.summary && (
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
+            <span>
+              {ui.language === "en" ? "Invoiced" : "إجمالي المفوتر"}:{" "}
+              <bdi dir="ltr" className="font-mono font-bold text-[var(--text-main)]">
+                {amountLabel(d.summary.totalInvoiced)} SAR
+              </bdi>
+            </span>
+            <span>
+              {ui.language === "en" ? "Collected" : "المحصّل"}:{" "}
+              <bdi dir="ltr" className="font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                {amountLabel(d.summary.totalPaid)} SAR
+              </bdi>
+            </span>
+            {d.summary.unbilledCompletedCount > 0 && (
+              <span>
+                {ui.language === "en" ? "Unbilled completed" : "منفذة غير مفوترة"}:{" "}
+                <strong className="font-mono text-[var(--accent-gold)]">
+                  {d.summary.unbilledCompletedCount}
+                </strong>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* KPI Stats Ribbon */}
       <StatRow columns={4}>
@@ -1141,7 +1270,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                 )}
               </CardDescription>
             </div>
-            {d.contracts.length > 0 && (
+            {canWriteInvoices && d.contracts.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -1175,19 +1304,61 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           isChecked ? "border-[var(--accent-gold)]/55 bg-[var(--accent-surface)]/55" : "theme-border"
                         }`}
                       >
-                        <label className="flex items-start gap-3 cursor-pointer">
-                          <Checkbox
-                            className="mt-0.5 shrink-0"
-                            checked={isChecked}
-                            onChange={(e) =>
-                              setSelected(
-                                e.target.checked
-                                  ? [...selected, t.id]
-                                  : selected.filter((v) => v !== t.id)
-                              )
-                            }
-                          />
-                          <div className="min-w-0 flex-1 space-y-2">
+                        {canWriteInvoices ? (
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <Checkbox
+                              className="mt-0.5 shrink-0"
+                              checked={isChecked}
+                              onChange={(e) =>
+                                setSelected(
+                                  e.target.checked
+                                    ? [...selected, t.id]
+                                    : selected.filter((v) => v !== t.id)
+                                )
+                              }
+                            />
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <Link
+                                  className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline"
+                                  href={`/admin/contracts/${t.id}`}
+                                >
+                                  <bdi>{t.referenceNumber}</bdi>
+                                </Link>
+                                <Badge
+                                  variant={
+                                    t.commercial.executionStatus === "COMPLETED"
+                                      ? "success"
+                                      : t.commercial.executionStatus === "CANCELLED"
+                                        ? "destructive"
+                                        : "outline"
+                                  }
+                                  className="text-[10px]"
+                                >
+                                  {ui(
+                                    t.commercial.executionStatus === "COMPLETED"
+                                      ? "تم التنفيذ"
+                                      : t.commercial.executionStatus === "CANCELLED"
+                                        ? "أُلغيت"
+                                        : "لم تُنفذ"
+                                  )}
+                                </Badge>
+                              </div>
+                              <div className="text-xs font-medium text-[var(--text-main)]">
+                                {t.origin} — {t.destination}
+                              </div>
+                              <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+                                <span className="font-mono">
+                                  {t.tripDate} {t.tripTime && `· ${t.tripTime}`}
+                                </span>
+                                <strong dir="ltr" className="font-mono text-sm font-bold text-[var(--text-main)]">
+                                  {t.commercial.netAmount} SAR
+                                </strong>
+                              </div>
+                            </div>
+                          </label>
+                        ) : (
+                          <div className="min-w-0 space-y-2">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <Link
                                 className="font-mono text-sm font-bold text-[var(--accent-gold)] hover:underline"
@@ -1226,7 +1397,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                               </strong>
                             </div>
                           </div>
-                        </label>
+                        )}
                       </Card>
                     );
                   })}
@@ -1236,13 +1407,15 @@ export function CustomerDetailPage({ id }: { id: string }) {
                   <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-10 text-center">
-                        <Checkbox
-                          aria-label={ui(isAllSelected ? "إلغاء التحديد" : "تحديد الكل")}
-                          checked={isAllSelected}
-                          onChange={toggleSelectAll}
-                        />
-                      </TableHead>
+                      {canWriteInvoices && (
+                        <TableHead className="w-10 text-center">
+                          <Checkbox
+                            aria-label={ui(isAllSelected ? "إلغاء التحديد" : "تحديد الكل")}
+                            checked={isAllSelected}
+                            onChange={toggleSelectAll}
+                          />
+                        </TableHead>
+                      )}
                       <TableHead className="text-start">{ui("رقم العقد والعملية")}</TableHead>
                       <TableHead className="text-start">{ui("المسار والرحلة")}</TableHead>
                       <TableHead className="text-start">{ui("حالة التنفيذ")}</TableHead>
@@ -1260,20 +1433,22 @@ export function CustomerDetailPage({ id }: { id: string }) {
                             isChecked ? "bg-[var(--accent-surface)]/55" : "hover:bg-[var(--table-row-hover)]"
                           }`}
                         >
-                          <TableCell className="text-center py-3">
-                            <Checkbox
-                              id={tripCheckboxId}
-                              aria-label={`${ui("رحلة")} ${t.referenceNumber}`}
-                              checked={isChecked}
-                              onChange={(e) =>
-                                setSelected(
-                                  e.target.checked
-                                    ? [...selected, t.id]
-                                    : selected.filter((v) => v !== t.id)
-                                )
-                              }
-                            />
-                          </TableCell>
+                          {canWriteInvoices && (
+                            <TableCell className="text-center py-3">
+                              <Checkbox
+                                id={tripCheckboxId}
+                                aria-label={`${ui("رحلة")} ${t.referenceNumber}`}
+                                checked={isChecked}
+                                onChange={(e) =>
+                                  setSelected(
+                                    e.target.checked
+                                      ? [...selected, t.id]
+                                      : selected.filter((v) => v !== t.id)
+                                  )
+                                }
+                              />
+                            </TableCell>
+                          )}
                           <TableCell className="font-medium py-3">
                             <Link
                               className="font-mono text-xs sm:text-sm font-bold text-[var(--accent-gold)] hover:underline"
@@ -1286,14 +1461,25 @@ export function CustomerDetailPage({ id }: { id: string }) {
                             </p>
                           </TableCell>
                           <TableCell className="py-3 text-xs">
-                            <label htmlFor={tripCheckboxId} className="block cursor-pointer">
-                              <span className="font-medium text-[var(--text-main)]">
-                                {t.origin} — {t.destination}
-                              </span>
-                              <span className="block text-[var(--text-muted)] font-mono mt-0.5">
-                                {t.tripDate} {t.tripTime && `· ${t.tripTime}`}
-                              </span>
-                            </label>
+                            {canWriteInvoices ? (
+                              <label htmlFor={tripCheckboxId} className="block cursor-pointer">
+                                <span className="font-medium text-[var(--text-main)]">
+                                  {t.origin} — {t.destination}
+                                </span>
+                                <span className="block text-[var(--text-muted)] font-mono mt-0.5">
+                                  {t.tripDate} {t.tripTime && `· ${t.tripTime}`}
+                                </span>
+                              </label>
+                            ) : (
+                              <div className="block">
+                                <span className="font-medium text-[var(--text-main)]">
+                                  {t.origin} — {t.destination}
+                                </span>
+                                <span className="block text-[var(--text-muted)] font-mono mt-0.5">
+                                  {t.tripDate} {t.tripTime && `· ${t.tripTime}`}
+                                </span>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="py-3">
                             <Badge
@@ -1344,66 +1530,70 @@ export function CustomerDetailPage({ id }: { id: string }) {
               </div>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="نوع المستند">
-                <select
-                  className={INPUT}
-                  value={docType}
-                  onChange={(e) => setDocType(e.target.value as typeof docType)}
-                >
-                  <option value="TAX">{ui("فاتورة ضريبية")}</option>
-                  <option value="PROFORMA">{ui("فاتورة مبدئية")}</option>
-                </select>
-              </Field>
-              <Field label="تاريخ الفاتورة">
-                <input
-                  className={INPUT}
-                  type="date"
-                  required
-                  value={invoiceDay}
-                  onChange={(e) => setInvoiceDay(e.target.value)}
-                />
-              </Field>
-            </div>
+            {canWriteInvoices && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="نوع المستند">
+                    <select
+                      className={INPUT}
+                      value={docType}
+                      onChange={(e) => setDocType(e.target.value as typeof docType)}
+                    >
+                      <option value="TAX">{ui("فاتورة ضريبية")}</option>
+                      <option value="PROFORMA">{ui("فاتورة مبدئية")}</option>
+                    </select>
+                  </Field>
+                  <Field label="تاريخ الفاتورة">
+                    <input
+                      className={INPUT}
+                      type="date"
+                      required
+                      value={invoiceDay}
+                      onChange={(e) => setInvoiceDay(e.target.value)}
+                    />
+                  </Field>
+                </div>
 
-            <label className="flex min-h-11 items-start gap-2.5 text-xs font-medium text-[var(--text-main)] cursor-pointer">
-              <Checkbox
-                required
-                checked={reviewed}
-                onChange={(e) => setReviewed(e.target.checked)}
-                className="mt-0.5 shrink-0"
-              />
-              <span>
-                {ui(
-                  "راجعت العميل والرحلات والأسعار والضريبة. ستُسجل الفاتورة آجلة في حساب العميل."
+                <label className="flex min-h-11 items-start gap-2.5 text-xs font-medium text-[var(--text-main)] cursor-pointer">
+                  <Checkbox
+                    required
+                    checked={reviewed}
+                    onChange={(e) => setReviewed(e.target.checked)}
+                    className="mt-0.5 shrink-0"
+                  />
+                  <span>
+                    {ui(
+                      "راجعت العميل والرحلات والأسعار والضريبة. ستُسجل الفاتورة آجلة في حساب العميل."
+                    )}
+                  </span>
+                </label>
+
+                <Notice message={mutation.error} error />
+                <Notice message={mutation.message} />
+
+                {receipt && (
+                  <div className="p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300">
+                    <Link
+                      className="font-bold underline text-sm inline-flex min-h-11 sm:min-h-9 items-center gap-1.5"
+                      href={`/admin/invoices/${receipt}`}
+                    >
+                      <Check className="w-4 h-4" aria-hidden="true" />
+                      <span>{ui("فتح الفاتورة الصادرة")}</span>
+                    </Link>
+                  </div>
                 )}
-              </span>
-            </label>
 
-            <Notice message={mutation.error} error />
-            <Notice message={mutation.message} />
-
-            {receipt && (
-              <div className="p-3 rounded-xl bg-emerald-500/12 border border-emerald-600/35 text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300">
-                <Link
-                  className="font-bold underline text-sm inline-flex min-h-11 sm:min-h-9 items-center gap-1.5"
-                  href={`/admin/invoices/${receipt}`}
+                <Button
+                  type="submit"
+                  variant="gold"
+                  size="sm"
+                  className="min-h-11 sm:min-h-10"
+                  disabled={mutation.busy || !selected.length || !reviewed}
                 >
-                  <Check className="w-4 h-4" aria-hidden="true" />
-                  <span>{ui("فتح الفاتورة الصادرة")}</span>
-                </Link>
-              </div>
+                  {ui("إصدار الفاتورة المختارة")}
+                </Button>
+              </>
             )}
-
-            <Button
-              type="submit"
-              variant="gold"
-              size="sm"
-              className="min-h-11 sm:min-h-10"
-              disabled={mutation.busy || !selected.length || !reviewed}
-            >
-              {ui("إصدار الفاتورة المختارة")}
-            </Button>
           </form>
         </CardContent>
       </Card>
@@ -1482,7 +1672,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                           >
                             <Link href={`/admin/invoices/${i.id}`}>{ui("عرض")}</Link>
                           </Button>
-                          {!isFullyPaid && (
+                          {canWritePayments && !isFullyPaid && (
                             <Button
                               variant="gold"
                               size="sm"
@@ -1611,7 +1801,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
                                 {ui("عرض")}
                               </Link>
                             </Button>
-                            {!isFullyPaid && (
+                            {canWritePayments && !isFullyPaid && (
                               <Button
                                 variant="gold"
                                 size="sm"
@@ -1754,7 +1944,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
         </CardContent>
       </Card>
 
-      {payingInvoice && (
+      {canWritePayments && payingInvoice && (
         <RecordPaymentModal
           isOpen={true}
           invoiceId={payingInvoice.id}

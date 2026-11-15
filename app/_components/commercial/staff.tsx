@@ -3,11 +3,13 @@ import { useUrlState } from "@/lib/use-url-state";
 import { useEffect, useId, useRef, useState, useMemo, type FormEvent } from "react";
 import Link from "next/link";
 import { useUiText } from "@/lib/ui-text";
-import { commercialRequest, csvDownload, type Member, type StaffStatement, type StaffOperation, type Payroll } from "@/lib/commercial";
+import { commercialRequest, csvDownload, buildStatementPath, type Member, type StaffStatement, type StaffOperation, type Payroll } from "@/lib/commercial";
 import { formatSignedMinor, signedMoneyMinor } from "@/lib/money";
 import { getCaptains } from "@/app/_actions/captain";
-import { currentSaudiPeriod } from "@/lib/accounting";
+import { currentSaudiPeriod, filterCashBankAccounts, type Account } from "@/lib/accounting";
 import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
+import { useApiQuery } from "@/lib/use-api-query";
 import {
   PageHeader,
   StatCard,
@@ -271,7 +273,9 @@ export function MemberEditor({ member, onSaved, onClose }: { member?: Member; on
 
 export function MembersPage({ representatives = false }: { representatives?: boolean }) {
   const ui = useUiText();
-  const list = useCommercialData<{ items: Member[] }>(`/members?representatives=${representatives}`);
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "staff", "write");
+  const list = useCommercialData<{ items: Member[] }>(`/members?representatives=${representatives}&includeBalances=true`);
   const [editing, setEditing] = useState<Member | "NEW" | null>(null);
   const [search, setSearch] = useUrlState<string>("q", "");
   const [kindFilter, setKindFilter] = useUrlState<MemberFilter>("kind", "ALL", MEMBER_FILTERS);
@@ -398,30 +402,56 @@ export function MembersPage({ representatives = false }: { representatives?: boo
         subtitle="المستحقات والعهد والسلف منفصلة، وكل حركة جديدة مرتبطة بدفتر الأستاذ."
         badge={representatives ? "الوسطاء والمناديب" : "إدارة العاملين والسائقين"}
         icon={representatives ? Users : UserCheck}
-        primaryAction={{
-          label: "إضافة مندوب أو موظف",
-          onClick: () => setEditing("NEW"),
-          icon: UserPlus,
-          variant: "primary",
-        }}
+        primaryAction={
+          canWrite
+            ? {
+                label: "إضافة مندوب أو موظف",
+                onClick: () => setEditing("NEW"),
+                icon: UserPlus,
+                variant: "primary",
+              }
+            : undefined
+        }
         secondaryActions={[
           {
             label: "تصدير التقرير",
             icon: Download,
             onClick: () => {
+              const isEn = ui.language === "en";
               csvDownload(`staff-report-${currentSaudiPeriod().day}.csv`, [
-                [representatives ? "المناديب وعمولات الإحالة" : "تقرير العاملين", `إجمالي: ${filteredItems.length}`],
                 [
-                  "الاسم",
-                  "صفة الحساب",
-                  "رقم التواصل",
-                  "الهوية / الرقم الضريبي",
-                  "اسم البنك",
-                  "صاحب الحساب",
-                  "الآيبان",
-                  "عمولات الإحالة",
-                  "الحالة",
+                  isEn
+                    ? representatives
+                      ? "Representatives & Referral Commissions"
+                      : "Staff & Drivers Directory"
+                    : representatives
+                      ? "المناديب وعمولات الإحالة"
+                      : "تقرير العاملين",
+                  isEn ? `Total: ${filteredItems.length}` : `إجمالي: ${filteredItems.length}`,
                 ],
+                isEn
+                  ? [
+                      "Name",
+                      "Account Role",
+                      "Phone",
+                      "ID / VAT Number",
+                      "Bank Name",
+                      "Account Holder",
+                      "IBAN",
+                      "Referral Commissions",
+                      "Status",
+                    ]
+                  : [
+                      "الاسم",
+                      "صفة الحساب",
+                      "رقم التواصل",
+                      "الهوية / الرقم الضريبي",
+                      "اسم البنك",
+                      "صاحب الحساب",
+                      "الآيبان",
+                      "عمولات الإحالة",
+                      "الحالة",
+                    ],
                 ...filteredItems.map((r) => [
                   r.name,
                   ui(KIND_LABELS[r.kind] || r.kind),
@@ -430,8 +460,14 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                   r.bankDetails?.bankName || "—",
                   r.bankDetails?.accountHolder || "—",
                   r.bankDetails?.iban || "—",
-                  r.isRepresentative ? "مؤهل للعمولة" : "غير مؤهل",
-                  r.active ? "نشط" : "موقوف",
+                  isEn
+                    ? r.isRepresentative
+                      ? "Eligible"
+                      : "Not eligible"
+                    : r.isRepresentative
+                      ? "مؤهل للعمولة"
+                      : "غير مؤهل",
+                  isEn ? (r.active ? "Active" : "Inactive") : r.active ? "نشط" : "موقوف",
                 ]),
               ]);
             },
@@ -482,7 +518,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
         />
       </StatRow>
 
-      {editing && (
+      {canWrite && editing && (
         <MemberEditor
           key={editing === "NEW" ? "NEW" : editing.id}
           member={editing === "NEW" ? undefined : editing}
@@ -708,7 +744,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                   <Button type="button" variant="outline" size="sm" onClick={resetFilters} className="min-h-11 sm:min-h-9">
                     {ui("مسح عوامل التصفية")}
                   </Button>
-                ) : (
+                ) : canWrite ? (
                   <Button
                     type="button"
                     variant="gold"
@@ -719,7 +755,7 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                     <UserPlus className="w-4 h-4" aria-hidden="true" />
                     <span>{ui("إضافة مندوب أو موظف")}</span>
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
           ) : (
@@ -903,17 +939,19 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                   <span className="sr-only"> — {r.name}</span>
                                 </Link>
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                type="button"
-                                aria-label={`${ui("تعديل")} — ${r.name}`}
-                                onClick={() => setEditing(r)}
-                                className="h-8 px-2.5 gap-1.5 text-xs font-bold hover:border-[var(--accent-gold)]"
-                              >
-                                <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
-                                <span>{ui("تعديل")}</span>
-                              </Button>
+                              {canWrite && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  type="button"
+                                  aria-label={`${ui("تعديل")} — ${r.name}`}
+                                  onClick={() => setEditing(r)}
+                                  className="h-8 px-2.5 gap-1.5 text-xs font-bold hover:border-[var(--accent-gold)]"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                                  <span>{ui("تعديل")}</span>
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -977,17 +1015,19 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                             <span className="sr-only"> — {r.name}</span>
                           </Link>
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          type="button"
-                          aria-label={`${ui("تعديل")} — ${r.name}`}
-                          className="min-h-11 px-4 gap-1.5 text-xs font-bold shrink-0"
-                          onClick={() => setEditing(r)}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>{ui("تعديل")}</span>
-                        </Button>
+                        {canWrite && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            aria-label={`${ui("تعديل")} — ${r.name}`}
+                            className="min-h-11 px-4 gap-1.5 text-xs font-bold shrink-0"
+                            onClick={() => setEditing(r)}
+                          >
+                            <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>{ui("تعديل")}</span>
+                          </Button>
+                        )}
                       </div>
                     }
                   >
@@ -1096,9 +1136,14 @@ export function StaffPage({
   readOnly?: boolean;
 }) {
   const { user } = useAuth();
-  const path = memberId
+  const canWriteOps = !readOnly && hasClientPermission(user, "staff", "write");
+  const canApproveOps = !readOnly && hasClientPermission(user, "staff", "approve");
+  const [fromDate, setFromDate] = useUrlState<string>("from", "");
+  const [toDate, setToDate] = useUrlState<string>("to", "");
+  const basePath = memberId
     ? `/members/${memberId}`
     : `/captains/${captainId || user?.id || ""}`;
+  const path = buildStatementPath(basePath, { from: fromDate, to: toDate });
   const result = useCommercialData<StaffStatement>(path);
   const ui = useUiText();
 
@@ -1161,7 +1206,11 @@ export function StaffPage({
     COMMISSION: d.operations.filter((o) => matchesOperationFilter(o, "COMMISSION")).length,
   };
 
-  const hasOpsFilter = operationFilter !== "ALL" || searchQuery.trim().length > 0;
+  const hasOpsFilter =
+    operationFilter !== "ALL" ||
+    searchQuery.trim().length > 0 ||
+    fromDate.trim().length > 0 ||
+    toDate.trim().length > 0;
 
   // Filter operations for table & mobile cards
   const filteredOps = d.operations.filter((o) => {
@@ -1247,6 +1296,8 @@ export function StaffPage({
   const resetOpsFilters = () => {
     setOperationFilter("ALL");
     setSearchQuery("");
+    setFromDate("");
+    setToDate("");
   };
 
   const handleApprovePayroll = async (p: Payroll) => {
@@ -1323,26 +1374,46 @@ export function StaffPage({
         icon={UserCheck}
         primaryAction={{
           label: "تنزيل كشف الحساب",
-          onClick: () =>
+          onClick: () => {
+            const isEn = ui.language === "en";
             csvDownload(`staff-${d.member.id}.csv`, [
-              ["كشف المستحقات", d.member.name],
-              [
-                "المستحق",
-                d.balances.entitlement,
-                "العهد",
-                d.balances.custody,
-                "السلف",
-                d.balances.advance,
-              ],
-              [
-                "التاريخ",
-                "النوع",
-                "البيان",
-                "المبلغ",
-                "تغير المستحق",
-                "تغير العهدة",
-                "تغير السلفة",
-              ],
+              [isEn ? "Account Statement" : "كشف المستحقات", d.member.name],
+              isEn
+                ? [
+                    "Entitlement",
+                    d.balances.entitlement,
+                    "Custody",
+                    d.balances.custody,
+                    "Advance",
+                    d.balances.advance,
+                  ]
+                : [
+                    "المستحق",
+                    d.balances.entitlement,
+                    "العهد",
+                    d.balances.custody,
+                    "السلف",
+                    d.balances.advance,
+                  ],
+              isEn
+                ? [
+                    "Date",
+                    "Type",
+                    "Description",
+                    "Amount",
+                    "Entitlement Delta",
+                    "Custody Delta",
+                    "Advance Delta",
+                  ]
+                : [
+                    "التاريخ",
+                    "النوع",
+                    "البيان",
+                    "المبلغ",
+                    "تغير المستحق",
+                    "تغير العهدة",
+                    "تغير السلفة",
+                  ],
               ...d.operations.map((o) => [
                 o.effectiveDate.slice(0, 10),
                 ui(OPERATION_LABELS[o.kind] || o.kind),
@@ -1352,7 +1423,8 @@ export function StaffPage({
                 o.custodyDelta,
                 o.advanceDelta,
               ]),
-            ]),
+            ]);
+          },
           icon: Download,
           variant: "secondary",
         }}
@@ -1482,7 +1554,7 @@ export function StaffPage({
               {ui("الرصيد المستحق")}
             </p>
           </div>
-          {!readOnly && (
+          {canWriteOps && (
             <button
               type="button"
               onClick={() =>
@@ -1524,7 +1596,7 @@ export function StaffPage({
               {ui("العهد التشغيلية")}
             </p>
           </div>
-          {!readOnly && (
+          {canWriteOps && (
             <button
               type="button"
               onClick={() =>
@@ -1565,7 +1637,7 @@ export function StaffPage({
               {ui("السلف القائمة")}
             </p>
           </div>
-          {!readOnly && (
+          {canWriteOps && (
             <button
               type="button"
               onClick={() =>
@@ -1702,7 +1774,7 @@ export function StaffPage({
         </div>
 
         {/* Global Action: New Movement Button */}
-        {!readOnly && (
+        {canWriteOps && (
           <button
             type="button"
             onClick={() => setMovementModal({ open: true })}
@@ -1787,29 +1859,53 @@ export function StaffPage({
                   })}
                 </div>
 
-                <div className="relative w-full lg:w-72 shrink-0">
-                  <Search
-                    className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
-                    aria-hidden="true"
-                  />
-                  <input
-                    type="search"
-                    aria-label={ui("بحث في الحركات...")}
-                    placeholder={ui("بحث في الحركات...")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-[0.8125rem] outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      aria-label={ui("مسح البحث")}
-                      className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-                  )}
+                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
+                  <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
+                    <span>{ui.language === "en" ? "From" : "من"}</span>
+                    <input
+                      type="date"
+                      dir="ltr"
+                      aria-label={ui.language === "en" ? "From date" : "من تاريخ"}
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] px-2.5 py-1 text-xs font-mono text-[var(--text-main)] outline-none focus:border-[var(--focus-color)]"
+                    />
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
+                    <span>{ui.language === "en" ? "To" : "إلى"}</span>
+                    <input
+                      type="date"
+                      dir="ltr"
+                      aria-label={ui.language === "en" ? "To date" : "إلى تاريخ"}
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
+                      className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] px-2.5 py-1 text-xs font-mono text-[var(--text-main)] outline-none focus:border-[var(--focus-color)]"
+                    />
+                  </label>
+                  <div className="relative flex-1 min-w-[200px] lg:w-64">
+                    <Search
+                      className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+                      aria-hidden="true"
+                    />
+                    <input
+                      type="search"
+                      aria-label={ui("بحث في الحركات...")}
+                      placeholder={ui("بحث في الحركات...")}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full min-h-11 sm:min-h-9 ps-9 pe-10 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--input-bg)] text-[var(--text-main)] placeholder:text-[var(--text-placeholder)] text-base sm:text-[0.8125rem] outline-none focus:border-[var(--focus-color)] focus:ring-2 focus:ring-[var(--focus-color)]/20"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        aria-label={ui("مسح البحث")}
+                        className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center absolute end-0.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -1839,7 +1935,7 @@ export function StaffPage({
                       >
                         {ui("مسح عوامل التصفية")}
                       </Button>
-                    ) : !readOnly ? (
+                    ) : canWriteOps ? (
                       <Button
                         type="button"
                         variant="gold"
@@ -1885,7 +1981,7 @@ export function StaffPage({
                           <TableHead className="py-3 px-3 border-b theme-border leading-snug">
                             {ui("أثر العهدة / السلفة")}
                           </TableHead>
-                          {!readOnly && (
+                          {canApproveOps && (
                             <TableHead className="sticky end-0 z-20 py-3 px-3 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                               {ui("الإجراءات")}
                             </TableHead>
@@ -1896,7 +1992,7 @@ export function StaffPage({
                         {filteredOps.map((o) => {
                           const isReversal = o.kind === "REVERSAL";
                           const isAlreadyReversed = reversedOpIds.has(o.id);
-                          const canReverse = !readOnly && !isReversal && !isAlreadyReversed;
+                          const canReverse = canApproveOps && !isReversal && !isAlreadyReversed;
                           const entitlement = formatSignedDelta(o.entitlementDelta);
                           const hasCustodyDelta = isNonZeroMoney(o.custodyDelta);
                           const hasAdvanceDelta = isNonZeroMoney(o.advanceDelta);
@@ -1971,7 +2067,7 @@ export function StaffPage({
                                   <span className="text-[var(--text-muted)]">—</span>
                                 )}
                               </TableCell>
-                              {!readOnly && (
+                              {canApproveOps && (
                                 <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-subtle)] transition-colors py-3.5 px-3 align-middle border-b theme-border border-s theme-border text-end whitespace-nowrap">
                                   {canReverse ? (
                                     <Button
@@ -2047,7 +2143,7 @@ export function StaffPage({
                               <span className="text-[var(--text-muted)]">—</span>
                             )}
                           </TableCell>
-                          {!readOnly && (
+                          {canApproveOps && (
                             <TableCell className="sticky end-0 z-10 bg-[var(--table-header-bg)] py-3.5 px-3 border-t theme-border border-s theme-border" />
                           )}
                         </TableRow>
@@ -2060,7 +2156,7 @@ export function StaffPage({
                     {filteredOps.map((o) => {
                       const isReversal = o.kind === "REVERSAL";
                       const isAlreadyReversed = reversedOpIds.has(o.id);
-                      const canReverse = !readOnly && !isReversal && !isAlreadyReversed;
+                      const canReverse = canApproveOps && !isReversal && !isAlreadyReversed;
                       const entitlement = formatSignedDelta(o.entitlementDelta);
                       const hasCustodyDelta = isNonZeroMoney(o.custodyDelta);
                       const hasAdvanceDelta = isNonZeroMoney(o.advanceDelta);
@@ -2235,7 +2331,7 @@ export function StaffPage({
                   </p>
                 )}
               </div>
-              {!readOnly && (
+              {canWriteOps && (
                 <Button
                   type="button"
                   variant="outline"
@@ -2269,7 +2365,7 @@ export function StaffPage({
                   </Badge>
                 </div>
               </div>
-              {!readOnly && (
+              {canWriteOps && (
                 <Button
                   type="button"
                   variant="gold"
@@ -2298,7 +2394,7 @@ export function StaffPage({
                   <p className="text-sm font-bold text-[var(--text-main)]">
                     {ui("لا توجد مسيرات رواتب مسجلة")}
                   </p>
-                  {!readOnly && (
+                  {canWriteOps && (
                     <div className="pt-1">
                       <Button
                         type="button"
@@ -2339,7 +2435,7 @@ export function StaffPage({
                           <TableHead className="py-3.5 px-4 border-b theme-border text-end whitespace-nowrap">
                             {ui("المبلغ")}
                           </TableHead>
-                          {!readOnly && (
+                          {(canWriteOps || canApproveOps) && (
                             <TableHead className="sticky end-0 z-20 py-3.5 px-4 text-end border-b theme-border border-s theme-border bg-[var(--table-header-bg)] whitespace-nowrap">
                               {ui("الإجراءات")}
                             </TableHead>
@@ -2383,36 +2479,40 @@ export function StaffPage({
                             >
                               {formatMoneyValue(p.amount)} SAR
                             </TableCell>
-                            {!readOnly && (
+                            {(canWriteOps || canApproveOps) && (
                               <TableCell className="sticky end-0 z-10 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-subtle)] transition-colors py-3.5 px-4 align-middle border-b theme-border border-s theme-border text-end whitespace-nowrap">
                                 {p.status === "DRAFT" ? (
                                   <div className="inline-flex items-center justify-end gap-1.5">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      aria-label={`${ui("تعديل")} ${p.month}`}
-                                      onClick={() => setEditingPayroll(p)}
-                                      className="h-9 px-3 gap-1.5 text-xs font-bold"
-                                    >
-                                      <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
-                                      <span>{ui("تعديل")}</span>
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="gold"
-                                      size="sm"
-                                      disabled={approvePayrollMutation.busy}
-                                      aria-label={`${ui("اعتماد الاستحقاق")} ${p.month}`}
-                                      onClick={() => void handleApprovePayroll(p)}
-                                      className="h-9 px-3 text-xs font-bold"
-                                    >
-                                      <span>
-                                        {approvingPayrollId === p.id && approvePayrollMutation.busy
-                                          ? "..."
-                                          : ui("اعتماد الاستحقاق")}
-                                      </span>
-                                    </Button>
+                                    {canWriteOps && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        aria-label={`${ui("تعديل")} ${p.month}`}
+                                        onClick={() => setEditingPayroll(p)}
+                                        className="h-9 px-3 gap-1.5 text-xs font-bold"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+                                        <span>{ui("تعديل")}</span>
+                                      </Button>
+                                    )}
+                                    {canApproveOps && (
+                                      <Button
+                                        type="button"
+                                        variant="gold"
+                                        size="sm"
+                                        disabled={approvePayrollMutation.busy}
+                                        aria-label={`${ui("اعتماد الاستحقاق")} ${p.month}`}
+                                        onClick={() => void handleApprovePayroll(p)}
+                                        className="h-9 px-3 text-xs font-bold"
+                                      >
+                                        <span>
+                                          {approvingPayrollId === p.id && approvePayrollMutation.busy
+                                            ? "..."
+                                            : ui("اعتماد الاستحقاق")}
+                                        </span>
+                                      </Button>
+                                    )}
                                   </div>
                                 ) : (
                                   <span className="text-[var(--text-muted)]">—</span>
@@ -2450,34 +2550,38 @@ export function StaffPage({
                             : undefined
                         }
                         footer={
-                          !readOnly && p.status === "DRAFT" ? (
+                          (canWriteOps || canApproveOps) && p.status === "DRAFT" ? (
                             <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                aria-label={`${ui("تعديل")} ${p.month}`}
-                                onClick={() => setEditingPayroll(p)}
-                                className="min-h-11 px-4 gap-1.5 text-xs font-bold shrink-0"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                                <span>{ui("تعديل")}</span>
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="gold"
-                                size="sm"
-                                disabled={approvePayrollMutation.busy}
-                                aria-label={`${ui("اعتماد الاستحقاق")} ${p.month}`}
-                                onClick={() => void handleApprovePayroll(p)}
-                                className="flex-1 min-h-11 px-3 text-xs font-bold"
-                              >
-                                <span>
-                                  {approvingPayrollId === p.id && approvePayrollMutation.busy
-                                    ? "..."
-                                    : ui("اعتماد الاستحقاق")}
-                                </span>
-                              </Button>
+                              {canWriteOps && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  aria-label={`${ui("تعديل")} ${p.month}`}
+                                  onClick={() => setEditingPayroll(p)}
+                                  className="min-h-11 px-4 gap-1.5 text-xs font-bold shrink-0"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                  <span>{ui("تعديل")}</span>
+                                </Button>
+                              )}
+                              {canApproveOps && (
+                                <Button
+                                  type="button"
+                                  variant="gold"
+                                  size="sm"
+                                  disabled={approvePayrollMutation.busy}
+                                  aria-label={`${ui("اعتماد الاستحقاق")} ${p.month}`}
+                                  onClick={() => void handleApprovePayroll(p)}
+                                  className="flex-1 min-h-11 px-3 text-xs font-bold"
+                                >
+                                  <span>
+                                    {approvingPayrollId === p.id && approvePayrollMutation.busy
+                                      ? "..."
+                                      : ui("اعتماد الاستحقاق")}
+                                  </span>
+                                </Button>
+                              )}
                             </div>
                           ) : undefined
                         }
@@ -2934,7 +3038,7 @@ export function StaffPage({
       )}
 
       {/* MODALS */}
-      {movementModal.open && (
+      {canWriteOps && movementModal.open && (
         <MovementModal
           statement={d}
           defaultKind={movementModal.defaultKind}
@@ -2944,7 +3048,7 @@ export function StaffPage({
         />
       )}
 
-      {salaryModalOpen && (
+      {canWriteOps && salaryModalOpen && (
         <SalaryTermModal
           memberId={d.member.id}
           onClose={() => setSalaryModalOpen(false)}
@@ -2952,7 +3056,7 @@ export function StaffPage({
         />
       )}
 
-      {(payrollModalOpen || editingPayroll) && (
+      {canWriteOps && (payrollModalOpen || editingPayroll) && (
         <PayrollModal
           memberId={d.member.id}
           editing={editingPayroll}
@@ -2964,7 +3068,7 @@ export function StaffPage({
         />
       )}
 
-      {reverseModalOp && (
+      {canApproveOps && reverseModalOp && (
         <ReverseModal
           op={reverseModalOp}
           onClose={() => setReverseModalOp(null)}
@@ -3064,6 +3168,16 @@ function MovementModal({
   const [billSearch, setBillSearch] = useState("");
   const [commissionId, setCommissionId] = useState("");
   const [operationKey, setOperationKey] = useState<string | null>(null);
+
+  const cashAccountsQuery = useApiQuery<{ items: Account[] }>("/accounting/accounts");
+  const cashAccountOptions = filterCashBankAccounts(cashAccountsQuery.data?.items);
+  const resolvedCashAccounts =
+    cashAccountOptions.length > 0
+      ? cashAccountOptions
+      : [
+          { code: "1102", nameAr: "تحويل بنكي", nameEn: "Bank transfer" },
+          { code: "1101", nameAr: "الصندوق", nameEn: "Cash" },
+        ];
 
   const bills = useCommercialData<{
     items: {
@@ -3214,8 +3328,11 @@ function MovementModal({
                     setOperationKey(null);
                   }}
                 >
-                  <option value="1102">{ui("البنك")}</option>
-                  <option value="1101">{ui("الصندوق")}</option>
+                  {resolvedCashAccounts.map((a) => (
+                    <option key={a.code} value={a.code}>
+                      {a.code} · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                    </option>
+                  ))}
                 </select>
               </Field>
             )}

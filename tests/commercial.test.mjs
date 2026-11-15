@@ -5,6 +5,7 @@ import ts from 'typescript';
 const exports={};
 new Function('require','exports',ts.transpileModule(fs.readFileSync('lib/commercial.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(()=>({}),exports);
 const {
+  buildStatementPath,
   commissionPreview,
   commissionTotalPreview,
   emptyCommercial,
@@ -87,4 +88,14 @@ test('commission total preview sums driver and representative cents exactly and 
     representativeId: null,
     representativeCommission: { mode: 'NONE', amount: '0', base: '0', percent: '0' },
   });
+});
+
+test('statement path omits empty date query parameters to preserve exact base endpoint matching', () => {
+  assert.equal(buildStatementPath('/members/m1'), '/members/m1');
+  assert.equal(buildStatementPath('/members/m1', { from: '', to: '   ' }), '/members/m1');
+  assert.equal(buildStatementPath('/members/m1', { from: '2026-01-01' }), '/members/m1?from=2026-01-01');
+  assert.equal(
+    buildStatementPath('/customers/c1', { from: ' 2026-01-01 ', to: '2026-03-31' }),
+    '/customers/c1?from=2026-01-01&to=2026-03-31'
+  );
 });

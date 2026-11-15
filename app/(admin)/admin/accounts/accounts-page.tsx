@@ -1,7 +1,8 @@
 "use client";
 import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
-
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -455,19 +456,45 @@ function Editor({
 
 export default function AccountsPage() {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canWrite =
+    hasClientPermission(user, "accounts", "write") ||
+    hasClientPermission(user, "accounting", "write");
+  const canViewLedger = hasClientPermission(user, "accounting", "view");
 
   const { t, dir, isRTL } = useLanguage();
   const [search, setSearch] = useUrlState<string>("q", "");
-  const [typeFilter, setTypeFilter] = useState<string>("ALL");
-  const [postingFilter, setPostingFilter] = useState<
-    "ALL" | "POSTING" | "GROUP"
-  >("ALL");
-  const [viewMode, setViewMode] = useState<"TREE" | "TABLE">("TREE");
+  const [typeFilter, setTypeFilter] = useUrlState<string>("type", "ALL", [
+    "ALL",
+    "ASSET",
+    "LIABILITY",
+    "EQUITY",
+    "REVENUE",
+    "EXPENSE",
+  ]);
+  const [postingFilter, setPostingFilter] = useUrlState<"ALL" | "POSTING" | "GROUP">(
+    "posting",
+    "ALL",
+    ["ALL", "POSTING", "GROUP"],
+  );
+  const [viewMode, setViewMode] = useUrlState<"TREE" | "TABLE">("view", "TREE", [
+    "TREE",
+    "TABLE",
+  ]);
   const [collapsedTypes, setCollapsedTypes] = useState<Record<string, boolean>>(
     {},
   );
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
   const [showFaqGuide, setShowFaqGuide] = useState(true);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
 
   const [reload, setReload] = useState(0);
   const [seedMessage, setSeedMessage] = useState("");
@@ -486,11 +513,18 @@ export default function AccountsPage() {
   // Copy code helper with visual feedback
   const handleCopyCode = (code: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => {
-      setCopiedCode((curr) => (curr === code ? null : curr));
-    }, 2000);
+    void navigator.clipboard
+      ?.writeText(code)
+      .then(() => {
+        setCopiedCode(code);
+        if (copyTimerRef.current !== null) {
+          window.clearTimeout(copyTimerRef.current);
+        }
+        copyTimerRef.current = window.setTimeout(() => {
+          setCopiedCode((curr) => (curr === code ? null : curr));
+        }, 2000);
+      })
+      .catch(() => {});
   };
 
   // Toggle category collapse in tree view
@@ -674,14 +708,16 @@ export default function AccountsPage() {
               <span>{ui(t("accounting.title"))}</span>
             </Link>
 
-            <button
-              type="button"
-              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
-              onClick={() => setEditor({ account: "NEW" })}
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              <span>+ {ui(t("common.create"))}</span>
-            </button>
+            {canWrite && (
+              <button
+                type="button"
+                className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
+                onClick={() => setEditor({ account: "NEW" })}
+              >
+                <Plus className="size-4" aria-hidden="true" />
+                <span>+ {ui(t("common.create"))}</span>
+              </button>
+            )}
           </>
         }
       />
@@ -1241,8 +1277,17 @@ export default function AccountsPage() {
                                   {ui("نظامي")}</span>
                               )}
 
+                              {canViewLedger && a.isPosting && (
+                                <Link
+                                  href={`/admin/accounting?view=LEDGER&accountCode=${encodeURIComponent(a.code)}`}
+                                  className="inline-flex min-h-11 sm:min-h-8 items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] transition"
+                                >
+                                  <span>{ui.language === "en" ? "Ledger" : "دفتر الحساب"}</span>
+                                </Link>
+                              )}
+
                               {/* Add Child Sub-Account (Only on Group Accounts) */}
-                              {!a.isPosting && (
+                              {canWrite && !a.isPosting && (
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -1264,12 +1309,14 @@ export default function AccountsPage() {
                               )}
 
                               {/* Edit Button */}
-                              <button
-                                type="button"
-                                className="min-h-11 sm:min-h-8 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
-                                onClick={() => setEditor({ account: a })}
-                              >
-                                {ui("تعديل")}</button>
+                              {canWrite && (
+                                <button
+                                  type="button"
+                                  className="min-h-11 sm:min-h-8 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
+                                  onClick={() => setEditor({ account: a })}
+                                >
+                                  {ui("تعديل")}</button>
+                              )}
                             </div>
                           </div>
                         );
@@ -1339,7 +1386,19 @@ export default function AccountsPage() {
                   }
                   footer={
                     <>
-                      {!a.isPosting && (
+                      {canViewLedger && a.isPosting && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="flex-1 min-h-11 text-xs font-bold"
+                        >
+                          <Link href={`/admin/accounting?view=LEDGER&accountCode=${encodeURIComponent(a.code)}`}>
+                            {ui.language === "en" ? "Ledger" : "دفتر الحساب"}
+                          </Link>
+                        </Button>
+                      )}
+                      {canWrite && !a.isPosting && (
                         <Button
                           type="button"
                           variant="outline"
@@ -1356,15 +1415,17 @@ export default function AccountsPage() {
                           <span>{ui("+ فرعي")}</span>
                         </Button>
                       )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 min-h-11 text-xs font-bold"
-                        onClick={() => setEditor({ account: a })}
-                      >
-                        {ui("تعديل")}
-                      </Button>
+                      {canWrite && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 min-h-11 text-xs font-bold"
+                          onClick={() => setEditor({ account: a })}
+                        >
+                          {ui("تعديل")}
+                        </Button>
+                      )}
                     </>
                   }
                 >
@@ -1495,7 +1556,15 @@ export default function AccountsPage() {
                     {/* Actions */}
                     <td className="px-5 py-3.5 text-end whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
-                        {!a.isPosting && (
+                        {canViewLedger && a.isPosting && (
+                          <Link
+                            href={`/admin/accounting?view=LEDGER&accountCode=${encodeURIComponent(a.code)}`}
+                            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] transition"
+                          >
+                            <span>{ui.language === "en" ? "Ledger" : "دفتر الحساب"}</span>
+                          </Link>
+                        )}
+                        {canWrite && !a.isPosting && (
                           <button
                             type="button"
                             onClick={() =>
@@ -1512,12 +1581,14 @@ export default function AccountsPage() {
                             <span>{ui("+ فرعي")}</span>
                           </button>
                         )}
-                        <button
-                          type="button"
-                          className="min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
-                          onClick={() => setEditor({ account: a })}
-                        >
-                          {ui("تعديل")}</button>
+                        {canWrite && (
+                          <button
+                            type="button"
+                            className="min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1 text-xs font-bold text-[var(--text-main)] cursor-pointer transition shadow-2xs"
+                            onClick={() => setEditor({ account: a })}
+                          >
+                            {ui("تعديل")}</button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1530,7 +1601,7 @@ export default function AccountsPage() {
       )}
 
       {/* Editor Modal */}
-      {editor && (
+      {canWrite && editor && (
         <Editor
           account={editor.account}
           prefillParent={editor.prefillParent}

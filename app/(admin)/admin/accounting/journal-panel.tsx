@@ -1,13 +1,24 @@
 "use client";
 
 import { useUiText } from "@/lib/ui-text";
-import { useRef, useState, type FormEvent } from "react";
-import { Scale, CheckCircle2, AlertCircle, Plus, Trash2, RotateCcw, Calendar, FileText, Hash } from "lucide-react";
-import { accountingRequest, amountLabel, currentSaudiPeriod, type Account, type Journal } from "@/lib/accounting";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Scale, CheckCircle2, AlertCircle, Plus, Trash2, RotateCcw, Calendar, FileText, Hash, Search, X } from "lucide-react";
+import {
+  accountingRequest,
+  amountLabel,
+  buildAccountingQuery,
+  currentSaudiPeriod,
+  journalSourceTypeLabel,
+  type Account,
+  type Journal,
+} from "@/lib/accounting";
 import { formatSignedMinor, signedMoneyMinor } from "@/lib/dashboard-analytics";
 import { moneyDecimal, moneyMinor } from "@/lib/money";
 import { ensureCapitalAndBankAccounts } from "@/lib/seed-test-data";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
+import { useUrlState } from "@/lib/use-url-state";
 import { Badge, Card } from "@/app/_components/ui";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
 
@@ -30,16 +41,41 @@ const empty = (key: string): Line => ({
   vehiclePlate: "",
 });
 
+const JOURNAL_SOURCES = [
+  "",
+  "MANUAL",
+  "SALE",
+  "PAYMENT",
+  "PURCHASE",
+  "TRIP_COMMISSION",
+  "SALARY",
+  "CREDIT_NOTE",
+  "DEBIT_NOTE",
+] as const;
+
 export default function JournalPanel({
   reload,
   onChanged,
+  onOpenLedger,
 }: {
   reload: number;
   onChanged: () => void;
+  onOpenLedger?: (accountCode: string) => void;
 }) {
   const ui = useUiText();
+  const isEn = ui.language === "en";
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "accounting", "write");
+  const canApprove = hasClientPermission(user, "accounting", "approve");
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState<number>("journalPage", 1);
+  const [searchFilter, setSearchFilter] = useUrlState<string>("journalSearch", "");
+  const [sourceTypeFilter, setSourceTypeFilter] = useUrlState<string>("journalSource", "", JOURNAL_SOURCES);
+  const [accountFilter, setAccountFilter] = useUrlState<string>("journalAccount", "");
+  const [startDateFilter, setStartDateFilter] = useUrlState<string>("journalFrom", "");
+  const [endDateFilter, setEndDateFilter] = useUrlState<string>("journalTo", "");
+  const [vehicleFilter, setVehicleFilter] = useUrlState<string>("journalPlate", "");
+
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState(currentSaudiPeriod().day);
   const [description, setDescription] = useState("");
@@ -51,11 +87,50 @@ export default function JournalPanel({
   const [reverseReason, setReverseReason] = useState("");
   const [reverseDate, setReverseDate] = useState(currentSaudiPeriod().day);
 
+  useEffect(() => {
+    if (!reverseId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !saving) {
+        setReverseId(null);
+        setError("");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [reverseId, saving]);
+
   const accounts = useAccountingQuery<{ items: Account[] }>("/accounts", reload);
-  const journals = useAccountingQuery<{ items: Journal[]; total: number }>(
-    `/journals?page=${page}`,
+  const journals = useAccountingQuery<{ items: Journal[]; total: number; pageSize?: number }>(
+    `/journals${buildAccountingQuery({
+      page,
+      search: searchFilter,
+      sourceType: sourceTypeFilter,
+      accountCode: accountFilter,
+      startDate: startDateFilter,
+      endDate: endDateFilter,
+      vehiclePlate: vehicleFilter,
+    })}`,
     reload
   );
+  const pageSize = journals.data?.pageSize || 30;
+  const hasFilters = Boolean(
+    searchFilter.trim() ||
+      sourceTypeFilter ||
+      accountFilter ||
+      startDateFilter ||
+      endDateFilter ||
+      vehicleFilter.trim()
+  );
+
+  function clearFilters() {
+    setSearchFilter("");
+    setSourceTypeFilter("");
+    setAccountFilter("");
+    setStartDateFilter("");
+    setEndDateFilter("");
+    setVehicleFilter("");
+    setPage(1);
+  }
 
   const totals = lines.reduce(
     (s, l) => ({
@@ -105,6 +180,14 @@ export default function JournalPanel({
         },
       ]);
       key.current = "";
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : isEn
+            ? "Unable to prepare opening capital preset."
+            : "تعذر تجهيز قيد رأس المال الافتتاحي."
+      );
     } finally {
       setSaving(false);
     }
@@ -149,8 +232,9 @@ export default function JournalPanel({
 
   async function reverse(e: FormEvent) {
     e.preventDefault();
-    if (!reverseId) return;
+    if (!reverseId || !canApprove) return;
     setSaving(true);
+    setError("");
     const result = await accountingRequest(`/journals/${reverseId}/reverse`, "POST", {
       date: reverseDate,
       reason: reverseReason,
@@ -179,24 +263,136 @@ export default function JournalPanel({
             {ui("القيود المعتمدة محفوظة. التصحيح بقيد عكسي؛ وتصحيح المستند من شاشته الأصلية.")}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            disabled={saving}
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-amber-600/35 bg-[var(--accent-surface)] hover:border-amber-600 px-3 py-1.5 text-xs font-bold text-[var(--accent-gold)] disabled:opacity-50 cursor-pointer transition-colors"
-            onClick={() => void fillCapitalPreset()}
+        {canWrite && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={saving}
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-amber-600/35 bg-[var(--accent-surface)] hover:border-amber-600 px-3 py-1.5 text-xs font-bold text-[var(--accent-gold)] disabled:opacity-50 cursor-pointer transition-colors"
+              onClick={() => void fillCapitalPreset()}
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              {ui("تعبئة قيد رأس مال (300,000 ر.س)")}
+            </button>
+            <button
+              type="button"
+              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold cursor-pointer transition-transform active:scale-[0.98]"
+              onClick={() => setShowForm((v) => !v)}
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              {ui("قيد يدوي")}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Filters Toolbar */}
+      <div className="theme-card rounded-2xl border theme-border p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end">
+        <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Search" : "بحث في القيود"}</span>
+          <div className="relative">
+            <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" aria-hidden="true" />
+            <input
+              type="search"
+              className={`${INPUT} ps-9`}
+              placeholder={isEn ? "Number, description..." : "رقم القيد أو البيان…"}
+              value={searchFilter}
+              onChange={(e) => {
+                setSearchFilter(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Source" : "المصدر"}</span>
+          <select
+            className={INPUT}
+            value={sourceTypeFilter}
+            onChange={(e) => {
+              setSourceTypeFilter(e.target.value);
+              setPage(1);
+            }}
           >
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            {ui("تعبئة قيد رأس مال (300,000 ر.س)")}
-          </button>
-          <button
-            type="button"
-            className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold cursor-pointer transition-transform active:scale-[0.98]"
-            onClick={() => setShowForm((v) => !v)}
+            <option value="">{isEn ? "All sources" : "كل المصادر"}</option>
+            {JOURNAL_SOURCES.filter(Boolean).map((s) => (
+              <option key={s} value={s}>
+                {journalSourceTypeLabel(s, isEn)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "Account" : "الحساب"}</span>
+          <select
+            className={INPUT}
+            value={accountFilter}
+            onChange={(e) => {
+              setAccountFilter(e.target.value);
+              setPage(1);
+            }}
           >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-            {ui("قيد يدوي")}
-          </button>
+            <option value="">{isEn ? "All accounts" : "كل الحسابات"}</option>
+            {accounts.data?.items.map((a) => (
+              <option key={a.code} value={a.code}>
+                {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "From" : "من"}</span>
+          <input
+            type="date"
+            dir="ltr"
+            className={`${INPUT} font-mono`}
+            value={startDateFilter}
+            onChange={(e) => {
+              setStartDateFilter(e.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+
+        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+          <span>{isEn ? "To" : "إلى"}</span>
+          <input
+            type="date"
+            dir="ltr"
+            className={`${INPUT} font-mono`}
+            value={endDateFilter}
+            onChange={(e) => {
+              setEndDateFilter(e.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+
+        <div className="lg:col-span-1 flex items-end gap-1.5">
+          <input
+            type="text"
+            aria-label={isEn ? "Vehicle plate filter" : "تصفية برقم اللوحة"}
+            placeholder={isEn ? "Plate" : "اللوحة"}
+            className={`${INPUT} font-mono`}
+            value={vehicleFilter}
+            onChange={(e) => {
+              setVehicleFilter(e.target.value);
+              setPage(1);
+            }}
+          />
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              aria-label={isEn ? "Reset journal filters" : "مسح فلاتر اليومية"}
+              className="min-h-11 sm:min-h-9 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-300 hover:border-rose-500 cursor-pointer shrink-0 inline-flex items-center justify-center"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -211,7 +407,7 @@ export default function JournalPanel({
       )}
 
       {/* Manual Journal Entry Form (Double-Entry Voucher) */}
-      {showForm && (
+      {canWrite && showForm && (
         <form
           onSubmit={save}
           className="theme-card space-y-5 rounded-2xl border theme-border p-5 shadow-sm"
@@ -482,52 +678,87 @@ export default function JournalPanel({
         </form>
       )}
 
-      {/* Reverse Journal Modal Form */}
-      {reverseId && (
-        <form
-          onSubmit={reverse}
-          className="theme-card flex flex-wrap items-end gap-3 rounded-2xl border border-rose-600/35 bg-rose-500/5 p-5"
+      {/* Reverse Journal Modal Dialog */}
+      {canApprove && reverseId && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={ui("عكس القيد اليدوي")}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !saving) {
+              setReverseId(null);
+              setError("");
+            }
+          }}
         >
-          <div className="w-full flex items-center gap-2 pb-2 text-rose-700 dark:text-rose-300 font-bold text-sm">
-            <RotateCcw className="h-4 w-4" />
-            <span>{ui("عكس القيد اليدوي")}</span>
-          </div>
-          <label className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
-            {ui("تاريخ العكس")}
-            <input
-              type="date"
-              required
-              className={`${INPUT} mt-1.5 font-mono`}
-              value={reverseDate}
-              onChange={(e) => setReverseDate(e.target.value)}
-            />
-          </label>
-          <label className="flex-1 min-w-[260px] text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
-            {ui("سبب عكس القيد")}
-            <input
-              required
-              minLength={3}
-              maxLength={300}
-              className={`${INPUT} mt-1.5`}
-              value={reverseReason}
-              onChange={(e) => setReverseReason(e.target.value)}
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={saving}
-            className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold cursor-pointer"
+          <form
+            onSubmit={reverse}
+            className="theme-card w-full max-w-lg space-y-4 rounded-2xl border border-rose-600/35 p-5 shadow-xl"
           >
-            {ui("تأكيد العكس")}
-          </button>
-          <button
-            type="button"
-            className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
-            onClick={() => setReverseId(null)}
-          >
-            {ui("إلغاء")}
-          </button>
-        </form>
+            <div className="flex items-center justify-between border-b theme-border pb-3">
+              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-bold text-sm">
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                <span>{ui("عكس القيد اليدوي")}</span>
+              </div>
+              <button
+                type="button"
+                aria-label={ui("إلغاء")}
+                disabled={saving}
+                onClick={() => {
+                  setReverseId(null);
+                  setError("");
+                }}
+                className="inline-flex min-h-11 min-w-11 sm:min-h-8 sm:min-w-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <label className="block text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
+                {ui("تاريخ العكس")}
+                <input
+                  type="date"
+                  required
+                  className={`${INPUT} mt-1.5 font-mono`}
+                  value={reverseDate}
+                  onChange={(e) => setReverseDate(e.target.value)}
+                />
+              </label>
+              <label className="block text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)]">
+                {ui("سبب عكس القيد")}
+                <input
+                  required
+                  minLength={3}
+                  maxLength={300}
+                  className={`${INPUT} mt-1.5`}
+                  value={reverseReason}
+                  onChange={(e) => setReverseReason(e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                disabled={saving}
+                className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
+                onClick={() => {
+                  setReverseId(null);
+                  setError("");
+                }}
+              >
+                {ui("إلغاء")}
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold cursor-pointer disabled:opacity-40"
+              >
+                {ui("تأكيد العكس")}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       {/* Journals List (Posted Vouchers) */}
@@ -550,27 +781,10 @@ export default function JournalPanel({
                     JE-{String(j.number).padStart(6, "0")}
                   </span>
 
-                  {/* Source Type Badges */}
-                  {j.sourceType === "MANUAL" && (
-                    <span className="rounded-md bg-sky-500/10 border border-sky-600/30 px-2 py-0.5 text-2xs font-bold text-sky-800 dark:text-sky-300">
-                      {ui.language === "en" ? "Manual entry" : "قيد يدوي"}
-                    </span>
-                  )}
-                  {j.sourceType === "TRIP_COMMISSION" && (
-                    <span className="rounded-md bg-indigo-500/10 border border-indigo-600/30 px-2 py-0.5 text-2xs font-bold text-indigo-800 dark:text-indigo-300">
-                      {ui.language === "en" ? "Trip commission" : "عمولة رحلة"}
-                    </span>
-                  )}
-                  {j.sourceType === "SALARY" && (
-                    <span className="rounded-md bg-emerald-500/12 border border-emerald-600/35 px-2 py-0.5 text-2xs font-bold text-emerald-800 dark:bg-emerald-950/45 dark:border-emerald-500/35 dark:text-emerald-300">
-                      {ui.language === "en" ? "Payroll" : "مسير رواتب"}
-                    </span>
-                  )}
-                  {j.sourceType === "PURCHASE" && (
-                    <span className="rounded-md bg-rose-500/10 border border-rose-600/30 px-2 py-0.5 text-2xs font-bold text-rose-800 dark:text-rose-300">
-                      {ui.language === "en" ? "Purchase invoice" : "فاتورة مشتريات"}
-                    </span>
-                  )}
+                  {/* Source Type Badge */}
+                  <span className="rounded-md bg-[var(--bg-card-subtle)] border theme-border px-2 py-0.5 text-2xs font-bold text-[var(--text-main)]">
+                    {journalSourceTypeLabel(j.sourceType, isEn)}
+                  </span>
 
                   {/* Reversal Indicators */}
                   {j.reversal && (
@@ -698,9 +912,19 @@ export default function JournalPanel({
                       {j.lines.map((l) => (
                         <tr key={l.id} className="hover:bg-[var(--table-row-hover)] transition-colors">
                           <td className="py-2.5 px-3">
-                            <span className="font-mono font-bold text-[var(--accent-gold)] bg-[var(--accent-surface)] border border-amber-600/30 px-1.5 py-0.5 rounded text-2xs me-2">
-                              {l.accountCode}
-                            </span>
+                            {onOpenLedger ? (
+                              <button
+                                type="button"
+                                onClick={() => onOpenLedger(l.accountCode)}
+                                className="font-mono font-bold text-[var(--accent-gold)] bg-[var(--accent-surface)] border border-amber-600/30 hover:border-[var(--accent-gold)] px-1.5 py-0.5 rounded text-2xs me-2 cursor-pointer"
+                              >
+                                {l.accountCode}
+                              </button>
+                            ) : (
+                              <span className="font-mono font-bold text-[var(--accent-gold)] bg-[var(--accent-surface)] border border-amber-600/30 px-1.5 py-0.5 rounded text-2xs me-2">
+                                {l.accountCode}
+                              </span>
+                            )}
                             <span className="font-medium text-[var(--text-main)]">
                               {ui.language === "en" && l.account.nameEn ? l.account.nameEn : ui(l.account.nameAr)}
                             </span>
@@ -740,12 +964,13 @@ export default function JournalPanel({
                   </table>
                 </div>
 
-                {j.sourceType === "MANUAL" && !j.reversal && (
+                {canApprove && j.sourceType === "MANUAL" && !j.reversal && (
                   <div className="mt-3 flex justify-end">
                     <button
                       type="button"
                       className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-600/35 bg-[var(--bg-card)] px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors shadow-2xs"
                       onClick={() => {
+                        setError("");
                         setReverseId(j.id);
                         setReverseReason("");
                       }}
@@ -784,7 +1009,7 @@ export default function JournalPanel({
         <button
           type="button"
           className="min-h-11 sm:min-h-9 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-2 text-[var(--text-main)] disabled:opacity-40 cursor-pointer hover:border-[var(--accent-gold)] transition-colors"
-          disabled={!journals.data || page * 30 >= journals.data.total}
+          disabled={!journals.data || page * pageSize >= journals.data.total}
           onClick={() => setPage((v) => v + 1)}
         >
           {ui("التالي")}

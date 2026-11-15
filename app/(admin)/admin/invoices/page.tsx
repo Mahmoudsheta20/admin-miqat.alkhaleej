@@ -3,7 +3,7 @@ import { useApiQuery } from "@/lib/use-api-query";
 import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ReceiptText,
@@ -23,12 +23,18 @@ import {
   FileMinus,
   FilePlus,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  invoiceTitle,
+  buildInvoiceListQueryPath,
   dateLabel,
   downloadInvoice,
+  filterInvoiceRows,
+  hasInvertedDateRange,
+  invoiceTitle,
+  summarizeInvoicePage,
+  type InvoiceListFilterType,
   type InvoiceRow,
 } from "@/lib/invoices";
 import InvoiceVisibilityAction from "./invoice-visibility-action";
@@ -74,6 +80,7 @@ export default function InvoicesPage() {
   const ui = useUiText();
 
   const { t, dir, isRTL } = useLanguage();
+  const text = (ar: string, en: string) => (isRTL ? ar : en);
   const { user: authUser } = useAuth();
   const canCreateInvoices = hasClientPermission(authUser, "invoices", "write");
   const canDeleteInvoices = hasClientPermission(authUser, "invoices", "delete");
@@ -82,26 +89,55 @@ export default function InvoicesPage() {
   const [page, setPage] = useUrlState<number>("page", 1);
   const [isArchived, setIsArchived] = useUrlState<boolean>("archived", false);
 
-  // Client-side instant filters
+  // URL-synced filters (queried server-side and applied locally for instant/fixture parity)
   const [search, setSearch] = useUrlState<string>("q", "");
-  const [typeFilter, setTypeFilter] = useUrlState<
-    "ALL" | "BOOKING" | "PROFORMA" | "TAX" | "NOTES"
-  >("type", "ALL", ["ALL", "BOOKING", "PROFORMA", "TAX", "NOTES"]);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [typeFilter, setTypeFilter] = useUrlState<InvoiceListFilterType>(
+    "type",
+    "ALL",
+    ["ALL", "BOOKING", "PROFORMA", "TAX", "NOTES"],
+  );
+  const [fromDate, setFromDate] = useUrlState<string>("fromDate", "");
+  const [toDate, setToDate] = useUrlState<string>("toDate", "");
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [seedMessage, setSeedMessage] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   // Payment Modal State
   const [paymentModalInvoice, setPaymentModalInvoice] =
     useState<InvoiceRow | null>(null);
 
   const [actionError, setError] = useState("");
+  const queryPath = useMemo(
+    () =>
+      buildInvoiceListQueryPath({
+        page,
+        archived: isArchived,
+        type: typeFilter,
+        search: debouncedSearch,
+        fromDate,
+        toDate,
+      }),
+    [page, isArchived, typeFilter, debouncedSearch, fromDate, toDate],
+  );
   const {
     data,
     error: queryError,
     isLoading,
     refetch,
-  } = useApiQuery<InvoiceList>(`/invoices?page=${page}&archived=${isArchived}`);
+  } = useApiQuery<InvoiceList>(queryPath);
   const error = actionError || queryError;
   const isRefreshing = isLoading;
   const load = (showRefresh = false) => {
@@ -110,92 +146,54 @@ export default function InvoicesPage() {
   };
 
   const items = useMemo(() => data?.items ?? [], [data]);
+  const invertedDates = hasInvertedDateRange(fromDate, toDate);
+  const hasActiveFilters = Boolean(
+    search.trim() || typeFilter !== "ALL" || fromDate || toDate,
+  );
 
-  const filteredItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return items.filter((row) => {
-      const docType = row.documentType || "BOOKING";
-      const isNote =
-        row.taxDocument?.kind === "CREDIT" || row.taxDocument?.kind === "DEBIT";
+  const clearAllFilters = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setTypeFilter("ALL");
+    setFromDate("");
+    setToDate("");
+    setPage(1);
+  };
 
-      if (
-        typeFilter === "BOOKING" &&
-        (!["BOOKING", "TAX"].includes(docType) || isNote)
-      )
-        return false;
-      if (typeFilter === "PROFORMA" && docType !== "PROFORMA") return false;
-      if (typeFilter === "TAX" && (docType !== "TAX" || isNote)) return false;
-      if (typeFilter === "NOTES" && !isNote) return false;
+  const filteredItems = useMemo(
+    () =>
+      filterInvoiceRows(items, {
+        type: typeFilter,
+        search,
+        fromDate,
+        toDate,
+      }),
+    [items, typeFilter, search, fromDate, toDate],
+  );
 
-      if (!q) return true;
-      return (
-        row.invoiceNumber.toLowerCase().includes(q) ||
-        row.customerName.toLowerCase().includes(q) ||
-        row.totalAmount.includes(q)
+  const stats = useMemo(
+    () => summarizeInvoicePage(items, data?.total),
+    [items, data?.total],
+  );
+
+  const handleCopyNumber = async (invoiceNumber: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(invoiceNumber);
+      }
+      setCopiedNumber(invoiceNumber);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => {
+        setCopiedNumber((curr) => (curr === invoiceNumber ? null : curr));
+      }, 2000);
+    } catch {
+      setError(
+        text(
+          "تعذر نسخ رقم الفاتورة إلى الحافظة.",
+          "Could not copy the invoice number to clipboard.",
+        ),
       );
-    });
-  }, [items, search, typeFilter]);
-
-  const stats = useMemo(() => {
-    let bookingCount = 0;
-    let proformaCount = 0;
-    let taxCount = 0;
-    let notesCount = 0;
-    let pageGrossSum = 0;
-    let pageVatSum = 0;
-
-    for (const item of items) {
-      const docType = item.documentType || "BOOKING";
-      const isNote =
-        item.taxDocument?.kind === "CREDIT" ||
-        item.taxDocument?.kind === "DEBIT";
-
-      if (isNote) {
-        notesCount++;
-      } else if (docType === "PROFORMA") {
-        proformaCount++;
-      } else if (docType === "TAX") {
-        taxCount++;
-      } else {
-        bookingCount++;
-      }
-
-      if (docType === "PROFORMA") continue;
-      const gross = Number(item.totalAmount);
-      const vat = Number(item.vatAmount);
-      if (Number.isFinite(gross)) {
-        if (item.taxDocument?.kind === "CREDIT") {
-          pageGrossSum -= gross;
-        } else {
-          pageGrossSum += gross;
-        }
-      }
-      if (Number.isFinite(vat)) {
-        if (item.taxDocument?.kind === "CREDIT") {
-          pageVatSum -= vat;
-        } else {
-          pageVatSum += vat;
-        }
-      }
     }
-
-    return {
-      total: data?.total ?? items.length,
-      bookingCount,
-      proformaCount,
-      taxCount,
-      notesCount,
-      pageGrossSum: pageGrossSum.toFixed(2),
-      pageVatSum: pageVatSum.toFixed(2),
-    };
-  }, [items, data?.total]);
-
-  const handleCopyNumber = (invoiceNumber: string) => {
-    void navigator.clipboard.writeText(invoiceNumber);
-    setCopiedNumber(invoiceNumber);
-    setTimeout(() => {
-      setCopiedNumber((curr) => (curr === invoiceNumber ? null : curr));
-    }, 2000);
   };
 
   const handleDownloadPdf = async (row: InvoiceRow) => {
@@ -391,17 +389,23 @@ export default function InvoicesPage() {
           subtext={t("invoice.savedInSystem")}
           icon={ReceiptText}
           isActive={typeFilter === "ALL"}
-          onClick={() => setTypeFilter("ALL")}
+          onClick={() => {
+            setTypeFilter("ALL");
+            setPage(1);
+          }}
           isLoading={isLoading && !data}
         />
         <StatCard
           label={ui(t("invoice.customerInvoices"))}
           value={stats.bookingCount + stats.taxCount}
-          subtext={t("invoice.customerInvoices")}
+          subtext={`${text("ضريبية", "Tax")}: ${stats.taxCount} · ${text("حجز", "Booking")}: ${stats.bookingCount}`}
           icon={Check}
           variant="emerald"
-          isActive={typeFilter === "BOOKING"}
-          onClick={() => setTypeFilter("BOOKING")}
+          isActive={typeFilter === "TAX" || typeFilter === "BOOKING"}
+          onClick={() => {
+            setTypeFilter(stats.taxCount > 0 || stats.bookingCount === 0 ? "TAX" : "BOOKING");
+            setPage(1);
+          }}
           isLoading={isLoading && !data}
         />
         <StatCard
@@ -411,7 +415,10 @@ export default function InvoicesPage() {
           icon={FileSpreadsheet}
           variant="blue"
           isActive={typeFilter === "PROFORMA"}
-          onClick={() => setTypeFilter("PROFORMA")}
+          onClick={() => {
+            setTypeFilter("PROFORMA");
+            setPage(1);
+          }}
           isLoading={isLoading && !data}
         />
         <StatCard
@@ -428,14 +435,22 @@ export default function InvoicesPage() {
       {/* 4. Unified Filter Bar */}
       <FilterBar
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          if (page !== 1) setPage(1);
+        }}
         searchPlaceholder={ui(t("invoice.searchPlaceholder"))}
         tabs={[
           { id: "ALL", label: t("common.all"), count: items.length },
           {
+            id: "TAX",
+            label: text("ضريبية", "Tax"),
+            count: stats.taxCount,
+          },
+          {
             id: "BOOKING",
-            label: t("invoice.customerInvoices"),
-            count: stats.bookingCount + stats.taxCount,
+            label: text("فواتير الحجز", "Booking"),
+            count: stats.bookingCount,
           },
           {
             id: "PROFORMA",
@@ -449,8 +464,61 @@ export default function InvoicesPage() {
           },
         ]}
         activeTab={typeFilter}
-        onTabChange={(tabId) => setTypeFilter(tabId as typeof typeFilter)}
-      />
+        onTabChange={(tabId) => {
+          setTypeFilter(tabId as typeof typeFilter);
+          setPage(1);
+        }}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)]">
+            <span>{text("من", "From")}</span>
+            <input
+              type="date"
+              value={fromDate}
+              aria-label={text("تاريخ البداية", "From date")}
+              onChange={(e) => {
+                setFromDate(e.target.value);
+                setPage(1);
+              }}
+              dir="ltr"
+              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-input)] px-2.5 py-1 text-xs font-mono text-[var(--text-main)] outline-none focus:border-[var(--accent-gold)]"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)]">
+            <span>{text("إلى", "To")}</span>
+            <input
+              type="date"
+              value={toDate}
+              aria-label={text("تاريخ النهاية", "To date")}
+              onChange={(e) => {
+                setToDate(e.target.value);
+                setPage(1);
+              }}
+              dir="ltr"
+              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-input)] px-2.5 py-1 text-xs font-mono text-[var(--text-main)] outline-none focus:border-[var(--accent-gold)]"
+            />
+          </label>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-2.5 py-1 text-xs font-bold text-[var(--text-muted)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{text("مسح التصفية", "Clear")}</span>
+            </button>
+          )}
+        </div>
+      </FilterBar>
+
+      {invertedDates && (
+        <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+          {text(
+            "تاريخ البداية بعد تاريخ النهاية — لن تُطبَّق تصفية التاريخ حتى تصحيح النطاق.",
+            "From date is after To date — date range filter is paused until corrected.",
+          )}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="inline-flex min-h-11 sm:min-h-9 items-center gap-2.5 text-xs sm:text-[0.8125rem] font-bold cursor-pointer">
@@ -466,9 +534,10 @@ export default function InvoicesPage() {
           </span>
         </label>
         <p className="text-xs text-[var(--text-muted)]">
-          {isRTL
-            ? "البحث والتصفية والإجماليات تخص الصفحة الحالية."
-            : "Search, filters and sales totals apply to the current page."}
+          {text(
+            "البحث والتصفية يشملان جميع السجلات المحفوظة، بينما تعكس الإجماليات مستندات الصفحة المعروضة.",
+            "Search and filters query all saved records; KPI totals reflect the displayed page.",
+          )}
         </p>
       </div>
       {isArchived && (
@@ -507,19 +576,19 @@ export default function InvoicesPage() {
             </div>
             <h3 className="text-sm font-semibold text-[var(--text-main)]">
               {ui(
-                items.length === 0
+                items.length === 0 && !hasActiveFilters && !isArchived
                   ? "لا توجد فواتير حتى الآن."
                   : "لا توجد فواتير مطابقة للبحث",
               )}
             </h3>
             <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
               {ui(
-                items.length === 0
+                items.length === 0 && !hasActiveFilters && !isArchived
                   ? "ابدأ بإنشاء فاتورة جديدة أو فاتورة مبدئية وسيتم حفظها مع رمز الفاتورة الضريبية ZATCA QR ونسخة PDF للعميل."
                   : "جرب تعديل كلمات البحث أو تغيير تصفية نوع الفاتورة.",
               )}
             </p>
-            {items.length === 0 ? (
+            {items.length === 0 && !hasActiveFilters && !isArchived ? (
               canCreateInvoices ? (
                 <Link
                   href="/admin/invoices/new"
@@ -532,13 +601,10 @@ export default function InvoicesPage() {
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  setSearch("");
-                  setTypeFilter("ALL");
-                }}
+                onClick={clearAllFilters}
                 className="min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--accent-gold)] hover:border-[var(--accent-gold)] transition cursor-pointer"
               >
-                {ui(t("common.cancel"))}
+                {text("مسح التصفية", "Clear filters")}
               </button>
             )}
           </div>
@@ -600,9 +666,9 @@ export default function InvoicesPage() {
                             <button
                               type="button"
                               onClick={() =>
-                                handleCopyNumber(row.invoiceNumber)
+                                void handleCopyNumber(row.invoiceNumber)
                               }
-                              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
+                              className="inline-flex items-center justify-center min-h-11 min-w-11 sm:min-h-7 sm:min-w-7 p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)] transition cursor-pointer"
                               aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                               title={ui("نسخ رقم الفاتورة")}
                             >
@@ -804,7 +870,7 @@ export default function InvoicesPage() {
                         </Link>
                         <button
                           type="button"
-                          onClick={() => handleCopyNumber(row.invoiceNumber)}
+                          onClick={() => void handleCopyNumber(row.invoiceNumber)}
                           className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer"
                           aria-label={`${ui("نسخ رقم الفاتورة")} ${row.invoiceNumber}`}
                         >

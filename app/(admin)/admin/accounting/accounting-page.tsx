@@ -10,12 +10,27 @@ import { BookOpen, Calculator, Landmark } from "lucide-react";
 import AccountingPeriodSelector from "@/app/_components/AccountingPeriodSelector";
 import { Badge, Card, PageHeader } from "@/app/_components/ui";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
-import { accountingRequest, amountLabel, downloadAccounting, periodBody, periodQuery, type FinancialReport, type ReportPeriod } from "@/lib/accounting";
+import {
+  accountingRequest,
+  amountLabel,
+  downloadAccounting,
+  filterCashBankAccounts,
+  filterSaleRevenueAccounts,
+  periodBody,
+  periodQuery,
+  reportPeriodSlug,
+  type Account,
+  type FinancialReport,
+  type ReportPeriod,
+} from "@/lib/accounting";
 import { formatSignedMinor, signedMoneyMinor } from "@/lib/dashboard-analytics";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 import JournalPanel from "./journal-panel";
 import PaymentPanel from "./payment-panel";
+import LedgerPanel from "./ledger-panel";
 import { useLanguage } from "@/lib/languageContext";
 
 interface ClosedPeriod {
@@ -30,9 +45,13 @@ const INPUT = "theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base 
 
 function LegacyReview({
   report,
+  accounts,
+  canWrite,
   onChanged,
 }: {
   report: FinancialReport;
+  accounts?: readonly Account[];
+  canWrite: boolean;
   onChanged: () => void;
 }) {
   const ui = useUiText();
@@ -43,10 +62,14 @@ function LegacyReview({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const revenueOptions = filterSaleRevenueAccounts(accounts);
+  const cashSettlementOptions = filterCashBankAccounts(accounts);
+
   async function post(e: FormEvent) {
     e.preventDefault();
-    if (!id) return;
+    if (!id || !canWrite) return;
     setSaving(true);
+    setError("");
     const r = await accountingRequest(`/sales/${id}/post`, "POST", {
       revenueAccountCode: revenue,
       settlementAccountCode: settlement,
@@ -67,50 +90,78 @@ function LegacyReview({
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
         {ui("الفواتير القديمة تظهر في VAT كما سُجلت، وتحتاج اعتماد حساب التسوية لإدراجها في دفتر الأستاذ، بما يشمل المستندات الأقدم التي تؤثر في الرصيد الافتتاحي. راجع التحصيل الفعلي قبل الترحيل.")}</p>
-      <form onSubmit={post} className="mt-4 flex flex-wrap items-end gap-3">
+      {canWrite ? (
+        <form onSubmit={post} className="mt-4 flex flex-wrap items-end gap-3">
           <label className="flex-1 text-xs font-bold">
-          {ui("الفاتورة")}<select
-            required
-            className={`${INPUT} mt-2 w-full`}
-            value={id}
-            onChange={(e) => setId(e.target.value)}
+            {ui("الفاتورة")}<select
+              required
+              className={`${INPUT} mt-2 w-full`}
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+            >
+              <option value="">{ui("اختر فاتورة للمراجعة")}</option>
+              {report.unpostedInvoices.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.number} · {v.customerName} · {v.invoiceDate.slice(0, 10)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-bold">
+            {ui("الإيراد")}<select
+              className={`${INPUT} mt-2 block`}
+              value={revenue}
+              onChange={(e) => setRevenue(e.target.value)}
+            >
+              {revenueOptions.length > 0 ? (
+                revenueOptions.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.code} · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="4101">{ui("4101 · النقل")}</option>
+                  <option value="4102">{ui("4102 · كبار الشخصيات والعمرة")}</option>
+                </>
+              )}
+            </select>
+          </label>
+          <label className="text-xs font-bold">
+            {ui("تسوية المستند")}<select
+              className={`${INPUT} mt-2 block`}
+              value={settlement}
+              onChange={(e) => setSettlement(e.target.value)}
+            >
+              <option value="1103">{ui("1103 · ذمم العملاء")}</option>
+              {cashSettlementOptions.length > 0 ? (
+                cashSettlementOptions.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.code} · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="1101">{ui("1101 · نقد مستلم / مسترد")}</option>
+                  <option value="1102">{ui("1102 · بنك مستلم / مسترد")}</option>
+                </>
+              )}
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={saving}
+            className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-40 cursor-pointer"
           >
-            <option value="">{ui("اختر فاتورة للمراجعة")}</option>
-            {report.unpostedInvoices.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.number} · {v.customerName} · {v.invoiceDate.slice(0, 10)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs font-bold">
-          {ui("الإيراد")}<select
-            className={`${INPUT} mt-2 block`}
-            value={revenue}
-            onChange={(e) => setRevenue(e.target.value)}
-          >
-            <option value="4101">{ui("4101 · النقل")}</option>
-            <option value="4102">{ui("4102 · كبار الشخصيات والعمرة")}</option>
-          </select>
-        </label>
-        <label className="text-xs font-bold">
-          {ui("تسوية المستند")}<select
-            className={`${INPUT} mt-2 block`}
-            value={settlement}
-            onChange={(e) => setSettlement(e.target.value)}
-          >
-            <option value="1103">{ui("1103 · ذمم العملاء")}</option>
-            <option value="1101">{ui("1101 · نقد مستلم / مسترد")}</option>
-            <option value="1102">{ui("1102 · بنك مستلم / مسترد")}</option>
-          </select>
-        </label>
-        <button
-          type="submit"
-          disabled={saving}
-          className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-40 cursor-pointer"
-        >
-          {ui("اعتماد ترحيل الفاتورة")}</button>
-      </form>
+            {ui("اعتماد ترحيل الفاتورة")}</button>
+        </form>
+      ) : (
+        <p className="mt-3 text-xs font-semibold text-[var(--text-muted)]">
+          {ui.language === "en"
+            ? "Read-only access: posting unposted invoices requires accounting write permission."
+            : "صلاحية عرض فقط: يتطلب ترحيل الفواتير غير المرحلة صلاحية التعديل المحاسبي."}
+        </p>
+      )}
       {error && (
         <p role="alert" className="mt-3 text-sm font-bold text-rose-700 dark:text-rose-300">
           {ui(error)}
@@ -124,11 +175,13 @@ function PeriodArchive({
   period,
   report,
   reload,
+  canApprove,
   onChanged,
 }: {
   period: ReportPeriod;
   report: FinancialReport;
   reload: number;
+  canApprove: boolean;
   onChanged: () => void;
 }) {
   const ui = useUiText();
@@ -169,46 +222,54 @@ function PeriodArchive({
         <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)]">
           {ui("تُحفظ نسخة ثابتة ومؤرشفة من الإقرار الضريبي وميزان المراجعة وقائمة الأرباح. بعد الإقفال تُمنع القيود والتعديلات وحذف الفواتير حتى تاريخ نهاية الفترة لضمان مطابقة الدفاتر مع إقرارات هيئة الزكاة؛ تُسجل أي تسويات لاحقة في فترة جديدة مفتوحة.")}</p>
       </div>
-      <form onSubmit={close} className="mt-5 space-y-4">
-        <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border text-xs font-bold text-[var(--text-main)]">
-          {ui("نطاق الفترة المطلوب إقفالها:")}{" "}
-          <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
-            {report.range.start}
-          </bdi>{" "}
-          {ui("إلى")}{" "}
-          <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
-            {report.range.endInclusive}
-          </bdi>
-        </div>
-        <label className="block text-xs font-bold text-[var(--text-main)]">
-          {ui("مرجع المراجعة وسبب الإقفال *")}<input
-            required
-            minLength={5}
-            maxLength={300}
-            className={`${INPUT} mt-2 w-full`}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder={ui("مثال: تمت مطابقة السجل والمستندات وتقديم الإقرار الضريبي")}
-          />
-        </label>
-        <label className="flex min-h-11 items-start gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer">
-          <Checkbox
-            required
-            checked={confirmed}
-            onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-0.5"
-          />
-          <span>
-            {ui("أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه الفترة وحفظها ومنع تعديلها لاحقاً.")}</span>
-        </label>
-        <button
-          type="submit"
-          disabled={saving || !confirmed || report.unpostedInvoices.length > 0}
-          className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-semibold disabled:opacity-40 cursor-pointer shadow-sm"
-        >
-          {ui(saving ? "جارٍ إقفال الفترة…" : "تأكيد إقفال الفترة وحفظ الأرشيف")}
-        </button>
-      </form>
+      {canApprove ? (
+        <form onSubmit={close} className="mt-5 space-y-4">
+          <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border text-xs font-bold text-[var(--text-main)]">
+            {ui("نطاق الفترة المطلوب إقفالها:")}{" "}
+            <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
+              {report.range.start}
+            </bdi>{" "}
+            {ui("إلى")}{" "}
+            <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
+              {report.range.endInclusive}
+            </bdi>
+          </div>
+          <label className="block text-xs font-bold text-[var(--text-main)]">
+            {ui("مرجع المراجعة وسبب الإقفال *")}<input
+              required
+              minLength={5}
+              maxLength={300}
+              className={`${INPUT} mt-2 w-full`}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={ui("مثال: تمت مطابقة السجل والمستندات وتقديم الإقرار الضريبي")}
+            />
+          </label>
+          <label className="flex min-h-11 items-start gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer">
+            <Checkbox
+              required
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              {ui("أؤكد مراجعة الفواتير والمصروفات والأرصدة، وأوافق على إقفال هذه الفترة وحفظها ومنع تعديلها لاحقاً.")}</span>
+          </label>
+          <button
+            type="submit"
+            disabled={saving || !confirmed || report.unpostedInvoices.length > 0}
+            className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-semibold disabled:opacity-40 cursor-pointer shadow-sm"
+          >
+            {ui(saving ? "جارٍ إقفال الفترة…" : "تأكيد إقفال الفترة وحفظ الأرشيف")}
+          </button>
+        </form>
+      ) : (
+        <p className="mt-4 rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-xs font-semibold text-[var(--text-muted)]">
+          {ui.language === "en"
+            ? "Period closing requires accounting approval permission. Archived snapshots remain downloadable below."
+            : "يتطلب إقفال الفترات المحاسبية صلاحية الاعتماد المحاسبي. يمكنك استعراض وتنزيل الأرشيف المحفوظ أدناه."}
+        </p>
+      )}
       {(error || closed.error) && (
         <p role="alert" className="mt-4 text-sm font-bold text-rose-700 dark:text-rose-300">
           {ui(error || closed.error)}
@@ -250,17 +311,25 @@ function PeriodArchive({
   );
 }
 
+const ACCOUNTING_VIEWS = ["REPORTS", "PERIODS", "JOURNALS", "PAYMENTS", "LEDGER"] as const;
+
 export default function AccountingPage() {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "accounting", "write");
+  const canApprove = hasClientPermission(user, "accounting", "approve");
 
   const { t, dir, isRTL } = useLanguage();
   const [period, setPeriod] = useReportPeriod();
-  const [tab, setTab] = useUrlState<string>("view", "REPORTS", ["REPORTS","PERIODS","JOURNALS","PAYMENTS"]);
+  const [tab, setTab] = useUrlState<string>("view", "REPORTS", ACCOUNTING_VIEWS);
+  const [, setAccountCode] = useUrlState<string>("accountCode", "");
+  const [, setJournalSearch] = useUrlState<string>("journalSearch", "");
   const [reload, setReload] = useState(0);
   const [error, setError] = useState("");
   const [seedMessage, setSeedMessage] = useState("");
   const [exporting, setExporting] = useState(false);
 
+  const accountsQuery = useAccountingQuery<{ items: Account[] }>("/accounts", reload);
   const {
     data,
     isLoading,
@@ -271,13 +340,23 @@ export default function AccountingPage() {
   );
   const changed = () => setReload((v) => v + 1);
 
+  function openAccountLedger(code: string) {
+    setAccountCode(code);
+    setTab("LEDGER");
+  }
+
+  function openJournalNumber(journalNumber: number) {
+    setJournalSearch(String(journalNumber));
+    setTab("JOURNALS");
+  }
+
   async function download(format: "pdf" | "csv") {
     setExporting(true);
     setError("");
     try {
       await downloadAccounting(
         `/exports/${format}?${periodQuery(period)}`,
-        `miqat-accounting-${period.year}.${format}`,
+        `miqat-accounting-${reportPeriodSlug(period)}.${format}`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "تعذر التصدير");
@@ -411,10 +490,11 @@ export default function AccountingPage() {
       >
         {(
           [
-            ["REPORTS", "الأرباح والمصروفات"],
-            ["JOURNALS", "دفتر اليومية"],
-            ["PAYMENTS", "القبض والدفع"],
-            ["PERIODS", "إقفال الفترة"],
+            ["REPORTS", ui("الأرباح والمصروفات")],
+            ["JOURNALS", ui("دفتر اليومية")],
+            ["LEDGER", ui.language === "en" ? "Account ledger" : "دفتر الحساب"],
+            ["PAYMENTS", ui("القبض والدفع")],
+            ["PERIODS", ui("إقفال الفترة")],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -428,7 +508,7 @@ export default function AccountingPage() {
                 : "theme-card border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
             }`}
           >
-            {ui(label)}
+            {label}
           </button>
         ))}
       </nav>
@@ -468,7 +548,15 @@ export default function AccountingPage() {
       )}
 
       {tab === "JOURNALS" && (
-        <JournalPanel reload={reload} onChanged={changed} />
+        <JournalPanel reload={reload} onChanged={changed} onOpenLedger={openAccountLedger} />
+      )}
+      {tab === "LEDGER" && (
+        <LedgerPanel
+          reload={reload}
+          rangeStart={data?.range.start}
+          rangeEnd={data?.range.endInclusive}
+          onOpenJournal={openJournalNumber}
+        />
       )}
       {tab === "PAYMENTS" && (
         <PaymentPanel reload={reload} onChanged={changed} />
@@ -486,13 +574,19 @@ export default function AccountingPage() {
           period={period}
           report={data}
           reload={reload}
+          canApprove={canApprove}
           onChanged={changed}
         />
       )}
 
       {data && tab === "REPORTS" && (
         <>
-          <LegacyReview report={data} onChanged={changed} />
+          <LegacyReview
+            report={data}
+            accounts={accountsQuery.data?.items}
+            canWrite={canWrite}
+            onChanged={changed}
+          />
 
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             {(
@@ -557,10 +651,14 @@ export default function AccountingPage() {
                       key={a.code}
                       className="flex justify-between gap-4 border-t theme-border px-5 py-3 text-sm"
                     >
-                      <p>
-                        <bdi className="font-mono text-[var(--text-muted)]">{a.code}</bdi> ·{" "}
+                      <button
+                        type="button"
+                        onClick={() => openAccountLedger(a.code)}
+                        className="text-start hover:text-[var(--accent-gold)] cursor-pointer transition-colors"
+                      >
+                        <bdi className="font-mono font-bold text-[var(--accent-gold)]">{a.code}</bdi> ·{" "}
                         {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
-                      </p>
+                      </button>
                       <bdi dir="ltr" className="font-mono font-bold">
                         {amountLabel(formatSignedMinor(netMinor))}
                       </bdi>
@@ -578,9 +676,13 @@ export default function AccountingPage() {
                 <MobileRecordCard
                   key={a.code}
                   title={
-                    <span className="font-mono font-bold text-[var(--accent-gold)]">
+                    <button
+                      type="button"
+                      onClick={() => openAccountLedger(a.code)}
+                      className="font-mono font-bold text-[var(--accent-gold)] hover:underline cursor-pointer"
+                    >
                       <bdi>{a.code}</bdi>
-                    </span>
+                    </button>
                   }
                   subtitle={ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
                 >
@@ -672,10 +774,16 @@ export default function AccountingPage() {
                   {data.trial.map((a) => (
                     <tr key={a.code} className="border-t theme-border hover:bg-[var(--table-row-hover)] transition-colors">
                       <td className="px-4 py-3">
-                        <bdi className="font-mono font-bold text-[var(--accent-gold)]">
-                          {a.code}
-                        </bdi>{" "}
-                        · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                        <button
+                          type="button"
+                          onClick={() => openAccountLedger(a.code)}
+                          className="text-start hover:underline cursor-pointer"
+                        >
+                          <bdi className="font-mono font-bold text-[var(--accent-gold)]">
+                            {a.code}
+                          </bdi>{" "}
+                          · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                        </button>
                       </td>
                       {[
                         a.openingDebit,

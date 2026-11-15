@@ -1,14 +1,26 @@
 "use client";
 import Modal from "@/app/_components/Modal";
-import { moneyMinor, moneyDecimal } from "@/lib/money";
+import { moneyMinor, moneyDecimal, signedMoneyMinor } from "@/lib/money";
 import { useUiText } from "@/lib/ui-text";
 
-
-import React, { useEffect, useState, useRef } from "react";
-import { X, CreditCard, Building2, Calendar, CheckCircle2, AlertCircle, Loader2, Receipt, ArrowDownLeft } from "lucide-react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import Link from "next/link";
+import { X, CreditCard, Building2, Calendar, CheckCircle2, AlertCircle, Loader2, Receipt, ArrowDownLeft, RefreshCw } from "lucide-react";
 import { accountingRequest, currentSaudiPeriod } from "@/lib/accounting";
-import { signedMoneyMinor } from "@/lib/dashboard-analytics";
 import { useLanguage } from "@/lib/languageContext";
+
+interface DepositAccountOption {
+  code: string;
+  nameAr: string;
+  nameEn: string;
+}
+
+const DEFAULT_DEPOSIT_ACCOUNTS: DepositAccountOption[] = [
+  { code: "1102", nameAr: "البنك الأهلي", nameEn: "SNB Bank" },
+  { code: "1101", nameAr: "الصندوق الرئيسي", nameEn: "Main Petty Cash" },
+];
+
+const RECEIVABLE_CODES = new Set(["1103", "1104", "1105"]);
 
 interface RecordPaymentModalProps {
   invoiceId: string;
@@ -37,7 +49,9 @@ function RecordPaymentModalContent({
 
   const { t, isRTL } = useLanguage();
   const [balance, setBalance] = useState<string | null>(null);
-  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [balanceError, setBalanceError] = useState("");
+  const [isLoadingBalance, setIsLoadingBalance] = useState(Boolean(invoiceId));
+  const [depositAccounts, setDepositAccounts] = useState<DepositAccountOption[]>(DEFAULT_DEPOSIT_ACCOUNTS);
   const [amount, setAmount] = useState(totalAmount);
   const [date, setDate] = useState(currentSaudiPeriod().day);
   const [cashAccount, setCashAccount] = useState("1102"); // Default to SNB Bank (1102)
@@ -53,21 +67,68 @@ function RecordPaymentModalContent({
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   }, []);
 
-  // Fetch current remaining balance when dialog mounts for this invoice
+  const loadBalance = useCallback(async () => {
+    if (!invoiceId) return;
+    setIsLoadingBalance(true);
+    setBalanceError("");
+    const res = await accountingRequest<{ balance: string; direction: string }>(
+      `/document-balance/SALE/${invoiceId}`,
+    );
+    setIsLoadingBalance(false);
+    if (res.data) {
+      setBalance(res.data.balance);
+      setAmount(res.data.balance);
+    } else {
+      setBalance(null);
+      setBalanceError(res.error || "");
+    }
+  }, [invoiceId]);
+
+  // Fetch current remaining balance + optional active cash/bank accounts when dialog mounts
   useEffect(() => {
     if (!invoiceId) return;
-
     let active = true;
     key.current = crypto.randomUUID();
 
-    void accountingRequest<{ balance: string; direction: string }>(
-      `/document-balance/SALE/${invoiceId}`
-    ).then((res) => {
+    void Promise.all([
+      accountingRequest<{ balance: string; direction: string }>(
+        `/document-balance/SALE/${invoiceId}`,
+      ),
+      accountingRequest<{
+        items?: Array<{ code: string; nameAr: string; nameEn?: string; isActive?: boolean; isPosting?: boolean }>;
+      }>("/accounts?type=ASSET&isActive=true&isPosting=true"),
+    ]).then(([balanceRes, accountsRes]) => {
       if (!active) return;
       setIsLoadingBalance(false);
-      if (res.data) {
-        setBalance(res.data.balance);
-        setAmount(res.data.balance); // Pre-fill with remaining amount
+      if (balanceRes.data) {
+        setBalance(balanceRes.data.balance);
+        setAmount(balanceRes.data.balance);
+      } else {
+        setBalance(null);
+        setBalanceError(balanceRes.error || "");
+      }
+
+      const fetched = (accountsRes.data?.items || []).filter(
+        (acc) =>
+          acc.code.startsWith("11") &&
+          !RECEIVABLE_CODES.has(acc.code) &&
+          acc.isActive !== false &&
+          acc.isPosting !== false,
+      );
+      if (fetched.length > 0) {
+        const merged = [...DEFAULT_DEPOSIT_ACCOUNTS];
+        const existingCodes = new Set(merged.map((item) => item.code));
+        for (const item of fetched) {
+          if (!existingCodes.has(item.code)) {
+            merged.push({
+              code: item.code,
+              nameAr: item.nameAr,
+              nameEn: item.nameEn || item.nameAr,
+            });
+            existingCodes.add(item.code);
+          }
+        }
+        setDepositAccounts(merged);
       }
     });
 
@@ -229,14 +290,33 @@ function RecordPaymentModalContent({
             </div>
           )}
 
-          {isRefundDue ? (
-            <p role="status" className="rounded-2xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--text-main)] p-5 text-sm">
-              {isRTL ? "يوجد مبلغ مستحق للعميل. سجّل رد المبلغ من صفحة القيود والتقارير المالية." : "A refund is due to the customer. Record the refund from Accounting & Reports."}
-            </p>
+          {isRefundDue && remainingMinor !== null ? (
+            <div role="status" className="rounded-2xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--text-main)] p-5 text-sm space-y-3">
+              <p>
+                {isRTL
+                  ? `يوجد مبلغ مستحق للعميل قدره ${moneyDecimal(-remainingMinor)} ر.س. سجّل رد المبلغ من صفحة المحاسبة.`
+                  : `A refund of ${moneyDecimal(-remainingMinor)} SAR is due to the customer. Record the refund from Accounting & Reports.`}
+              </p>
+              <Link
+                href="/admin/accounting"
+                onClick={onClose}
+                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg gold-gradient-btn text-xs font-bold shadow-xs"
+              >
+                <span>{isRTL ? "الانتقال إلى القيود والمحاسبة" : "Go to Accounting"}</span>
+              </Link>
+            </div>
           ) : !isLoadingBalance && balance === null ? (
-            <p role="alert" className="rounded-2xl border border-rose-500/40 p-5 text-sm text-rose-700 dark:text-rose-400">
-              {isRTL ? "تعذر تحميل الرصيد. أغلق النافذة وأعد المحاولة قبل تسجيل دفعة." : "Unable to load the balance. Close this window and retry before recording a payment."}
-            </p>
+            <div role="alert" className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-5 text-sm text-rose-700 dark:text-rose-400 space-y-3">
+              <p>{balanceError || (isRTL ? "تعذر تحميل الرصيد. أعد المحاولة قبل تسجيل دفعة." : "Unable to load the balance. Retry before recording a payment.")}</p>
+              <button
+                type="button"
+                onClick={() => void loadBalance()}
+                className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-500/40 bg-[var(--bg-card)] px-3.5 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 hover:border-rose-500 transition cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{isRTL ? "إعادة المحاولة" : "Retry"}</span>
+              </button>
+            </div>
           ) : isFullyPaid && !isLoadingBalance ? (
             <div className="p-6 text-center space-y-2 rounded-2xl bg-emerald-500/12 border border-emerald-600/35 dark:bg-emerald-950/45 dark:border-emerald-500/35">
               <CheckCircle2 className="w-8 h-8 text-emerald-700 dark:text-emerald-300 mx-auto" aria-hidden="true" />
@@ -303,43 +383,33 @@ function RecordPaymentModalContent({
                   {isRTL ? "طريقة استلام المبلغ (حساب الإيداع) *" : "Payment Method (Deposit Account) *"}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    aria-pressed={cashAccount === "1102"}
-                    onClick={() => setCashAccount("1102")}
-                    className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
-                      cashAccount === "1102"
-                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
-                        : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
-                    <div>
-                      <strong className="text-xs font-semibold block text-[var(--text-main)]">
-                        {isRTL ? "تحويل بنكي" : "Bank Transfer"}
-                      </strong>
-                      <span className="text-xs text-[var(--text-muted)]">{isRTL ? "البنك الأهلي (1102)" : "SNB Bank (1102)"}</span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    aria-pressed={cashAccount === "1101"}
-                    onClick={() => setCashAccount("1101")}
-                    className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
-                      cashAccount === "1101"
-                        ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
-                        : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
-                    }`}
-                  >
-                    <Receipt className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
-                    <div>
-                      <strong className="text-xs font-semibold block text-[var(--text-main)]">
-                        {isRTL ? "نقداً في الصندوق" : "Cash in Drawer"}
-                      </strong>
-                      <span className="text-xs text-[var(--text-muted)]">{isRTL ? "الصندوق الرئيسي (1101)" : "Main Petty Cash (1101)"}</span>
-                    </div>
-                  </button>
+                  {depositAccounts.map((acc) => {
+                    const isCash = acc.code === "1101";
+                    const Icon = isCash ? Receipt : Building2;
+                    return (
+                      <button
+                        key={acc.code}
+                        type="button"
+                        aria-pressed={cashAccount === acc.code}
+                        onClick={() => setCashAccount(acc.code)}
+                        className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
+                          cashAccount === acc.code
+                            ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
+                            : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/60"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                        <div className="min-w-0">
+                          <strong className="text-xs font-semibold block text-[var(--text-main)] truncate">
+                            {isRTL ? acc.nameAr : acc.nameEn}
+                          </strong>
+                          <span className="text-xs text-[var(--text-muted)] font-mono" dir="ltr">
+                            ({acc.code})
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

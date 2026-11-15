@@ -1,12 +1,13 @@
 "use client";
 import { useUrlState } from "@/lib/use-url-state";
 import { useUiText } from "@/lib/ui-text";
-
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Calculator, History, Pencil, Plus, RefreshCw, Search, ShoppingBag, RotateCcw, ShieldAlert, Truck } from "lucide-react";
-import { amountLabel, currentSaudiPeriod, EXPENSE_CATEGORIES, type PurchaseList, type PurchaseRow } from "@/lib/accounting";
+import { amountLabel, currentSaudiPeriod, EXPENSE_CATEGORIES, filterCashBankAccounts, type Account, type PurchaseList, type PurchaseRow } from "@/lib/accounting";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge, Button, PageHeader, StatCard, StatRow, Money } from "@/app/_components/ui";
@@ -29,12 +30,25 @@ function signedPurchaseAmount(raw: string, isReturn: boolean): string {
 
 export default function PurchasesPage() {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "purchases", "write");
 
   const { t, dir, isRTL } = useLanguage();
   const current = currentSaudiPeriod();
   const [year, setYear] = useUrlState<number>("year", current.year);
   const [quarter, setQuarter] = useUrlState<number>("quarter", current.quarter, [1,2,3,4]);
   const [category, setCategory] = useUrlState<string>("category", "");
+  const [documentType, setDocumentType] = useUrlState<string>("docType", "", [
+    "",
+    "PURCHASE_INVOICE",
+    "PURCHASE_RETURN",
+  ]);
+  const [postingStatus, setPostingStatus] = useUrlState<string>("status", "", [
+    "",
+    "POSTED",
+    "DRAFT",
+  ]);
+  const [paymentAccountCode, setPaymentAccountCode] = useUrlState<string>("payAcc", "");
   const [submittedSearch, setSubmittedSearch] = useUrlState<string>("q", "");
   const [searchDraft, setSearch] = useState<string | null>(null);
   const search = searchDraft ?? submittedSearch;
@@ -54,12 +68,22 @@ export default function PurchasesPage() {
     search: submittedSearch,
     includeVoided: String(includeVoided),
     ...(category ? { category } : {}),
+    ...(documentType ? { documentType } : {}),
+    ...(postingStatus ? { postingStatus } : {}),
+    ...(paymentAccountCode ? { paymentAccountCode } : {}),
   });
 
   const { data, error, isLoading } = useAccountingQuery<PurchaseList>(
     `/purchases?${query}`,
     reload,
   );
+  const accountsQuery = useAccountingQuery<{ items: Account[] }>("/accounts", reload);
+  const paymentAccounts = useMemo(() => {
+    const items = accountsQuery.data?.items || [];
+    const cashBank = filterCashBankAccounts(items);
+    const payable = items.filter((a) => a.isActive && a.isPosting && a.code === "2101");
+    return [...payable, ...cashBank];
+  }, [accountsQuery.data]);
 
   function saved() {
     setEditor(null);
@@ -159,29 +183,33 @@ export default function PurchasesPage() {
               <span>{ui(t("nav.vatReturnsShort"))}</span>
             </Link>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMessage("");
-                setEditor("NEW_RETURN");
-              }}
-              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
-            >
-              <RotateCcw className="size-4" aria-hidden="true" />
-              <span>+ {ui(t("purchases.newReturn"))}</span>
-            </button>
+            {canWrite && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMessage("");
+                    setEditor("NEW_RETURN");
+                  }}
+                  className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 transition shadow-2xs cursor-pointer"
+                >
+                  <RotateCcw className="size-4" aria-hidden="true" />
+                  <span>+ {ui(t("purchases.newReturn"))}</span>
+                </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMessage("");
-                setEditor("NEW");
-              }}
-              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold shadow-sm hover:shadow-md transition cursor-pointer"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              <span>{ui(t("purchases.newPurchase"))}</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMessage("");
+                    setEditor("NEW");
+                  }}
+                  className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold shadow-sm hover:shadow-md transition cursor-pointer"
+                >
+                  <Plus className="size-4" aria-hidden="true" />
+                  <span>{ui(t("purchases.newPurchase"))}</span>
+                </button>
+              </>
+            )}
           </>
         }
       />
@@ -240,6 +268,64 @@ export default function PurchasesPage() {
               {Object.entries(EXPENSE_CATEGORIES).map(([catKey, label]) => (
                 <option key={catKey} value={catKey}>
                   {ui(label)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-xs font-bold text-[var(--text-main)]">
+            {isRTL ? "نوع المستند" : "Document Type"}
+            <select
+              className={`${CONTROL} ms-2`}
+              value={documentType}
+              onChange={(e) => {
+                setDocumentType(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">{isRTL ? "الكل" : "All"}</option>
+              <option value="PURCHASE_INVOICE">{isRTL ? "فاتورة مشتريات" : "Purchase Invoice"}</option>
+              <option value="PURCHASE_RETURN">{isRTL ? "مرتجع مشتريات" : "Purchase Return"}</option>
+            </select>
+          </label>
+
+          <label className="text-xs font-bold text-[var(--text-main)]">
+            {isRTL ? "حالة الترحيل" : "Posting Status"}
+            <select
+              className={`${CONTROL} ms-2`}
+              value={postingStatus}
+              onChange={(e) => {
+                setPostingStatus(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">{isRTL ? "الكل" : "All"}</option>
+              <option value="POSTED">{isRTL ? "مرحّل" : "Posted"}</option>
+              <option value="DRAFT">{isRTL ? "مسودة" : "Draft"}</option>
+            </select>
+          </label>
+
+          <label className="text-xs font-bold text-[var(--text-main)]">
+            {isRTL ? "حساب السداد" : "Payment Account"}
+            <select
+              className={`${CONTROL} ms-2`}
+              value={paymentAccountCode}
+              onChange={(e) => {
+                setPaymentAccountCode(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">{isRTL ? "الكل" : "All"}</option>
+              {(paymentAccounts.length > 0
+                ? paymentAccounts
+                : [
+                    { code: "2101", nameAr: "ذمم الموردين", nameEn: "Accounts Payable" },
+                    { code: "1102", nameAr: "البنك", nameEn: "Bank" },
+                    { code: "1101", nameAr: "الصندوق", nameEn: "Cash" },
+                  ]
+              ).map((acc) => (
+                <option key={acc.code} value={acc.code}>
+                  {acc.code} · {ui.language === "en" && acc.nameEn ? acc.nameEn : ui(acc.nameAr)}
                 </option>
               ))}
             </select>
@@ -485,7 +571,7 @@ export default function PurchasesPage() {
 
                     <td className={`px-4 py-3.5 whitespace-nowrap ${"text-end"}`}>
                       <div className="inline-flex items-center gap-1.5">
-                        {!row.voidedAt && (
+                        {canWrite && !row.voidedAt && (
                           <button
                             type="button"
                             className="inline-flex min-h-11 lg:min-h-9 items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[var(--text-main)] font-bold transition cursor-pointer"
@@ -550,7 +636,7 @@ export default function PurchasesPage() {
                 }
                 footer={
                   <>
-                    {!row.voidedAt && (
+                    {canWrite && !row.voidedAt && (
                       <Button
                         type="button"
                         variant="outline"
@@ -651,17 +737,19 @@ export default function PurchasesPage() {
               {ui("لا توجد فواتير موردين مسجلة لهذه الفترة")}</h3>
             <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
               {ui("سجّل مصروفات الوقود والصيانة وتكاليف الأسطول لاحتساب ضريبة المدخلات تلقائياً في الإقرار الضريبي.")}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setMessage("");
-                setEditor("NEW");
-              }}
-              className="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs cursor-pointer"
-            >
-              <Plus className="w-4 h-4" aria-hidden="true" />
-              <span>{ui("تسجيل أول مصروف")}</span>
-            </button>
+            {canWrite && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMessage("");
+                  setEditor("NEW");
+                }}
+                className="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl gold-gradient-btn text-xs font-bold shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" aria-hidden="true" />
+                <span>{ui("تسجيل أول مصروف")}</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -693,10 +781,11 @@ export default function PurchasesPage() {
       </div>
 
       {/* Editor Modal */}
-      {editor && (
+      {canWrite && editor && (
         <PurchaseForm
           key={typeof editor === "string" ? editor : editor.id}
           existing={typeof editor === "string" ? undefined : editor}
+          initialDocumentType={editor === "NEW_RETURN" ? "PURCHASE_RETURN" : "PURCHASE_INVOICE"}
           onClose={() => setEditor(null)}
           onSaved={saved}
         />

@@ -1,12 +1,14 @@
 "use client";
 import { useUiText } from "@/lib/ui-text";
-
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, Building2, CheckCircle2, Loader2, MapPin, Plus, Save } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, Loader2, MapPin, Plus, Save, Lock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import InvoiceBankFields, { EMPTY_BANK } from "@/app/_components/InvoiceBankFields";
+import { hasCompleteBankDetails, sanitizeBankForm } from "@/lib/invoice-validation";
 import { invoiceRequest, type InvoiceSettings } from "@/lib/invoices";
 
 const INPUT =
@@ -38,6 +40,10 @@ const EMPTY: CompanyForm = {
 
 export default function InvoiceSettingsPage() {
   const ui = useUiText();
+  const text = (ar: string, en: string) => (ui.language === "en" ? en : ar);
+  const { user: authUser } = useAuth();
+  const canWriteCompanySettings = hasClientPermission(authUser, "companySettings", "write");
+  const canCreateInvoices = hasClientPermission(authUser, "invoices", "write");
 
   const [form, setForm] = useState(EMPTY);
   const [presentation, setPresentation] = useState(DEFAULT_PRESENTATION);
@@ -78,7 +84,7 @@ export default function InvoiceSettingsPage() {
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (hasLoadError) return;
+    if (hasLoadError || !canWriteCompanySettings) return;
     setError("");
     setMessage("");
     const addressFields = [
@@ -90,7 +96,22 @@ export default function InvoiceSettingsPage() {
     ];
     const hasAddress = addressFields.some((v) => v.trim());
     if (hasAddress && !addressFields.every((v) => v.trim())) {
-      setError("أكمل حقول العنوان معًا أو اتركها فارغة.");
+      setError(
+        text(
+          "أكمل جميع حقول العنوان الوطني الخمسة معًا أو اتركها فارغة.",
+          "Complete all 5 National Address fields together or leave all of them empty.",
+        ),
+      );
+      return;
+    }
+    const cleanBank = sanitizeBankForm(bankDetails);
+    if (hasBankDetails && !hasCompleteBankDetails(cleanBank)) {
+      setError(
+        text(
+          "أكمل اسم البنك واسم المستفيد ورقم الحساب أو الآيبان، أو أوقف تفعيل الحساب البنكي.",
+          "Complete bank name, account holder, and account number or IBAN, or disable bank details.",
+        ),
+      );
       return;
     }
     setIsSaving(true);
@@ -114,18 +135,12 @@ export default function InvoiceSettingsPage() {
               },
             }
           : {}),
-        bankDetails: hasBankDetails
-          ? Object.fromEntries(
-              Object.entries(bankDetails)
-                .map(([key, value]) => [key, value.trim()])
-                .filter(([, value]) => value)
-            )
-          : null,
+        bankDetails: hasBankDetails ? cleanBank : null,
       });
       if (result.success) {
         setMessage("تم حفظ بيانات الشركة والحساب البنكي للفواتير الجديدة.");
       } else {
-        setError(result.error || "تعذر الحفظ");
+        setError(result.error || text("تعذر الحفظ", "Could not save settings"));
       }
     } finally {
       setIsSaving(false);
@@ -143,13 +158,15 @@ export default function InvoiceSettingsPage() {
           <span>{ui("العودة للفواتير")}</span>
         </Link>
 
-        <Link
-          href="/admin/invoices/new"
-          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--accent-gold)] transition"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{ui("إنشاء فاتورة")}</span>
-        </Link>
+        {canCreateInvoices && (
+          <Link
+            href="/admin/invoices/new"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--accent-gold)] transition"
+          >
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>{ui("إنشاء فاتورة")}</span>
+          </Link>
+        )}
       </div>
 
       <header className="flex items-center gap-3">
@@ -202,8 +219,22 @@ export default function InvoiceSettingsPage() {
         </div>
       ) : (
         !hasLoadError && (
-          <form onSubmit={save}>
-            <fieldset disabled={isSaving} className="space-y-6">
+          <form onSubmit={save} className="space-y-6">
+            {!canWriteCompanySettings && (
+              <div
+                role="status"
+                className="p-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
+              >
+                <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>
+                  {text(
+                    "وضع عرض فقط: يلزم صلاحية تعديل إعدادات الشركة لحفظ التغييرات.",
+                    "Read-only view: Company Settings write permission is required to save changes.",
+                  )}
+                </span>
+              </div>
+            )}
+            <fieldset disabled={isSaving || !canWriteCompanySettings} className="space-y-6">
               {/* Legal & Tax Identity */}
               <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-4">
                 <div className="flex items-center gap-2 border-b theme-border pb-3">
@@ -278,24 +309,26 @@ export default function InvoiceSettingsPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {(
                     [
-                      { key: "street", label: "الشارع (اختياري)", placeholder: "اسم الشارع أو الطريق" },
-                      { key: "building", label: "رقم المبنى", pattern: "\\d{4}", placeholder: "4 أرقام" },
-                      { key: "district", label: "الحي", placeholder: "اسم الحي" },
-                      { key: "city", label: "المدينة", placeholder: "مثال: مكة المكرمة" },
-                      { key: "postalCode", label: "الرمز البريدي", pattern: "\\d{5}", placeholder: "5 أرقام" },
+                      { key: "street", label: text("الشارع", "Street"), placeholder: "اسم الشارع أو الطريق" },
+                      { key: "building", label: ui("رقم المبنى"), pattern: "\\d{4}", placeholder: "4 أرقام" },
+                      { key: "district", label: ui("الحي"), placeholder: "اسم الحي" },
+                      { key: "city", label: ui("المدينة"), placeholder: "مثال: مكة المكرمة" },
+                      { key: "postalCode", label: ui("الرمز البريدي"), pattern: "\\d{5}", placeholder: "5 أرقام" },
                     ] as const
                   ).map((field) => (
                     <label key={field.key} className="text-xs sm:text-[0.8125rem] font-bold">
-                      {ui(field.label)}
+                      {field.label}
                       <input
                         maxLength={200}
                         pattern={"pattern" in field ? field.pattern : undefined}
+                        dir={"pattern" in field ? "ltr" : undefined}
                         placeholder={ui(field.placeholder)}
                         className={`${INPUT} ${"pattern" in field ? "font-mono" : ""}`}
                         value={form[field.key]}
                         onChange={(event) => {
                           setForm((current) => ({ ...current, [field.key]: event.target.value }));
                           setMessage("");
+                          setError("");
                         }}
                       />
                     </label>
@@ -359,23 +392,25 @@ export default function InvoiceSettingsPage() {
                 }}
               />
 
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="gold-gradient-btn min-h-11 sm:min-h-10 w-full rounded-lg px-5 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{ui("جارٍ الحفظ…")}</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>{ui("حفظ بيانات الشركة والحساب البنكي")}</span>
-                  </>
-                )}
-              </button>
+              {canWriteCompanySettings && (
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="gold-gradient-btn min-h-11 sm:min-h-10 w-full rounded-lg px-5 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{ui("جارٍ الحفظ…")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>{ui("حفظ بيانات الشركة والحساب البنكي")}</span>
+                    </>
+                  )}
+                </button>
+              )}
             </fieldset>
           </form>
         )

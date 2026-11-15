@@ -74,6 +74,7 @@ import {
   validateStage3Fields,
 } from "@/lib/invoice-validation";
 import {
+  creditLimitError,
   INVOICE_TYPE_LABELS,
   invoiceRequest,
   type InvoiceDocumentType,
@@ -82,6 +83,7 @@ import {
   type InvoiceSettings,
   type InvoiceDetail,
   type TaxDocument,
+  type TaxOriginalRow,
 } from "@/lib/invoices";
 import { accountingRequest } from "@/lib/accounting";
 import { moneyDecimal, moneyMinor } from "@/lib/money";
@@ -96,12 +98,6 @@ import {
   fetchWhatsAppStatus,
   type WhatsAppAutoSendResult,
 } from "@/lib/whatsapp";
-
-interface OriginalInvoiceOption {
-  id: string;
-  invoiceNumber: string;
-  customerName: string;
-}
 
 export type FormStage =
   | "DOCUMENT_AND_CUSTOMER"
@@ -207,6 +203,7 @@ export default function InvoiceForm({
   onCreated,
 }: InvoiceFormProps) {
   const ui = useUiText();
+  const text = (ar: string, en: string) => (ui.language === "en" ? en : ar);
   const { user, isLoading: authLoading } = useAuth();
   const canViewWhatsApp = hasClientPermission(user, "whatsapp", "view");
 
@@ -217,6 +214,9 @@ export default function InvoiceForm({
     "DOCUMENT_AND_CUSTOMER",
   );
 
+  const [customerSubtype, setCustomerSubtype] = useState<"BOOKING" | "TAX">(
+    initialDocumentType === "TAX" ? "TAX" : "BOOKING",
+  );
   const [documentType, setDocumentType] =
     useState<InvoiceDocumentType>(initialDocumentType);
   const [taxDocument, setTaxDocument] = useState<TaxDocument>({
@@ -225,12 +225,14 @@ export default function InvoiceForm({
     supplyDate: saudiDateTimeInput().slice(0, 10),
     ...(originalInvoiceId ? { originalInvoiceId } : {}),
   });
+  const manualProfileRef = useRef(false);
 
   const isTaxMode = documentType === "TAX" || taxDocument.kind !== "INVOICE";
+  const isCreditNote = isTaxMode && taxDocument.kind === "CREDIT";
 
   const [original, setOriginal] = useState<InvoiceDetail | null>(null);
   const [origSearch, setOrigSearch] = useState("");
-  const [origOptions, setOrigOptions] = useState<OriginalInvoiceOption[]>([]);
+  const [origOptions, setOrigOptions] = useState<TaxOriginalRow[]>([]);
   const [origSearchError, setOrigSearchError] = useState("");
   const [hasBankDetails, setHasBankDetails] = useState(false);
   const [bankDetails, setBankDetails] = useState(EMPTY_BANK);
@@ -417,23 +419,35 @@ export default function InvoiceForm({
   // Handle Unified Doc Choice
   const handleDocChoice = (choice: UnifiedDocChoice) => {
     setIsReviewed(false);
+    setError("");
     if (choice === "CUSTOMER") {
-      setDocumentType("BOOKING");
+      setDocumentType(customerSubtype);
+      setOriginal(null);
       setTaxDocument((prev) => ({
         ...prev,
         kind: "INVOICE",
         originalInvoiceId: undefined,
+        adjustmentReason: undefined,
+        adjustmentEventDate: undefined,
       }));
     } else if (choice === "PROFORMA") {
       setDocumentType("PROFORMA");
+      setOriginal(null);
       setTaxDocument((prev) => ({
         ...prev,
         kind: "INVOICE",
         originalInvoiceId: undefined,
+        adjustmentReason: undefined,
+        adjustmentEventDate: undefined,
       }));
     } else if (choice === "CREDIT_NOTE") {
       setDocumentType("TAX");
       setTaxDocument((prev) => ({ ...prev, kind: "CREDIT" }));
+      if (paymentStatusChoice === "PARTIALLY_PAID") {
+        setPaymentStatusChoice("NOT_PAID");
+        setSettlementAccountCode("1103");
+        setPartialPaymentAmount("");
+      }
     } else if (choice === "DEBIT_NOTE") {
       setDocumentType("TAX");
       setTaxDocument((prev) => ({ ...prev, kind: "DEBIT" }));
@@ -540,7 +554,7 @@ export default function InvoiceForm({
     if (!isTaxMode || taxDocument.kind === "INVOICE") return;
     let active = true;
     const timer = setTimeout(() => {
-      void invoiceRequest<{ items: OriginalInvoiceOption[] }>(
+      void invoiceRequest<{ items: TaxOriginalRow[] }>(
         `/tax-originals?search=${encodeURIComponent(origSearch)}`,
       ).then((result) => {
         if (!active) return;
@@ -562,6 +576,24 @@ export default function InvoiceForm({
     estimate.isValid && beforeDiscount.isValid
       ? difference(beforeDiscount.net, estimate.net)
       : "—";
+  const sellerMissingTax = Boolean(
+    isTaxMode &&
+      settings?.company &&
+      (!settings.company.vatNumber ||
+        !settings.company.commercialRegistration ||
+        !settings.company.address),
+  );
+  const selectedOrigSummary = origOptions.find(
+    (item) => item.id === original?.id,
+  );
+  const creditCapError =
+    isCreditNote && estimate.isValid
+      ? creditLimitError(
+          estimate.gross,
+          original?.creditBalance || selectedOrigSummary,
+          ui.language === "en",
+        )
+      : "";
   const canSave =
     Boolean(settings?.company) &&
     !isLoading &&
@@ -570,25 +602,28 @@ export default function InvoiceForm({
     !sourceError;
 
   function updateBuyer(change: Partial<BuyerForm>) {
-    setBuyer((current) => {
-      const next = { ...current, ...change };
-      return {
-        name: next.name ?? "",
-        vatNumber: next.vatNumber ?? "",
-        street: next.street ?? "",
-        building: next.building ?? "",
-        district: next.district ?? "",
-        city: next.city ?? "",
-        postalCode: next.postalCode ?? "",
-        commercialRegistration: next.commercialRegistration ?? "",
-      };
+    const nextBuyer = { ...buyer, ...change };
+    setBuyer({
+      name: nextBuyer.name ?? "",
+      vatNumber: nextBuyer.vatNumber ?? "",
+      street: nextBuyer.street ?? "",
+      building: nextBuyer.building ?? "",
+      district: nextBuyer.district ?? "",
+      city: nextBuyer.city ?? "",
+      postalCode: nextBuyer.postalCode ?? "",
+      commercialRegistration: nextBuyer.commercialRegistration ?? "",
     });
-    if (isTaxMode && change.vatNumber !== undefined && !original) {
-      setTaxDocument((current) => ({
-        ...current,
-        profile: change.vatNumber ? "STANDARD" : "SIMPLIFIED",
+    if (isTaxMode && !original && !manualProfileRef.current && (change.vatNumber !== undefined || change.commercialRegistration !== undefined)) {
+      const hasTaxId = Boolean(
+        nextBuyer.vatNumber.trim() || nextBuyer.commercialRegistration.trim(),
+      );
+      setTaxDocument((currDoc) => ({
+        ...currDoc,
+        profile: hasTaxId ? "STANDARD" : "SIMPLIFIED",
       }));
-      if (change.vatNumber) setShowBuyerDetails(true);
+    }
+    if (change.vatNumber || change.commercialRegistration) {
+      setShowBuyerDetails(true);
     }
     setIsReviewed(false);
   }
@@ -768,12 +803,52 @@ export default function InvoiceForm({
     bankDetails,
   });
 
+  const validateTaxDatesError = (): string => {
+    if (!isTaxMode || taxDocument.kind === "INVOICE" || !taxDocument.adjustmentEventDate) {
+      return "";
+    }
+    const eventDate = taxDocument.adjustmentEventDate.trim();
+    const issueDay = invoiceDate.slice(0, 10) || saudiDateTimeInput().slice(0, 10);
+    if (eventDate > issueDay) {
+      return text(
+        "تاريخ واقعة الإشعار لا يمكن أن يتجاوز تاريخ إصدار الإشعار.",
+        "Adjustment event date cannot be later than the note issue date.",
+      );
+    }
+    if (original) {
+      const origIssue = original.invoiceDate.slice(0, 10);
+      const origSupply = original.snapshot.input.taxDocument?.supplyDate || origIssue;
+      const origPoint = origSupply < origIssue ? origSupply : origIssue;
+      if (eventDate < origPoint) {
+        return text(
+          `تاريخ واقعة الإشعار لا يسبق تاريخ الفاتورة أو التوريد الأصلي (${origPoint}).`,
+          `Adjustment event date cannot precede the original tax/supply date (${origPoint}).`,
+        );
+      }
+    }
+    return "";
+  };
+
   const goToNextStage = () => {
     setError("");
     if (currentStage === "DOCUMENT_AND_CUSTOMER") {
+      if (sellerMissingTax) {
+        showError(
+          text(
+            "أكمل الرقم الضريبي والسجل التجاري والعنوان الوطني في إعدادات الشركة لإصدار مستند ضريبي.",
+            "Complete seller VAT, CRN, and National Address in Company Settings before creating a tax document.",
+          ),
+        );
+        return;
+      }
       if (stage1Issue) {
         if (stage1Issue.openBuyerDetails) setShowBuyerDetails(true);
         showError(stage1Issue.error);
+        return;
+      }
+      const taxDateErr = validateTaxDatesError();
+      if (taxDateErr) {
+        showError(taxDateErr);
         return;
       }
       setCurrentStage("TRIP_AND_SERVICE");
@@ -788,6 +863,10 @@ export default function InvoiceForm({
     } else if (currentStage === "PRICE_AND_TAX") {
       if (stage3Error) {
         showError(stage3Error);
+        return;
+      }
+      if (creditCapError) {
+        showError(creditCapError);
         return;
       }
       setCurrentStage("PAYMENT_AND_REVIEW");
@@ -809,10 +888,28 @@ export default function InvoiceForm({
     setError("");
     setHasTransportError(false);
 
+    if (sellerMissingTax) {
+      setCurrentStage("DOCUMENT_AND_CUSTOMER");
+      showError(
+        text(
+          "أكمل الرقم الضريبي والسجل التجاري والعنوان الوطني في إعدادات الشركة لإصدار مستند ضريبي.",
+          "Complete seller VAT, CRN, and National Address in Company Settings before creating a tax document.",
+        ),
+      );
+      return;
+    }
+
     if (stage1Issue) {
       setCurrentStage("DOCUMENT_AND_CUSTOMER");
       if (stage1Issue.openBuyerDetails) setShowBuyerDetails(true);
       showError(stage1Issue.error);
+      return;
+    }
+
+    const taxDateErr = validateTaxDatesError();
+    if (taxDateErr) {
+      setCurrentStage("DOCUMENT_AND_CUSTOMER");
+      showError(taxDateErr);
       return;
     }
 
@@ -826,6 +923,12 @@ export default function InvoiceForm({
     if (stage3Error) {
       setCurrentStage("PRICE_AND_TAX");
       showError(stage3Error);
+      return;
+    }
+
+    if (creditCapError) {
+      setCurrentStage("PRICE_AND_TAX");
+      showError(creditCapError);
       return;
     }
 
@@ -861,6 +964,7 @@ export default function InvoiceForm({
     let partialMinor: bigint | null = null;
     if (
       documentType !== "PROFORMA" &&
+      !isCreditNote &&
       paymentStatusChoice === "PARTIALLY_PAID"
     ) {
       partialMinor = moneyMinor(partialPaymentAmount);
@@ -944,14 +1048,18 @@ export default function InvoiceForm({
         ...(isTaxMode
           ? {
               taxDocument: {
-                ...taxDocument,
+                kind: taxDocument.kind,
+                profile: taxDocument.profile,
+                supplyDate: taxDocument.supplyDate,
                 ...(taxDocument.kind !== "INVOICE"
-                  ? { adjustmentReason: taxDocument.adjustmentReason?.trim() }
-                  : {
-                      originalInvoiceId: undefined,
-                      adjustmentReason: undefined,
-                      adjustmentEventDate: undefined,
-                    }),
+                  ? {
+                      originalInvoiceId: taxDocument.originalInvoiceId,
+                      adjustmentReason: taxDocument.adjustmentReason?.trim(),
+                      ...(taxDocument.adjustmentEventDate?.trim()
+                        ? { adjustmentEventDate: taxDocument.adjustmentEventDate.trim() }
+                        : {}),
+                    }
+                  : {}),
               },
             }
           : {}),
@@ -1030,28 +1138,31 @@ export default function InvoiceForm({
       });
 
       if (result.data) {
+        let payWarn = "";
         // If partial payment was entered during creation, issue the payment voucher immediately!
         if (
           documentType !== "PROFORMA" &&
+          !isCreditNote &&
           paymentStatusChoice === "PARTIALLY_PAID" &&
           partialMinor !== null &&
           partialMinor > BigInt(0)
         ) {
-          try {
-            await accountingRequest("/payments", "POST", {
-              operationKey: crypto.randomUUID(),
-              documentType: "SALE",
-              documentId: result.data.id,
-              amount: moneyDecimal(partialMinor),
-              paymentDate: invoiceDate.slice(0, 10),
-              cashAccount: partialPaymentMethod === "CASH" ? "1101" : "1102",
-              reference: `دفعة أولى مستلمة عند إصدار الفاتورة #${result.data.id.slice(0, 8)}`,
-            });
-          } catch (payErr) {
-            console.error(
-              "Failed to post initial partial payment voucher:",
-              payErr,
-            );
+          const payRes = await accountingRequest("/payments", "POST", {
+            operationKey: crypto.randomUUID(),
+            documentType: "SALE",
+            documentId: result.data.id,
+            amount: moneyDecimal(partialMinor),
+            paymentDate: invoiceDate.slice(0, 10),
+            cashAccount: partialPaymentMethod === "CASH" ? "1101" : "1102",
+            reference: `دفعة أولى مستلمة عند إصدار الفاتورة #${result.data.id.slice(0, 8)}`,
+          });
+          if (!payRes.success) {
+            payWarn =
+              payRes.error ||
+              text(
+                "تعذر تسجيل الدفعة المبدئية تلقائياً؛ يرجى تسجيلها من زر تسجيل الدفعة.",
+                "Could not post initial receipt voucher; please record it via Record Payment.",
+              );
           }
         }
 
@@ -1059,18 +1170,20 @@ export default function InvoiceForm({
           onCreated(result.data.id);
         } else {
           const waAuto = result.data.whatsAppAutoSend;
-          let waQuery = "";
+          const sp = new URLSearchParams();
           if (waAuto?.attempted) {
-            const sp = new URLSearchParams();
             sp.set("waAuto", waAuto.success ? "sent" : "error");
             if (waAuto.phone) sp.set("waPhone", waAuto.phone);
             if (waAuto.error) sp.set("waMsg", waAuto.error);
             if (waAuto.adminPhone && waAuto.adminNotified) {
               sp.set("waAdmin", waAuto.adminPhone);
             }
-            waQuery = `?${sp.toString()}`;
           }
-          router.push(`/admin/invoices/${encodeURIComponent(result.data.id)}${waQuery}`);
+          if (payWarn) sp.set("payWarn", payWarn);
+          const qs = sp.toString();
+          router.push(
+            `/admin/invoices/${encodeURIComponent(result.data.id)}${qs ? `?${qs}` : ""}`,
+          );
         }
       } else {
         showError(result.error || "تعذر حفظ الفاتورة. حاول مرة أخرى.");
@@ -1331,6 +1444,171 @@ export default function InvoiceForm({
                   onChangeType={handleDocChoice}
                 />
 
+                {/* Customer invoice subtype: Tax Invoice (ZATCA QR) vs Internal Booking Invoice */}
+                {taxDocument.kind === "INVOICE" && documentType !== "PROFORMA" && (
+                  <section className="theme-card rounded-2xl p-4 border theme-border flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)] block">
+                        {text("نوع فاتورة العميل", "Customer Invoice Mode")}
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {documentType === "TAX"
+                          ? text(
+                              "فاتورة ضريبية معتمدة مع رمز ZATCA QR وقابلة لإصدار إشعارات دائن ومدين.",
+                              "Tax invoice with official ZATCA QR and Credit/Debit note support.",
+                            )
+                          : text(
+                              "فاتورة حجز داخلية للرحلة دون رمز ضريبي ZATCA.",
+                              "Internal booking invoice without ZATCA QR.",
+                            )}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        aria-pressed={documentType === "TAX"}
+                        onClick={() => {
+                          setCustomerSubtype("TAX");
+                          setDocumentType("TAX");
+                          setIsReviewed(false);
+                        }}
+                        className={`min-h-11 sm:min-h-9 rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                          documentType === "TAX"
+                            ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                            : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/60"
+                        }`}
+                      >
+                        {text("فاتورة ضريبية (ZATCA QR)", "Tax Invoice (ZATCA)")}
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={documentType === "BOOKING"}
+                        onClick={() => {
+                          setCustomerSubtype("BOOKING");
+                          setDocumentType("BOOKING");
+                          setIsReviewed(false);
+                        }}
+                        className={`min-h-11 sm:min-h-9 rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                          documentType === "BOOKING"
+                            ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                            : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/60"
+                        }`}
+                      >
+                        {text("فاتورة حجز", "Booking Invoice")}
+                      </button>
+                    </div>
+                  </section>
+                )}
+
+                {/* Seller Readiness & ZATCA Tax Fields */}
+                {isTaxMode && (
+                  <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-3">
+                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                        {text("خصائص المستند الضريبي (ZATCA)", "Tax Document Settings (ZATCA)")}
+                      </h2>
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {taxDocument.profile === "STANDARD"
+                          ? text("يتطلب عنوان المشتري ورقمه الضريبي أو التجاري", "Requires full buyer address + VAT or CRN")
+                          : text("مبسطة للأفراد والنقل اليومي", "Simplified B2C document")}
+                      </span>
+                    </div>
+
+                    {sellerMissingTax && (
+                      <div
+                        role="alert"
+                        className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs sm:text-sm text-amber-900 dark:text-amber-300 flex flex-wrap items-center justify-between gap-3"
+                      >
+                        <span className="font-bold">
+                          {text(
+                            "بيانات المنشأة الضريبية غير مكتملة (الرقم الضريبي أو السجل التجاري أو العنوان الوطني). يلزم إكمالها لحفظ المستند الضريبي.",
+                            "Seller tax identity is incomplete (VAT, CRN, or National Address). Complete Company Settings before issuing a tax document.",
+                          )}
+                        </span>
+                        <Link
+                          href="/admin/invoices/settings"
+                          className="inline-flex min-h-9 items-center rounded-lg border border-current/30 px-3 py-1 text-xs font-bold hover:bg-black/5 dark:hover:bg-white/5 transition"
+                        >
+                          {text("إكمال إعدادات الشركة", "Company Settings")}
+                        </Link>
+                      </div>
+                    )}
+
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] block">
+                        <span className="block mb-1">
+                          {text("نموذج الفاتورة الضريبية", "Tax Invoice Profile")}
+                        </span>
+                        <select
+                          disabled={Boolean(original)}
+                          value={taxDocument.profile}
+                          onChange={(e) => {
+                            const nextProfile = e.target.value as "STANDARD" | "SIMPLIFIED";
+                            manualProfileRef.current = true;
+                            setTaxDocument((current) => ({
+                              ...current,
+                              profile: nextProfile,
+                            }));
+                            if (nextProfile === "STANDARD") {
+                              setShowBuyerDetails(true);
+                            }
+                            setIsReviewed(false);
+                          }}
+                          className={`${INLINE_INPUT} disabled:opacity-60`}
+                        >
+                          <option value="SIMPLIFIED">
+                            {text("مبسطة (B2C للأفراد)", "Simplified (B2C)")}
+                          </option>
+                          <option value="STANDARD">
+                            {text("ضريبية قياسية (B2B للمنشآت)", "Standard Tax (B2B)")}
+                          </option>
+                        </select>
+                      </label>
+
+                      <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] block">
+                        <span className="block mb-1">
+                          {text("تاريخ التوريد *", "Supply Date *")}
+                        </span>
+                        <input
+                          type="date"
+                          required
+                          dir="ltr"
+                          value={taxDocument.supplyDate}
+                          onChange={(e) => {
+                            setTaxDocument((current) => ({
+                              ...current,
+                              supplyDate: e.target.value,
+                            }));
+                            setIsReviewed(false);
+                          }}
+                          className={`${INLINE_INPUT} font-mono`}
+                        />
+                      </label>
+
+                      {taxDocument.kind !== "INVOICE" && (
+                        <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] block">
+                          <span className="block mb-1">
+                            {text("تاريخ واقعة الإشعار (اختياري)", "Adjustment Event Date")}
+                          </span>
+                          <input
+                            type="date"
+                            dir="ltr"
+                            value={taxDocument.adjustmentEventDate || ""}
+                            onChange={(e) => {
+                              setTaxDocument((current) => ({
+                                ...current,
+                                adjustmentEventDate: e.target.value || undefined,
+                              }));
+                              setIsReviewed(false);
+                            }}
+                            className={`${INLINE_INPUT} font-mono`}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </section>
+                )}
+
                 {/* 1b. If Credit or Debit Note, choose Original Invoice and Reason */}
                 {isTaxMode && taxDocument.kind !== "INVOICE" && (
                   <section className="theme-card rounded-2xl p-4 sm:p-5 border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)]">
@@ -1374,7 +1652,10 @@ export default function InvoiceForm({
                               : []),
                             ...origOptions.map((item) => ({
                               value: item.id,
-                              label: `${item.invoiceNumber} · ${item.customerName}`,
+                              label:
+                                taxDocument.kind === "CREDIT"
+                                  ? `${item.invoiceNumber} · ${item.customerName} (${text("المتاح للتخفيض", "Avail.")}: ${item.remainingGross} SAR)`
+                                  : `${item.invoiceNumber} · ${item.customerName} (${item.totalAmount} SAR)`,
                               badge: item.invoiceNumber,
                               keywords: `${item.invoiceNumber} ${item.customerName}`,
                             })),
@@ -1417,26 +1698,40 @@ export default function InvoiceForm({
                       </div>
                     </div>
                     {original && (
-                      <div className="mt-3.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--bg-card)] p-3.5 text-xs sm:text-sm flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <ReceiptText className="size-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
-                          <div>
-                            <span className="font-bold text-[var(--text-main)]">
-                              {ui("الفاتورة الأصلية المرتبطة")}: {original.invoiceNumber}
-                            </span>
-                            <span className="text-[var(--text-muted)] ms-2">
-                              ({original.customerName} · {amount(original.snapshot.totals.gross)} {ui("ر.س")})
-                            </span>
+                      <div className="mt-3.5 space-y-2.5">
+                        <div className="rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--bg-card)] p-3.5 text-xs sm:text-sm flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <ReceiptText className="size-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                            <div>
+                              <span className="font-bold text-[var(--text-main)]">
+                                {ui("الفاتورة الأصلية المرتبطة")}: {original.invoiceNumber}
+                              </span>
+                              <span className="text-[var(--text-muted)] ms-2">
+                                ({original.customerName} · {amount(original.snapshot.totals.gross)} {ui("ر.س")})
+                              </span>
+                              {taxDocument.kind === "CREDIT" && (original.creditBalance || selectedOrigSummary) && (
+                                <span className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-0.5 font-mono" dir="ltr">
+                                  {text("المتاح للإشعار الدائن", "Remaining creditable")}:{" "}
+                                  {original.creditBalance?.availableGross ?? selectedOrigSummary?.remainingGross}{" "}
+                                  {text("ر.س", "SAR")}
+                                </span>
+                              )}
+                            </div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => void selectOriginal("")}
+                            className="min-h-11 sm:min-h-8 inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-rose-500 hover:text-rose-600 transition cursor-pointer"
+                          >
+                            <X className="size-3.5" aria-hidden="true" />
+                            <span>{ui("تغيير")}</span>
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => void selectOriginal("")}
-                          className="min-h-11 sm:min-h-8 inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-rose-500 hover:text-rose-600 transition cursor-pointer"
-                        >
-                          <X className="size-3.5" aria-hidden="true" />
-                          <span>{ui("تغيير")}</span>
-                        </button>
+                        {creditCapError && (
+                          <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-700 dark:text-rose-300">
+                            {creditCapError}
+                          </p>
+                        )}
                       </div>
                     )}
                   </section>
@@ -1988,6 +2283,14 @@ export default function InvoiceForm({
                   </div>
 
                   {linesBody}
+                  {creditCapError && (
+                    <div
+                      role="alert"
+                      className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300"
+                    >
+                      {creditCapError}
+                    </div>
+                  )}
                 </section>
 
                 {/* Company Bank Details on Document (if proforma or tax) */}
@@ -2048,16 +2351,25 @@ export default function InvoiceForm({
                           className="size-4 sm:size-5 text-[var(--accent-gold)]"
                           aria-hidden="true"
                         />
-                        <span>{ui("هل دفع العميل قيمة الفاتورة؟")}</span>
+                        <span>
+                          {isCreditNote
+                            ? text("كيف سيتم تسوية الإشعار الدائن مع العميل؟", "How will the credit note be settled?")
+                            : ui("هل دفع العميل قيمة الفاتورة؟")}
+                        </span>
                       </h2>
                       <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
-                        {ui(
-                          "حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة",
-                        )}
+                        {isCreditNote
+                          ? text(
+                              "اختر إما قيد المبلغ في رصيد العميل أو إثبات رده نقداً أو تحويلاً بنكياً.",
+                              "Choose whether to apply to customer balance or record an immediate cash/bank refund.",
+                            )
+                          : ui(
+                              "حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة",
+                            )}
                       </p>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div className={`grid gap-3 ${isCreditNote ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
                       {/* NOT PAID (آجل) */}
                       <label
                         className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
@@ -2076,7 +2388,9 @@ export default function InvoiceForm({
                         />
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                            {ui("لم يدفع بعد (آجل)")}
+                            {isCreditNote
+                              ? text("تخفيض ذمة / رصيد العميل (1103)", "Credit Customer Balance (1103)")
+                              : ui("لم يدفع بعد (آجل)")}
                           </span>
                           <span className="size-4 rounded-full border border-[var(--accent-gold)] flex items-center justify-center">
                             {paymentStatusChoice === "NOT_PAID" && (
@@ -2085,13 +2399,18 @@ export default function InvoiceForm({
                           </span>
                         </div>
                         <p className="text-xs text-[var(--text-muted)]">
-                          {ui(
-                            "تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.",
-                          )}
+                          {isCreditNote
+                            ? text(
+                                "يُخفض الرصيد القائم على الفاتورة الأصلية أو يُثبت كرصيد دائن للعميل.",
+                                "Reduces receivable on the original invoice or leaves a credit balance for the customer.",
+                              )
+                            : ui(
+                                "تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.",
+                              )}
                         </p>
                       </label>
 
-                      {/* FULLY PAID */}
+                      {/* FULLY PAID / IMMEDIATE REFUND */}
                       <label
                         className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
                           paymentStatusChoice === "FULLY_PAID"
@@ -2111,7 +2430,9 @@ export default function InvoiceForm({
                         />
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                            {ui("دفع المبلغ كاملاً")}
+                            {isCreditNote
+                              ? text("تم رد كامل المبلغ للعميل", "Refunded in Full Immediately")
+                              : ui("دفع المبلغ كاملاً")}
                           </span>
                           <span className="size-4 rounded-full border border-[var(--accent-gold)] flex items-center justify-center">
                             {paymentStatusChoice === "FULLY_PAID" && (
@@ -2120,53 +2441,62 @@ export default function InvoiceForm({
                           </span>
                         </div>
                         <p className="text-xs text-[var(--text-muted)]">
-                          {ui(
-                            "تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.",
-                          )}
+                          {isCreditNote
+                            ? text(
+                                "تم رد المبلغ للعميل مباشرة من البنك أو الصندوق عند إصدار الإشعار.",
+                                "Direct refund paid out from Bank or Petty Cash on issuance.",
+                              )
+                            : ui(
+                                "تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.",
+                              )}
                         </p>
                       </label>
 
-                      {/* PARTIALLY PAID */}
-                      <label
-                        className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
-                          paymentStatusChoice === "PARTIALLY_PAID"
-                            ? "bg-sky-500/10 border-sky-600/45 ring-1 ring-sky-500/30"
-                            : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-sky-600/55 dark:hover:border-sky-400/55"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="paymentStatusChoice"
-                          value="PARTIALLY_PAID"
-                          checked={paymentStatusChoice === "PARTIALLY_PAID"}
-                          onChange={() =>
-                            changePaymentStatusChoice("PARTIALLY_PAID")
-                          }
-                          className="sr-only"
-                        />
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                            {ui("دفع جزءاً من المبلغ")}
-                          </span>
-                          <span className="size-4 rounded-full border border-sky-600 dark:border-sky-400 flex items-center justify-center">
-                            {paymentStatusChoice === "PARTIALLY_PAID" && (
-                              <span className="size-2 rounded-full bg-sky-600 dark:bg-sky-400" />
+                      {/* PARTIALLY PAID (hidden for Credit Notes) */}
+                      {!isCreditNote && (
+                        <label
+                          className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
+                            paymentStatusChoice === "PARTIALLY_PAID"
+                              ? "bg-sky-500/10 border-sky-600/45 ring-1 ring-sky-500/30"
+                              : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-sky-600/55 dark:hover:border-sky-400/55"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="paymentStatusChoice"
+                            value="PARTIALLY_PAID"
+                            checked={paymentStatusChoice === "PARTIALLY_PAID"}
+                            onChange={() =>
+                              changePaymentStatusChoice("PARTIALLY_PAID")
+                            }
+                            className="sr-only"
+                          />
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
+                              {ui("دفع جزءاً من المبلغ")}
+                            </span>
+                            <span className="size-4 rounded-full border border-sky-600 dark:border-sky-400 flex items-center justify-center">
+                              {paymentStatusChoice === "PARTIALLY_PAID" && (
+                                <span className="size-2 rounded-full bg-sky-600 dark:bg-sky-400" />
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[var(--text-muted)]">
+                            {ui(
+                              "تسجيل دفعة مقدمة الآن مع بقاء الرصيد المتبقي للمتابعة.",
                             )}
-                          </span>
-                        </div>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {ui(
-                            "تسجيل دفعة مقدمة الآن مع بقاء الرصيد المتبقي للمتابعة.",
-                          )}
-                        </p>
-                      </label>
+                          </p>
+                        </label>
+                      )}
                     </div>
 
                     {/* If FULLY PAID: choose bank or cash */}
                     {paymentStatusChoice === "FULLY_PAID" && (
                       <div className="mt-4 pt-3.5 border-t theme-border space-y-2.5">
                         <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] block">
-                          {ui("كيف استلمت المبلغ من العميل؟")}
+                          {isCreditNote
+                            ? text("كيف تم رد المبلغ للعميل؟", "How was the refund issued?")
+                            : ui("كيف استلمت المبلغ من العميل؟")}
                         </span>
                         <div className="grid gap-2.5 sm:grid-cols-3">
                           <label

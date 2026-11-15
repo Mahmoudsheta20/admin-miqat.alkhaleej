@@ -1,5 +1,7 @@
 "use client";
 import { useUiText } from "@/lib/ui-text";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
@@ -20,6 +22,9 @@ interface PurchaseHistoryProps {
 
 export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHistoryProps) {
   const ui = useUiText();
+  const { user } = useAuth();
+  const canWrite = hasClientPermission(user, "purchases", "write");
+  const canDelete = hasClientPermission(user, "purchases", "delete");
 
   const dialog = useRef<HTMLDialogElement>(null);
   const { data, error, isLoading } = useAccountingQuery<PurchaseDetail>(`/purchases/${id}`);
@@ -143,18 +148,20 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               {ui("PDF أو صورة، حتى 10 ميجابايت. التنزيل متاح للمسؤولين فقط.")}
             </p>
-            <input
-              type="file"
-              aria-label={ui("رفع فاتورة المورد")}
-              accept="application/pdf,image/png,image/jpeg,image/webp"
-              disabled={isUploading}
-              className="my-3 w-full text-xs"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void upload(file);
-                e.target.value = "";
-              }}
-            />
+            {canWrite && (
+              <input
+                type="file"
+                aria-label={ui("رفع فاتورة المورد")}
+                accept="application/pdf,image/png,image/jpeg,image/webp"
+                disabled={isUploading}
+                className="my-3 w-full text-xs"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void upload(file);
+                  e.target.value = "";
+                }}
+              />
+            )}
             {isUploading && (
               <p role="status" className="text-xs">
                 {ui("جارٍ رفع المرفق…")}
@@ -210,50 +217,52 @@ export default function PurchaseHistory({ id, onClose, onVoided }: PurchaseHisto
             <p className="mt-6 rounded-xl bg-rose-50 p-4 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
               {ui("القيد ملغى ولا يدخل في الإقرار:")} {data.voidReason}
             </p>
-          ) : isVoiding ? (
-            <form className="mt-7 space-y-3 border-t theme-border pt-5" onSubmit={cancel}>
-              <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-                {ui("الإلغاء يستبعد القيد من التقرير ويحتفظ بتاريخه. استخدمه لتصحيح تسجيل خاطئ، وليس بدلًا من إشعار دائن من المورد أو لتعديل إقرار سبق تقديمه.")}
-              </p>
-              <label className="block text-xs sm:text-[0.8125rem] font-bold">
-                {ui("سبب إلغاء القيد")}
-                <input
-                  autoFocus
-                  required
-                  minLength={3}
-                  maxLength={200}
-                  className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                />
-              </label>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="min-h-11 sm:min-h-9 rounded-lg bg-rose-700 hover:bg-rose-800 px-4 py-1.5 text-xs sm:text-sm font-bold text-white disabled:opacity-50 cursor-pointer"
-                >
-                  {ui("تأكيد إلغاء القيد")}
-                </button>
-                <button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => setIsVoiding(false)}
-                  className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-4 py-1.5 text-xs sm:text-sm cursor-pointer"
-                >
-                  {ui("رجوع")}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsVoiding(true)}
-              className="mt-7 min-h-11 sm:min-h-9 rounded-lg border border-rose-300 px-4 py-1.5 text-xs sm:text-sm font-bold text-rose-700 dark:border-rose-800 dark:text-rose-400 cursor-pointer"
-            >
-              {ui("إلغاء قيد مسجل بالخطأ")}
-            </button>
-          )}
+          ) : canDelete ? (
+            isVoiding ? (
+              <form className="mt-7 space-y-3 border-t theme-border pt-5" onSubmit={cancel}>
+                <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                  {ui("الإلغاء يستبعد القيد من التقرير ويحتفظ بتاريخه. استخدمه لتصحيح تسجيل خاطئ، وليس بدلًا من إشعار دائن من المورد أو لتعديل إقرار سبق تقديمه.")}
+                </p>
+                <label className="block text-xs sm:text-[0.8125rem] font-bold">
+                  {ui("سبب إلغاء القيد")}
+                  <input
+                    autoFocus
+                    required
+                    minLength={3}
+                    maxLength={200}
+                    className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="min-h-11 sm:min-h-9 rounded-lg bg-rose-700 hover:bg-rose-800 px-4 py-1.5 text-xs sm:text-sm font-bold text-white disabled:opacity-50 cursor-pointer"
+                  >
+                    {ui("تأكيد إلغاء القيد")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => setIsVoiding(false)}
+                    className="theme-card min-h-11 sm:min-h-9 rounded-lg border theme-border px-4 py-1.5 text-xs sm:text-sm cursor-pointer"
+                  >
+                    {ui("رجوع")}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsVoiding(true)}
+                className="mt-7 min-h-11 sm:min-h-9 rounded-lg border border-rose-300 px-4 py-1.5 text-xs sm:text-sm font-bold text-rose-700 dark:border-rose-800 dark:text-rose-400 cursor-pointer"
+              >
+                {ui("إلغاء قيد مسجل بالخطأ")}
+              </button>
+            )
+          ) : null}
         </>
       )}
     </dialog>

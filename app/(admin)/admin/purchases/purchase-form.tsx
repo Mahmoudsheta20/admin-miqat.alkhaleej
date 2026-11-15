@@ -5,12 +5,14 @@ import { useUiText } from "@/lib/ui-text";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { X, Loader2, Building2, Receipt, CreditCard, AlertCircle, ChevronDown, Percent, CheckCircle2, Truck, RotateCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { accountingRequest, currentSaudiPeriod, EXPENSE_CATEGORIES, TAX_TREATMENTS, CATEGORY_ACCOUNTS, purchasePreview, purchaseInclusive, type Account, type PurchaseInput, type PurchaseRow } from "@/lib/accounting";
+import { accountingRequest, currentSaudiPeriod, EXPENSE_CATEGORIES, TAX_TREATMENTS, CATEGORY_ACCOUNTS, filterCashBankAccounts, purchasePreview, purchaseInclusive, type Account, type PurchaseInput, type PurchaseRow } from "@/lib/accounting";
 import { moneyMinor } from "@/lib/money";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
+import { useApiQuery } from "@/lib/use-api-query";
 
 interface Props {
   existing?: PurchaseRow;
+  initialDocumentType?: "PURCHASE_INVOICE" | "PURCHASE_RETURN";
   onClose: () => void;
   onSaved: () => void;
 }
@@ -24,7 +26,12 @@ interface OriginalOption {
 
 const INPUT_STYLE = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
-export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
+export default function PurchaseForm({
+  existing,
+  initialDocumentType = "PURCHASE_INVOICE",
+  onClose,
+  onSaved,
+}: Props) {
   const ui = useUiText();
 
   const dialog = useRef<HTMLDialogElement>(null);
@@ -67,7 +74,7 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
           evidenceReference: "",
           vehiclePlate: "",
           notes: "",
-          documentType: "PURCHASE_INVOICE",
+          documentType: initialDocumentType,
           accountCode: "5101",
           paymentAccountCode: "2101",
           postImmediately: true,
@@ -83,12 +90,14 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [showAccountantDetails, setShowAccountantDetails] = useState(false);
 
-  const accounts = useAccountingQuery<{ items: Account[] }>("/accounts");
-  const originals = useAccountingQuery<{ items: OriginalOption[] }>(
-    `/purchase-originals?search=${encodeURIComponent(originalSearch)}`
-  );
-
   const isReturn = form.documentType === "PURCHASE_RETURN";
+  const accounts = useAccountingQuery<{ items: Account[] }>("/accounts");
+  const originals = useApiQuery<{ items: OriginalOption[] }>(
+    isReturn && !existing
+      ? `/accounting/purchase-originals?search=${encodeURIComponent(originalSearch)}`
+      : null,
+  );
+  const cashBankAccounts = filterCashBankAccounts(accounts.data?.items);
   const isRecoverable = Number(form.recoverablePercent) > 0;
   const isZeroTaxExpense = ["DRIVER_PAYROLL", "GOVERNMENT_FEES"].includes(form.category);
 
@@ -651,8 +660,18 @@ export default function PurchaseForm({ existing, onClose, onSaved }: Props) {
                   onChange={(e) => update({ paymentAccountCode: e.target.value })}
                 >
                   <option value="2101">{ui("آجل على حساب المورد (ذمم دائنة)")}</option>
-                  <option value="1102">{ui("تحويل بنكي - البنك الأهلي SNB")}</option>
-                  <option value="1101">{ui("نقداً من الصندوق الرئيسي")}</option>
+                  {cashBankAccounts.length > 0 ? (
+                    cashBankAccounts.map((acc) => (
+                      <option key={acc.code} value={acc.code}>
+                        {acc.code} · {ui.language === "en" && acc.nameEn ? acc.nameEn : ui(acc.nameAr)}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="1102">{ui("تحويل بنكي - البنك الأهلي SNB")}</option>
+                      <option value="1101">{ui("نقداً من الصندوق الرئيسي")}</option>
+                    </>
+                  )}
                 </select>
               </label>
 

@@ -10,10 +10,11 @@ interface ReturnSettingsProps {
   year: number;
   quarter: number;
   value: VatSettings;
+  canEdit?: boolean;
   onSaved: () => void;
 }
 
-export default function ReturnSettings({ year, quarter, value, onSaved }: ReturnSettingsProps) {
+export default function ReturnSettings({ year, quarter, value, canEdit = true, onSaved }: ReturnSettingsProps) {
   const ui = useUiText();
 
   const [correction, setCorrection] = useState(value.previousCorrection);
@@ -36,7 +37,7 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (isSaving) return;
+    if (!canEdit || isSaving) return;
     if (!isValidCorrection || correctionMinor > BigInt(1499999)) {
       setError(
         ui.language === "en"
@@ -81,11 +82,12 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
             {ui("تصحيحات سابقة (الخانة 14)")}
             <input
               required
+              disabled={!canEdit}
               type="text"
               inputMode="decimal"
               dir="ltr"
               placeholder="0.00"
-              className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono"
+              className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono disabled:opacity-60"
               value={correction}
               onChange={(e) => setCorrection(e.target.value)}
             />
@@ -94,11 +96,12 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
             {ui("الرصيد الدائن المتاح (الخانة 15)")}
             <input
               required
+              disabled={!canEdit}
               type="text"
               inputMode="decimal"
               dir="ltr"
               placeholder="0.00"
-              className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono"
+              className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono disabled:opacity-60"
               value={credit}
               onChange={(e) => setCredit(e.target.value)}
             />
@@ -107,9 +110,10 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
         <label className="block text-xs sm:text-[0.8125rem] font-bold">
           {ui("تاريخ تقديم هذا الإقرار في بوابة الهيئة (اختياري)")}
           <input
+            disabled={!canEdit}
             type="date"
             dir="ltr"
-            className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono text-start"
+            className="theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] font-mono text-start disabled:opacity-60"
             value={filedOn}
             onChange={(e) => setFiledOn(e.target.value)}
           />
@@ -120,11 +124,12 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
         <label className="block text-xs sm:text-[0.8125rem] font-bold">
           {ui("مرجع التصحيح أو الإقرار السابق")}
           <textarea
+            disabled={!canEdit}
             required={requiresNote}
             minLength={requiresNote ? 5 : undefined}
             maxLength={1000}
             rows={2}
-            className="theme-input mt-1.5 w-full rounded-lg px-3 py-2 text-base sm:text-[0.8125rem]"
+            className="theme-input mt-1.5 w-full rounded-lg px-3 py-2 text-base sm:text-[0.8125rem] disabled:opacity-60"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
@@ -137,13 +142,21 @@ export default function ReturnSettings({ year, quarter, value, onSaved }: Return
             {ui(error)}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer"
-        >
-          {ui(isSaving ? "جارٍ الحفظ…" : "حفظ وإعادة حساب الإقرار")}
-        </button>
+        {canEdit ? (
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="gold-gradient-btn min-h-11 sm:min-h-9 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold disabled:opacity-50 cursor-pointer"
+          >
+            {ui(isSaving ? "جارٍ الحفظ…" : "حفظ وإعادة حساب الإقرار")}
+          </button>
+        ) : (
+          <p className="text-xs text-[var(--text-muted)]">
+            {ui.language === "en"
+              ? "Read-only view — VAT return write permission is required to modify period settings."
+              : "عرض للقراءة فقط — يتطلب تعديل إعدادات الفترة صلاحية تعديل الإقرارات الضريبية."}
+          </p>
+        )}
       </form>
     </details>
   );

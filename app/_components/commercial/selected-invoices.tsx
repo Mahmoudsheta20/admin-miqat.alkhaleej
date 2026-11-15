@@ -1,10 +1,14 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { useUiText } from "@/lib/ui-text";
+import { useAuth } from "@/lib/authContext";
+import { hasClientPermission } from "@/lib/permissions";
+import { useUrlState } from "@/lib/use-url-state";
 import { commercialRequest, csvDownload } from "@/lib/commercial";
 import { currentSaudiPeriod } from "@/lib/accounting";
+import { buildInvoiceListQueryPath, invoiceRiyadhDateKey, invoiceRequest, type InvoiceRow } from "@/lib/invoices";
 import { Checkbox, PageHeader, StatCard, StatRow } from "@/app/_components/ui";
-import { FileCheck2, Download, ArrowLeft, ArrowRight, Receipt, FileText, Scale } from "lucide-react";
+import { FileCheck2, Download, ArrowLeft, ArrowRight, Receipt, FileText, Scale, Plus, Search, Trash2, Calculator } from "lucide-react";
 import { INPUT, SECONDARY, Field, Notice, Panel, useCommercialData, useMutation } from "./shared";
 
 interface SelectionSale {
@@ -40,25 +44,73 @@ interface SavedSelection {
 }
 
 export default function SelectedInvoices() {
-  const ui = useUiText(),
-    current = currentSaudiPeriod(),
-    [year, setYear] = useState(current.year),
-    [quarter, setQuarter] = useState(current.quarter),
-    [ids, setIds] = useState<string[]>([]),
-    [report, setReport] = useState<SelectionReport | null>(null),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(false),
-    [search, setSearch] = useState(""),
-    [type, setType] = useState(""),
-    [customer, setCustomer] = useState(""),
-    [from, setFrom] = useState(""),
-    [to, setTo] = useState(""),
-    [page, setPage] = useState(1),
-    [name, setName] = useState(""),
-    [savedId, setSavedId] = useState(""),
-    [version, setVersion] = useState(0),
-    saved = useCommercialData<{ items: SavedSelection[] }>("/selections"),
-    m = useMutation();
+  const ui = useUiText();
+  const { user } = useAuth();
+  const canManageSelections = hasClientPermission(user, "vatReturns", "write");
+  const canSearchInvoices = hasClientPermission(user, "invoices", "view");
+  const current = currentSaudiPeriod();
+  const [year, setYear] = useUrlState<number>("year", current.year);
+  const [quarter, setQuarter] = useUrlState<number>("quarter", current.quarter, [1, 2, 3, 4]);
+  const [ids, setIds] = useState<string[]>([]);
+  const [report, setReport] = useState<SelectionReport | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useUrlState<string>("q", "");
+  const [type, setType] = useUrlState<string>("type", "", ["", "TAX", "BOOKING"]);
+  const [customer, setCustomer] = useUrlState<string>("customer", "");
+  const [from, setFrom] = useUrlState<string>("from", "");
+  const [to, setTo] = useUrlState<string>("to", "");
+  const [page, setPage] = useUrlState<number>("page", 1);
+  const [name, setName] = useState("");
+  const [savedId, setSavedId] = useState("");
+  const [version, setVersion] = useState(0);
+  const [lookupQuery, setLookupQuery] = useState("");
+  const [lookupResults, setLookupResults] = useState<InvoiceRow[]>([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState("");
+  const saved = useCommercialData<{ items: SavedSelection[] }>("/selections");
+  const m = useMutation();
+
+  useEffect(() => {
+    const clean = lookupQuery.trim();
+    if (!canSearchInvoices || !clean) return;
+    let alive = true;
+    const timer = setTimeout(() => {
+      setLookupLoading(true);
+      setLookupError("");
+      invoiceRequest<{ items: InvoiceRow[] }>(
+        buildInvoiceListQueryPath({ page: 1, search: clean, archived: false }),
+      )
+        .then((res) => {
+          if (!alive) return;
+          if (!res.success || !res.data) {
+            setLookupError(
+              res.error || (ui.language === "en" ? "Could not search invoices" : "تعذر البحث في الفواتير"),
+            );
+            setLookupResults([]);
+          } else {
+            setLookupResults((res.data.items || []).filter((item) => item.documentType !== "PROFORMA"));
+          }
+        })
+        .catch(() => {
+          if (alive) {
+            setLookupError(ui.language === "en" ? "Could not search invoices" : "تعذر البحث في الفواتير");
+            setLookupResults([]);
+          }
+        })
+        .finally(() => {
+          if (alive) setLookupLoading(false);
+        });
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [canSearchInvoices, lookupQuery, ui.language]);
+
+  const visibleLookupResults = lookupQuery.trim() ? lookupResults : [];
+  const visibleLookupError = lookupQuery.trim() ? lookupError : "";
+  const visibleLookupLoading = Boolean(lookupQuery.trim()) && lookupLoading;
 
   useEffect(() => {
     let alive = true;
@@ -83,17 +135,20 @@ export default function SelectedInvoices() {
     };
   }, [year, quarter, ids]);
 
+  const q = search.trim().toLowerCase();
   const filtered =
     report?.sales.filter(
       (r) =>
-        (!search || `${r.number} ${r.customerName}`.includes(search)) &&
+        (!q || `${r.number} ${r.customerName}`.toLowerCase().includes(q)) &&
         (!type || r.documentType === type) &&
         (!customer || r.customerName === customer) &&
         (!from || r.date >= from) &&
         (!to || r.date <= to),
     ) || [];
 
-  const visible = filtered.slice((page - 1) * 30, page * 30);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / 30));
+  const currentPage = Math.min(page, totalPages);
+  const visible = filtered.slice((currentPage - 1) * 30, currentPage * 30);
   const dirty = loading || Boolean(error);
 
   function toggle(id: string, checked: boolean) {
@@ -160,6 +215,12 @@ export default function SelectedInvoices() {
           disabled: !report || dirty,
         }}
         secondaryActions={[
+          {
+            label: ui.language === "en" ? "Open in VAT Return (Boxes 1–16)" : "فتح في الإقرار الضريبي (خانات 1–16)",
+            href: `/admin/vat-returns?selection=manual&year=${year}&quarter=${quarter}${savedId ? `&groupId=${encodeURIComponent(savedId)}` : ""}`,
+            icon: Calculator,
+            variant: "subtle",
+          },
           {
             label: "العودة للإقرار الكامل",
             href: "/admin/vat-returns",
@@ -273,52 +334,128 @@ export default function SelectedInvoices() {
             </select>
           </Field>
           <Field label="اسم المجموعة">
-            <input className={INPUT} value={name} onChange={(e) => setName(e.target.value)} />
+            <input className={INPUT} disabled={!canManageSelections} value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={SECONDARY}
-            disabled={m.busy || !name.trim()}
-            onClick={() =>
-              void m.run(async () => {
-                const row = await commercialRequest<SavedSelection>(savedId ? `/selections/${savedId}` : "/selections", savedId ? "PUT" : "POST", {
-                  name,
-                  invoiceIds: ids,
-                  ...(savedId ? { version } : {}),
-                });
-                setSavedId(row.id);
-                setVersion(row.version);
-              }, saved.reload)
-            }
-          >
-            {ui("حفظ مجموعة الاختيار")}
-          </button>
-          {savedId && (
+        {canManageSelections ? (
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               className={SECONDARY}
-              disabled={m.busy}
+              disabled={m.busy || !name.trim()}
               onClick={() =>
-                void m.run(
-                  () => commercialRequest(`/selections/${savedId}`, "DELETE", { version }),
-                  () => {
-                    setSavedId("");
-                    setVersion(0);
-                    setName("");
-                    saved.reload();
-                  },
-                )
+                void m.run(async () => {
+                  const row = await commercialRequest<SavedSelection>(savedId ? `/selections/${savedId}` : "/selections", savedId ? "PUT" : "POST", {
+                    name,
+                    invoiceIds: ids,
+                    ...(savedId ? { version } : {}),
+                  });
+                  setSavedId(row.id);
+                  setVersion(row.version);
+                }, saved.reload)
               }
             >
-              {ui("حذف مجموعة الاختيار")}
+              {ui("حفظ مجموعة الاختيار")}
             </button>
-          )}
-        </div>
+            {savedId && (
+              <button
+                type="button"
+                className={SECONDARY}
+                disabled={m.busy}
+                onClick={() =>
+                  void m.run(
+                    () => commercialRequest(`/selections/${savedId}`, "DELETE", { version }),
+                    () => {
+                      setSavedId("");
+                      setVersion(0);
+                      setName("");
+                      saved.reload();
+                    },
+                  )
+                }
+              >
+                {ui("حذف مجموعة الاختيار")}
+              </button>
+            )}
+          </div>
+        ) : null}
       </Panel>
 
       <Panel title="اختيار الفواتير">
+        {canSearchInvoices && (
+          <div className="mb-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border p-3.5 space-y-2.5">
+            <label className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5">
+              <Search className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>
+                {ui.language === "en"
+                  ? "Search & Manually Add Any Invoice (even outside this quarter):"
+                  : "ابحث وأضف أي فاتورة يدويًا (حتى من خارج هذا الربع):"}
+              </span>
+            </label>
+            <input
+              type="search"
+              className={INPUT}
+              value={lookupQuery}
+              onChange={(e) => setLookupQuery(e.target.value)}
+              placeholder={
+                ui.language === "en"
+                  ? "Invoice number or customer name…"
+                  : "اكتب رقم الفاتورة أو اسم العميل للإضافة…"
+              }
+            />
+            {visibleLookupError && <p role="alert" className="text-xs font-bold text-rose-700 dark:text-rose-300">{visibleLookupError}</p>}
+            {visibleLookupLoading && (
+              <p className="text-xs text-[var(--text-muted)]">
+                {ui.language === "en" ? "Searching invoices…" : "جارٍ البحث…"}
+              </p>
+            )}
+            {visibleLookupResults.length > 0 && (
+              <div className="max-h-52 overflow-y-auto divide-y theme-border rounded-xl border theme-border bg-[var(--bg-card)]">
+                {visibleLookupResults.map((row) => {
+                  const isSelected = ids.includes(row.id);
+                  return (
+                    <div key={row.id} className="flex flex-wrap items-center justify-between gap-2 p-2.5 text-xs">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <b className="font-mono text-[var(--text-main)]" dir="ltr">{row.invoiceNumber}</b>
+                          <span className="text-[var(--text-muted)]">{invoiceRiyadhDateKey(row.invoiceDate)}</span>
+                        </div>
+                        <p className="text-[var(--text-muted)] truncate">{row.customerName}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-[var(--accent-gold)]" dir="ltr">
+                          {row.vatAmount} SAR
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggle(row.id, !isSelected)}
+                          className={
+                            isSelected
+                              ? "min-h-11 sm:min-h-9 inline-flex items-center gap-1 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose-700 dark:text-rose-300 cursor-pointer"
+                              : "gold-gradient-btn min-h-11 sm:min-h-9 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold cursor-pointer"
+                          }
+                        >
+                          {isSelected ? (
+                            <>
+                              <Trash2 className="size-3.5" aria-hidden="true" />
+                              <span>{ui.language === "en" ? "Remove" : "إزالة"}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="size-3.5" aria-hidden="true" />
+                              <span>{ui.language === "en" ? "Add" : "إضافة"}</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Field label="بحث">
             <input
@@ -428,11 +565,11 @@ export default function SelectedInvoices() {
         </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <button type="button" className={SECONDARY} disabled={page === 1} onClick={() => setPage((v) => v - 1)}>
+          <button type="button" className={SECONDARY} disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>
             {ui("السابق")}
           </button>
-          <span className="font-mono text-sm font-bold">{page}</span>
-          <button type="button" className={SECONDARY} disabled={page * 30 >= filtered.length} onClick={() => setPage((v) => v + 1)}>
+          <span className="font-mono text-sm font-bold">{currentPage} / {totalPages}</span>
+          <button type="button" className={SECONDARY} disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>
             {ui("التالي")}
           </button>
         </div>

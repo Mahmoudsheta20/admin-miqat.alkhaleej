@@ -13,10 +13,17 @@ import InvoiceTaxSummary from "./invoice-tax-summary";
 import InvoiceQr from "./invoice-qr";
 import InvoiceTransportDetails from "./transport-details";
 import { BILLING_UNIT_LABELS } from "@/lib/invoice-transport";
-import { invoiceTitle, dateLabel, downloadInvoice, invoiceRequest, type InvoiceDetail } from "@/lib/invoices";
+import {
+  canIssueTaxAdjustment,
+  dateLabel,
+  downloadInvoice,
+  invoiceRequest,
+  invoiceTitle,
+  normalizeInvoiceTaxRateLabel,
+  type InvoiceDetail,
+} from "@/lib/invoices";
 import { accountingRequest } from "@/lib/accounting";
-import { signedMoneyMinor } from "@/lib/dashboard-analytics";
-import { moneyDecimal } from "@/lib/money";
+import { moneyDecimal, signedMoneyMinor } from "@/lib/money";
 import RecordPaymentModal from "../record-payment-modal";
 import { useAuth } from "@/lib/authContext";
 import { hasClientPermission } from "@/lib/permissions";
@@ -39,6 +46,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 
 export default function InvoicePage({ params }: InvoicePageProps) {
   const ui = useUiText();
+  const text = (ar: string, en: string) => (ui.language === "en" ? en : ar);
   const { user: authUser } = useAuth();
   const canCreateInvoices = hasClientPermission(authUser, "invoices", "write");
   const canDeleteInvoices = hasClientPermission(authUser, "invoices", "delete");
@@ -58,14 +66,15 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [waAutoDismissed, setWaAutoDismissed] = useState(false);
+  const [payWarnDismissed, setPayWarnDismissed] = useState(false);
   const searchSnapshot = useSyncExternalStore(
     subscribeSearch,
     () => window.location.search,
     () => "",
   );
+  const sp = searchSnapshot ? new URLSearchParams(searchSnapshot) : null;
   const waAutoNotice = (() => {
-    if (waAutoDismissed || !searchSnapshot) return null;
-    const sp = new URLSearchParams(searchSnapshot);
+    if (waAutoDismissed || !sp) return null;
     const status = sp.get("waAuto");
     if (status !== "sent" && status !== "error") return null;
     return {
@@ -75,6 +84,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       adminPhone: sp.get("waAdmin") || undefined,
     } as const;
   })();
+  const payWarnNotice = !payWarnDismissed && sp ? sp.get("payWarn") || "" : "";
 
   const loadBalance = useCallback(async () => {
     setIsLoadingBalance(true);
@@ -123,12 +133,23 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current); }, []);
 
-  function copyVerificationUrl() {
+  async function copyVerificationUrl() {
     if (!data?.verificationUrl) return;
-    void navigator.clipboard.writeText(data.verificationUrl);
-    setCopiedLink(true);
-    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-    copyTimerRef.current = setTimeout(() => setCopiedLink(false), 2500);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(data.verificationUrl);
+      }
+      setCopiedLink(true);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedLink(false), 2500);
+    } catch {
+      setError(
+        text(
+          "تعذر نسخ رابط التحقق إلى الحافظة.",
+          "Could not copy verification link to clipboard.",
+        ),
+      );
+    }
   }
 
   if (!data) {
@@ -165,6 +186,11 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const isProforma = docType === "PROFORMA";
   const isCredit = data.snapshot.input.taxDocument?.kind === "CREDIT";
   const isDebit = data.snapshot.input.taxDocument?.kind === "DEBIT";
+  const canAdjustTaxInvoice = canIssueTaxAdjustment(data);
+  const creditExhausted = Boolean(
+    data.creditBalance && signedMoneyMinor(data.creditBalance.availableGross) <= BigInt(0),
+  );
+  const taxRateMeta = normalizeInvoiceTaxRateLabel(data.snapshot.input.lines);
   const buyer = data.snapshot.input.buyer;
   const issuer = data.snapshot.issuer;
 
@@ -348,6 +374,44 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         </div>
       )}
 
+      {payWarnNotice && (
+        <div
+          role="alert"
+          className="p-3.5 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-300 text-xs sm:text-sm flex flex-wrap items-center justify-between gap-3"
+        >
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="font-bold">
+                {text(
+                  "تم حفظ الفاتورة، ولكن تعذر تسجيل الدفعة المبدئية تلقائياً:",
+                  "Invoice was saved, but the initial receipt voucher could not be posted automatically:",
+                )}
+              </p>
+              <p className="mt-0.5 text-xs">{payWarnNotice}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {canWriteAccounting && !data.visibility?.isArchived && !isProforma && !isCredit && (
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(true)}
+                className="min-h-9 px-3 py-1 rounded-lg border border-current/30 font-bold text-xs hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+              >
+                {text("تسجيل الدفعة الآن", "Record payment now")}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setPayWarnDismissed(true)}
+              className="min-h-9 px-2.5 py-1 rounded-lg text-xs font-bold opacity-80 hover:opacity-100 cursor-pointer"
+            >
+              {ui("إغلاق")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div
           role="alert"
@@ -409,7 +473,14 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
-              <span className="text-xs text-[var(--text-muted)] block">{ui("الإجمالي الشامل (15%)")}</span>
+              <span className="text-xs text-[var(--text-muted)] block">
+                {taxRateMeta.isMixed
+                  ? text("الإجمالي الشامل للضريبة", "Grand Total (incl. VAT)")
+                  : text(
+                      `الإجمالي الشامل (${taxRateMeta.displayRate})`,
+                      `Grand Total (${taxRateMeta.displayRate} VAT)`,
+                    )}
+              </span>
               <strong className="mt-1 block font-mono text-lg sm:text-xl font-semibold text-[var(--text-main)]">
                 <bdi dir="ltr">{formatMoneyValue(data.snapshot.totals.gross)}</bdi>{" "}
                 <span className="text-xs text-[var(--accent-gold)] font-bold">{ui("ر.س")}</span>
@@ -453,18 +524,30 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 </button>
               )}
 
-              {canCreateInvoices && !isCredit && (
-                <Link
-                  href={`/admin/invoices/new?type=TAX&kind=CREDIT&originalInvoiceId=${encodeURIComponent(id)}`}
-                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:border-rose-500 text-rose-700 dark:text-rose-400 text-xs font-bold transition"
-                  title={ui("إصدار إشعار دائن لخفض قيمة الفاتورة أو إلغائها")}
-                >
-                  <FileMinus className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" aria-hidden="true" />
-                  <span>{ui("خفض قيمة الفاتورة (إشعار دائن)")}</span>
-                </Link>
+              {canCreateInvoices && canAdjustTaxInvoice && (
+                creditExhausted ? (
+                  <span className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border theme-border bg-[var(--bg-card-subtle)] text-xs font-bold text-[var(--text-muted)] opacity-75">
+                    <FileMinus className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>
+                      {text(
+                        "استُنفد رصيد الإشعار الدائن",
+                        "Credit note headroom exhausted",
+                      )}
+                    </span>
+                  </span>
+                ) : (
+                  <Link
+                    href={`/admin/invoices/new?type=TAX&kind=CREDIT&originalInvoiceId=${encodeURIComponent(id)}`}
+                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:border-rose-500 text-rose-700 dark:text-rose-400 text-xs font-bold transition"
+                    title={ui("إصدار إشعار دائن لخفض قيمة الفاتورة أو إلغائها")}
+                  >
+                    <FileMinus className="w-3.5 h-3.5 text-rose-700 dark:text-rose-400" aria-hidden="true" />
+                    <span>{ui("خفض قيمة الفاتورة (إشعار دائن)")}</span>
+                  </Link>
+                )
               )}
 
-              {canCreateInvoices && (
+              {canCreateInvoices && canAdjustTaxInvoice && (
                 <Link
                   href={`/admin/invoices/new?type=TAX&kind=DEBIT&originalInvoiceId=${encodeURIComponent(id)}`}
                   className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition"
@@ -473,6 +556,15 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                   <FilePlus className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                   <span>{ui("إضافة مبلغ (إشعار مدين)")}</span>
                 </Link>
+              )}
+
+              {docType === "BOOKING" && !data.visibility?.isArchived && (
+                <span className="text-xs text-[var(--text-muted)]">
+                  {text(
+                    "إشعارات الدائن والمدين متاحة للفواتير الضريبية فقط.",
+                    "Credit & Debit adjustment notes apply to Tax invoices only.",
+                  )}
+                </span>
               )}
             </div>
 
@@ -560,7 +652,14 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 </strong>
               </div>
               <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
-                <span className="text-xs text-[var(--text-muted)] block">{ui("ضريبة المبيعات (15%)")}</span>
+                <span className="text-xs text-[var(--text-muted)] block">
+                  {taxRateMeta.isMixed
+                    ? text("ضريبة القيمة المضافة (مختلطة)", "Sales VAT (Mixed)")
+                    : text(
+                        `ضريبة القيمة المضافة (${taxRateMeta.displayRate})`,
+                        `Sales VAT (${taxRateMeta.displayRate})`,
+                      )}
+                </span>
                 <strong className="mt-1 block font-mono text-base font-semibold text-[var(--accent-gold)]">
                   <bdi dir="ltr">{data.snapshot.totals.vat}</bdi> {ui("ر.س")}
                 </strong>
@@ -602,7 +701,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           <div className="space-y-2">
             <button
               type="button"
-              onClick={copyVerificationUrl}
+              onClick={() => void copyVerificationUrl()}
               className="w-full min-h-11 sm:min-h-9 inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs font-bold text-[var(--accent-gold)] transition cursor-pointer"
             >
               {copiedLink ? (
@@ -705,6 +804,50 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         </section>
       )}
 
+      {/* Grouped Contract / Trip References (from grouped customer trip billing) */}
+      {data.snapshot.trips && data.snapshot.trips.length > 0 && (
+        <section className="theme-card rounded-2xl border theme-border p-5 sm:p-6 space-y-3">
+          <div className="flex items-center justify-between gap-2 border-b theme-border pb-3">
+            <h2 className="text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>
+                {text(
+                  `الرحلات والعقود المشمولة (${data.snapshot.trips.length})`,
+                  `Included Trips & Contracts (${data.snapshot.trips.length})`,
+                )}
+              </span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {data.snapshot.trips.map((trip) => (
+              <Link
+                key={trip.contractId}
+                href={`/admin/contracts/${encodeURIComponent(trip.contractId)}`}
+                className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-3 hover:border-[var(--accent-gold)] transition space-y-1 text-xs"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono font-bold text-[var(--accent-gold)]" dir="ltr">
+                    {trip.reference}
+                  </span>
+                  <span className="font-mono text-[var(--text-muted)]" dir="ltr">
+                    {trip.date}
+                  </span>
+                </div>
+                <p className="font-semibold text-[var(--text-main)] truncate">
+                  {trip.origin} - {trip.destination}
+                </p>
+                <div className="flex items-center justify-between gap-2 text-[var(--text-muted)]">
+                  <span className="truncate">{trip.guestName}</span>
+                  <span className="font-mono font-bold text-[var(--text-main)]" dir="ltr">
+                    {formatMoneyValue(trip.netAmount)} {text("ر.س", "SAR")}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Services Line Items Table */}
       <section className="theme-card rounded-2xl border theme-border overflow-hidden">
         <div className="p-4 sm:p-5 border-b theme-border flex items-center justify-between">
@@ -715,81 +858,116 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         </div>
 
         <div className="md:hidden p-3.5 space-y-3">
-          {data.snapshot.input.lines.map((line, index) => (
-            <MobileRecordCard
-              key={index}
-              title={line.description}
-              badge={
-                <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] font-mono font-bold text-xs">
-                  {line.rate}%
-                </span>
-              }
-            >
-              <MobileCardMetaGrid columns={3}>
-                <MobileCardField
-                  label={ui("الكمية")}
-                  value={
-                    <span>
-                      <span className="font-mono">{line.quantity}</span>{" "}
-                      {line.billingUnit ? ui(BILLING_UNIT_LABELS[line.billingUnit]) : ""}
+          {data.snapshot.input.lines.map((line, index) => {
+            const calc = data.snapshot.totals.lines?.[index];
+            return (
+              <MobileRecordCard
+                key={index}
+                title={line.description}
+                badge={
+                  <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] font-mono font-bold text-xs">
+                    {line.category === "S" ? `${line.rate}%` : `${line.category} (0%)`}
+                  </span>
+                }
+              >
+                <MobileCardMetaGrid columns={3}>
+                  <MobileCardField
+                    label={ui("الكمية")}
+                    value={
+                      <span>
+                        <span className="font-mono">{line.quantity}</span>{" "}
+                        {line.billingUnit ? ui(BILLING_UNIT_LABELS[line.billingUnit]) : ""}
+                      </span>
+                    }
+                  />
+                  <MobileCardField
+                    label={ui("السعر")}
+                    mono
+                    value={
+                      <bdi dir="ltr">
+                        {line.unitPrice} {ui("ر.س")}
+                      </bdi>
+                    }
+                  />
+                  <MobileCardField
+                    label={ui("الخصم")}
+                    mono
+                    value={
+                      <bdi dir="ltr">
+                        {line.discount} {ui("ر.س")}
+                      </bdi>
+                    }
+                  />
+                </MobileCardMetaGrid>
+                {calc && (
+                  <div className="mt-2 pt-2 border-t theme-border flex items-center justify-between text-xs font-mono" dir="ltr">
+                    <span className="text-[var(--text-muted)]">
+                      {text("صافي", "Net")}: {calc.net} · {text("ضريبة", "VAT")}: {calc.vat}
                     </span>
-                  }
-                />
-                <MobileCardField
-                  label={ui("السعر")}
-                  mono
-                  value={
-                    <bdi dir="ltr">
-                      {line.unitPrice} {ui("ر.س")}
-                    </bdi>
-                  }
-                />
-                <MobileCardField
-                  label={ui("الخصم")}
-                  mono
-                  value={
-                    <bdi dir="ltr">
-                      {line.discount} {ui("ر.س")}
-                    </bdi>
-                  }
-                />
-              </MobileCardMetaGrid>
-            </MobileRecordCard>
-          ))}
+                    <strong className="text-[var(--text-main)]">{calc.gross} SAR</strong>
+                  </div>
+                )}
+                {line.exemptionReason && (
+                  <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
+                    {line.exemptionCode ? `[${line.exemptionCode}] ` : ""}
+                    {line.exemptionReason}
+                  </p>
+                )}
+              </MobileRecordCard>
+            );
+          })}
         </div>
 
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-start text-xs sm:text-sm border-collapse">
             <thead>
               <tr className="bg-[var(--table-header-bg)] border-b theme-border text-[var(--text-muted)] font-bold">
-                {["البيان", "الكمية", "السعر", "الخصم", "الضريبة"].map((label) => (
-                  <th key={label} className="p-3.5 whitespace-nowrap">
-                    {ui(label)}
-                  </th>
-                ))}
+                <th className="p-3.5 whitespace-nowrap">{ui("البيان")}</th>
+                <th className="p-3.5 whitespace-nowrap">{ui("الكمية")}</th>
+                <th className="p-3.5 whitespace-nowrap">{ui("السعر")}</th>
+                <th className="p-3.5 whitespace-nowrap">{ui("الخصم")}</th>
+                <th className="p-3.5 whitespace-nowrap">{ui("الضريبة")}</th>
+                <th className="p-3.5 whitespace-nowrap">{text("الإجمالي", "Total")}</th>
               </tr>
             </thead>
             <tbody className="divide-y theme-border">
-              {data.snapshot.input.lines.map((line, index) => (
-                <tr key={index} className="hover:bg-[var(--table-row-hover)] transition">
-                  <td className="p-3.5 font-bold text-[var(--text-main)]">
-                    {line.description}
-                  </td>
-                  <td className="p-3.5 whitespace-nowrap font-semibold">
-                    <span className="font-mono">{line.quantity}</span>{" "}
-                    {line.billingUnit ? ui(BILLING_UNIT_LABELS[line.billingUnit]) : ""}
-                  </td>
-                  <td className="p-3.5 font-mono whitespace-nowrap" dir="ltr">
-                    {line.unitPrice} {ui("ر.س")}</td>
-                  <td className="p-3.5 font-mono text-[var(--text-muted)] whitespace-nowrap" dir="ltr">
-                    {line.discount} {ui("ر.س")}</td>
-                  <td className="p-3.5 font-mono whitespace-nowrap">
-                    <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold text-xs">
-                      {line.rate}%
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {data.snapshot.input.lines.map((line, index) => {
+                const calc = data.snapshot.totals.lines?.[index];
+                return (
+                  <tr key={index} className="hover:bg-[var(--table-row-hover)] transition">
+                    <td className="p-3.5 font-bold text-[var(--text-main)]">
+                      <div>{line.description}</div>
+                      {line.exemptionReason && (
+                        <div className="mt-0.5 text-[11px] font-normal text-[var(--text-muted)]">
+                          {line.exemptionCode ? `${line.exemptionCode} — ` : ""}
+                          {line.exemptionReason}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3.5 whitespace-nowrap font-semibold">
+                      <span className="font-mono">{line.quantity}</span>{" "}
+                      {line.billingUnit ? ui(BILLING_UNIT_LABELS[line.billingUnit]) : ""}
+                    </td>
+                    <td className="p-3.5 font-mono whitespace-nowrap" dir="ltr">
+                      {line.unitPrice} {ui("ر.س")}</td>
+                    <td className="p-3.5 font-mono text-[var(--text-muted)] whitespace-nowrap" dir="ltr">
+                      {line.discount} {ui("ر.س")}</td>
+                    <td className="p-3.5 font-mono whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--accent-surface)] text-[var(--accent-gold)] font-bold text-xs">
+                        {line.category === "S" ? `${line.rate}%` : `${line.category} (0%)`}
+                      </span>
+                      {calc && (
+                        <div className="mt-1 text-[11px] text-[var(--text-muted)]" dir="ltr">
+                          {calc.vat} {text("ر.س", "SAR")}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3.5 font-mono font-bold whitespace-nowrap text-[var(--text-main)]" dir="ltr">
+                      {calc ? `${calc.gross} SAR` : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
