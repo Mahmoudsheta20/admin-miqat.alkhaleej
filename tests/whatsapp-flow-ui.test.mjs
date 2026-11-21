@@ -350,3 +350,92 @@ test("reconnectWhatsApp posts with credentials and unwraps nested status payload
   );
   await assert.rejects(() => errApi.reconnectWhatsApp(), /Unable to reconnect WhatsApp/);
 });
+
+test("fetchWhatsAppStatus normalizes savedSession and haltCode, and reconnectWhatsApp sends explicit modes", async () => {
+  const statusApi = setup(
+    async () =>
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            status: "disconnected",
+            qrImage: null,
+            haltCode: null,
+            savedSession: {
+              hasSession: true,
+              me_id: "966501112233:1@s.whatsapp.net",
+              me_push_name: "Miqat Ops",
+            },
+            recovery: { canReconnect: true, canRelink: true },
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+  );
+  const status = await statusApi.fetchWhatsAppStatus();
+  assert.equal(status.haltCode, null);
+  assert.deepEqual(status.savedSession, {
+    hasSession: true,
+    me_id: "966501112233:1@s.whatsapp.net",
+    me_push_name: "Miqat Ops",
+  });
+
+  const loggedOutApi = setup(
+    async () =>
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            status: "disconnected",
+            qrImage: null,
+            haltCode: "logged_out",
+            savedSession: { hasSession: false },
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+  );
+  const loggedOutStatus = await loggedOutApi.fetchWhatsAppStatus();
+  assert.equal(loggedOutStatus.haltCode, "logged_out");
+  assert.deepEqual(loggedOutStatus.savedSession, { hasSession: false });
+
+  const calls = [];
+  const reconnectApi = setup(
+    async (url, init) => {
+      calls.push({
+        url,
+        method: init.method,
+        credentials: init.credentials,
+        headers: init.headers ?? null,
+        body: init.body ?? null,
+      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            status: "qr_ready",
+            qrImage: "data:image/png;base64,abc",
+            haltCode: null,
+            savedSession: { hasSession: false },
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    },
+    { lang: "en" },
+  );
+
+  await reconnectApi.reconnectWhatsApp();
+  await reconnectApi.reconnectWhatsApp("same_number");
+  await reconnectApi.reconnectWhatsApp("new_number");
+
+  assert.equal(calls.length, 3);
+  assert.equal(calls[0].body, null);
+  assert.equal(calls[1].url, "/api/proxy/whatsapp/reconnect");
+  assert.equal(calls[1].method, "POST");
+  assert.equal(calls[1].credentials, "include");
+  assert.equal(calls[1].headers["Content-Type"], "application/json");
+  assert.equal(calls[1].body, JSON.stringify({ mode: "same_number" }));
+  assert.equal(calls[2].headers["Content-Type"], "application/json");
+  assert.equal(calls[2].body, JSON.stringify({ mode: "new_number" }));
+});

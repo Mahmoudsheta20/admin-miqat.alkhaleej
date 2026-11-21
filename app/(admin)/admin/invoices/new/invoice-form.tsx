@@ -4,48 +4,27 @@ import { useUiText } from "@/lib/ui-text";
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type FormEvent,
 } from "react";
 import Link from "next/link";
-import CustomerPicker from "@/app/_components/commercial/customer-picker";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
-  CheckCircle2,
-  ChevronDown,
-  CreditCard,
-  FileSpreadsheet,
-  FileText,
-  HelpCircle,
-  Landmark,
   Loader2,
-  Plus,
   ReceiptText,
   Save,
   Truck,
-  Wallet,
-  X,
 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 
-import InvoiceTypeSelector, {
-  type UnifiedDocChoice,
-} from "./invoice-type-selector";
-import InvoiceBankFields, {
-  EMPTY_BANK,
-} from "@/app/_components/InvoiceBankFields";
-import InvoicePhoneField from "./invoice-phone-field";
+import { type UnifiedDocChoice } from "./invoice-type-selector";
+import { EMPTY_BANK } from "@/app/_components/InvoiceBankFields";
 import { invoicePhoneFrom, invoicePhoneNumber } from "@/lib/invoice-phone";
-import BookingFields from "./booking-fields";
-import ContractPicker, { type InvoiceContractOption } from "./contract-picker";
-import InvoiceLineEditor from "./invoice-line-editor";
-import TransportFields from "./transport-fields";
+import { type InvoiceContractOption } from "./contract-picker";
 import {
   bookingNotes,
   emptyBooking,
@@ -88,9 +67,6 @@ import {
 import { accountingRequest } from "@/lib/accounting";
 import { moneyDecimal, moneyMinor } from "@/lib/money";
 import { MobileStickyActionBar } from "@/app/_components/mobile";
-import { ExpandableField } from "@/app/_components/form/FullscreenFieldModal";
-import { FullscreenSelect } from "@/app/_components/form/FullscreenSelect";
-import AutoSendWhatsAppCard from "@/app/_components/AutoSendWhatsAppCard";
 import { useAuth } from "@/lib/authContext";
 import { hasClientPermission } from "@/lib/permissions";
 import {
@@ -99,11 +75,20 @@ import {
   type WhatsAppAutoSendResult,
 } from "@/lib/whatsapp";
 
-export type FormStage =
-  | "DOCUMENT_AND_CUSTOMER"
-  | "TRIP_AND_SERVICE"
-  | "PRICE_AND_TAX"
-  | "PAYMENT_AND_REVIEW";
+import {
+  amount,
+  difference,
+  EMPTY_BUYER,
+  STAGES,
+  type BuyerForm,
+  type FormLine,
+  type FormStage,
+} from "./invoice-form-types";
+import InvoiceSummarySidebar from "./invoice-summary-sidebar";
+import StageDocumentCustomer from "./stage-document-customer";
+import StageTripService from "./stage-trip-service";
+import StagePriceTax from "./stage-price-tax";
+import StagePaymentReview from "./stage-payment-review";
 
 interface InvoiceFormProps {
   contractId?: string;
@@ -113,84 +98,6 @@ interface InvoiceFormProps {
   inModal?: boolean;
   onClose?: () => void;
   onCreated?: (invoiceId: string) => void;
-}
-
-interface FormLine {
-  id: string;
-  input: InvoiceLineInput;
-}
-
-interface BuyerForm {
-  name: string;
-  vatNumber: string;
-  street: string;
-  building: string;
-  district: string;
-  city: string;
-  postalCode: string;
-  commercialRegistration: string;
-}
-
-const EMPTY_BUYER: BuyerForm = {
-  name: "",
-  vatNumber: "",
-  street: "",
-  building: "",
-  district: "",
-  city: "",
-  postalCode: "",
-  commercialRegistration: "",
-};
-
-const INLINE_INPUT =
-  "theme-input min-h-11 sm:min-h-9 w-full min-w-0 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
-const INPUT = `mt-1.5 ${INLINE_INPUT}`;
-
-const STAGES: {
-  id: FormStage;
-  number: string;
-  title: string;
-  subtitle: string;
-}[] = [
-  {
-    id: "DOCUMENT_AND_CUSTOMER",
-    number: "١",
-    title: "نوع المستند والعميل",
-    subtitle: "اختر نوع المستند وبيانات العميل",
-  },
-  {
-    id: "TRIP_AND_SERVICE",
-    number: "٢",
-    title: "مسار الرحلة والخدمة",
-    subtitle: "حدد مسار الرحلة وموعدها والمركبة",
-  },
-  {
-    id: "PRICE_AND_TAX",
-    number: "٣",
-    title: "السعر والضريبة",
-    subtitle: "أدخل قيمة الخدمة والمعاملة الضريبية",
-  },
-  {
-    id: "PAYMENT_AND_REVIEW",
-    number: "٤",
-    title: "الدفع والمراجعة",
-    subtitle: "هل دفع العميل والمراجعة النهائية",
-  },
-];
-
-function difference(before: string, after: string): string {
-  const beforeMinor = moneyMinor(before);
-  const afterMinor = moneyMinor(after);
-  if (beforeMinor === null || afterMinor === null) return "—";
-  const diff = beforeMinor - afterMinor;
-  return moneyDecimal(diff < BigInt(0) ? BigInt(0) : diff);
-}
-
-function amount(value: string): string {
-  const [whole, decimals] = value.split(".");
-  return decimals === undefined
-    ? value
-    : `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${decimals}`;
 }
 
 export default function InvoiceForm({
@@ -209,7 +116,6 @@ export default function InvoiceForm({
 
   const router = useRouter();
 
-  // Active Stepper Stage
   const [currentStage, setCurrentStage] = useState<FormStage>(
     "DOCUMENT_AND_CUSTOMER",
   );
@@ -277,7 +183,6 @@ export default function InvoiceForm({
     };
   }, [authLoading, canViewWhatsApp]);
 
-  // Simplified Payment UX: "هل دفع العميل؟"
   const [paymentStatusChoice, setPaymentStatusChoice] = useState<
     "NOT_PAID" | "FULLY_PAID" | "PARTIALLY_PAID"
   >("NOT_PAID");
@@ -289,10 +194,7 @@ export default function InvoiceForm({
     "BANK_TRANSFER" | "CASH"
   >("BANK_TRANSFER");
 
-  // Show Accountant details (collapsible)
   const [showAccountantDetails, setShowAccountantDetails] = useState(false);
-
-  // Supplemental Trip details (collapsible)
   const [showSupplementalTrip, setShowSupplementalTrip] = useState(false);
 
   const [buyer, setBuyer] = useState<BuyerForm>(EMPTY_BUYER);
@@ -328,7 +230,6 @@ export default function InvoiceForm({
   const sourceVersion = useRef(0);
   const errorRegion = useRef<HTMLDivElement>(null);
 
-  // Synchronize settlementAccountCode & paymentCode based on "هل دفع العميل؟"
   const changePaymentStatusChoice = (
     choice: "NOT_PAID" | "FULLY_PAID" | "PARTIALLY_PAID",
   ) => {
@@ -349,15 +250,14 @@ export default function InvoiceForm({
     }
   };
 
-  const paymentCode = useMemo(() => {
-    if (paymentStatusChoice === "NOT_PAID") return "30"; // Credit / Transfer
-    if (paymentStatusChoice === "FULLY_PAID") {
-      if (fullPaymentMethod === "CASH") return "10";
-      if (fullPaymentMethod === "CARD") return "48";
-      return "42"; // Bank
-    }
-    return "30";
-  }, [paymentStatusChoice, fullPaymentMethod]);
+  const paymentCode =
+    paymentStatusChoice === "FULLY_PAID"
+      ? fullPaymentMethod === "CASH"
+        ? "10"
+        : fullPaymentMethod === "CARD"
+          ? "48"
+          : "42"
+      : "30";
 
   const applyOriginal = useCallback((invoice: InvoiceDetail) => {
     setOriginal(invoice);
@@ -416,7 +316,6 @@ export default function InvoiceForm({
     setIsSourceLoading(false);
   }
 
-  // Handle Unified Doc Choice
   const handleDocChoice = (choice: UnifiedDocChoice) => {
     setIsReviewed(false);
     setError("");
@@ -511,10 +410,7 @@ export default function InvoiceForm({
               input: {
                 ...emptyInvoiceLine(),
                 description:
-                  `خدمة نقل من ${origin} إلى ${destination}`.slice(
-                    0,
-                    200,
-                  ),
+                  `خدمة نقل من ${origin} إلى ${destination}`.slice(0, 200),
               },
             },
           ]);
@@ -613,7 +509,13 @@ export default function InvoiceForm({
       postalCode: nextBuyer.postalCode ?? "",
       commercialRegistration: nextBuyer.commercialRegistration ?? "",
     });
-    if (isTaxMode && !original && !manualProfileRef.current && (change.vatNumber !== undefined || change.commercialRegistration !== undefined)) {
+    if (
+      isTaxMode &&
+      !original &&
+      !manualProfileRef.current &&
+      (change.vatNumber !== undefined ||
+        change.commercialRegistration !== undefined)
+    ) {
       const hasTaxId = Boolean(
         nextBuyer.vatNumber.trim() || nextBuyer.commercialRegistration.trim(),
       );
@@ -675,7 +577,6 @@ export default function InvoiceForm({
     setSourceError("");
     setIsReviewed(false);
 
-    // Immediately and synchronously populate route, trip date, and buyer name from the contract
     const safeCustomerName = contract.customerName || "";
     setBuyer((current) =>
       current.name === safeCustomerName
@@ -881,7 +782,6 @@ export default function InvoiceForm({
     }
   };
 
-  // Save / Issue Invoice
   async function submitInvoice(reviewedOverride?: boolean) {
     const reviewed = reviewedOverride ?? isReviewed;
     if (!canSave) return;
@@ -1027,9 +927,7 @@ export default function InvoiceForm({
                 : {}),
               ...(bankDetails.iban.replace(/\s/g, "").trim()
                 ? {
-                    iban: bankDetails.iban
-                      .replace(/\s/g, "")
-                      .toUpperCase(),
+                    iban: bankDetails.iban.replace(/\s/g, "").toUpperCase(),
                   }
                 : {}),
               ...(bankDetails.swiftCode.trim()
@@ -1056,7 +954,10 @@ export default function InvoiceForm({
                       originalInvoiceId: taxDocument.originalInvoiceId,
                       adjustmentReason: taxDocument.adjustmentReason?.trim(),
                       ...(taxDocument.adjustmentEventDate?.trim()
-                        ? { adjustmentEventDate: taxDocument.adjustmentEventDate.trim() }
+                        ? {
+                            adjustmentEventDate:
+                              taxDocument.adjustmentEventDate.trim(),
+                          }
                         : {}),
                     }
                   : {}),
@@ -1139,7 +1040,6 @@ export default function InvoiceForm({
 
       if (result.data) {
         let payWarn = "";
-        // If partial payment was entered during creation, issue the payment voucher immediately!
         if (
           documentType !== "PROFORMA" &&
           !isCreditNote &&
@@ -1200,7 +1100,6 @@ export default function InvoiceForm({
     void submitInvoice();
   }
 
-  // Exact minor-unit Remaining Balance for Stage 4
   const estTotalMinor = estimate.isValid ? moneyMinor(estimate.gross) : null;
   const estPartialMinor = moneyMinor(partialPaymentAmount) ?? BigInt(0);
   const remainingBalance =
@@ -1223,58 +1122,7 @@ export default function InvoiceForm({
     "أدخل بيانات المستند في ٤ خطوات واضحة وميسرة دون تعقيد محاسبي",
   );
 
-  const linesBody = (
-    <>
-      <div className="space-y-4">
-        {rows.map((row, index) => (
-          <InvoiceLineEditor
-            key={row.id}
-            isBooking={index === 0}
-            index={index}
-            value={row.input}
-            canRemove={rows.length > 1 && index > 0}
-            amount={estimate.lines[index]?.gross}
-            onChange={(change) => updateRow(row.id, change)}
-            onRemove={() => {
-              setRows((current) =>
-                current.filter((item) => item.id !== row.id),
-              );
-              setIsReviewed(false);
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Add Service Buttons */}
-      <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t theme-border">
-        <button
-          type="button"
-          disabled={rows.length >= 200}
-          onClick={() => addService()}
-          className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-[var(--accent-gold)] transition cursor-pointer"
-        >
-          <Plus className="size-4" aria-hidden="true" />
-          <span>{ui("إضافة خدمة جديدة")}</span>
-        </button>
-        {["رسوم نقل إضافية", "جولة سياحية وزيارات", "رسوم انتظار"].map(
-          (label) => (
-            <button
-              key={label}
-              type="button"
-              disabled={rows.length >= 200}
-              onClick={() => addService(label)}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
-            >
-              <Plus className="size-3.5" aria-hidden="true" />
-              <span>{ui(label)}</span>
-            </button>
-          ),
-        )}
-      </div>
-    </>
-  );
-
-  const workspaceContent = (
+  return (
     <div
       className={`creation-workspace mx-auto max-w-[1680px] ${
         inModal ? "pb-6" : "pb-12"
@@ -1427,1674 +1275,217 @@ export default function InvoiceForm({
           onSubmit={save}
           className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_390px]"
         >
-          {/* Main Stepper Stages Area */}
           <fieldset
             disabled={isSaving || isSourceLoading}
             className="min-w-0 space-y-5 disabled:opacity-75"
           >
-            {/* =========================================================================
-                المرحلة الأولى: نوع المستند والعميل (§5 المرحلة الأولى)
-               ========================================================================= */}
             {currentStage === "DOCUMENT_AND_CUSTOMER" && (
-              <div className="space-y-5">
-                {/* 1a. Unified Document Selector */}
-                <InvoiceTypeSelector
-                  documentType={documentType}
-                  taxKind={taxDocument.kind}
-                  onChangeType={handleDocChoice}
-                />
-
-                {/* Customer invoice subtype: Tax Invoice (ZATCA QR) vs Internal Booking Invoice */}
-                {taxDocument.kind === "INVOICE" && documentType !== "PROFORMA" && (
-                  <section className="theme-card rounded-2xl p-4 border theme-border flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)] block">
-                        {text("نوع فاتورة العميل", "Customer Invoice Mode")}
-                      </span>
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {documentType === "TAX"
-                          ? text(
-                              "فاتورة ضريبية معتمدة مع رمز ZATCA QR وقابلة لإصدار إشعارات دائن ومدين.",
-                              "Tax invoice with official ZATCA QR and Credit/Debit note support.",
-                            )
-                          : text(
-                              "فاتورة حجز داخلية للرحلة دون رمز ضريبي ZATCA.",
-                              "Internal booking invoice without ZATCA QR.",
-                            )}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        aria-pressed={documentType === "TAX"}
-                        onClick={() => {
-                          setCustomerSubtype("TAX");
-                          setDocumentType("TAX");
-                          setIsReviewed(false);
-                        }}
-                        className={`min-h-11 sm:min-h-9 rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                          documentType === "TAX"
-                            ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
-                            : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/60"
-                        }`}
-                      >
-                        {text("فاتورة ضريبية (ZATCA QR)", "Tax Invoice (ZATCA)")}
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={documentType === "BOOKING"}
-                        onClick={() => {
-                          setCustomerSubtype("BOOKING");
-                          setDocumentType("BOOKING");
-                          setIsReviewed(false);
-                        }}
-                        className={`min-h-11 sm:min-h-9 rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                          documentType === "BOOKING"
-                            ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
-                            : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/60"
-                        }`}
-                      >
-                        {text("فاتورة حجز", "Booking Invoice")}
-                      </button>
-                    </div>
-                  </section>
-                )}
-
-                {/* Seller Readiness & ZATCA Tax Fields */}
-                {isTaxMode && (
-                  <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-3">
-                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
-                        {text("خصائص المستند الضريبي (ZATCA)", "Tax Document Settings (ZATCA)")}
-                      </h2>
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {taxDocument.profile === "STANDARD"
-                          ? text("يتطلب عنوان المشتري ورقمه الضريبي أو التجاري", "Requires full buyer address + VAT or CRN")
-                          : text("مبسطة للأفراد والنقل اليومي", "Simplified B2C document")}
-                      </span>
-                    </div>
-
-                    {sellerMissingTax && (
-                      <div
-                        role="alert"
-                        className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs sm:text-sm text-amber-900 dark:text-amber-300 flex flex-wrap items-center justify-between gap-3"
-                      >
-                        <span className="font-bold">
-                          {text(
-                            "بيانات المنشأة الضريبية غير مكتملة (الرقم الضريبي أو السجل التجاري أو العنوان الوطني). يلزم إكمالها لحفظ المستند الضريبي.",
-                            "Seller tax identity is incomplete (VAT, CRN, or National Address). Complete Company Settings before issuing a tax document.",
-                          )}
-                        </span>
-                        <Link
-                          href="/admin/invoices/settings"
-                          className="inline-flex min-h-9 items-center rounded-lg border border-current/30 px-3 py-1 text-xs font-bold hover:bg-black/5 dark:hover:bg-white/5 transition"
-                        >
-                          {text("إكمال إعدادات الشركة", "Company Settings")}
-                        </Link>
-                      </div>
-                    )}
-
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] block">
-                        <span className="block mb-1">
-                          {text("نموذج الفاتورة الضريبية", "Tax Invoice Profile")}
-                        </span>
-                        <select
-                          disabled={Boolean(original)}
-                          value={taxDocument.profile}
-                          onChange={(e) => {
-                            const nextProfile = e.target.value as "STANDARD" | "SIMPLIFIED";
-                            manualProfileRef.current = true;
-                            setTaxDocument((current) => ({
-                              ...current,
-                              profile: nextProfile,
-                            }));
-                            if (nextProfile === "STANDARD") {
-                              setShowBuyerDetails(true);
-                            }
-                            setIsReviewed(false);
-                          }}
-                          className={`${INLINE_INPUT} disabled:opacity-60`}
-                        >
-                          <option value="SIMPLIFIED">
-                            {text("مبسطة (B2C للأفراد)", "Simplified (B2C)")}
-                          </option>
-                          <option value="STANDARD">
-                            {text("ضريبية قياسية (B2B للمنشآت)", "Standard Tax (B2B)")}
-                          </option>
-                        </select>
-                      </label>
-
-                      <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] block">
-                        <span className="block mb-1">
-                          {text("تاريخ التوريد *", "Supply Date *")}
-                        </span>
-                        <input
-                          type="date"
-                          required
-                          dir="ltr"
-                          value={taxDocument.supplyDate}
-                          onChange={(e) => {
-                            setTaxDocument((current) => ({
-                              ...current,
-                              supplyDate: e.target.value,
-                            }));
-                            setIsReviewed(false);
-                          }}
-                          className={`${INLINE_INPUT} font-mono`}
-                        />
-                      </label>
-
-                      {taxDocument.kind !== "INVOICE" && (
-                        <label className="text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] block">
-                          <span className="block mb-1">
-                            {text("تاريخ واقعة الإشعار (اختياري)", "Adjustment Event Date")}
-                          </span>
-                          <input
-                            type="date"
-                            dir="ltr"
-                            value={taxDocument.adjustmentEventDate || ""}
-                            onChange={(e) => {
-                              setTaxDocument((current) => ({
-                                ...current,
-                                adjustmentEventDate: e.target.value || undefined,
-                              }));
-                              setIsReviewed(false);
-                            }}
-                            className={`${INLINE_INPUT} font-mono`}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </section>
-                )}
-
-                {/* 1b. If Credit or Debit Note, choose Original Invoice and Reason */}
-                {isTaxMode && taxDocument.kind !== "INVOICE" && (
-                  <section className="theme-card rounded-2xl p-4 sm:p-5 border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)]">
-                    <div className="flex items-center gap-2 mb-2.5">
-                      <span className="rounded-md bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] px-2.5 py-0.5 text-xs font-semibold">
-                        {ui("ربط الفاتورة الأصلية للإشعار")}
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[var(--text-muted)] mb-3.5 leading-relaxed">
-                      {ui(
-                        "يُشترط نظاماً ربط الإشعار برقم الفاتورة الصادرة سابقاً. سيتم نسخ بيانات العميل والمسار والضريبة تلقائياً.",
-                      )}
-                    </p>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="sm:col-span-2">
-                        <FullscreenSelect
-                          label={ui("الفاتورة الأصلية")}
-                          required
-                          searchable
-                          columns={2}
-                          clearable
-                          searchValue={origSearch}
-                          onSearchChange={setOrigSearch}
-                          searchPlaceholder={ui("رقم الفاتورة أو اسم العميل")}
-                          placeholder={ui("اختر الفاتورة الأصلية")}
-                          value={taxDocument.originalInvoiceId || ""}
-                          onChange={(id) => void selectOriginal(id)}
-                          error={
-                            origSearchError ? ui(origSearchError) : undefined
-                          }
-                          options={[
-                            ...(original &&
-                            !origOptions.some((o) => o.id === original.id)
-                              ? [
-                                  {
-                                    value: original.id,
-                                    label: `${original.invoiceNumber} · ${original.customerName}`,
-                                    badge: original.invoiceNumber,
-                                  },
-                                ]
-                              : []),
-                            ...origOptions.map((item) => ({
-                              value: item.id,
-                              label:
-                                taxDocument.kind === "CREDIT"
-                                  ? `${item.invoiceNumber} · ${item.customerName} (${text("المتاح للتخفيض", "Avail.")}: ${item.remainingGross} SAR)`
-                                  : `${item.invoiceNumber} · ${item.customerName} (${item.totalAmount} SAR)`,
-                              badge: item.invoiceNumber,
-                              keywords: `${item.invoiceNumber} ${item.customerName}`,
-                            })),
-                          ]}
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <ExpandableField
-                          label={ui("سبب إصدار هذا الإشعار بالعربية")}
-                          required
-                          maxLength={200}
-                          placeholder={ui(
-                            taxDocument.kind === "CREDIT"
-                              ? "مثال: خصم تجاري ممنوح أو إلغاء رحلة جزئياً"
-                              : "مثال: رسوم جولة إضافية وتمديد ساعات الخدمة",
-                          )}
-                          value={taxDocument.adjustmentReason || ""}
-                          onApply={(adjustmentReason) =>
-                            setTaxDocument({ ...taxDocument, adjustmentReason })
-                          }
-                        >
-                          <input
-                            required
-                            maxLength={200}
-                            className={INLINE_INPUT}
-                            placeholder={ui(
-                              taxDocument.kind === "CREDIT"
-                                ? "مثال: خصم تجاري ممنوح أو إلغاء رحلة جزئياً"
-                                : "مثال: رسوم جولة إضافية وتمديد ساعات الخدمة",
-                            )}
-                            value={taxDocument.adjustmentReason || ""}
-                            onChange={(e) =>
-                              setTaxDocument({
-                                ...taxDocument,
-                                adjustmentReason: e.target.value,
-                              })
-                            }
-                          />
-                        </ExpandableField>
-                      </div>
-                    </div>
-                    {original && (
-                      <div className="mt-3.5 space-y-2.5">
-                        <div className="rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--bg-card)] p-3.5 text-xs sm:text-sm flex flex-wrap items-center justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
-                            <ReceiptText className="size-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
-                            <div>
-                              <span className="font-bold text-[var(--text-main)]">
-                                {ui("الفاتورة الأصلية المرتبطة")}: {original.invoiceNumber}
-                              </span>
-                              <span className="text-[var(--text-muted)] ms-2">
-                                ({original.customerName} · {amount(original.snapshot.totals.gross)} {ui("ر.س")})
-                              </span>
-                              {taxDocument.kind === "CREDIT" && (original.creditBalance || selectedOrigSummary) && (
-                                <span className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-0.5 font-mono" dir="ltr">
-                                  {text("المتاح للإشعار الدائن", "Remaining creditable")}:{" "}
-                                  {original.creditBalance?.availableGross ?? selectedOrigSummary?.remainingGross}{" "}
-                                  {text("ر.س", "SAR")}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => void selectOriginal("")}
-                            className="min-h-11 sm:min-h-8 inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-rose-500 hover:text-rose-600 transition cursor-pointer"
-                          >
-                            <X className="size-3.5" aria-hidden="true" />
-                            <span>{ui("تغيير")}</span>
-                          </button>
-                        </div>
-                        {creditCapError && (
-                          <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-700 dark:text-rose-300">
-                            {creditCapError}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {/* 1c. Fast Import: Use Existing Contract */}
-                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-3.5 mb-4">
-                    <div>
-                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
-                        {ui("بيانات العميل والفاتورة")}
-                      </h2>
-                      <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
-                        {ui(
-                          "اختر العقد لاستيراد كافة بيانات الرحلة والعميل بضغطة زر، أو أدخلها يدوياً",
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Contract Picker */}
-                  <div className="mb-5 pb-5 border-b theme-border">
-                    <ContractPicker
-                      selected={selectedContract}
-                      isLoading={isSourceLoading}
-                      onSelect={(c) => void selectContract(c)}
-                      onClear={clearContract}
-                    />
-                    {sourceError && (
-                      <p
-                        role="alert"
-                        className="mt-2 text-sm font-bold text-rose-700 dark:text-rose-400"
-                      >
-                        {ui(sourceError)}
-                      </p>
-                    )}
-                    {selectedContract && (
-                      <div className="mt-3.5 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
-                        <div className="flex items-center gap-2.5">
-                          <div className="size-8 rounded-lg bg-[var(--accent-btn-bg)] text-[var(--accent-btn-fg)] flex items-center justify-center shrink-0">
-                            <FileText className="size-4" aria-hidden="true" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-[var(--text-main)]">
-                                {ui("تم استيراد العقد")}: {selectedContract.referenceNumber}
-                              </span>
-                              <span className="rounded-md border theme-border bg-[var(--bg-card)] px-1.5 py-0.5 font-mono text-xs font-semibold text-[var(--text-main)]">
-                                {selectedContract.tripDate}
-                              </span>
-                            </div>
-                            <p className="text-[var(--text-muted)] text-xs mt-0.5">
-                              {selectedContract.customerName} · {selectedContract.origin} {ui.dir === "rtl" ? "←" : "→"} {selectedContract.destination}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={clearContract}
-                          className="min-h-11 sm:min-h-8 inline-flex items-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-2.5 py-1 text-xs font-bold text-[var(--text-main)] hover:border-rose-500 hover:text-rose-600 transition cursor-pointer"
-                        >
-                          <X className="size-3.5" aria-hidden="true" />
-                          <span>{ui("إلغاء الربط")}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {!original && (
-                    <div className="mb-5">
-                      <CustomerPicker
-                        value={customerId}
-                        onSelect={(c) => {
-                          setCustomerId(c?.id || "");
-                          if (c) {
-                            setBuyer({
-                              name: c.name || "",
-                              vatNumber: c.vatNumber || "",
-                              commercialRegistration: c.identification || "",
-                              street: c.address?.street || "",
-                              building: c.address?.building || "",
-                              district: c.address?.district || "",
-                              city: c.address?.city || "",
-                              postalCode: c.address?.postalCode || "",
-                            });
-                            if (c.phone) {
-                              setPhone(invoicePhoneFrom(c.phone));
-                            }
-                            setTaxDocument((v) => ({
-                              ...v,
-                              profile:
-                                c.type === "COMPANY"
-                                  ? "STANDARD"
-                                  : "SIMPLIFIED",
-                            }));
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
-                  {/* Customer Information Grid */}
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <ExpandableField
-                      label={ui("الفاتورة باسم (العميل أو المنشأة)")}
-                      required
-                      maxLength={200}
-                      autoComplete="name"
-                      disabled={Boolean(original)}
-                      placeholder={ui("اسم الفرد، الفندق، أو الشركة")}
-                      value={buyer.name || ""}
-                      onApply={(name) => updateBuyer({ name: name || "" })}
-                    >
-                      <input
-                        name="customerName"
-                        readOnly={Boolean(original)}
-                        required
-                        maxLength={200}
-                        autoComplete="name"
-                        placeholder={ui("اسم الفرد، الفندق، أو الشركة")}
-                        className={INLINE_INPUT}
-                        value={buyer.name || ""}
-                        onChange={(e) => updateBuyer({ name: e.target.value })}
-                      />
-                    </ExpandableField>
-
-                    <ExpandableField
-                      label={ui("الرقم الضريبي للمشتري (للمنشآت B2B)")}
-                      inputMode="numeric"
-                      pattern="3\d{13}3"
-                      maxLength={15}
-                      dir="ltr"
-                      disabled={Boolean(original)}
-                      placeholder={ui("3xxxxxxxxxxxxxx3 (15 رقماً)")}
-                      value={buyer.vatNumber || ""}
-                      onApply={(vatNumber) =>
-                        updateBuyer({ vatNumber: vatNumber || "" })
-                      }
-                    >
-                      <input
-                        name="customerVat"
-                        readOnly={Boolean(original)}
-                        inputMode="numeric"
-                        pattern="3\d{13}3"
-                        maxLength={15}
-                        dir="ltr"
-                        placeholder={ui("3xxxxxxxxxxxxxx3 (15 رقماً)")}
-                        className={`${INLINE_INPUT} font-mono`}
-                        value={buyer.vatNumber || ""}
-                        onChange={(e) =>
-                          updateBuyer({ vatNumber: e.target.value })
-                        }
-                      />
-                    </ExpandableField>
-
-                    <ExpandableField
-                      label={ui("اسم الضيف أو مسؤول المجموعة (اختياري)")}
-                      maxLength={160}
-                      autoComplete="name"
-                      placeholder={ui("إذا كان مختلفاً عن صاحب الفاتورة")}
-                      value={transport.contactName || ""}
-                      onApply={(contactName) =>
-                        updateTransport({ contactName: contactName || "" })
-                      }
-                    >
-                      <input
-                        maxLength={160}
-                        autoComplete="name"
-                        placeholder={ui("إذا كان مختلفاً عن صاحب الفاتورة")}
-                        className={INLINE_INPUT}
-                        value={transport.contactName || ""}
-                        onChange={(e) =>
-                          updateTransport({ contactName: e.target.value })
-                        }
-                      />
-                    </ExpandableField>
-
-                    {/* Phone with Country Code */}
-                    <div>
-                      <span className="block text-xs sm:text-[0.8125rem] font-semibold text-[var(--text-main)] mb-1">
-                        {ui("رقم الجوال للتواصل والفاتورة *")}
-                      </span>
-                      <InvoicePhoneField
-                        value={phone}
-                        onChange={(v) => {
-                          setPhone(v);
-                          setIsReviewed(false);
-                        }}
-                      />
-                    </div>
-
-                    <ExpandableField
-                      label={ui("البريد الإلكتروني (اختياري)")}
-                      type="email"
-                      maxLength={160}
-                      dir="ltr"
-                      placeholder="customer@example.com"
-                      value={booking.email || ""}
-                      onApply={(email) => updateBooking({ email: email || "" })}
-                    >
-                      <input
-                        type="email"
-                        maxLength={160}
-                        dir="ltr"
-                        placeholder="customer@example.com"
-                        className={INLINE_INPUT}
-                        value={booking.email || ""}
-                        onChange={(e) =>
-                          updateBooking({ email: e.target.value })
-                        }
-                      />
-                    </ExpandableField>
-
-                    <ExpandableField
-                      label={ui("عدد الركاب في الرحلة")}
-                      required
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      max={100}
-                      step={1}
-                      placeholder={ui("مثال: 4 ركاب")}
-                      value={
-                        transport.passengerCount !== undefined &&
-                        transport.passengerCount !== null
-                          ? String(transport.passengerCount)
-                          : ""
-                      }
-                      onApply={(next) => {
-                        const trimmed = next.trim();
-                        const parsed = Number(trimmed);
-                        updateTransport({
-                          passengerCount:
-                            trimmed && Number.isFinite(parsed)
-                              ? parsed
-                              : undefined,
-                        });
-                      }}
-                    >
-                      <input
-                        required
-                        type="number"
-                        min={1}
-                        max={100}
-                        step={1}
-                        placeholder={ui("مثال: 4 ركاب")}
-                        className={`${INLINE_INPUT} font-mono`}
-                        value={
-                          transport.passengerCount !== undefined &&
-                          transport.passengerCount !== null
-                            ? transport.passengerCount
-                            : ""
-                        }
-                        onChange={(e) =>
-                          updateTransport({
-                            passengerCount: e.target.value
-                              ? Number(e.target.value)
-                              : undefined,
-                          })
-                        }
-                      />
-                    </ExpandableField>
-                  </div>
-
-                  {/* Commercial Registration if entered */}
-                  {isTaxMode && (
-                    <div className="mt-5">
-                      <ExpandableField
-                        label={ui("رقم السجل التجاري للعميل (اختياري)")}
-                        inputMode="numeric"
-                        pattern="[0-9]{10}"
-                        maxLength={10}
-                        dir="ltr"
-                        disabled={Boolean(original)}
-                        placeholder={ui("10 أرقام")}
-                        value={
-                          original
-                            ? original.snapshot.input.buyer.identification || ""
-                            : buyer.commercialRegistration || ""
-                        }
-                        onApply={(commercialRegistration) =>
-                          updateBuyer({
-                            commercialRegistration:
-                              commercialRegistration || "",
-                          })
-                        }
-                      >
-                        <input
-                          readOnly={Boolean(original)}
-                          inputMode="numeric"
-                          pattern="[0-9]{10}"
-                          maxLength={10}
-                          dir="ltr"
-                          placeholder={ui("10 أرقام")}
-                          className={`${INLINE_INPUT} font-mono`}
-                          value={
-                            original
-                              ? original.snapshot.input.buyer.identification ||
-                                ""
-                              : buyer.commercialRegistration || ""
-                          }
-                          onChange={(e) =>
-                            updateBuyer({
-                              commercialRegistration: e.target.value,
-                            })
-                          }
-                        />
-                      </ExpandableField>
-                    </div>
-                  )}
-
-                  {/* National Address: auto-opened if B2B/VAT or toggleable */}
-                  <div className="mt-4 pt-3.5 border-t theme-border">
-                    <button
-                      type="button"
-                      aria-expanded={showBuyerDetails}
-                      className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 py-1 text-xs sm:text-sm font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] transition cursor-pointer"
-                      onClick={() => setShowBuyerDetails(!showBuyerDetails)}
-                    >
-                      <span>
-                        {ui(
-                          buyer.vatNumber
-                            ? "العنوان الوطني للمشتري (مطلوب للفواتير الضريبية B2B)"
-                            : "عنوان العميل الوطني (اختياري)",
-                        )}
-                      </span>
-                      <ChevronDown
-                        className={`size-4 transition-transform ${showBuyerDetails ? "rotate-180" : ""}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-
-                    {showBuyerDetails && (
-                      <div className="mt-3 grid gap-4 border theme-border rounded-xl p-4 sm:grid-cols-2 bg-[var(--bg-card-subtle)]">
-                        {(
-                          [
-                            { key: "street", label: "اسم الشارع" },
-                            {
-                              key: "building",
-                              label: "رقم المبنى (٤ أرقام)",
-                              pattern: "\\d{4}",
-                            },
-                            { key: "district", label: "الحي" },
-                            { key: "city", label: "المدينة" },
-                            {
-                              key: "postalCode",
-                              label: "الرمز البريدي (٥ أرقام)",
-                              pattern: "\\d{5}",
-                            },
-                          ] as const
-                        ).map((field) => (
-                          <ExpandableField
-                            key={field.key}
-                            label={ui(field.label)}
-                            maxLength={200}
-                            pattern={
-                              "pattern" in field ? field.pattern : undefined
-                            }
-                            disabled={Boolean(original)}
-                            value={buyer[field.key] || ""}
-                            onApply={(next) =>
-                              updateBuyer({ [field.key]: next || "" })
-                            }
-                          >
-                            <input
-                              readOnly={Boolean(original)}
-                              maxLength={200}
-                              className={INLINE_INPUT}
-                              value={buyer[field.key] || ""}
-                              pattern={
-                                "pattern" in field ? field.pattern : undefined
-                              }
-                              onChange={(e) =>
-                                updateBuyer({ [field.key]: e.target.value })
-                              }
-                            />
-                          </ExpandableField>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </section>
-
-                {/* Stage 1 Footer Button */}
-                <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
-                  {inModal && onClose && (
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="inline-flex min-h-11 sm:min-h-9 items-center justify-center rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
-                    >
-                      {ui("إلغاء")}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={goToNextStage}
-                    className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
-                  >
-                    <span>{ui("المتابعة: مسار الرحلة والخدمة")}</span>
-                    <ArrowLeft
-                      className="size-4 ltr:rotate-180"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              </div>
+              <StageDocumentCustomer
+                documentType={documentType}
+                taxDocument={taxDocument}
+                isTaxMode={isTaxMode}
+                sellerMissingTax={sellerMissingTax}
+                original={original}
+                origSearch={origSearch}
+                origOptions={origOptions}
+                origSearchError={origSearchError}
+                selectedOrigSummary={selectedOrigSummary}
+                creditCapError={creditCapError}
+                selectedContract={selectedContract}
+                isSourceLoading={isSourceLoading}
+                sourceError={sourceError}
+                customerId={customerId}
+                buyer={buyer}
+                showBuyerDetails={showBuyerDetails}
+                phone={phone}
+                booking={booking}
+                transport={transport}
+                inModal={inModal}
+                onClose={onClose}
+                onDocChoice={handleDocChoice}
+                onSwitchCustomerSubtype={(subtype) => {
+                  setCustomerSubtype(subtype);
+                  setDocumentType(subtype);
+                  setIsReviewed(false);
+                }}
+                onChangeTaxProfile={(nextProfile) => {
+                  manualProfileRef.current = true;
+                  setTaxDocument((current) => ({
+                    ...current,
+                    profile: nextProfile,
+                  }));
+                  if (nextProfile === "STANDARD") {
+                    setShowBuyerDetails(true);
+                  }
+                  setIsReviewed(false);
+                }}
+                onUpdateTaxDocument={(updater) => {
+                  setTaxDocument(updater);
+                  setIsReviewed(false);
+                }}
+                onOrigSearchChange={setOrigSearch}
+                onSelectOriginal={(id) => void selectOriginal(id)}
+                onSelectContract={(c) => void selectContract(c)}
+                onClearContract={clearContract}
+                onSelectCustomer={(nextId, patch) => {
+                  setCustomerId(nextId);
+                  if (patch) {
+                    setBuyer(patch.buyer);
+                    if (patch.phone) setPhone(patch.phone);
+                    setTaxDocument((v) => ({
+                      ...v,
+                      profile: patch.profile,
+                    }));
+                  }
+                }}
+                onUpdateBuyer={updateBuyer}
+                onToggleBuyerDetails={() => setShowBuyerDetails((v) => !v)}
+                onChangePhone={(v) => {
+                  setPhone(v);
+                  setIsReviewed(false);
+                }}
+                onUpdateBooking={updateBooking}
+                onUpdateTransport={updateTransport}
+                onNext={goToNextStage}
+              />
             )}
 
-            {/* =========================================================================
-                المرحلة الثانية: الرحلة والخدمة (§5 المرحلة الثانية)
-               ========================================================================= */}
             {currentStage === "TRIP_AND_SERVICE" && (
-              <div className="space-y-5">
-                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                  <div className="border-b theme-border pb-3.5 mb-4">
-                    <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
-                      {ui("مسار الرحلة ومواعيدها")}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
-                      {ui(
-                        "حدد نوع الرحلة، محطة الانطلاق، وجهة الوصول، والتاريخ",
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Booking Fields Component (handles roundtrip, hourly, stops) */}
-                  <BookingFields
-                    booking={booking}
-                    transport={transport}
-                    vehicles={vehicles}
-                    isLoadingVehicles={isLoadingVehicles}
-                    vehicleError={vehicleError}
-                    selectedContract={selectedContract}
-                    onSelectContract={(c) => void selectContract(c)}
-                    onRetryVehicles={() => {
-                      setIsLoadingVehicles(true);
-                      setVehicleReload((v) => v + 1);
-                    }}
-                    onBookingChange={updateBooking}
-                    onTransportChange={updateTransport}
-                  />
-
-                  {/* Informative Passengers Notice (§5 المرحلة الثانية) */}
-                  <div className="mt-4 rounded-xl border border-sky-600/25 bg-sky-500/10 p-3 text-xs sm:text-sm text-[var(--text-main)] flex items-center gap-2">
-                    <HelpCircle className="size-4 text-sky-700 dark:text-sky-400 shrink-0" />
-                    <span>
-                      {ui(
-                        "ملاحظة: تظهر في نسخة العميل المطبوعة أعداد الركاب الإجمالية؛ تفاصيل الأسماء والهويات تُراجع من سجل العقد والرحلة.",
-                      )}
-                    </span>
-                  </div>
-                </section>
-
-                {/* Collapsible Supplemental Details: Driver, Odometer, Distance */}
-                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                  <button
-                    type="button"
-                    aria-expanded={showSupplementalTrip}
-                    onClick={() =>
-                      setShowSupplementalTrip(!showSupplementalTrip)
-                    }
-                    className="flex min-h-11 sm:min-h-9 w-full items-center justify-between gap-3 text-start cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Truck
-                        className="size-4 sm:size-5 text-[var(--accent-gold)] shrink-0"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold text-[var(--text-main)]">
-                          {ui("تفاصيل الرحلة التشغيلية الإضافية (اختياري)")}
-                        </h3>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {ui(
-                            "بيانات السائق، قراءة العداد، المسافة المقطوعة، وملاحظات التشغيل",
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronDown
-                      className={`size-4 text-[var(--text-muted)] transition-transform shrink-0 ${showSupplementalTrip ? "rotate-180" : ""}`}
-                      aria-hidden="true"
-                    />
-                  </button>
-
-                  {showSupplementalTrip && (
-                    <div className="mt-4 pt-4 border-t theme-border">
-                      <TransportFields
-                        isSupplemental
-                        value={transport}
-                        hasValidationError={hasTransportError}
-                        onChange={(v) => {
-                          setTransport(v);
-                          setIsReviewed(false);
-                        }}
-                      />
-                    </div>
-                  )}
-                </section>
-
-                {/* Stage 2 Stepper Navigation */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={goToPreviousStage}
-                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
-                  >
-                    <ArrowRight
-                      className="size-4 ltr:rotate-180"
-                      aria-hidden="true"
-                    />
-                    <span>{ui("السابق")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goToNextStage}
-                    className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
-                  >
-                    <span>{ui("المتابعة: السعر والضريبة")}</span>
-                    <ArrowLeft
-                      className="size-4 ltr:rotate-180"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              </div>
+              <StageTripService
+                booking={booking}
+                transport={transport}
+                vehicles={vehicles}
+                isLoadingVehicles={isLoadingVehicles}
+                vehicleError={vehicleError}
+                selectedContract={selectedContract}
+                hasTransportError={hasTransportError}
+                showSupplementalTrip={showSupplementalTrip}
+                onToggleSupplementalTrip={() =>
+                  setShowSupplementalTrip((v) => !v)
+                }
+                onSelectContract={(c) => void selectContract(c)}
+                onRetryVehicles={() => {
+                  setIsLoadingVehicles(true);
+                  setVehicleReload((v) => v + 1);
+                }}
+                onBookingChange={updateBooking}
+                onTransportChange={updateTransport}
+                onTransportReplace={(v) => {
+                  setTransport(v);
+                  setIsReviewed(false);
+                }}
+                onBack={goToPreviousStage}
+                onNext={goToNextStage}
+              />
             )}
 
-            {/* =========================================================================
-                المرحلة الثالثة: السعر والضريبة (§5 المرحلة الثالثة)
-               ========================================================================= */}
             {currentStage === "PRICE_AND_TAX" && (
-              <div className="space-y-5">
-                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                  <div className="border-b theme-border pb-3.5 mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
-                        {ui("الخدمات والأسعار والمعاملة الضريبية")}
-                      </h2>
-                      <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
-                        {ui(
-                          "أدخل تفاصيل الخدمات، ويمكنك كتابة السعر قبل الضريبة أو السعر الإجمالي شامل 15%",
-                        )}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--accent-gold)]">
-                      {ui("مثال: خدمة ٣٠٠ ر.س + ضريبة ٤٥ ر.س = ٣٤٥ ر.س إجمالي")}
-                    </div>
-                  </div>
-
-                  {linesBody}
-                  {creditCapError && (
-                    <div
-                      role="alert"
-                      className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300"
-                    >
-                      {creditCapError}
-                    </div>
-                  )}
-                </section>
-
-                {/* Company Bank Details on Document (if proforma or tax) */}
-                {(documentType === "PROFORMA" || isTaxMode) && (
-                  <InvoiceBankFields
-                    isEnabled={hasBankDetails}
-                    value={bankDetails}
-                    onToggle={(v) => {
-                      setHasBankDetails(v);
-                      setIsReviewed(false);
-                    }}
-                    onChange={(v) => {
-                      setBankDetails(v);
-                      setIsReviewed(false);
-                    }}
-                  />
-                )}
-
-                {/* Stage 3 Stepper Navigation */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={goToPreviousStage}
-                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
-                  >
-                    <ArrowRight
-                      className="size-4 ltr:rotate-180"
-                      aria-hidden="true"
-                    />
-                    <span>{ui("السابق")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goToNextStage}
-                    className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg px-5 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
-                  >
-                    <span>{ui("المتابعة: الدفع والمراجعة")}</span>
-                    <ArrowLeft
-                      className="size-4 ltr:rotate-180"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              </div>
+              <StagePriceTax
+                documentType={documentType}
+                isTaxMode={isTaxMode}
+                rows={rows}
+                lineEstimates={estimate.lines}
+                creditCapError={creditCapError}
+                hasBankDetails={hasBankDetails}
+                bankDetails={bankDetails}
+                onUpdateRow={updateRow}
+                onRemoveRow={(id) => {
+                  setRows((current) =>
+                    current.filter((item) => item.id !== id),
+                  );
+                  setIsReviewed(false);
+                }}
+                onAddService={addService}
+                onToggleBank={(v) => {
+                  setHasBankDetails(v);
+                  setIsReviewed(false);
+                }}
+                onChangeBank={(v) => {
+                  setBankDetails(v);
+                  setIsReviewed(false);
+                }}
+                onBack={goToPreviousStage}
+                onNext={goToNextStage}
+              />
             )}
 
-            {/* =========================================================================
-                المرحلة الرابعة: الدفع والمراجعة (§5 المرحلة الرابعة)
-               ========================================================================= */}
             {currentStage === "PAYMENT_AND_REVIEW" && (
-              <div className="space-y-5">
-                {/* 4a. The User Question: "هل دفع العميل؟" */}
-                {documentType !== "PROFORMA" ? (
-                  <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                    <div className="border-b theme-border pb-3.5 mb-4">
-                      <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)] flex items-center gap-2">
-                        <Wallet
-                          className="size-4 sm:size-5 text-[var(--accent-gold)]"
-                          aria-hidden="true"
-                        />
-                        <span>
-                          {isCreditNote
-                            ? text("كيف سيتم تسوية الإشعار الدائن مع العميل؟", "How will the credit note be settled?")
-                            : ui("هل دفع العميل قيمة الفاتورة؟")}
-                        </span>
-                      </h2>
-                      <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
-                        {isCreditNote
-                          ? text(
-                              "اختر إما قيد المبلغ في رصيد العميل أو إثبات رده نقداً أو تحويلاً بنكياً.",
-                              "Choose whether to apply to customer balance or record an immediate cash/bank refund.",
-                            )
-                          : ui(
-                              "حدد حالة تحصيل المبلغ الفعلي لتسجيل الدفعة وتوجيه القيود بدقة",
-                            )}
-                      </p>
-                    </div>
-
-                    <div className={`grid gap-3 ${isCreditNote ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-                      {/* NOT PAID (آجل) */}
-                      <label
-                        className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
-                          paymentStatusChoice === "NOT_PAID"
-                            ? "bg-[var(--accent-surface)] border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30"
-                            : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/55"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="paymentStatusChoice"
-                          value="NOT_PAID"
-                          checked={paymentStatusChoice === "NOT_PAID"}
-                          onChange={() => changePaymentStatusChoice("NOT_PAID")}
-                          className="sr-only"
-                        />
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                            {isCreditNote
-                              ? text("تخفيض ذمة / رصيد العميل (1103)", "Credit Customer Balance (1103)")
-                              : ui("لم يدفع بعد (آجل)")}
-                          </span>
-                          <span className="size-4 rounded-full border border-[var(--accent-gold)] flex items-center justify-center">
-                            {paymentStatusChoice === "NOT_PAID" && (
-                              <span className="size-2 rounded-full bg-[var(--accent-gold)]" />
-                            )}
-                          </span>
-                        </div>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {isCreditNote
-                            ? text(
-                                "يُخفض الرصيد القائم على الفاتورة الأصلية أو يُثبت كرصيد دائن للعميل.",
-                                "Reduces receivable on the original invoice or leaves a credit balance for the customer.",
-                              )
-                            : ui(
-                                "تُسجل الفاتورة على ذمة العميل وتظهر في قائمة المتبقي لمتابعتها لاحقاً.",
-                              )}
-                        </p>
-                      </label>
-
-                      {/* FULLY PAID / IMMEDIATE REFUND */}
-                      <label
-                        className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
-                          paymentStatusChoice === "FULLY_PAID"
-                            ? "bg-[var(--accent-surface)] border-[var(--accent-gold)]/55 ring-1 ring-[var(--accent-gold)]/30"
-                            : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/55"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="paymentStatusChoice"
-                          value="FULLY_PAID"
-                          checked={paymentStatusChoice === "FULLY_PAID"}
-                          onChange={() =>
-                            changePaymentStatusChoice("FULLY_PAID")
-                          }
-                          className="sr-only"
-                        />
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                            {isCreditNote
-                              ? text("تم رد كامل المبلغ للعميل", "Refunded in Full Immediately")
-                              : ui("دفع المبلغ كاملاً")}
-                          </span>
-                          <span className="size-4 rounded-full border border-[var(--accent-gold)] flex items-center justify-center">
-                            {paymentStatusChoice === "FULLY_PAID" && (
-                              <span className="size-2 rounded-full bg-[var(--accent-gold)]" />
-                            )}
-                          </span>
-                        </div>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {isCreditNote
-                            ? text(
-                                "تم رد المبلغ للعميل مباشرة من البنك أو الصندوق عند إصدار الإشعار.",
-                                "Direct refund paid out from Bank or Petty Cash on issuance.",
-                              )
-                            : ui(
-                                "تم استلام كامل قيمة الفاتورة وتغذية حساب البنك أو الصندوق.",
-                              )}
-                        </p>
-                      </label>
-
-                      {/* PARTIALLY PAID (hidden for Credit Notes) */}
-                      {!isCreditNote && (
-                        <label
-                          className={`p-3.5 rounded-xl border cursor-pointer transition text-start ${
-                            paymentStatusChoice === "PARTIALLY_PAID"
-                              ? "bg-sky-500/10 border-sky-600/45 ring-1 ring-sky-500/30"
-                              : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-sky-600/55 dark:hover:border-sky-400/55"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="paymentStatusChoice"
-                            value="PARTIALLY_PAID"
-                            checked={paymentStatusChoice === "PARTIALLY_PAID"}
-                            onChange={() =>
-                              changePaymentStatusChoice("PARTIALLY_PAID")
-                            }
-                            className="sr-only"
-                          />
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                              {ui("دفع جزءاً من المبلغ")}
-                            </span>
-                            <span className="size-4 rounded-full border border-sky-600 dark:border-sky-400 flex items-center justify-center">
-                              {paymentStatusChoice === "PARTIALLY_PAID" && (
-                                <span className="size-2 rounded-full bg-sky-600 dark:bg-sky-400" />
-                              )}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[var(--text-muted)]">
-                            {ui(
-                              "تسجيل دفعة مقدمة الآن مع بقاء الرصيد المتبقي للمتابعة.",
-                            )}
-                          </p>
-                        </label>
-                      )}
-                    </div>
-
-                    {/* If FULLY PAID: choose bank or cash */}
-                    {paymentStatusChoice === "FULLY_PAID" && (
-                      <div className="mt-4 pt-3.5 border-t theme-border space-y-2.5">
-                        <span className="text-xs sm:text-sm font-bold text-[var(--text-main)] block">
-                          {isCreditNote
-                            ? text("كيف تم رد المبلغ للعميل؟", "How was the refund issued?")
-                            : ui("كيف استلمت المبلغ من العميل؟")}
-                        </span>
-                        <div className="grid gap-2.5 sm:grid-cols-3">
-                          <label
-                            className={`min-h-11 sm:min-h-9 p-2.5 rounded-lg border text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "BANK_TRANSFER" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
-                          >
-                            <input
-                              type="radio"
-                              name="fullPaymentMethod"
-                              checked={fullPaymentMethod === "BANK_TRANSFER"}
-                              onChange={() =>
-                                changeFullPaymentMethod("BANK_TRANSFER")
-                              }
-                              className="size-4 accent-amber-700 dark:accent-amber-400"
-                            />
-                            <Landmark
-                              className="size-4 shrink-0"
-                              aria-hidden="true"
-                            />
-                            <span>{ui("تحويل بنكي (البنك الأهلي SNB)")}</span>
-                          </label>
-                          <label
-                            className={`min-h-11 sm:min-h-9 p-2.5 rounded-lg border text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "CASH" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
-                          >
-                            <input
-                              type="radio"
-                              name="fullPaymentMethod"
-                              checked={fullPaymentMethod === "CASH"}
-                              onChange={() => changeFullPaymentMethod("CASH")}
-                              className="size-4 accent-amber-700 dark:accent-amber-400"
-                            />
-                            <Wallet
-                              className="size-4 shrink-0"
-                              aria-hidden="true"
-                            />
-                            <span>{ui("نقداً بالصندوق")}</span>
-                          </label>
-                          <label
-                            className={`min-h-11 sm:min-h-9 p-2.5 rounded-lg border text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer transition ${fullPaymentMethod === "CARD" ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]" : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"}`}
-                          >
-                            <input
-                              type="radio"
-                              name="fullPaymentMethod"
-                              checked={fullPaymentMethod === "CARD"}
-                              onChange={() => changeFullPaymentMethod("CARD")}
-                              className="size-4 accent-amber-700 dark:accent-amber-400"
-                            />
-                            <CreditCard
-                              className="size-4 shrink-0"
-                              aria-hidden="true"
-                            />
-                            <span>{ui("بطاقة مدى / دفع إلكتروني")}</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* If PARTIALLY PAID: input partial amount & method */}
-                    {paymentStatusChoice === "PARTIALLY_PAID" && (
-                      <div className="mt-5 pt-4 border-t theme-border grid gap-4 sm:grid-cols-2">
-                        <ExpandableField
-                          label={ui("المبلغ المدفوع مقدماً الآن (ر.س)")}
-                          required
-                          inputMode="decimal"
-                          dir="ltr"
-                          placeholder="0.00"
-                          value={partialPaymentAmount}
-                          onApply={setPartialPaymentAmount}
-                        >
-                          <input
-                            required
-                            type="text"
-                            inputMode="decimal"
-                            dir="ltr"
-                            placeholder="0.00"
-                            className={`${INLINE_INPUT} font-mono text-start`}
-                            value={partialPaymentAmount}
-                            onChange={(e) =>
-                              setPartialPaymentAmount(e.target.value)
-                            }
-                          />
-                        </ExpandableField>
-                        <FullscreenSelect
-                          label={ui("طريقة استلام الدفعة الأولى")}
-                          searchable={false}
-                          value={partialPaymentMethod}
-                          onChange={(nextMethod) =>
-                            setPartialPaymentMethod(
-                              nextMethod as "BANK_TRANSFER" | "CASH",
-                            )
-                          }
-                          options={[
-                            {
-                              value: "BANK_TRANSFER",
-                              label: ui("تحويل بنكي / الحساب البنكي SNB"),
-                            },
-                            { value: "CASH", label: ui("نقداً في الصندوق") },
-                          ]}
-                        />
-                      </div>
-                    )}
-                  </section>
-                ) : (
-                  <section className="theme-card rounded-2xl p-5 border border-sky-600/30 bg-sky-500/10">
-                    <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-sm">
-                      <FileSpreadsheet className="size-5" aria-hidden="true" />
-                      <span>{ui("فاتورة مبدئية (عرض أسعار)")}</span>
-                    </div>
-                    <p className="mt-1.5 text-sm text-[var(--text-main)] leading-relaxed">
-                      {ui(
-                        "الفاتورة المبدئية هي عرض سعر مبدئي لا يتطلب تسوية أو تحصيل في هذه المرحلة. يتم تأكيد الدفع عند إصدار الفاتورة الفعلية للعميل.",
-                      )}
-                    </p>
-                  </section>
-                )}
-
-                {/* 4b. Collapsible "تفاصيل للمحاسب (تلقائية)" (§5 المرحلة الرابعة) */}
-                {documentType !== "PROFORMA" && (
-                  <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                    <button
-                      type="button"
-                      aria-expanded={showAccountantDetails}
-                      onClick={() =>
-                        setShowAccountantDetails(!showAccountantDetails)
-                      }
-                      className="flex min-h-11 sm:min-h-9 w-full items-center justify-between gap-3 text-start cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Landmark
-                          className="size-4 sm:size-5 text-[var(--text-muted)] shrink-0"
-                          aria-hidden="true"
-                        />
-                        <div>
-                          <span className="text-xs sm:text-sm font-semibold text-[var(--text-main)]">
-                            {ui(
-                              "تفاصيل التوجيه المحاسبي (تلقائية ومخصصة للمحاسب)",
-                            )}
-                          </span>
-                          <p className="text-xs text-[var(--text-muted)]">
-                            {ui("حساب الإيراد")}: {revenueAccountCode} ·{" "}
-                            {ui("حساب التسوية المالية")}:{" "}
-                            {settlementAccountCode}
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronDown
-                        className={`size-4 text-[var(--text-muted)] transition-transform shrink-0 ${showAccountantDetails ? "rotate-180" : ""}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-
-                    {showAccountantDetails && (
-                      <div className="mt-4 pt-4 border-t theme-border grid gap-4 sm:grid-cols-2">
-                        <FullscreenSelect
-                          label={ui("حساب الإيراد")}
-                          searchable={false}
-                          value={revenueAccountCode}
-                          onChange={(nextCode) => {
-                            setRevenueAccountCode(nextCode);
-                            setIsReviewed(false);
-                          }}
-                          options={[
-                            {
-                              value: "4101",
-                              label: ui("4101 · إيرادات خدمات النقل والمطارات"),
-                              badge: "4101",
-                            },
-                            {
-                              value: "4102",
-                              label: ui(
-                                "4102 · إيرادات كبار الشخصيات والعمرة والزيارة",
-                              ),
-                              badge: "4102",
-                            },
-                          ]}
-                        />
-                        <FullscreenSelect
-                          label={ui("حساب التسوية المالية")}
-                          searchable={false}
-                          value={settlementAccountCode}
-                          onChange={(nextCode) => {
-                            setSettlementAccountCode(nextCode);
-                            setIsReviewed(false);
-                          }}
-                          options={[
-                            {
-                              value: "1103",
-                              label: ui("1103 · ذمم العملاء (آجل)"),
-                              badge: "1103",
-                            },
-                            {
-                              value: "1102",
-                              label: ui("1102 · البنك الأهلي السعودي - SNB"),
-                              badge: "1102",
-                            },
-                            {
-                              value: "1101",
-                              label: ui("1101 · النقدية بالصندوق"),
-                              badge: "1101",
-                            },
-                          ]}
-                        />
-                        <p className="sm:col-span-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                          {ui(
-                            "يوجه النظام القيود تلقائياً بناءً على إجابتك في سؤال «هل دفع العميل؟». يمكنك تغيير الحساب هنا للمحاسبة المتقدمة فقط.",
-                          )}
-                        </p>
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {/* 4c. Pre-Issuance Summary & Review Card (§5 المرحلة الرابعة) */}
-                <section className="theme-card rounded-2xl p-4 sm:p-5 border theme-border">
-                  <div className="border-b theme-border pb-3.5 mb-4">
-                    <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
-                      {ui("مراجعة بيانات المستند قبل الإصدار")}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">
-                      {ui(
-                        "تأكد من صحة المبالغ والمسار قبل الضغط على زر الإصدار",
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 text-xs sm:text-sm">
-                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
-                      <span className="text-[var(--text-muted)] block mb-1">
-                        {ui("العميل والمستند:")}
-                      </span>
-                      <p className="font-bold text-sm text-[var(--text-main)]">
-                        {buyer.name || "—"}
-                      </p>
-                      {phone.number && (
-                        <p
-                          className="text-[var(--text-muted)] font-mono mt-0.5"
-                          dir="ltr"
-                        >
-                          {phone.number}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
-                      <span className="text-[var(--text-muted)] block mb-1">
-                        {ui("مسار وموعد الرحلة:")}
-                      </span>
-                      <p className="font-bold text-sm text-[var(--text-main)]">
-                        {transport.origin || "—"} {ui.dir === "rtl" ? "←" : "→"}{" "}
-                        {transport.destination || "—"}
-                      </p>
-                      <p
-                        className="text-[var(--text-muted)] font-mono mt-0.5"
-                        dir="ltr"
-                      >
-                        {transport.tripDate || "—"}
-                      </p>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
-                      <span className="text-[var(--text-muted)] block mb-1">
-                        {ui("تاريخ ووقت الفاتورة:")}
-                      </span>
-                      <input
-                        required
-                        type="datetime-local"
-                        className={`${INPUT} font-mono`}
-                        value={invoiceDate}
-                        onChange={(e) => {
-                          setInvoiceDate(e.target.value);
-                          setIsReviewed(false);
-                        }}
-                      />
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border">
-                      <span className="text-[var(--text-muted)] block mb-1">
-                        {ui("حالة السداد والمتبقي:")}
-                      </span>
-                      <p className="font-semibold font-mono text-sm">
-                        {paymentStatusChoice === "FULLY_PAID" ? (
-                          <span className="text-[var(--accent-gold)]">
-                            {ui("مدفوع بالكامل (٠.٠٠ متبقي)")}
-                          </span>
-                        ) : paymentStatusChoice === "PARTIALLY_PAID" ? (
-                          <span className="text-sky-700 dark:text-sky-300">
-                            {ui("مدفوع:")} {partialPaymentAmount || "0"}{" "}
-                            {ui("ر.س · متبقي:")} {remainingBalance} {ui("ر.س")}
-                          </span>
-                        ) : (
-                          <span className="text-[var(--accent-gold)]">
-                            {ui("آجل بالكامل (المتبقي:")} {estimate.gross}{" "}
-                            {ui("ر.س)")}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border sm:col-span-2">
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className="text-[var(--text-muted)]">
-                          {ui("الخدمات والضريبة:")}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStage("PRICE_AND_TAX")}
-                          className="text-xs font-semibold text-[var(--accent-gold)] hover:underline cursor-pointer"
-                        >
-                          {ui("تعديل")}
-                        </button>
-                      </div>
-                      <div className="space-y-1.5">
-                        {rows.map((row, idx) => (
-                          <div
-                            key={row.id}
-                            className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm"
-                          >
-                            <span
-                              className={
-                                row.input.description.trim()
-                                  ? "font-semibold text-[var(--text-main)]"
-                                  : "font-semibold text-rose-700 dark:text-rose-400"
-                              }
-                            >
-                              {idx + 1}.{" "}
-                              {row.input.description.trim() ||
-                                ui("بند بدون وصف")}
-                            </span>
-                            <span
-                              className="font-mono text-[var(--text-muted)]"
-                              dir="ltr"
-                            >
-                              {estimate.lines[idx]?.gross
-                                ? `${estimate.lines[idx].gross} ${ui("ر.س")}`
-                                : "—"}{" "}
-                              ({row.input.rate || "0"}%)
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Auto-Send Invoice via WhatsApp Option */}
-                  <div className="mt-4">
-                    <AutoSendWhatsAppCard
-                      checked={autoSendWhatsApp}
-                      onCheckedChange={(next) => {
-                        autoSendTouchedRef.current = true;
-                        setAutoSendWhatsApp(next);
-                      }}
-                      phone={whatsAppPhoneOverride}
-                      onPhoneChange={setWhatsAppPhoneOverride}
-                      defaultPhoneHint={contactPhone || ""}
-                      recipientLabel={ui("هاتف العميل")}
-                      titleAr="إرسال الفاتورة تلقائياً للعميل عبر واتساب فور الإصدار"
-                      subtitleAr="عند التفعيل سيُرسل ملف الفاتورة (PDF) للعميل مع إخطار رقم الإدارة ضمن مسار التدفق، دون تعطيل حفظ الفاتورة إذا كان الواتساب غير متصل."
-                      waConnected={whatsAppMeta ? whatsAppMeta.connected : null}
-                      adminFlowPhone={whatsAppMeta?.adminFlowPhone}
-                      disabled={isSaving}
-                    />
-                  </div>
-
-                  {/* Review Checkbox */}
-                  <div className="mt-4 pt-3.5 border-t theme-border">
-                    <label
-                      id="review-checkbox-label"
-                      className={`flex min-h-11 sm:min-h-9 items-start gap-2.5 text-xs sm:text-sm leading-relaxed font-semibold cursor-pointer p-3 rounded-xl border transition ${
-                        isReviewed
-                          ? "border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] text-[var(--text-main)]"
-                          : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]/50"
-                      }`}
-                    >
-                      <Checkbox
-                        required
-                        checked={isReviewed}
-                        onChange={(e) => setIsReviewed(e.target.checked)}
-                        className="mt-1 shrink-0"
-                      />
-                      <span>
-                        {ui(
-                          "أقر بأنني راجعت بيانات العميل والرحلة والأسعار والضريبة وهي صحيحة ومعتمدة للإصدار.",
-                        )}
-                      </span>
-                    </label>
-                  </div>
-                </section>
-
-                {/* Stage 4 Stepper Navigation & Primary Save Button */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={goToPreviousStage}
-                    className="inline-flex min-h-11 sm:min-h-9 items-center gap-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition cursor-pointer"
-                  >
-                    <ArrowRight
-                      className="size-4 ltr:rotate-180"
-                      aria-hidden="true"
-                    />
-                    <span>{ui("السابق")}</span>
-                  </button>
-
-                  <button
-                    id="invoice-submit-btn"
-                    type="submit"
-                    disabled={!canSave}
-                    className="gold-gradient-btn flex min-h-11 sm:min-h-9 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-lg px-6 py-2 text-xs sm:text-sm font-semibold transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Save className="size-4" />
-                    )}
-                    <span>
-                      {ui(
-                        isSaving
-                          ? "جارٍ الإصدار والحفظ…"
-                          : documentType === "PROFORMA"
-                            ? "حفظ الفاتورة المبدئية"
-                            : "إصدار الفاتورة وتوليد PDF",
-                      )}
-                    </span>
-                  </button>
-                </div>
-              </div>
+              <StagePaymentReview
+                documentType={documentType}
+                isCreditNote={isCreditNote}
+                paymentStatusChoice={paymentStatusChoice}
+                fullPaymentMethod={fullPaymentMethod}
+                partialPaymentAmount={partialPaymentAmount}
+                partialPaymentMethod={partialPaymentMethod}
+                showAccountantDetails={showAccountantDetails}
+                revenueAccountCode={revenueAccountCode}
+                settlementAccountCode={settlementAccountCode}
+                buyer={buyer}
+                contactPhone={contactPhone || ""}
+                transport={transport}
+                invoiceDate={invoiceDate}
+                estimateGross={estimate.gross}
+                remainingBalance={remainingBalance}
+                rows={rows}
+                lineEstimates={estimate.lines}
+                autoSendWhatsApp={autoSendWhatsApp}
+                whatsAppPhoneOverride={whatsAppPhoneOverride}
+                whatsAppMeta={whatsAppMeta}
+                isReviewed={isReviewed}
+                isSaving={isSaving}
+                canSave={canSave}
+                onChangePaymentStatusChoice={changePaymentStatusChoice}
+                onChangeFullPaymentMethod={changeFullPaymentMethod}
+                onChangePartialPaymentAmount={setPartialPaymentAmount}
+                onChangePartialPaymentMethod={setPartialPaymentMethod}
+                onToggleAccountantDetails={() =>
+                  setShowAccountantDetails((v) => !v)
+                }
+                onChangeRevenueAccount={(nextCode) => {
+                  setRevenueAccountCode(nextCode);
+                  setIsReviewed(false);
+                }}
+                onChangeSettlementAccount={(nextCode) => {
+                  setSettlementAccountCode(nextCode);
+                  setIsReviewed(false);
+                }}
+                onChangeInvoiceDate={(val) => {
+                  setInvoiceDate(val);
+                  setIsReviewed(false);
+                }}
+                onEditPricingStage={() => setCurrentStage("PRICE_AND_TAX")}
+                onAutoSendWhatsAppChange={(next) => {
+                  autoSendTouchedRef.current = true;
+                  setAutoSendWhatsApp(next);
+                }}
+                onWhatsAppPhoneChange={setWhatsAppPhoneOverride}
+                onChangeReviewed={setIsReviewed}
+                onBack={goToPreviousStage}
+              />
             )}
           </fieldset>
 
-          {/* Sticky Financial Summary Sidebar on Desktop */}
-          <aside className="min-w-0 lg:sticky lg:top-5 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto">
-            <fieldset disabled={isSaving} className="min-w-0 space-y-4">
-              <section className="overflow-hidden rounded-2xl border theme-border bg-[var(--bg-card)]">
-                <div className="border-b theme-border px-4 py-3.5 bg-[var(--bg-card-subtle)]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[var(--accent-gold)]">
-                      {ui("ملخص المستند")}
-                    </span>
-                    <span className="text-xs font-bold text-[var(--text-muted)] font-mono">
-                      {rows.length} {ui(rows.length === 1 ? "خدمة" : "خدمات")}
-                    </span>
-                  </div>
-                  <h2 className="text-sm sm:text-base font-semibold text-[var(--text-main)] mt-1">
-                    {ui(
-                      documentType === "PROFORMA"
-                        ? "فاتورة مبدئية"
-                        : INVOICE_TYPE_LABELS[documentType],
-                    )}
-                  </h2>
-                  {buyer.name && (
-                    <p className="text-xs sm:text-sm text-[var(--text-muted)] truncate mt-0.5">
-                      {ui("العميل:")} {buyer.name}
-                    </p>
-                  )}
-                </div>
-
-                <dl aria-live="polite" className="space-y-2.5 px-4 py-3.5 text-xs sm:text-sm">
-                  {[
-                    ["الإجمالي قبل الخصم", beforeDiscount.net],
-                    ["قيمة الخصم", discountTotal],
-                    ["المبلغ قبل الضريبة", estimate.net],
-                    [
-                      rows.every((r) => r.input.rate === "0")
-                        ? "ضريبة القيمة المضافة (0%)"
-                        : rows.every((r) => r.input.rate === "15")
-                          ? "ضريبة القيمة المضافة (15%)"
-                          : "ضريبة القيمة المضافة",
-                      estimate.vat,
-                    ],
-                  ].map(([label, val]) => (
-                    <div key={label} className="flex justify-between gap-3">
-                      <dt className="text-[var(--text-muted)]">
-                        {ui(label)}
-                      </dt>
-                      <dd
-                        className="font-mono font-bold text-[var(--text-main)]"
-                        dir="ltr"
-                      >
-                        {amount(val)}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-
-                {/* Dark Slate Signature Total Box */}
-                <div className="mx-3.5 mb-3.5 rounded-xl bg-slate-900 dark:bg-slate-800/95 p-3.5 text-white border border-slate-700">
-                  <p className="text-xs text-slate-200 font-bold">
-                    {ui("الإجمالي المطلوب شامل الضريبة")}
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-1.5">
-                    <strong
-                      className="font-mono text-2xl font-semibold tracking-tight text-white"
-                      dir="ltr"
-                      data-testid="invoice-total"
-                    >
-                      {amount(estimate.gross)}
-                    </strong>
-                    <span className="text-xs sm:text-sm font-bold text-amber-300">
-                      {ui("ر.س")}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Remaining Amount Box if Partial or Not Paid */}
-                {paymentStatusChoice !== "FULLY_PAID" && (
-                  <div className="mx-4 mb-4 rounded-xl bg-[var(--accent-surface)] p-3.5 text-sm border border-[var(--accent-gold)]/35">
-                    <div className="flex items-center justify-between text-[var(--accent-gold)] font-bold">
-                      <span>{ui("المبلغ المتبقي:")}</span>
-                      <span className="font-mono font-semibold" dir="ltr">
-                        {amount(remainingBalance)} {ui("ر.س")}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Desktop Stage Progression in Sidebar */}
-                <div className="hidden lg:block border-t theme-border p-3.5 bg-[var(--bg-card-subtle)] space-y-2.5">
-                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                    <span className="font-semibold text-[var(--text-main)]">
-                      {ui("المرحلة")}{" "}
-                      {ui(STAGES.find((s) => s.id === currentStage)?.number)}:{" "}
-                      {ui(STAGES.find((s) => s.id === currentStage)?.title)}
-                    </span>
-                    <span>
-                      {ui(STAGES.find((s) => s.id === currentStage)?.number)} / {ui("٤")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {currentStage !== "DOCUMENT_AND_CUSTOMER" && (
-                      <button
-                        type="button"
-                        onClick={goToPreviousStage}
-                        className="flex-1 min-h-9 inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-3 py-1.5 text-xs font-semibold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
-                      >
-                        <ArrowRight className="size-3.5 ltr:rotate-180" aria-hidden="true" />
-                        <span>{ui("السابق")}</span>
-                      </button>
-                    )}
-                    {currentStage !== "PAYMENT_AND_REVIEW" ? (
-                      <button
-                        type="button"
-                        onClick={goToNextStage}
-                        className="flex-1 min-h-9 gold-gradient-btn inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer shadow-xs hover:shadow-sm transition"
-                      >
-                        <span>{ui("التالي")}</span>
-                        <ArrowLeft className="size-3.5 ltr:rotate-180" aria-hidden="true" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!isReviewed) setIsReviewed(true);
-                          void submitInvoice(true);
-                        }}
-                        disabled={!canSave}
-                        className="flex-1 min-h-9 gold-gradient-btn inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer shadow-xs hover:shadow-sm transition disabled:opacity-50"
-                      >
-                        {isSaving ? (
-                          <Loader2 className="size-3.5 animate-spin" />
-                        ) : (
-                          <Save className="size-3.5" />
-                        )}
-                        <span>
-                          {ui(
-                            documentType === "PROFORMA"
-                              ? "حفظ الفاتورة"
-                              : "إصدار الفاتورة",
-                          )}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {!estimate.isValid && (
-                  <p className="px-5 pb-4 text-sm leading-relaxed text-rose-700 dark:text-rose-400 font-bold">
-                    {ui(estimate.error)}
-                  </p>
-                )}
-              </section>
-
-              {settings?.company && (
-                <div className="rounded-xl border theme-border p-3.5 text-center text-sm text-[var(--text-muted)]">
-                  <p className="font-bold text-[var(--text-main)] flex items-center justify-center gap-1.5">
-                    <CheckCircle2
-                      className="size-4 text-[var(--accent-gold)]"
-                      aria-hidden="true"
-                    />
-                    <span>{settings.company.legalName}</span>
-                  </p>
-                  <p className="text-sm text-[var(--text-muted)] font-mono mt-0.5">
-                    {ui("الرقم الضريبي:")} {settings.company.vatNumber}
-                  </p>
-                </div>
-              )}
-            </fieldset>
-          </aside>
+          {/* Calm Sticky Financial Summary Sidebar on Desktop (no duplicate action buttons) */}
+          <InvoiceSummarySidebar
+            documentType={documentType}
+            buyer={buyer}
+            rows={rows}
+            beforeDiscountNet={beforeDiscount.net}
+            discountTotal={discountTotal}
+            estimateNet={estimate.net}
+            estimateVat={estimate.vat}
+            estimateGross={estimate.gross}
+            estimateIsValid={estimate.isValid}
+            estimateError={estimate.error}
+            paymentStatusChoice={paymentStatusChoice}
+            remainingBalance={remainingBalance}
+            company={settings?.company}
+            isSaving={isSaving}
+          />
         </form>
       )}
 
-      {/* Mobile Sticky Wizard Summary & Step Controls (never duplicates type="submit") */}
+      {/* Mobile Sticky Wizard Summary & Step Controls */}
       {!isLoading && (
         <MobileStickyActionBar sticky={!inModal} className="mt-4">
           <div className="min-w-0">
@@ -3181,6 +1572,4 @@ export default function InvoiceForm({
       </p>
     </div>
   );
-
-  return workspaceContent;
 }

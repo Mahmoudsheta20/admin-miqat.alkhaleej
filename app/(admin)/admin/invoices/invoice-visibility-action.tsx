@@ -10,6 +10,9 @@ interface Props {
   id: string;
   number: string;
   isArchived?: boolean;
+  open?: boolean;
+  onOpenChange?: (nextOpen: boolean) => void;
+  hideTrigger?: boolean;
   onChanged: () => void;
 }
 
@@ -17,10 +20,22 @@ export default function InvoiceVisibilityAction({
   id,
   number,
   isArchived = false,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
   onChanged,
 }: Props) {
   const { isRTL } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = controlledOpen ?? uncontrolledOpen;
+  const setIsOpen = (next: boolean) => {
+    if (next) {
+      setReason("");
+      setError("");
+    }
+    if (controlledOpen === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -57,26 +72,28 @@ export default function InvoiceVisibilityAction({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => {
-          setReason("");
-          setError("");
-          setIsOpen(true);
-        }}
-        className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3 py-2 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition cursor-pointer"
-        aria-label={`${label} ${number}`}
-        title={label}
-      >
-        {isArchived ? (
-          <RotateCcw className="size-4" aria-hidden="true" />
-        ) : (
-          <Archive className="size-4" aria-hidden="true" />
-        )}
-        <span>
-          {isArchived ? (isRTL ? "استعادة" : "Restore") : isRTL ? "إزالة" : "Remove"}
-        </span>
-      </button>
+      {!hideTrigger && (
+        <button
+          type="button"
+          onClick={() => {
+            setReason("");
+            setError("");
+            setIsOpen(true);
+          }}
+          className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-1.5 rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] px-3 py-2 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition cursor-pointer"
+          aria-label={`${label} ${number}`}
+          title={label}
+        >
+          {isArchived ? (
+            <RotateCcw className="size-4" aria-hidden="true" />
+          ) : (
+            <Archive className="size-4" aria-hidden="true" />
+          )}
+          <span>
+            {isArchived ? (isRTL ? "استعادة" : "Restore") : isRTL ? "إزالة" : "Remove"}
+          </span>
+        </button>
+      )}
 
       {isOpen && (
         <Modal label={label} onClose={() => setIsOpen(false)} isBusy={isSaving}>

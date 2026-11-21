@@ -15,6 +15,8 @@ export interface SystemUser {
   assignedVehiclePlate?: string | null;
   avatarUrl?: string | null;
   active: boolean;
+  isArchived?: boolean;
+  archivedAt?: string | Date | null;
   mustChangePassword?: boolean;
   permissions?: AdminPermissions | null;
   isSuperAdmin?: boolean;

@@ -70,3 +70,14 @@ public/storage/inspections/*
 # WhatsApp Baileys session credentials
 miqat_auth_info/
 ./miqat_auth_info/
+
+# Product demo secrets & generated intermediate media
+.env.demo.local
+/demo/audio/
+/demo/recordings/
+/demo/v2/audio/
+/demo/v2/recordings/
+/demo/v3/audio/
+/demo/v3/recordings/
+/demo/v4/audio/
+/demo/v4/recordings/

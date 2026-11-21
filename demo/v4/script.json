@@ -1,0 +1,574 @@
+{
+  "meta": {
+    "project": "Miqat Al-Khaleej — Detailed Financial Suite Walkthrough",
+    "targetDurationSec": 175,
+    "audience": "Financial controllers, CFOs, accountants, auditors, and business owners",
+    "demoUrl": "http://127.0.0.1:3429",
+    "outputVideo": "output/miqat-finance-detailed-v4.mp4",
+    "outputSubtitlesAr": "output/miqat-finance-detailed-v4-ar.srt",
+    "outputSubtitlesEn": "output/miqat-finance-detailed-v4-en.srt",
+    "ttsEngine": "elevenlabs",
+    "modelId": "eleven_v4",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+    "elevenlabs": {
+      "modelId": "eleven_v4",
+      "languageCode": "ar",
+      "outputFormat": "mp3_44100_128",
+      "stability": 0.64,
+      "similarityBoost": 0.78,
+      "useSpeakerBoost": true,
+      "preferredVoices": [
+        {
+          "id": "cFUFIbKkO2iZFwS8cRnY",
+          "label": "Nasser AlJubaily - Authentic Saudi Pro"
+        },
+        {
+          "id": "MI88rOZjXbH22N8KHXUo",
+          "label": "Ali - Calm & Deep Arabic Saudi Narrator"
+        },
+        {
+          "id": "JBFqnCBsd6RMkjVDRZzb",
+          "label": "George - Warm Storyteller (Premade)"
+        },
+        {
+          "id": "onwK4e9ZLuTAKqWW03F9",
+          "label": "Daniel - Steady Broadcaster (Premade)"
+        }
+      ]
+    },
+    "measuredTotalDurationSec": 243.68
+  },
+  "scenes": [
+    {
+      "id": "scene_01",
+      "chapterNum": "01",
+      "titleAr": "سجل الفواتير وفلاتر حالة السداد",
+      "titleEn": "Invoices Registry & Live Payment Status Filters",
+      "routes": [
+        "/admin/invoices"
+      ],
+      "estimatedDurationSec": 16,
+      "durationMs": 24640,
+      "audioFile": "demo/v4/audio/scene_01.mp3",
+      "narrationAr": "أهلاً بكم في الشرح التفصيلي للمنظومة المالية في ميقات الخليج. تبدأ رحلتك من شاشة الفواتير، حيث تعرض البطاقات العلوية إجمالي المبيعات والضريبة، مع تبويبات تفصل الفواتير الضريبية والمبدئية والإشعارات، وفلاتر فورية لحالة السداد: مدفوعة، أو جزئية، أو غير مدفوعة.",
+      "ttsAr": "أَهلًا بِكُم في الشَّرحِ التَّفصيلِيِّ لِلمَنظومَةِ المالِيَّةِ في ميقاتِ الخَليجِ. تَبدَأُ رِحلَتُكَ مِن شاشَةِ الفَواتيرِ، حَيثُ تَعرِضُ البِطاقاتُ العُلوِيَّةُ إِجمالِيَّ المَبيعاتِ والضَّريبَةِ، مَعَ تَبويباتٍ تَفصِلُ الفَواتيرَ الضَّريبِيَّةَ والمَبدَئِيَّةَ والإِشعاراتِ، وَفَلاتِرَ فَورِيَّةٍ لِحالَةِ السَّدادِ: مَدفوعَةٍ، أَو جُزئِيَّةٍ، أَو غَيرِ مَدفوعَةٍ.",
+      "narrationEn": "Welcome to the detailed Financial Suite guide. In Invoices, top KPI cards track sales and VAT, tabs separate Tax, Proforma, and Notes, and instant filters sort by Paid, Partial, or Unpaid status.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "div[aria-label='تصفية بحالة السداد']",
+          "scale": 1.13,
+          "durationMs": 5500
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('غير مدفوعة')",
+          "holdMs": 850
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('جزئي')",
+          "holdMs": 950
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('كل الحالات')",
+          "holdMs": 700
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تصفية متقدمة')",
+          "holdMs": 900
+        }
+      ]
+    },
+    {
+      "id": "scene_02",
+      "chapterNum": "02",
+      "titleAr": "تفاصيل الفاتورة والتحصيل والإشعارات",
+      "titleEn": "Invoice Details, Halala Collection & Credit Notes",
+      "routes": [
+        "/admin/invoices/55555555-5555-4555-8555-555555555502"
+      ],
+      "estimatedDurationSec": 17,
+      "durationMs": 26960,
+      "audioFile": "demo/v4/audio/scene_02.mp3",
+      "narrationAr": "عند فتح تفاصيل أي فاتورة، تشاهد بطاقة حالة السداد والتحصيل التي توضح الإجمالي، والمبلغ المحصّل، والمتبقي بدقة الهللة مع شريط نسبة التحصيل. ومن هنا تسجّل دفعة جديدة للعميل نقداً للصندوق أو بتحويل بنكي، أو تصدر إشعاراً دائناً أو مديناً مع رمز QR وملف PDF الرسمي.",
+      "ttsAr": "عِندَ فَتحِ تَفاصيلِ أَيِّ فاتورَةٍ، تُشاهِدُ بِطاقَةَ حالَةِ السَّدادِ والتَّحصيلِ الَّتي تُوَضِّحُ الإِجمالِيَّ، والمَبلَغَ المُحَصَّلَ، والمُتَبَقِّيَ بِدِقَّةِ الهَلَلَةِ مَعَ شَريطِ نِسبَةِ التَّحصيلِ. وَمِن هُنا، تُسَجِّلُ دُفعَةً جَديدَةً لِلعَميلِ نَقدًا لِلصُّندوقِ أَو بِتَحويلٍ بَنكِيٍّ، أَو تُصدِرُ إِشعارًا دائِنًا أَو مَدينًا مَعَ رَمزِ كيو آر وَمَلَفِّ بي دي إِف الرَّسمِيِّ.",
+      "narrationEn": "Inside invoice details, view exact totals, collected amounts, remaining halalas, and the collection progress bar. Record cash or bank payments directly, issue credit or debit notes, and download the ZATCA QR PDF.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/55555555-5555-4555-8555-555555555502"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "section:has-text('حالة السداد والتحصيل')",
+          "scale": 1.13,
+          "durationMs": 6000
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تسجيل دفعة جديدة للعميل')",
+          "holdMs": 1600
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        },
+        {
+          "action": "glideHover",
+          "target": "a:has-text('خفض قيمة الفاتورة')",
+          "holdMs": 900
+        },
+        {
+          "action": "glideHover",
+          "target": "button:has-text('تنزيل الفاتورة PDF')",
+          "holdMs": 900
+        }
+      ]
+    },
+    {
+      "id": "scene_03",
+      "chapterNum": "03",
+      "titleAr": "معالج الفاتورة: المستند، العقد، والمسار",
+      "titleEn": "Invoice Wizard Stages 1 & 2: Document, Contract & Route",
+      "routes": [
+        "/admin/invoices/new?type=TAX"
+      ],
+      "estimatedDurationSec": 16,
+      "durationMs": 22960,
+      "audioFile": "demo/v4/audio/scene_03.mp3",
+      "narrationAr": "لإصدار فاتورة جديدة، يأخذك المعالج في أربع مراحل واضحة: في المرحلة الأولى تختار نوع الفاتورة الضريبية، وتربطها بعقد موجود فتتعبأ بيانات العميل ورقمه الضريبي تلقائياً؛ وفي المرحلة الثانية تراجع مسار الرحلة، والمركبة، وتاريخ التوريد.",
+      "ttsAr": "لِإِصدارِ فاتورَةٍ جَديدَةٍ، يَأخُذُكَ المُعالِجُ في أَربَعِ مَراحِلَ واضِحَةٍ: في المَرحَلَةِ الأولَى تَختارُ نَوعَ الفاتورَةِ الضَّريبِيَّةِ، وَتَربِطُها بِعَقدٍ مَوجودٍ فَتَتَعَبَّأُ بَياناتُ العَميلِ وَرَقمُهُ الضَّريبِيُّ تِلقائِيًّا؛ وَفي المَرحَلَةِ الثَّانِيَةِ تُراجِعُ مَسارَ الرِّحلَةِ، والمَركَبَةَ، وَتاريخَ التَّوريدِ.",
+      "narrationEn": "The 4-stage wizard starts in Stage 1 by choosing the tax document type and linking an existing contract to auto-fill client and VAT details, then Stage 2 verifies route, vehicle, and supply date.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/new?type=TAX"
+        },
+        {
+          "action": "pause",
+          "durationMs": 600
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main form",
+          "scale": 1.12,
+          "durationMs": 5500
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('ابحث برقم العقد')",
+          "holdMs": 650
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('MQ-2026')",
+          "holdMs": 1200
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: مسار الرحلة والخدمة')",
+          "holdMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "scene_04",
+      "chapterNum": "04",
+      "titleAr": "معالج الفاتورة: التسعير والضريبة والمراجعة",
+      "titleEn": "Invoice Wizard Stages 3 & 4: Pricing, 15% VAT & Review",
+      "routes": [
+        "/admin/invoices/new?type=TAX"
+      ],
+      "estimatedDurationSec": 17,
+      "durationMs": 25920,
+      "audioFile": "demo/v4/audio/scene_04.mp3",
+      "narrationAr": "في المرحلة الثالثة تدخل سعر الخدمة وتختار هل السعر قبل الضريبة أو شامل خمسة عشر بالمئة، وتحدد المعاملة الضريبية أو تضيف رسوماً إضافية، بينما يحسب الملخص الجانبي صافي المبلغ والضريبة والإجمالي لحظياً؛ ثم تنتقل للمرحلة الرابعة لتحديد حالة الدفع وإرسال الفاتورة عبر واتساب.",
+      "ttsAr": "في المَرحَلَةِ الثَّالِثَةِ، تُدخِلُ سِعرَ الخِدمَةِ وَتَختارُ هَلِ السِّعرُ قَبلَ الضَّريبَةِ أَو شامِلٌ خَمسَةَ عَشَرَ بِالمِئَةِ، وَتُحَدِّدُ المُعامَلَةَ الضَّريبِيَّةَ أَو تُضيفُ رُسومًا إِضافِيَّةً، بَينَما يَحسِبُ المُلَخَّصُ الجانِبِيُّ صافِيَ المَبلَغِ والضَّريبَةَ والإِجمالِيَّ لَحظِيًّا؛ ثُمَّ تَنتَقِلُ لِلمَرحَلَةِ الرَّابِعَةِ لِتَحديدِ حالَةِ الدَّفعِ وَإِرسالِ الفاتورَةِ عَبرَ واتساب.",
+      "narrationEn": "In Stage 3, enter service price as Before or Includes 15% VAT, pick the tax category, and watch the sticky side summary compute net, VAT, and grand total live; Stage 4 sets payment terms and automatic WhatsApp delivery.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/new?type=TAX"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('ابحث برقم العقد')",
+          "holdMs": 320
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('MQ-2026')",
+          "holdMs": 380
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: مسار الرحلة والخدمة')",
+          "holdMs": 350
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: السعر والضريبة')",
+          "holdMs": 400
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main form",
+          "scale": 1.12,
+          "durationMs": 6200
+        },
+        {
+          "action": "typeSlow",
+          "target": "input[aria-label='السعر (ر.س) *']",
+          "value": "12500"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('اختر المعاملة الضريبية')",
+          "holdMs": 320
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('خاضع لضريبة')",
+          "holdMs": 1400
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: الدفع والمراجعة')",
+          "holdMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "scene_05",
+      "chapterNum": "05",
+      "titleAr": "المشتريات ومصروفات الأسطول والمرتجعات",
+      "titleEn": "Fleet Purchases, Reverse VAT Extraction & Vendor Returns",
+      "routes": [
+        "/admin/purchases"
+      ],
+      "estimatedDurationSec": 17,
+      "durationMs": 24160,
+      "audioFile": "demo/v4/audio/scene_05.mp3",
+      "narrationAr": "في قسم المشتريات ومصروفات الأسطول، تسجّل فواتير الموردين للوقود والصيانة والتأمين وتربط كل مصروف بالحافلة الخاصة به. وعند اختيار شامل خمسة عشر بالمئة، يستخرج النظام صافي المبلغ ومبلغ الضريبة عكسياً بدقة الهللة، مع دعم المصروفات غير الخاضعة ومرتجعات المشتريات.",
+      "ttsAr": "في قِسمِ المُشتَرَياتِ وَمَصروفاتِ الأُسطولِ، تُسَجِّلُ فَواتيرَ المُوَرِّدينَ لِلوَقودِ والصِّيانَةِ والتَّأمينِ، وَتَربِطُ كُلَّ مَصروفٍ بِالحافِلَةِ الخاصَّةِ بِهِ. وَعِندَ اختيارِ شامِلٍ خَمسَةَ عَشَرَ بِالمِئَةِ، يَستَخرِجُ النِّظامُ صافِيَ المَبلَغِ وَمَبلَغَ الضَّريبَةِ عَكسِيًّا بِدِقَّةِ الهَلَلَةِ، مَعَ دَعمِ المَصروفاتِ غَيرِ الخاضِعَةِ وَمُرتَجَعاتِ المُشتَرَياتِ.",
+      "narrationEn": "In Purchases and Fleet Expenses, record vendor bills for fuel, maintenance, and insurance linked directly to each bus. Toggle Includes 15% VAT for exact reverse halala extraction, alongside non-taxable expenses and purchase returns.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/purchases"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تسجيل فاتورة مورد')",
+          "holdMs": 750
+        },
+        {
+          "action": "zoomFocus",
+          "target": "dialog[open]",
+          "scale": 1.12,
+          "durationMs": 5500
+        },
+        {
+          "action": "glideClick",
+          "target": "dialog[open] button:has-text('شامل 15%')",
+          "holdMs": 1100
+        },
+        {
+          "action": "glideClick",
+          "target": "dialog[open] button:has-text('قبل الضريبة')",
+          "holdMs": 900
+        },
+        {
+          "action": "glideClick",
+          "target": "dialog[open] button:has-text('شامل 15%')",
+          "holdMs": 1000
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 260,
+          "durationMs": 750
+        }
+      ]
+    },
+    {
+      "id": "scene_06",
+      "chapterNum": "06",
+      "titleAr": "المحاسبة: الأرباح، السيولة، وربحية الحافلات",
+      "titleEn": "Accounting Hub: P&L, Liquidity, Trial Balance & Vehicle Margins",
+      "routes": [
+        "/admin/accounting"
+      ],
+      "estimatedDurationSec": 18,
+      "durationMs": 24160,
+      "audioFile": "demo/v4/audio/scene_06.mp3",
+      "narrationAr": "في المركز المحاسبي، يعرض تبويب الأرباح والمصروفات قائمة الدخل وصافي الربح قبل وبعد الزكاة، وبطاقات السيولة الحية للصندوق والبنك وذمم العملاء والموردين؛ كما يمكنك فتح جدول ميزان المراجعة التفصيلي، واستعراض جدول تكلفة وربحية كل مركبة في الأسطول.",
+      "ttsAr": "في المَركَزِ المُحاسَبِيِّ، يَعرِضُ تَبويبُ الأَرباحِ والمَصروفاتِ قائِمَةَ الدَّخلِ وَصافِيَ الرِّبحِ قَبلَ وَبَعدَ الزَّكاةِ، وَبِطاقاتِ السُّيولَةِ الحَيَّةِ لِلصُّندوقِ والبَنكِ وَذِمَمِ العُمَلاءِ والمُوَرِّدينَ؛ كَما يُمكِنُكَ فَتحُ جَدوَلِ ميزانِ المُراجَعَةِ التَّفصيلِيِّ، واستِعراضُ جَدوَلِ تَكلِفَةِ وَرِبحِيَّةِ كُلِّ مَركَبَةٍ في الأُسطولِ.",
+      "narrationEn": "In the Accounting Hub, the Profits & Expenses tab displays the Income Statement, net profit before and after zakat, and live cash, bank, AR, and AP cards—plus an expandable Trial Balance and per-vehicle profitability table.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/accounting"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main .grid",
+          "scale": 1.13,
+          "durationMs": 5000
+        },
+        {
+          "action": "smoothScroll",
+          "y": 420,
+          "durationMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('عرض الجدول')",
+          "holdMs": 1400
+        },
+        {
+          "action": "smoothScroll",
+          "y": 880,
+          "durationMs": 850
+        }
+      ]
+    },
+    {
+      "id": "scene_07",
+      "chapterNum": "07",
+      "titleAr": "اليومية، الأستاذ، السندات، وإقفال الفترات",
+      "titleEn": "Journals, General Ledger, Vouchers & Period Locking",
+      "routes": [
+        "/admin/accounting"
+      ],
+      "estimatedDurationSec": 18,
+      "durationMs": 24080,
+      "audioFile": "demo/v4/audio/scene_07.mp3",
+      "narrationAr": "وعبر تبويبات المحاسبة الأخرى، تدير دفتر اليومية للقيود المتوازنة وقالب إثبات رأس المال، وتفحص حركة أي حساب في دفتر الأستاذ، وتسجّل سندات القبض والدفع بالبحث الذكي عن الفاتورة، وصولاً إلى إقفال الفترة المحاسبية لحماية الدفاتر المعتمدة من أي تعديل لاحق.",
+      "ttsAr": "وَعَبرَ تَبويباتِ المُحاسَبَةِ الأُخرَى، تُديرُ دَفتَرَ اليَومِيَّةِ لِلقُيودِ المُتَوازِنَةِ وَقالَبِ إِثباتِ رَأسِ المالِ، وَتَفحَصُ حَرَكَةَ أَيِّ حِسابٍ في دَفتَرِ الأُستاذِ، وَتُسَجِّلُ سَنَداتِ القَبضِ والدَّفعِ بِالبَحثِ الذَّكِيِّ عَنِ الفاتورَةِ، وُصولًا إِلَى إِقفالِ الفَترَةِ المُحاسَبِيَّةِ لِحِمايَةِ الدَّفاتِرِ المُعتَمَدَةِ مِن أَيِّ تَعديلٍ لاحِقٍ.",
+      "narrationEn": "Across the remaining Accounting tabs, manage balanced Journal Entries, inspect any Account Ledger, issue Receipt and Payment Vouchers with smart invoice lookup, and lock audited periods against retroactive changes.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/accounting"
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='صفحات المحاسبة'] button:has-text('دفتر اليومية')",
+          "holdMs": 1400
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main",
+          "scale": 1.12,
+          "durationMs": 5500
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='صفحات المحاسبة'] button:has-text('دفتر الحساب')",
+          "holdMs": 1400
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='صفحات المحاسبة'] button:has-text('القبض والدفع')",
+          "holdMs": 1500
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='صفحات المحاسبة'] button:has-text('إقفال الفترة')",
+          "holdMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "scene_08",
+      "chapterNum": "08",
+      "titleAr": "دليل الحسابات وإقرار ضريبة القيمة المضافة",
+      "titleEn": "Chart of Accounts & ZATCA VAT Return Boxes 1–16",
+      "routes": [
+        "/admin/accounts",
+        "/admin/vat-returns"
+      ],
+      "estimatedDurationSec": 18,
+      "durationMs": 22160,
+      "audioFile": "demo/v4/audio/scene_08.mp3",
+      "narrationAr": "في دليل الحسابات الشجري يميز النظام بين الحسابات التجميعية الرئيسية والحسابات الفرعية القابلة للقيد؛ وفي شاشة الإقرار الضريبي تختار الفواتير المدرجة، ليحسب النظام خانات هيئة الزكاة والضريبة من واحد إلى ستة عشر مع أزرار نسخ فورية لكل خانة.",
+      "ttsAr": "في دَليلِ الحِساباتِ الشَّجَرِيِّ، يُمَيِّزُ النِّظامُ بَينَ الحِساباتِ التَّجميعِيَّةِ الرَّئيسِيَّةِ والحِساباتِ الفَرعِيَّةِ القابِلَةِ لِلقَيدِ؛ وَفي شاشَةِ الإِقرارِ الضَّريبِيِّ تَختارُ الفَواتيرَ المُدرَجَةَ، لِيَحسِبَ النِّظامُ خاناتِ هَيئَةِ الزَّكاةِ والضَّريبَةِ مِن واحِدٍ إِلَى سِتَّةَ عَشَرَ مَعَ أَزرارِ نَسخٍ فَورِيَّةٍ لِكُلِّ خانَةٍ.",
+      "narrationEn": "The hierarchical Chart of Accounts separates group headers from posting accounts; in VAT Returns, select included invoices and copy reconciled ZATCA Boxes 1–16 directly into the tax portal.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/accounts"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 260,
+          "durationMs": 750
+        },
+        {
+          "action": "pause",
+          "durationMs": 1400
+        },
+        {
+          "action": "goto",
+          "target": "/admin/vat-returns"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 540,
+          "durationMs": 800
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main table",
+          "scale": 1.13,
+          "durationMs": 5500
+        },
+        {
+          "action": "glideClick",
+          "target": "button[title='نسخ للإدخال']",
+          "holdMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "scene_09",
+      "chapterNum": "09",
+      "titleAr": "مركز التصدير المالي الموحد والفلاتر المتقدمة",
+      "titleEn": "Unified Financial Exports Center & 19 Advanced Filters",
+      "routes": [
+        "/admin/accounting/exports"
+      ],
+      "estimatedDurationSec": 20,
+      "durationMs": 28880,
+      "audioFile": "demo/v4/audio/scene_09.mp3",
+      "narrationAr": "أما مركز التصدير المالي الموحد فيجمع كل بياناتك المالية في صفحة واحدة: تختار إحدى الحزم الجاهزة مثل ملف المراجعة الشامل أو حزمة الزكاة، وتفتح تسعة عشر فلتراً متقدماً لتصفية الفواتير والمشتريات والسندات والمركبات، وتعاين تسع قوائم مالية حية، ثم تصدّر حزمة موحدة بصيغة PDF أو إكسل أو JSON.",
+      "ttsAr": "أَمَّا مَركَزُ التَّصديرِ المالِيِّ المُوَحَّدُ، فَيَجمَعُ كُلَّ بَياناتِكَ المالِيَّةِ في صَفحَةٍ واحِدَةٍ: تَختارُ إِحدَى الحِزَمِ الجاهِزَةِ مِثلَ مَلَفِّ المُراجَعَةِ الشَّامِلِ أَو حُزمَةِ الزَّكاةِ، وَتَفتَحُ تِسعَةَ عَشَرَ فِلتَرًا مُتَقَدِّمًا لِتَصفِيَةِ الفَواتيرِ والمُشتَرَياتِ والسَّنَداتِ والمَركَباتِ، وَتُعايِنُ تِسعَ قَوائِمَ مالِيَّةٍ حَيَّةٍ، ثُمَّ تُصَدِّرُ حُزمَةً مُوَحَّدَةً بِصيغَةِ بي دي إِف أَو إِكسِل أَو جَيسون.",
+      "narrationEn": "The Unified Financial Exports Center consolidates everything in one page: pick ready audit or ZATCA bundles, filter across 19 advanced criteria, preview 9 live financial datasets, and export a single A4 PDF, Excel CSV, or JSON package.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/accounting/exports"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('حزمة الضريبة والزكاة')",
+          "holdMs": 700
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تقرير الإدارة والربحية')",
+          "holdMs": 700
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('ملف المراجعة الشامل')",
+          "holdMs": 600
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('فلاتر متقدمة')",
+          "holdMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "section:has-text('فلاتر فواتير المبيعات')",
+          "scale": 1.13,
+          "durationMs": 5200
+        },
+        {
+          "action": "smoothScroll",
+          "y": 780,
+          "durationMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='تبويبات معاينة التصدير'] button:has-text('ميزان المراجعة')",
+          "holdMs": 850
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='تبويبات معاينة التصدير'] button:has-text('ربحية المركبات')",
+          "holdMs": 850
+        },
+        {
+          "action": "glideHover",
+          "target": "button:has-text('تصدير تقرير PDF رسمي')",
+          "holdMs": 950
+        }
+      ]
+    },
+    {
+      "id": "scene_10",
+      "chapterNum": "10",
+      "titleAr": "إعدادات الشركة والبنك والربط مع ZATCA",
+      "titleEn": "Company & Bank Settings and ZATCA Phase 2 Onboarding",
+      "routes": [
+        "/admin/invoices/settings",
+        "/admin/zatca"
+      ],
+      "estimatedDurationSec": 16,
+      "durationMs": 19760,
+      "audioFile": "demo/v4/audio/scene_10.mp3",
+      "narrationAr": "وتكتمل الدورة المالية بإعدادات الشركة والحساب البنكي والآيبان المطبوع على الفواتير، مع شاشة إعدادات زاتكا لإدارة شهادات التشفير والربط التقني المباشر مع هيئة الزكاة والضريبة والجمارك، لتعمل ماليتك بدقة وامتثال كامل.",
+      "ttsAr": "وَتَكتَمِلُ الدَّورَةُ المالِيَّةُ بِإِعداداتِ الشَّرِكَةِ والحِسابِ البَنكِيِّ والآيبانِ المَطبوعِ عَلَى الفَواتيرِ، مَعَ شاشَةِ إِعداداتِ زاتكا لِإِدارَةِ شَهاداتِ التَّشفيرِ والرَّبطِ التِّقنِيِّ المُباشِرِ مَعَ هَيئَةِ الزَّكاةِ والضَّريبَةِ والجَمارِكِ، لِتَعمَلَ مالِيَّتُكَ بِدِقَّةٍ وامتِثالٍ كامِلٍ.",
+      "narrationEn": "The financial cycle completes with Company, Bank, and IBAN settings printed on invoices, plus ZATCA Phase 2 cryptographic onboarding and compliance monitoring.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/settings"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main",
+          "scale": 1.12,
+          "durationMs": 4500
+        },
+        {
+          "action": "smoothScroll",
+          "y": 260,
+          "durationMs": 750
+        },
+        {
+          "action": "pause",
+          "durationMs": 1100
+        },
+        {
+          "action": "goto",
+          "target": "/admin/zatca"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 240,
+          "durationMs": 750
+        }
+      ]
+    }
+  ]
+}

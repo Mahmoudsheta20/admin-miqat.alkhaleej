@@ -85,3 +85,139 @@ test("send dialog reports text-only dispatch and stays open for explicit acknowl
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await expect(dialog).toHaveCount(0);
 });
+
+const FIXTURE_QR_URL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jI2YAAAAASUVORK5CYII=";
+
+test("disconnected and connecting sessions support reconnecting same number vs switching to a new number", async ({
+  page,
+}) => {
+  let currentStatus: Record<string, unknown> = {
+    status: "disconnected",
+    qrImage: null,
+    haltCode: null,
+    savedSession: {
+      hasSession: true,
+      me_id: "966501112233:2@s.whatsapp.net",
+      me_push_name: "Miqat Ops",
+    },
+    recovery: { canReconnect: true, canRelink: true },
+  };
+  const reconnectBodies: unknown[] = [];
+  let logoutCalls = 0;
+
+  await page.route("**/api/proxy/whatsapp/status", (route) =>
+    route.fulfill({ json: { success: true, data: currentStatus } }),
+  );
+  await page.route("**/api/proxy/whatsapp/reconnect", async (route) => {
+    const body = route.request().postDataJSON();
+    reconnectBodies.push(body);
+    currentStatus = {
+      status: "connecting",
+      qrImage: null,
+      haltCode: null,
+      savedSession: {
+        hasSession: true,
+        me_id: "966501112233:2@s.whatsapp.net",
+        me_push_name: "Miqat Ops",
+      },
+      recovery: { canReconnect: true, canRelink: true },
+    };
+    await route.fulfill({ json: { success: true, data: currentStatus } });
+  });
+  await page.route("**/api/proxy/whatsapp/logout", async (route) => {
+    logoutCalls += 1;
+    currentStatus = {
+      status: "qr_ready",
+      qrImage: FIXTURE_QR_URL,
+      haltCode: null,
+      savedSession: { hasSession: false },
+      recovery: { canReconnect: true, canRelink: true },
+    };
+    await route.fulfill({ json: { success: true, data: currentStatus } });
+  });
+
+  await openWhatsApp(page);
+  await expect(page.getByText("Saved Session on Server")).toBeVisible();
+  await expect(page.getByText("+966501112233")).toBeVisible();
+  await expect(page.getByText("Miqat Ops")).toBeVisible();
+
+  await page.getByRole("button", { name: "Reconnect Same Number", exact: true }).click();
+  expect(reconnectBodies).toEqual([{ mode: "same_number" }]);
+  await expect(page.getByText("Reconnecting to Saved Number...")).toBeVisible();
+  await expect(page.getByText("+966501112233")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cancel & Switch Number", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Cancel & Switch Number", exact: true }).click();
+  const switchDialog = page.getByRole("dialog");
+  await expect(switchDialog.getByText(/\+966501112233/)).toBeVisible();
+  await switchDialog.getByRole("button", { name: "Yes, Link New Number", exact: true }).click();
+  expect(logoutCalls).toBe(1);
+  await expect(page.getByAltText("WhatsApp Login QR Code")).toBeVisible();
+  await expect(page.getByText(/Ready to link a new WhatsApp number/)).toBeVisible();
+
+  // Logged out state with saved session requires re-link QR or switching to a new number
+  currentStatus = {
+    status: "disconnected",
+    qrImage: null,
+    haltCode: "logged_out",
+    savedSession: {
+      hasSession: true,
+      me_id: "966501112233:2@s.whatsapp.net",
+      me_push_name: "Miqat Ops",
+    },
+    recovery: { canReconnect: false, canRelink: true },
+    antiBan: {
+      queueLength: 0,
+      maxQueueSize: 100,
+      sentLastMinute: 0,
+      sentLast24Hours: 0,
+      perMinuteLimit: 15,
+      dailyLimit: 300,
+      minDelayMs: 1500,
+      maxDelayMs: 3000,
+      cooldownEveryMessages: 10,
+      dedupWindowMs: 300000,
+      haltReason: "Logged out",
+    },
+  };
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Re-link Same Number (New QR)", exact: true })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Connect New Number", exact: true })).toBeEnabled();
+  await page.getByRole("button", { name: "Re-link Same Number (New QR)", exact: true }).click();
+  const relinkDialog = page.getByRole("dialog");
+  await expect(relinkDialog.getByText(/\+966501112233/)).toBeVisible();
+  await relinkDialog.getByRole("button", { name: "Generate QR Code", exact: true }).click();
+  expect(logoutCalls).toBe(2);
+  await expect(page.getByText(/Ready to re-link the same number/)).toBeVisible();
+
+  // Forbidden (403) state disables both reconnect and switch-number actions
+  currentStatus = {
+    status: "disconnected",
+    qrImage: null,
+    haltCode: "forbidden",
+    savedSession: {
+      hasSession: true,
+      me_id: "966501112233:2@s.whatsapp.net",
+      me_push_name: "Miqat Ops",
+    },
+    recovery: { canReconnect: false, canRelink: false },
+    antiBan: {
+      queueLength: 0,
+      maxQueueSize: 100,
+      sentLastMinute: 0,
+      sentLast24Hours: 0,
+      perMinuteLimit: 15,
+      dailyLimit: 300,
+      minDelayMs: 1500,
+      maxDelayMs: 3000,
+      cooldownEveryMessages: 10,
+      dedupWindowMs: 300000,
+      haltReason: "403 refusal",
+    },
+  };
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Reconnect Same Number", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Connect New Number", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Change / New Number", exact: true })).toBeDisabled();
+});

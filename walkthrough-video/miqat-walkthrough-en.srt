@@ -1,0 +1,235 @@
+1
+00:00:00,350 --> 00:00:07,934
+Welcome to Miqat Al-Khaleej, the unified fleet operations and financial management platform.
+
+2
+00:00:08,284 --> 00:00:19,588
+An integrated Saudi platform connecting vehicle inspections and official contracts with e-invoicing, accounting, and ZATCA tax compliance.
+
+3
+00:00:19,938 --> 00:00:30,666
+In this guided tour, we will walk through every module, highlighting the streamlined financial suite and the new Unified Financial Exports Center.
+
+4
+00:00:31,566 --> 00:00:39,894
+We begin with secure authentication backed by encrypted HTTP-only sessions and role-based permissions.
+
+5
+00:00:40,244 --> 00:00:50,348
+The workspace opens to the Executive Dashboard, bringing together fleet KPIs, contracts, and daily trip readiness at a glance.
+
+6
+00:00:50,698 --> 00:00:59,098
+At the top are the live Makkah clock and one-click shortcuts to create a contract, invoice, or expense.
+
+7
+00:00:59,448 --> 00:01:09,408
+Interactive cards and charts track daily contract trends, trip categories, and vehicle document expiry alerts.
+
+8
+00:01:09,758 --> 00:01:19,622
+The entire interface switches seamlessly between Arabic RTL and English LTR layouts, as well as light and dark themes.
+
+9
+00:01:20,522 --> 00:01:31,178
+In the Fleet registry, managers monitor every vehicle, passenger capacity, and registration or insurance expiration dates.
+
+10
+00:01:31,528 --> 00:01:40,048
+Next, the Daily Inspections module verifies vehicle safety and operational readiness before any trip departs.
+
+11
+00:01:40,398 --> 00:01:51,174
+The shared 16-point safety checklist covers engine gauges, brakes, tyres, lighting, fire extinguisher, and first aid readiness.
+
+12
+00:01:51,524 --> 00:02:01,748
+Approved inspections link automatically to official contracts and invoices, with instant WhatsApp PDF dispatch.
+
+13
+00:02:02,648 --> 00:02:10,952
+In Official Contracts, dispatchers issue transport contracts specifying the customer, route, assigned captain, and vehicle.
+
+14
+00:02:11,302 --> 00:02:21,070
+Opening a contract displays the full passenger manifest, approval controls, and the public QR verification link.
+
+15
+00:02:21,420 --> 00:02:32,004
+Contracts can be dispatched to the driver via WhatsApp, with return-trip cloning and optional driver or representative trip payouts.
+
+16
+00:02:32,354 --> 00:02:41,090
+Meanwhile, drivers access a dedicated mobile-friendly Captain Portal isolated from back-office financial data.
+
+17
+00:02:41,440 --> 00:02:50,656
+From their portal, captains manage daily inspections, view active contracts, and track trip earnings, custody, and advances.
+
+18
+00:02:51,556 --> 00:03:01,468
+The Customer directory maintains corporate agencies, hotels, and individual clients with VAT IDs and Saudi national addresses.
+
+19
+00:03:01,818 --> 00:03:10,386
+Each customer profile includes a live ledger of contracts, issued invoices, collected payments, and remaining balance.
+
+20
+00:03:10,736 --> 00:03:20,168
+The Staff & Representatives workspace manages driver and agent profiles, monthly payroll drafts, operating custody, and personal advances.
+
+21
+00:03:20,518 --> 00:03:29,494
+Every entitlement and settlement balance is tracked to exact halala precision with downloadable staff statements.
+
+22
+00:03:30,394 --> 00:03:39,418
+Now we enter the redesigned financial suite; the Invoices list now shows live collection status badges right on every row.
+
+23
+00:03:39,768 --> 00:03:49,584
+At a glance, teams distinguish Paid, Partially Paid with remaining due balance, and Unpaid invoices.
+
+24
+00:03:49,934 --> 00:03:59,318
+One-click payment status pills and collapsible This Month / This Quarter filters keep the toolbar calm and effortless.
+
+25
+00:03:59,668 --> 00:04:10,276
+Secondary actions like Copy #, Credit/Debit Notes, and Archive live neatly inside the action menu while Record Payment stays prominent.
+
+26
+00:04:10,626 --> 00:04:19,746
+Inside Invoice Details, a clean progress bar tracks collected amounts, allowing bank or cash payment recording in seconds.
+
+27
+00:04:20,646 --> 00:04:29,574
+Creating a new invoice follows an intuitive four-stage wizard built for both non-accountants and finance specialists.
+
+28
+00:04:29,924 --> 00:04:40,100
+Stage one selects the document type and Individual vs. Business customer profile, auto-filling data from linked contracts.
+
+29
+00:04:40,450 --> 00:04:48,922
+Stage two captures trip origin, destination, service line description, and transport operational details.
+
+30
+00:04:49,272 --> 00:04:59,784
+Stage three computes 15% standard or 0% VAT lines accurately while updating the live side summary card in real time.
+
+31
+00:05:00,134 --> 00:05:10,574
+Finally, Review & Confirm validates balances, enables optional WhatsApp auto-send, and tucks ledger codes under an optional disclosure.
+
+32
+00:05:11,474 --> 00:05:21,218
+Purchases & Expenses tracks fuel, maintenance, insurance, and fleet costs under the same unified period selector.
+
+33
+00:05:21,568 --> 00:05:31,648
+Each supplier bill displays its live payment badge and an inline Pay Supplier button for deferred invoices.
+
+34
+00:05:31,998 --> 00:05:41,790
+When logging a new expense, linking a vehicle from the fleet dropdown feeds directly into per-vehicle profitability reports.
+
+35
+00:05:42,140 --> 00:05:52,628
+Users switch cleanly between Before-VAT and Includes-15% pricing, seeing net cost versus recoverable input VAT immediately.
+
+36
+00:05:52,978 --> 00:06:03,946
+Clear payment cards replace raw account dropdowns, while ledger account codes and VAT dates stay neatly inside Accountant Details.
+
+37
+00:06:04,846 --> 00:06:15,142
+The Accounting Hub organizes five focused workspaces inside a single-row, scrollable underline tab bar.
+
+38
+00:06:15,492 --> 00:06:25,692
+Profits & Expenses leads with operating net income KPIs followed by a four-card snapshot of Cash, Receivables, Payables, and Net VAT.
+
+39
+00:06:26,042 --> 00:06:34,514
+Clicking any balance card opens that account's full General Ledger statement directly.
+
+40
+00:06:34,864 --> 00:06:45,472
+Vehicle profitability now highlights margin percentages, while the 7-column Trial Balance rests neatly inside a collapsible disclosure.
+
+41
+00:06:45,822 --> 00:06:55,278
+Inside Receipts & Payments, an instant searchable document combobox replaces tedious pagination dropdowns and shows due balances.
+
+42
+00:06:55,628 --> 00:07:06,068
+Account Ledger adds six one-click quick account chips, and Journals tucks opening templates and advanced filters away neatly.
+
+43
+00:07:06,968 --> 00:07:17,192
+Chart of Accounts presents a clean hierarchical tree paired with a compact three-stat overview for posting and group accounts.
+
+44
+00:07:17,542 --> 00:07:28,054
+On the ZATCA VAT Return screen, four focused KPI cards pair with an interactive Box 6 to Box 16 net tax formula bar.
+
+45
+00:07:28,404 --> 00:07:37,932
+Clicking Box 14 or Box 15 in the equation jumps directly to Adjustments & Filing Settings below.
+
+46
+00:07:38,282 --> 00:07:47,690
+The official Boxes 1–16 table provides one-click copy buttons formatted for direct entry on the ZATCA portal.
+
+47
+00:07:48,040 --> 00:07:58,000
+Manual Selection mode allows hand-picking specific invoices for independent tax scenarios with instant recalculation and export.
+
+48
+00:07:58,350 --> 00:08:08,766
+At the bottom, Supporting Documents, Adjustments, and Audit Warnings are consolidated into one crisp three-tab review panel.
+
+49
+00:08:09,666 --> 00:08:20,490
+Now introducing the newest capability: the Unified Financial Exports Center, exporting every financial dataset from a single page.
+
+50
+00:08:20,840 --> 00:08:33,416
+Start with four one-click bundles: Complete Audit Pack, ZATCA VAT & Tax, Cash & Receivables, or Management & Fleet P&L.
+
+51
+00:08:33,766 --> 00:08:46,870
+The Advanced Filters panel filters across 19 dimensions including payment status, expense category, vehicle plate, GL account, and min/max amount.
+
+52
+00:08:47,220 --> 00:08:57,396
+Users toggle any combination of the nine financial datasets and immediately see live matched counts and totals in the summary strip.
+
+53
+00:08:57,746 --> 00:09:09,266
+Live Preview tabs let teams inspect matching records before downloading, strictly enforcing per-section RBAC permissions.
+
+54
+00:09:09,616 --> 00:09:21,088
+Finally, pick Arabic or English output language and export the entire filtered bundle in one click as A4 PDF, Excel CSV, or JSON.
+
+55
+00:09:21,988 --> 00:09:31,852
+We conclude with System Settings: company & IBAN banking profiles, alongside ZATCA Phase 2 EGS integration readiness.
+
+56
+00:09:32,202 --> 00:09:40,818
+The WhatsApp Integration console manages connection QR status and automated contract, invoice, and inspection notifications.
+
+57
+00:09:41,168 --> 00:09:51,608
+Super Administrators configure granular module permissions and presets to keep financial and operational roles secure.
+
+58
+00:09:51,958 --> 00:10:01,390
+With this unified architecture, Miqat Al-Khaleej unites daily fleet efficiency, effortless finance workflows, and full tax compliance.
+
+59
+00:10:01,740 --> 00:10:10,020
+Thank you for watching, and we wish your team productive operations with Miqat Al-Khaleej.

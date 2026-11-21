@@ -5,7 +5,8 @@ import { useUiText } from "@/lib/ui-text";
 import { use, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import InvoiceVisibilityAction from "../invoice-visibility-action";
-import { ArrowRight, Building2, Check, CheckCircle2, Copy, CreditCard, Download, ExternalLink, FileText, Landmark, Loader2, Plus, QrCode, ReceiptText, User, AlertCircle, HelpCircle, FileMinus, FilePlus, ShieldCheck, Clock, MessageSquare } from "lucide-react";
+import { ArrowRight, Archive, Building2, Check, CheckCircle2, Copy, CreditCard, Download, ExternalLink, FileText, Landmark, Loader2, Plus, QrCode, ReceiptText, RotateCcw, User, AlertCircle, HelpCircle, FileMinus, FilePlus, ShieldCheck, Clock, MessageSquare } from "lucide-react";
+import { ActionMenu, ActionMenuItem, ActionMenuSeparator } from "@/components/ui/action-menu";
 import SendWhatsAppModal from "@/app/_components/SendWhatsAppModal";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
 import { formatMoneyValue } from "@/app/_components/ui/Money";
@@ -65,6 +66,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [waAutoDismissed, setWaAutoDismissed] = useState(false);
   const [payWarnDismissed, setPayWarnDismissed] = useState(false);
   const searchSnapshot = useSyncExternalStore(
@@ -204,6 +206,15 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   const isFullyPaid = Boolean(balanceData) && !isProforma && absRemainingMinor === BigInt(0);
   const isPartiallyPaid =
     Boolean(balanceData) && !isRefundDue && !isProforma && absRemainingMinor > BigInt(0) && paidMinor > BigInt(0);
+  const netDocMinor = balanceData?.netDocumentAmount
+    ? signedMoneyMinor(balanceData.netDocumentAmount)
+    : signedMoneyMinor(data.snapshot.totals.gross);
+  const paidPercent =
+    !balanceData || netDocMinor <= BigInt(0)
+      ? 0
+      : isFullyPaid
+        ? 100
+        : Math.max(0, Math.min(100, Number((paidMinor * BigInt(100)) / netDocMinor)));
 
   return (
     <div className="space-y-6 pb-12" dir={ui.dir}>
@@ -258,51 +269,6 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {data.contractId && (
-            <Link
-              href={`/admin/contracts/${encodeURIComponent(data.contractId)}`}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition"
-            >
-              <FileText className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span>{ui("العقد المرتبط")}</span>
-            </Link>
-          )}
-
-          {canCreateInvoices && (
-            <Link
-              href="/admin/invoices/new"
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-xs font-bold text-[var(--text-main)] transition"
-            >
-              <Plus className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span>{ui("فاتورة جديدة")}</span>
-            </Link>
-          )}
-
-          {canWriteAccounting && !data.visibility?.isArchived && !isProforma && !isCredit && balanceData && !isLoadingBalance && !isRefundDue && !isFullyPaid && (
-            <button
-              type="button"
-              onClick={() => setShowPaymentModal(true)}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] hover:border-[var(--accent-gold)] text-[var(--accent-gold)] text-xs font-bold transition cursor-pointer"
-            >
-              <CreditCard className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span>{ui("تسجيل دفعة")}</span>
-            </button>
-          )}
-
-          {canDeleteInvoices && (
-            <InvoiceVisibilityAction id={data.id} number={data.invoiceNumber} isArchived={data.visibility?.isArchived} onChanged={()=>void invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(id)}`).then(result=>{if(result.data)setData(result.data);})}/>
-          )}
-          {canSendInvoiceWhatsApp && (
-            <button
-              type="button"
-              onClick={() => setShowWhatsAppModal(true)}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
-              title={ui("إرسال الفاتورة للعميل عبر واتساب")}
-            >
-              <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
-              <span>{ui("إرسال عبر واتساب")}</span>
-            </button>
-          )}
           <button
             type="button"
             disabled={isDownloading}
@@ -316,6 +282,84 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             )}
             <span>{ui("تنزيل الفاتورة PDF")}</span>
           </button>
+
+          {canWriteAccounting && !data.visibility?.isArchived && !isProforma && !isCredit && balanceData && !isLoadingBalance && !isRefundDue && !isFullyPaid && (
+            <button
+              type="button"
+              onClick={() => setShowPaymentModal(true)}
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 hover:border-emerald-600 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:hover:border-emerald-500 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+            >
+              <CreditCard className="w-4 h-4" aria-hidden="true" />
+              <span>{ui("تسجيل دفعة")}</span>
+            </button>
+          )}
+
+          {canSendInvoiceWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setShowWhatsAppModal(true)}
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] text-[var(--text-main)] text-xs font-bold transition cursor-pointer"
+              title={ui("إرسال الفاتورة للعميل عبر واتساب")}
+            >
+              <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+              <span>{ui("إرسال عبر واتساب")}</span>
+            </button>
+          )}
+
+          <ActionMenu label={text("إجراءات الفاتورة", "Invoice actions")}>
+            {data.contractId && (
+              <ActionMenuItem
+                icon={<FileText className="w-3.5 h-3.5" />}
+                href={`/admin/contracts/${encodeURIComponent(data.contractId)}`}
+              >
+                {text("العقد المرتبط", "Linked contract")}
+              </ActionMenuItem>
+            )}
+            {canCreateInvoices && (
+              <ActionMenuItem icon={<Plus className="w-3.5 h-3.5" />} href="/admin/invoices/new">
+                {text("فاتورة جديدة", "New invoice")}
+              </ActionMenuItem>
+            )}
+            {canCreateInvoices && canAdjustTaxInvoice && !creditExhausted && (
+              <ActionMenuItem
+                icon={<FileMinus className="w-3.5 h-3.5" />}
+                tone="danger"
+                href={`/admin/invoices/new?type=TAX&kind=CREDIT&originalInvoiceId=${encodeURIComponent(id)}`}
+              >
+                {text("خفض قيمة الفاتورة (إشعار دائن)", "Issue credit note")}
+              </ActionMenuItem>
+            )}
+            {canCreateInvoices && canAdjustTaxInvoice && (
+              <ActionMenuItem
+                icon={<FilePlus className="w-3.5 h-3.5" />}
+                tone="gold"
+                href={`/admin/invoices/new?type=TAX&kind=DEBIT&originalInvoiceId=${encodeURIComponent(id)}`}
+              >
+                {text("إضافة مبلغ (إشعار مدين)", "Issue debit note")}
+              </ActionMenuItem>
+            )}
+            {data.verificationUrl && (
+              <ActionMenuItem
+                icon={copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5" />}
+                onClick={() => void copyVerificationUrl()}
+              >
+                {copiedLink ? text("تم نسخ الرابط", "Link copied") : text("نسخ رابط التحقق", "Copy verification link")}
+              </ActionMenuItem>
+            )}
+            {canDeleteInvoices && (
+              <>
+                <ActionMenuSeparator />
+                <ActionMenuItem
+                  icon={data.visibility?.isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                  onClick={() => setVisibilityOpen(true)}
+                >
+                  {data.visibility?.isArchived
+                    ? text("استعادة الفاتورة", "Restore invoice")
+                    : text("إزالة الفاتورة من القائمة", "Remove from list")}
+                </ActionMenuItem>
+              </>
+            )}
+          </ActionMenu>
         </div>
       </div>
 
@@ -509,6 +553,21 @@ export default function InvoicePage({ params }: InvoicePageProps) {
               </strong>
             </div>
           </div>
+
+          {balanceData && !isRefundDue && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                <span>{text("نسبة التحصيل", "Collection progress")}</span>
+                <span className="font-mono font-bold text-[var(--text-main)]">{paidPercent}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-[var(--bg-card-subtle)] border theme-border overflow-hidden">
+                <div
+                  style={{ width: `${paidPercent}%` }}
+                  className="h-full rounded-full bg-emerald-600 dark:bg-emerald-400 transition-all duration-300"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions & Note issuance bar (§7) */}
           <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
@@ -998,6 +1057,22 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           targetTitle={data.invoiceNumber}
           recipientName={buyer.name}
           defaultPhone={data.snapshot.input.transport?.contactPhone || ""}
+        />
+      )}
+
+      {canDeleteInvoices && (
+        <InvoiceVisibilityAction
+          id={data.id}
+          number={data.invoiceNumber}
+          isArchived={data.visibility?.isArchived}
+          hideTrigger
+          open={visibilityOpen}
+          onOpenChange={setVisibilityOpen}
+          onChanged={() =>
+            void invoiceRequest<InvoiceDetail>(`/${encodeURIComponent(id)}`).then((result) => {
+              if (result.data) setData(result.data);
+            })
+          }
         />
       )}
     </div>

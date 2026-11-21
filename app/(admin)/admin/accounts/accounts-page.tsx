@@ -6,7 +6,7 @@ import { hasClientPermission } from "@/lib/permissions";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { BookOpen, Landmark, Plus, Search, X, Copy, Check, FolderTree, Folder, FileSpreadsheet, Layers, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, RefreshCw, HelpCircle } from "lucide-react";
+import { BookOpen, Plus, Search, X, Copy, Check, FolderTree, Folder, FileSpreadsheet, Layers, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { Badge, Button, PageHeader } from "@/app/_components/ui";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -486,7 +486,6 @@ export default function AccountsPage() {
   );
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const copyTimerRef = useRef<number | null>(null);
-  const [showFaqGuide, setShowFaqGuide] = useState(true);
 
   useEffect(() => {
     return () => {
@@ -537,20 +536,10 @@ export default function AccountsPage() {
     const total = accounts.length;
     const posting = accounts.filter((a) => a.isPosting && a.isActive).length;
     const group = accounts.filter((a) => !a.isPosting).length;
-    const assets = accounts.filter((a) => a.type === "ASSET").length;
-    const liabilities = accounts.filter((a) => a.type === "LIABILITY").length;
-    const equity = accounts.filter((a) => a.type === "EQUITY").length;
-    const revenues = accounts.filter((a) => a.type === "REVENUE").length;
-    const expenses = accounts.filter((a) => a.type === "EXPENSE").length;
     return {
       total,
       posting,
       group,
-      assets,
-      liabilities,
-      equity,
-      revenues,
-      expenses,
     };
   }, [accounts]);
 
@@ -699,26 +688,16 @@ export default function AccountsPage() {
           setSeedError(err);
         }}
         actions={
-          <>
-            <Link
-              href="/admin/accounting"
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
+          canWrite ? (
+            <button
+              type="button"
+              className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
+              onClick={() => setEditor({ account: "NEW" })}
             >
-              <Landmark className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span>{ui(t("accounting.title"))}</span>
-            </Link>
-
-            {canWrite && (
-              <button
-                type="button"
-                className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md transition"
-                onClick={() => setEditor({ account: "NEW" })}
-              >
-                <Plus className="size-4" aria-hidden="true" />
-                <span>+ {ui(t("common.create"))}</span>
-              </button>
-            )}
-          </>
+              <Plus className="size-4" aria-hidden="true" />
+              <span>+ {ui(t("common.create"))}</span>
+            </button>
+          ) : undefined
         }
       />
 
@@ -762,83 +741,8 @@ export default function AccountsPage() {
         </div>
       )}
 
-      {/* Prominent Quick-Fix Callout Banner */}
-      {showFaqGuide && (
-        <section
-          aria-label={ui("تنبيه حل المشكلة")}
-          className="theme-card rounded-2xl border border-sky-600/35 bg-sky-500/[0.06] p-4 sm:p-5 flex flex-col sm:flex-row items-start justify-between gap-4"
-        >
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-sky-500/15 text-sky-800 dark:text-sky-300 flex items-center justify-center shrink-0 mt-0.5">
-              <HelpCircle className="size-5" aria-hidden="true" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-semibold text-[var(--text-main)] flex flex-wrap items-center gap-2">
-                <span>
-                  {ui("لماذا يظهر تنبيه: «اختر حسابات فرعية نشطة قابلة للترحيل»؟")}</span>
-                <span className="rounded-md bg-sky-500/15 text-sky-800 dark:text-sky-300 text-xs font-bold px-2 py-0.5 border border-sky-600/30">
-                  {ui("حل فوري")}</span>
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                {ui("يظهر هذا التنبيه عند محاولة اختيار حساب رئيسي تجميعي مثل")}{" "}
-                <code className="font-mono font-bold text-[var(--accent-gold)]">
-                  1000
-                </code>{" "}
-                {ui("أو")}{" "}
-                <code className="font-mono font-bold text-[var(--accent-gold)]">
-                  2000
-                </code>{" "}
-                {ui("أو")}{" "}
-                <code className="font-mono font-bold text-[var(--accent-gold)]">
-                  5000
-                </code>{" "}
-                {ui("في قيد أو فاتورة. لتفادي ذلك، اختر دائماً الحساب الفرعي النشط التابع له (مثل")}{" "}
-                <code className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
-                  {ui("1102 البنك")}</code>
-                {ui("،")}{" "}
-                <code className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
-                  {ui("4101 الإيرادات")}</code>
-                {ui("، أو")}{" "}
-                <code className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
-                  {ui("5101 الوقود")}</code>
-                ).
-              </p>
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setPostingFilter("POSTING")}
-                  className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg bg-[var(--accent-btn-bg)] hover:bg-[var(--accent-btn-hover)] text-[var(--accent-btn-fg)] px-3 py-1.5 text-xs font-bold transition cursor-pointer"
-                >
-                  <CheckCircle2 className="size-3.5" aria-hidden="true" />
-                  <span>{ui("تصفية الحسابات الفرعية القابلة للترحيل الآن")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPostingFilter("ALL");
-                    setTypeFilter("ALL");
-                    setSearch("");
-                  }}
-                  className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] hover:border-[var(--accent-gold)] transition cursor-pointer"
-                >
-                  {ui("إلغاء الفلترة وعرض الكل")}</button>
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowFaqGuide(false)}
-            className="inline-flex min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 items-center justify-center p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition shrink-0 cursor-pointer"
-            aria-label={ui("إخفاء التنبيه")}
-            title={ui("إخفاء التنبيه")}
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        </section>
-      )}
-
-      {/* Interactive KPI Summary Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* Compact 3-Stat Posting Overview Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Total */}
         <button
           type="button"
@@ -846,18 +750,23 @@ export default function AccountsPage() {
             setTypeFilter("ALL");
             setPostingFilter("ALL");
           }}
-          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer flex items-center justify-between gap-3 ${
             typeFilter === "ALL" && postingFilter === "ALL"
               ? "bg-[var(--accent-surface)] border-[var(--accent-gold)] ring-1 ring-[var(--accent-gold)]/30"
               : "theme-card theme-border hover:border-[var(--accent-gold)]/50"
           }`}
         >
-          <span className="text-xs font-bold text-[var(--text-muted)]">
-            {ui("إجمالي الحسابات")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-[var(--text-main)] mt-1">
+          <div>
+            <span className="text-xs font-bold text-[var(--text-muted)] block">
+              {ui("إجمالي الحسابات")}
+            </span>
+            <span className="text-xs text-[var(--text-muted)]">
+              {ui("شاملة الفئات الـ 5")}
+            </span>
+          </div>
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-[var(--text-main)]">
             {isLoading ? "—" : stats.total}
           </div>
-          <span className="text-xs text-[var(--text-muted)]">{ui("شاملة الفئات الـ 5")}</span>
         </button>
 
         {/* Posting Sub-Accounts */}
@@ -866,22 +775,26 @@ export default function AccountsPage() {
           onClick={() =>
             setPostingFilter(postingFilter === "POSTING" ? "ALL" : "POSTING")
           }
-          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer flex items-center justify-between gap-3 ${
             postingFilter === "POSTING"
               ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
               : "theme-card theme-border hover:border-emerald-600/50"
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
-              {ui("يقبل الترحيل (فرعي)")}</span>
-            <CheckCircle2 className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                {ui("يقبل الترحيل (فرعي)")}
+              </span>
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">
+              {ui("صالحة للقيود والفواتير")}
+            </span>
           </div>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-800 dark:text-emerald-300 mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-800 dark:text-emerald-300">
             {isLoading ? "—" : stats.posting}
           </div>
-          <span className="text-xs text-[var(--text-muted)]">
-            {ui("صالحة للقيود والفواتير")}</span>
         </button>
 
         {/* Group Accounts */}
@@ -890,85 +803,26 @@ export default function AccountsPage() {
           onClick={() =>
             setPostingFilter(postingFilter === "GROUP" ? "ALL" : "GROUP")
           }
-          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
+          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer flex items-center justify-between gap-3 ${
             postingFilter === "GROUP"
               ? "bg-[var(--accent-surface)] border-amber-600 ring-1 ring-amber-600/30"
               : "theme-card theme-border hover:border-amber-600/50"
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--accent-gold)]">
-              {ui("تجميعي (رئيسي)")}</span>
-            <Folder className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Folder className="size-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span className="text-xs font-bold text-[var(--accent-gold)]">
+                {ui("تجميعي (رئيسي)")}
+              </span>
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">
+              {ui("لحساب مجاميع الفروع")}
+            </span>
           </div>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-[var(--accent-gold)] mt-1">
+          <div className="text-xl sm:text-2xl font-semibold font-mono text-[var(--accent-gold)]">
             {isLoading ? "—" : stats.group}
           </div>
-          <span className="text-xs text-[var(--text-muted)]">
-            {ui("لحساب مجاميع الفروع")}</span>
-        </button>
-
-        {/* Assets 1xxx */}
-        <button
-          type="button"
-          onClick={() =>
-            setTypeFilter(typeFilter === "ASSET" ? "ALL" : "ASSET")
-          }
-          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
-            typeFilter === "ASSET"
-              ? "bg-sky-500/10 border-sky-600 ring-1 ring-sky-600/30"
-              : "theme-card theme-border hover:border-sky-600/50"
-          }`}
-        >
-          <span className="text-xs font-bold text-sky-800 dark:text-sky-300">
-            {ui("1000 الأصول")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-sky-800 dark:text-sky-300 mt-1">
-            {isLoading ? "—" : stats.assets}
-          </div>
-          <span className="text-xs text-[var(--text-muted)]">
-            {ui("الصندوق، البنك، الأسطول")}</span>
-        </button>
-
-        {/* Revenues 4xxx */}
-        <button
-          type="button"
-          onClick={() =>
-            setTypeFilter(typeFilter === "REVENUE" ? "ALL" : "REVENUE")
-          }
-          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
-            typeFilter === "REVENUE"
-              ? "bg-emerald-500/12 border-emerald-600 ring-1 ring-emerald-600/30 dark:bg-emerald-950/45 dark:border-emerald-500 dark:ring-emerald-500/30"
-              : "theme-card theme-border hover:border-emerald-600/50"
-          }`}
-        >
-          <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
-            {ui("4000 الإيرادات")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-emerald-800 dark:text-emerald-300 mt-1">
-            {isLoading ? "—" : stats.revenues}
-          </div>
-          <span className="text-xs text-[var(--text-muted)]">
-            {ui("نقل، VIP، عمرة، صادرات")}</span>
-        </button>
-
-        {/* Expenses 5xxx */}
-        <button
-          type="button"
-          onClick={() =>
-            setTypeFilter(typeFilter === "EXPENSE" ? "ALL" : "EXPENSE")
-          }
-          className={`p-3.5 rounded-2xl border text-start transition cursor-pointer ${
-            typeFilter === "EXPENSE"
-              ? "bg-rose-500/10 border-rose-600 ring-1 ring-rose-600/30"
-              : "theme-card theme-border hover:border-rose-600/50"
-          }`}
-        >
-          <span className="text-xs font-bold text-rose-800 dark:text-rose-300">
-            {ui("5000 المصروفات")}</span>
-          <div className="text-xl sm:text-2xl font-semibold font-mono text-rose-800 dark:text-rose-300 mt-1">
-            {isLoading ? "—" : stats.expenses}
-          </div>
-          <span className="text-xs text-[var(--text-muted)]">
-            {ui("وقود، صيانة، رواتب، TGA")}</span>
         </button>
       </div>
 

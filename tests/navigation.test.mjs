@@ -6,13 +6,14 @@ const output=ts.transpileModule(fs.readFileSync('lib/navigation.ts','utf8'),{com
 const mod={};new Function('exports',output)(mod);
 test('unified navigation includes all admin sections and hides privileged administration',()=>{
  const items=mod.navigationFor('ADMIN');
- for(const path of ['/admin/contracts','/admin/fleet','/admin/captains','/admin/inspections','/admin/customers','/admin/staff','/admin/representatives','/admin/invoices','/admin/purchases','/admin/accounting','/admin/accounts','/admin/vat-returns','/admin/invoices/settings','/admin/zatca','/admin/whatsapp'])assert.ok(items.some(item=>item.href===path),path);
+ for(const path of ['/admin/contracts','/admin/fleet','/admin/captains','/admin/inspections','/admin/customers','/admin/staff','/admin/representatives','/admin/invoices','/admin/purchases','/admin/accounting','/admin/accounting/exports','/admin/accounts','/admin/vat-returns','/admin/invoices/settings','/admin/zatca','/admin/whatsapp'])assert.ok(items.some(item=>item.href===path),path);
  assert.ok(!items.some(item=>item.href==='/admin/admins'));
  assert.ok(mod.navigationFor('ADMIN',true).some(item=>item.href==='/admin/admins'));
  assert.ok(!items.some(item=>item.href.endsWith('/new')));
 });
 test('longest matching route owns nested pages and settings never highlights invoices',()=>{
  assert.equal(mod.routeInfo('/admin/invoices/settings').group,'settings');
+ assert.equal(mod.routeInfo('/admin/accounting/exports').href,'/admin/accounting/exports');
  assert.equal(mod.routeInfo('/admin/contracts/example/edit').href,'/admin/contracts');
  assert.equal(mod.routeInfo('/admin/invoices-unknown').href,'/admin');
  assert.equal(mod.routeInfo('/administrator'),undefined);

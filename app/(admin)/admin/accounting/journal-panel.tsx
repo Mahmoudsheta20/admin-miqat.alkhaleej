@@ -2,7 +2,8 @@
 
 import { useUiText } from "@/lib/ui-text";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Scale, CheckCircle2, AlertCircle, Plus, Trash2, RotateCcw, Calendar, FileText, Hash, Search, X } from "lucide-react";
+import { Scale, CheckCircle2, AlertCircle, Plus, Trash2, RotateCcw, Calendar, FileText, Hash, Search, SlidersHorizontal, X } from "lucide-react";
+import { ActionMenu, ActionMenuItem } from "@/components/ui/action-menu";
 import {
   accountingRequest,
   amountLabel,
@@ -75,6 +76,7 @@ export default function JournalPanel({
   const [startDateFilter, setStartDateFilter] = useUrlState<string>("journalFrom", "");
   const [endDateFilter, setEndDateFilter] = useUrlState<string>("journalTo", "");
   const [vehicleFilter, setVehicleFilter] = useUrlState<string>("journalPlate", "");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState(currentSaudiPeriod().day);
@@ -113,6 +115,14 @@ export default function JournalPanel({
     reload
   );
   const pageSize = journals.data?.pageSize || 30;
+  const advancedFilterCount = [
+    sourceTypeFilter,
+    accountFilter,
+    startDateFilter,
+    endDateFilter,
+    vehicleFilter.trim(),
+  ].filter(Boolean).length;
+  const filtersExpanded = showMoreFilters || advancedFilterCount > 0;
   const hasFilters = Boolean(
     searchFilter.trim() ||
       sourceTypeFilter ||
@@ -265,15 +275,15 @@ export default function JournalPanel({
         </div>
         {canWrite && (
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={saving}
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-amber-600/35 bg-[var(--accent-surface)] hover:border-amber-600 px-3 py-1.5 text-xs font-bold text-[var(--accent-gold)] disabled:opacity-50 cursor-pointer transition-colors"
-              onClick={() => void fillCapitalPreset()}
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              {ui("تعبئة قيد رأس مال (300,000 ر.س)")}
-            </button>
+            <ActionMenu label={isEn ? "Quick templates" : "قوالب جاهزة"} align="end">
+              <ActionMenuItem
+                onClick={() => void fillCapitalPreset()}
+                icon={<Plus className="h-4 w-4" aria-hidden="true" />}
+                tone="gold"
+              >
+                {ui("تعبئة قيد رأس مال (300,000 ر.س)")}
+              </ActionMenuItem>
+            </ActionMenu>
             <button
               type="button"
               className="gold-gradient-btn inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold cursor-pointer transition-transform active:scale-[0.98]"
@@ -287,15 +297,18 @@ export default function JournalPanel({
       </div>
 
       {/* Filters Toolbar */}
-      <div className="theme-card rounded-2xl border theme-border p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end">
-        <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Search" : "بحث في القيود"}</span>
-          <div className="relative">
-            <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" aria-hidden="true" />
+      <div className="theme-card rounded-2xl border theme-border p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search
+              className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+              aria-hidden="true"
+            />
             <input
               type="search"
+              aria-label={isEn ? "Search journals" : "بحث في القيود"}
               className={`${INPUT} ps-9`}
-              placeholder={isEn ? "Number, description..." : "رقم القيد أو البيان…"}
+              placeholder={isEn ? "Search journal # or description..." : "بحث برقم القيد أو البيان…"}
               value={searchFilter}
               onChange={(e) => {
                 setSearchFilter(e.target.value);
@@ -303,97 +316,125 @@ export default function JournalPanel({
               }}
             />
           </div>
-        </label>
 
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Source" : "المصدر"}</span>
-          <select
-            className={INPUT}
-            value={sourceTypeFilter}
-            onChange={(e) => {
-              setSourceTypeFilter(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">{isEn ? "All sources" : "كل المصادر"}</option>
-            {JOURNAL_SOURCES.filter(Boolean).map((s) => (
-              <option key={s} value={s}>
-                {journalSourceTypeLabel(s, isEn)}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Account" : "الحساب"}</span>
-          <select
-            className={INPUT}
-            value={accountFilter}
-            onChange={(e) => {
-              setAccountFilter(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">{isEn ? "All accounts" : "كل الحسابات"}</option>
-            {accounts.data?.items.map((a) => (
-              <option key={a.code} value={a.code}>
-                {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "From" : "من"}</span>
-          <input
-            type="date"
-            dir="ltr"
-            className={`${INPUT} font-mono`}
-            value={startDateFilter}
-            onChange={(e) => {
-              setStartDateFilter(e.target.value);
-              setPage(1);
-            }}
-          />
-        </label>
-
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "To" : "إلى"}</span>
-          <input
-            type="date"
-            dir="ltr"
-            className={`${INPUT} font-mono`}
-            value={endDateFilter}
-            onChange={(e) => {
-              setEndDateFilter(e.target.value);
-              setPage(1);
-            }}
-          />
-        </label>
-
-        <div className="lg:col-span-1 flex items-end gap-1.5">
-          <input
-            type="text"
-            aria-label={isEn ? "Vehicle plate filter" : "تصفية برقم اللوحة"}
-            placeholder={isEn ? "Plate" : "اللوحة"}
-            className={`${INPUT} font-mono`}
-            value={vehicleFilter}
-            onChange={(e) => {
-              setVehicleFilter(e.target.value);
-              setPage(1);
-            }}
-          />
-          {hasFilters && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={clearFilters}
-              aria-label={isEn ? "Reset journal filters" : "مسح فلاتر اليومية"}
-              className="min-h-11 sm:min-h-9 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-300 hover:border-rose-500 cursor-pointer shrink-0 inline-flex items-center justify-center"
+              aria-expanded={filtersExpanded}
+              onClick={() => setShowMoreFilters((v) => !v)}
+              className={`min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                filtersExpanded || advancedFilterCount > 0
+                  ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                  : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
+              }`}
             >
-              <X className="h-4 w-4" aria-hidden="true" />
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{isEn ? "More filters" : "فلاتر متقدمة"}</span>
+              {advancedFilterCount > 0 && (
+                <span className="inline-flex size-5 items-center justify-center rounded-full bg-[var(--accent-btn-bg)] text-[11px] font-bold text-[var(--accent-btn-fg)]">
+                  {advancedFilterCount}
+                </span>
+              )}
             </button>
-          )}
+
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                aria-label={isEn ? "Reset journal filters" : "مسح فلاتر اليومية"}
+                className="min-h-11 sm:min-h-9 px-3 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-rose-700 dark:text-rose-300 hover:border-rose-500 cursor-pointer inline-flex items-center gap-1"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{isEn ? "Reset" : "مسح"}</span>
+              </button>
+            )}
+          </div>
         </div>
+
+        {filtersExpanded && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end border-t theme-border pt-3">
+            <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "Source" : "المصدر"}</span>
+              <select
+                className={INPUT}
+                value={sourceTypeFilter}
+                onChange={(e) => {
+                  setSourceTypeFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">{isEn ? "All sources" : "كل المصادر"}</option>
+                {JOURNAL_SOURCES.filter(Boolean).map((s) => (
+                  <option key={s} value={s}>
+                    {journalSourceTypeLabel(s, isEn)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "Account" : "الحساب"}</span>
+              <select
+                className={INPUT}
+                value={accountFilter}
+                onChange={(e) => {
+                  setAccountFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">{isEn ? "All accounts" : "كل الحسابات"}</option>
+                {accounts.data?.items.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "From" : "من"}</span>
+              <input
+                type="date"
+                dir="ltr"
+                className={`${INPUT} font-mono`}
+                value={startDateFilter}
+                onChange={(e) => {
+                  setStartDateFilter(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </label>
+
+            <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "To" : "إلى"}</span>
+              <input
+                type="date"
+                dir="ltr"
+                className={`${INPUT} font-mono`}
+                value={endDateFilter}
+                onChange={(e) => {
+                  setEndDateFilter(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </label>
+
+            <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "Vehicle plate" : "لوحة المركبة"}</span>
+              <input
+                type="text"
+                aria-label={isEn ? "Vehicle plate filter" : "تصفية برقم اللوحة"}
+                placeholder={isEn ? "Plate..." : "اللوحة..."}
+                className={`${INPUT} font-mono`}
+                value={vehicleFilter}
+                onChange={(e) => {
+                  setVehicleFilter(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </label>
+          </div>
+        )}
       </div>
 
       {(error || journals.error || accounts.error) && (

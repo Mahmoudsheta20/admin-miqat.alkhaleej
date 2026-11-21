@@ -1,8 +1,10 @@
 import { backendUrl, backendRequest } from "./backend";
 export const EXPENSE_CATEGORIES = { FUEL: "وقود", MAINTENANCE_TIRES: "صيانة وإطارات", VEHICLE_INSURANCE: "تأمين المركبات", SUBCONTRACTED_TRANSPORT: "نقل من الباطن", DRIVER_PAYROLL: "رواتب وتريبات السائقين", GOVERNMENT_FEES: "رسوم حكومية وتراخيص", RENT_UTILITIES: "إيجارات ومرافق واتصالات", MARKETING_SOFTWARE: "تسويق واشتراكات تقنية", ADMIN: "مصروفات إدارية" };
 export const TAX_TREATMENTS = { STANDARD: "خاضع للضريبة 15%", ZERO_RATED: "خاضع للنسبة الصفرية 0%", EXEMPT: "معفى من الضريبة", OUT_OF_SCOPE: "خارج نطاق الضريبة" };
+export type DocumentPaymentStatus = "PAID" | "PARTIAL" | "UNPAID" | "REFUND_DUE" | "UNPOSTED";
+export interface DocumentPaymentSummary { balance: string; netDocumentAmount: string; settledAmount: string; direction: "RECEIPT" | "PAYMENT"; status: DocumentPaymentStatus }
 export interface PurchaseInput { documentType?: "PURCHASE_INVOICE" | "PURCHASE_RETURN"; originalPurchaseId?: string; accountCode?: string; paymentAccountCode?: string; vehicleId?: string; postImmediately?: boolean; supplierName: string; supplierVatNumber?: string | null; invoiceNumber: string; issueDate: string; vatDate: string; category: keyof typeof EXPENSE_CATEGORIES; taxTreatment: keyof typeof TAX_TREATMENTS; netAmount: string; vatAmount: string; recoverablePercent: string; evidenceReference?: string; vehiclePlate?: string; notes?: string }
-export interface PurchaseRow extends PurchaseInput { id: string; voucher: string; postingStatus: "POSTED" | "DRAFT" | "LEGACY"; totalAmount: string; recoverableVat: string; version: number; createdAt: string; updatedAt: string; voidedAt: string | null; voidReason: string | null }
+export interface PurchaseRow extends PurchaseInput { id: string; voucher: string; postingStatus: "POSTED" | "DRAFT" | "LEGACY"; totalAmount: string; recoverableVat: string; version: number; createdAt: string; updatedAt: string; voidedAt: string | null; voidReason: string | null; paymentSummary?: DocumentPaymentSummary | null }
 export interface PurchaseAudit { id: string; action: string; createdAt: string; actorId: string }
 export interface PurchaseDetail extends PurchaseRow { audit: PurchaseAudit[] }
 export interface PurchaseList { items: PurchaseRow[]; total: number; page: number; totals: { netAmount: string; vatAmount: string; recoverableVat: string; totalAmount: string } }
@@ -262,6 +264,66 @@ function buildClientVatCsv(vat: VatReport): string {
   ];
   return `\uFEFF${rows.map((row) => row.map(escapeVatCsvCell).join(",")).join("\r\n")}`;
 }
+export function paymentStatusMeta(
+  status: DocumentPaymentStatus | null | undefined,
+  isEn: boolean,
+  kind: "SALE" | "PURCHASE" = "SALE",
+): { label: string; variant: "success" | "warning" | "destructive" | "secondary" | "outline"; canPay: boolean } {
+  switch (status) {
+    case "PAID":
+      return { label: isEn ? "Paid" : "مدفوعة", variant: "success", canPay: false };
+    case "PARTIAL":
+      return { label: isEn ? "Partial" : "مدفوعة جزئياً", variant: "warning", canPay: true };
+    case "REFUND_DUE":
+      return {
+        label: isEn ? (kind === "SALE" ? "Refund due" : "Supplier credit") : kind === "SALE" ? "رصيد للعميل" : "رصيد لدى المورد",
+        variant: "secondary",
+        canPay: false,
+      };
+    case "UNPOSTED":
+      return { label: isEn ? "Needs review" : "بانتظار المراجعة", variant: "outline", canPay: false };
+    case "UNPAID":
+    default:
+      return { label: isEn ? "Unpaid" : "غير مدفوعة", variant: "destructive", canPay: true };
+  }
+}
+
+export function buildPurchasesQueryPath(params: {
+  period?: ReportPeriod;
+  year?: number;
+  quarter?: number;
+  page?: number;
+  search?: string;
+  includeVoided?: boolean;
+  category?: string;
+  documentType?: string;
+  postingStatus?: string;
+  paymentAccountCode?: string;
+}): string {
+  const qs = new URLSearchParams();
+  if (params.period) {
+    qs.set("mode", params.period.mode);
+    if (params.period.mode === "CUSTOM") {
+      qs.set("startDate", params.period.startDate);
+      qs.set("endDate", params.period.endDate);
+    } else {
+      qs.set("year", String(params.period.year));
+      if (params.period.mode === "QUARTER") qs.set("quarter", String(params.period.quarter));
+    }
+  } else if (params.year !== undefined && params.quarter !== undefined) {
+    qs.set("year", String(params.year));
+    qs.set("quarter", String(params.quarter));
+  }
+  qs.set("page", String(params.page ?? 1));
+  qs.set("search", (params.search || "").trim());
+  qs.set("includeVoided", String(Boolean(params.includeVoided)));
+  if (params.category) qs.set("category", params.category);
+  if (params.documentType) qs.set("documentType", params.documentType);
+  if (params.postingStatus) qs.set("postingStatus", params.postingStatus);
+  if (params.paymentAccountCode) qs.set("paymentAccountCode", params.paymentAccountCode);
+  return `/purchases?${qs.toString()}`;
+}
+
 export async function downloadAccounting(path:string,name:string) { const response=await fetch(backendUrl(`/accounting${path}`),{credentials:"include",cache:"no-store"});if(!response.ok){const data=await response.json().catch(()=>null);throw new Error(data?.error||"تعذر تنزيل الملف");}const url=URL.createObjectURL(await response.blob()),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
 export async function downloadManualVatReturn(format:"csv"|"pdf",body:Record<string,unknown>,name:string,fallbackReport?:VatReport|null) {
   const response=await fetch(backendUrl("/accounting/vat-return/manual/export"),{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",cache:"no-store",body:JSON.stringify({...body,format})});

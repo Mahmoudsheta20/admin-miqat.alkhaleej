@@ -1,0 +1,39 @@
+1
+00:00:02,500 --> 00:00:27,140
+Welcome to the detailed Financial Suite guide. In Invoices, top KPI cards track sales and VAT, tabs separate Tax, Proforma, and Notes, and instant filters sort by Paid, Partial, or Unpaid status.
+
+2
+00:00:27,450 --> 00:00:54,410
+Inside invoice details, view exact totals, collected amounts, remaining halalas, and the collection progress bar. Record cash or bank payments directly, issue credit or debit notes, and download the ZATCA QR PDF.
+
+3
+00:00:54,700 --> 00:01:17,660
+The 4-stage wizard starts in Stage 1 by choosing the tax document type and linking an existing contract to auto-fill client and VAT details, then Stage 2 verifies route, vehicle, and supply date.
+
+4
+00:01:17,950 --> 00:01:43,870
+In Stage 3, enter service price as Before or Includes 15% VAT, pick the tax category, and watch the sticky side summary compute net, VAT, and grand total live; Stage 4 sets payment terms and automatic WhatsApp delivery.
+
+5
+00:01:44,167 --> 00:02:08,327
+In Purchases and Fleet Expenses, record vendor bills for fuel, maintenance, and insurance linked directly to each bus. Toggle Includes 15% VAT for exact reverse halala extraction, alongside non-taxable expenses and purchase returns.
+
+6
+00:02:08,617 --> 00:02:32,777
+In the Accounting Hub, the Profits & Expenses tab displays the Income Statement, net profit before and after zakat, and live cash, bank, AR, and AP cards—plus an expandable Trial Balance and per-vehicle profitability table.
+
+7
+00:02:33,067 --> 00:02:57,147
+Across the remaining Accounting tabs, manage balanced Journal Entries, inspect any Account Ledger, issue Receipt and Payment Vouchers with smart invoice lookup, and lock audited periods against retroactive changes.
+
+8
+00:02:57,450 --> 00:03:19,610
+The hierarchical Chart of Accounts separates group headers from posting accounts; in VAT Returns, select included invoices and copy reconciled ZATCA Boxes 1–16 directly into the tax portal.
+
+9
+00:03:19,900 --> 00:03:48,780
+The Unified Financial Exports Center consolidates everything in one page: pick ready audit or ZATCA bundles, filter across 19 advanced criteria, preview 9 live financial datasets, and export a single A4 PDF, Excel CSV, or JSON package.
+
+10
+00:03:49,083 --> 00:04:08,843
+The financial cycle completes with Company, Bank, and IBAN settings printed on invoices, plus ZATCA Phase 2 cryptographic onboarding and compliance monitoring.

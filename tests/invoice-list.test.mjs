@@ -31,6 +31,7 @@ const {
   invoiceRiyadhDateKey,
   isValidIsoDateString,
   normalizeInvoiceTaxRateLabel,
+  quickInvoiceDateRange,
   summarizeInvoicePage,
 } = invoicesMod;
 
@@ -244,4 +245,81 @@ test('creditLimitError enforces exact decimal remaining balance ceiling', () => 
   assert.equal(creditLimitError('115.00', { availableGross: '115.00' }, true), '');
   assert.match(creditLimitError('115.01', { availableGross: '115.00' }, true), /115\.00 SAR/);
   assert.match(creditLimitError('10.00', { availableGross: '0.00' }, false), /لا يوجد رصيد/);
+});
+
+test('filterInvoiceRows filters by paymentStatus and excludes rows without matching summary', () => {
+  const sample = [
+    {
+      id: 'inv-paid',
+      invoiceNumber: 'INV-1',
+      customerName: 'Paid Co',
+      documentType: 'TAX',
+      netAmount: '100.00',
+      vatAmount: '15.00',
+      totalAmount: '115.00',
+      invoiceDate: '2026-05-05T10:00:00+03:00',
+      createdAt: '2026-05-05T10:00:00Z',
+      status: 'SAVED',
+      paymentSummary: { status: 'PAID', settledAmount: '115.00', balance: '0.00', netDocumentAmount: '115.00' },
+    },
+    {
+      id: 'inv-partial',
+      invoiceNumber: 'INV-2',
+      customerName: 'Partial Co',
+      documentType: 'TAX',
+      netAmount: '100.00',
+      vatAmount: '15.00',
+      totalAmount: '115.00',
+      invoiceDate: '2026-05-06T10:00:00+03:00',
+      createdAt: '2026-05-06T10:00:00Z',
+      status: 'SAVED',
+      paymentSummary: { status: 'PARTIAL', settledAmount: '50.00', balance: '65.00', netDocumentAmount: '115.00' },
+    },
+    {
+      id: 'inv-unpaid',
+      invoiceNumber: 'INV-3',
+      customerName: 'Unpaid Co',
+      documentType: 'BOOKING',
+      netAmount: '200.00',
+      vatAmount: '30.00',
+      totalAmount: '230.00',
+      invoiceDate: '2026-05-07T10:00:00+03:00',
+      createdAt: '2026-05-07T10:00:00Z',
+      status: 'SAVED',
+      paymentSummary: { status: 'UNPAID', settledAmount: '0.00', balance: '230.00', netDocumentAmount: '230.00' },
+    },
+    {
+      id: 'inv-null',
+      invoiceNumber: 'PRO-4',
+      customerName: 'Proforma Null',
+      documentType: 'PROFORMA',
+      netAmount: '300.00',
+      vatAmount: '45.00',
+      totalAmount: '345.00',
+      invoiceDate: '2026-05-08T10:00:00+03:00',
+      createdAt: '2026-05-08T10:00:00Z',
+      status: 'SAVED',
+      paymentSummary: null,
+    },
+  ];
+
+  assert.equal(filterInvoiceRows(sample, { paymentStatus: 'ALL' }).length, 4);
+  assert.deepEqual(filterInvoiceRows(sample, { paymentStatus: 'PAID' }).map((r) => r.id), ['inv-paid']);
+  assert.deepEqual(filterInvoiceRows(sample, { paymentStatus: 'PARTIAL' }).map((r) => r.id), ['inv-partial']);
+  assert.deepEqual(filterInvoiceRows(sample, { paymentStatus: 'UNPAID' }).map((r) => r.id), ['inv-unpaid']);
+});
+
+test('quickInvoiceDateRange derives month and quarter boundaries accurately', () => {
+  assert.deepEqual(quickInvoiceDateRange('THIS_MONTH', '2026-05-19'), {
+    fromDate: '2026-05-01',
+    toDate: '2026-05-31',
+  });
+  assert.deepEqual(quickInvoiceDateRange('THIS_MONTH', '2024-02-10'), {
+    fromDate: '2024-02-01',
+    toDate: '2024-02-29',
+  });
+  assert.deepEqual(quickInvoiceDateRange('THIS_QUARTER', '2026-05-19'), {
+    fromDate: '2026-04-01',
+    toDate: '2026-06-30',
+  });
 });

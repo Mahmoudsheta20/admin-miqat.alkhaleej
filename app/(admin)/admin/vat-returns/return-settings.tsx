@@ -11,10 +11,18 @@ interface ReturnSettingsProps {
   quarter: number;
   value: VatSettings;
   canEdit?: boolean;
+  embedded?: boolean;
   onSaved: () => void;
 }
 
-export default function ReturnSettings({ year, quarter, value, canEdit = true, onSaved }: ReturnSettingsProps) {
+export default function ReturnSettings({
+  year,
+  quarter,
+  value,
+  canEdit = true,
+  embedded = false,
+  onSaved,
+}: ReturnSettingsProps) {
   const ui = useUiText();
 
   const [correction, setCorrection] = useState(value.previousCorrection);
@@ -68,12 +76,8 @@ export default function ReturnSettings({ year, quarter, value, canEdit = true, o
     else onSaved();
   }
 
-  return (
-    <details className="theme-card rounded-2xl border theme-border p-5">
-      <summary className="min-h-11 flex items-center cursor-pointer font-bold">
-        {ui("إعدادات الفترة والتقديم والتصحيحات")}
-      </summary>
-      <form className="mt-5 space-y-4" onSubmit={save}>
+  const formElement = (
+    <form className={embedded ? "space-y-4" : "mt-5 space-y-4"} onSubmit={save}>
         <p className="text-xs leading-relaxed text-[var(--text-muted)]">
           {ui("تُحفظ القيم لكل ربع مع سجل مراجعة. أدخل الرصيد المتاح فعليًا من إقرار سابق؛ لا يُرحّل رصيد الربع السابق تلقائيًا لتجنب خصمه مرتين. التصحيح الموجب يزيد الضريبة، والسالب يخفضها.")}
         </p>
@@ -157,7 +161,17 @@ export default function ReturnSettings({ year, quarter, value, canEdit = true, o
               : "عرض للقراءة فقط — يتطلب تعديل إعدادات الفترة صلاحية تعديل الإقرارات الضريبية."}
           </p>
         )}
-      </form>
+    </form>
+  );
+
+  if (embedded) return formElement;
+
+  return (
+    <details className="theme-card rounded-2xl border theme-border p-5">
+      <summary className="min-h-11 flex items-center cursor-pointer font-bold">
+        {ui("إعدادات الفترة والتقديم والتصحيحات")}
+      </summary>
+      {formElement}
     </details>
   );
 }

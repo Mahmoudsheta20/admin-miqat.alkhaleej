@@ -7,17 +7,18 @@ import LoadError from "@/app/_components/LoadError";
 
 import Modal from "@/app/_components/Modal";
 
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ImageUpload from "@/app/_components/ImageUpload";
-import { UserPlus, Car, CheckCircle2, XCircle, Edit2, Trash2, X, KeyRound, Copy, Check, Power, Download, AlertCircle, Wallet } from "lucide-react";
+import { UserPlus, Car, CheckCircle2, XCircle, Edit2, Archive, RotateCcw, X, KeyRound, Copy, Check, Power, Download, AlertCircle, Wallet } from "lucide-react";
 import { csvDownload } from "@/lib/commercial";
 import { currentSaudiPeriod } from "@/lib/accounting";
-import { getCaptains, createCaptain, updateCaptain, toggleCaptainStatus, deleteCaptain, resetCaptainTemporaryPassword, CaptainFormData } from "@/app/_actions/captain";
+import { getCaptains, createCaptain, updateCaptain, toggleCaptainStatus, removeCaptain, restoreCaptain, resetCaptainTemporaryPassword, CaptainFormData } from "@/app/_actions/captain";
 import { SystemUser } from "@/lib/types";
 import StatusBadge from "@/app/_components/StatusBadge";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   PageHeader,
   FilterBar,
@@ -70,13 +71,23 @@ export default function CaptainsManagementPage() {
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [search, setSearch] = useUrlState<string>("q", "");
   const [statusFilter, setStatusFilter] = useUrlState<string>("status", "ALL");
+  const [showRemoved, setShowRemoved] = useUrlState<boolean>("archived", false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCaptain, setEditingCaptain] = useState<CaptainItem | null>(
     null,
   );
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<CaptainItem | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<CaptainItem | null>(null);
+  const [actionSuccess, setActionSuccess] = useState("");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const invalidateCaptainCaches = useCallback(() => {
+    invalidateClientCache("captains_list");
+    invalidateClientCache("inspections_");
+    invalidateClientCache("dashboard_stats");
+    invalidateClientCache("api:/workforce/");
+  }, []);
 
   // Temporary password display modal
   const [tempPasswordModal, setTempPasswordModal] = useState<{
@@ -102,12 +113,58 @@ export default function CaptainsManagementPage() {
     active: true,
   });
 
-  const loadCaptains = async (forceRefresh = false) => {
-    return fetchCached("captains_list", getCaptains, {
-      ttlMs: 120_000,
-      forceRefresh,
-    })
+  const loadCaptains = useCallback(
+    async (forceRefresh = false, archived = showRemoved) => {
+      const cacheKey = archived ? "captains_list_archived" : "captains_list";
+      if (!forceRefresh && !getCachedData(cacheKey)) {
+        setIsLoading(true);
+      }
+      return fetchCached(
+        cacheKey,
+        () => getCaptains(archived ? { archived: true } : undefined),
+        {
+          ttlMs: 120_000,
+          forceRefresh,
+        },
+      )
+        .then((res) => {
+          if (res?.success && Array.isArray(res?.captains)) {
+            setCaptains(res.captains);
+            setLoadError("");
+          } else {
+            setLoadError(res.error || "تعذر تحميل البيانات");
+          }
+        })
+        .catch((err) => {
+          setLoadError("تعذر الاتصال بالخادم");
+          console.error("Failed to load captains:", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    },
+    [showRemoved],
+  );
+
+  useEffect(() => {
+    let active = true;
+    const cacheKey = showRemoved ? "captains_list_archived" : "captains_list";
+    const cached =
+      getCachedData<Awaited<ReturnType<typeof getCaptains>>>(cacheKey);
+    if (cached?.success && Array.isArray(cached.captains)) {
+      setCaptains(cached.captains);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+
+    fetchCached(
+      cacheKey,
+      () => getCaptains(showRemoved ? { archived: true } : undefined),
+      { ttlMs: 120_000 },
+    )
       .then((res) => {
+        if (!active) return;
         if (res?.success && Array.isArray(res?.captains)) {
           setCaptains(res.captains);
           setLoadError("");
@@ -116,20 +173,19 @@ export default function CaptainsManagementPage() {
         }
       })
       .catch((err) => {
+        if (!active) return;
         setLoadError("تعذر الاتصال بالخادم");
         console.error("Failed to load captains:", err);
       })
       .finally(() => {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       });
-  };
 
-  useEffect(() => {
-    loadCaptains();
     return () => {
+      active = false;
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     };
-  }, []);
+  }, [showRemoved]);
 
   const handleToggleStatus = async (c: CaptainItem) => {
     const newStatus = !c.active;
@@ -143,8 +199,7 @@ export default function CaptainsManagementPage() {
       );
       const res = await toggleCaptainStatus(c.id, newStatus);
       if (res.success) {
-        invalidateClientCache("captains_list");
-        invalidateClientCache("dashboard_stats");
+        invalidateCaptainCaches();
       } else {
         setCaptains((prev) =>
           prev.map((item) =>
@@ -213,9 +268,8 @@ export default function CaptainsManagementPage() {
       if (res.success) {
         setEditingCaptain(null);
         setIsAddModalOpen(false);
-        invalidateClientCache("captains_list");
-        invalidateClientCache("dashboard_stats");
-        await loadCaptains(true);
+        invalidateCaptainCaches();
+        await loadCaptains(true, showRemoved);
       } else {
         setFormError(res.error || "فشل التحديث");
       }
@@ -223,9 +277,8 @@ export default function CaptainsManagementPage() {
       const res = await createCaptain(formData);
       if (res.success && res.captain) {
         setIsAddModalOpen(false);
-        invalidateClientCache("captains_list");
-        invalidateClientCache("dashboard_stats");
-        await loadCaptains(true);
+        invalidateCaptainCaches();
+        await loadCaptains(true, showRemoved);
         if (res.temporaryPassword) {
           setTempPasswordModal({
             open: true,
@@ -262,17 +315,42 @@ export default function CaptainsManagementPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
+  const handleConfirmRemove = async () => {
+    if (!archiveTarget) return;
     setActionError("");
-    const res = await deleteCaptain(deleteId);
+    setActionSuccess("");
+    const res = await removeCaptain(archiveTarget.id);
     if (!res.success) {
-      throw new Error(res.error || (isRTL ? "تعذر حذف الكابتن" : "Failed to delete captain"));
+      throw new Error(res.error || (isRTL ? "تعذر إزالة الكابتن" : "Failed to remove captain"));
     }
-    setDeleteId(null);
-    invalidateClientCache("captains_list");
-    invalidateClientCache("dashboard_stats");
-    await loadCaptains(true);
+    const removedName = archiveTarget.name;
+    setArchiveTarget(null);
+    invalidateCaptainCaches();
+    setActionSuccess(
+      isRTL
+        ? `تمت إزالة الكابتن (${removedName}) من القوائم الرئيسية مع الإبقاء على سجلاته.`
+        : `Captain (${removedName}) was removed from main tables while preserving all records.`
+    );
+    await loadCaptains(true, showRemoved);
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!restoreTarget) return;
+    setActionError("");
+    setActionSuccess("");
+    const res = await restoreCaptain(restoreTarget.id);
+    if (!res.success) {
+      throw new Error(res.error || (isRTL ? "تعذر استعادة الكابتن" : "Failed to restore captain"));
+    }
+    const restoredName = restoreTarget.name;
+    setRestoreTarget(null);
+    invalidateCaptainCaches();
+    setActionSuccess(
+      isRTL
+        ? `تمت استعادة الكابتن (${restoredName}) إلى القوائم الرئيسية بنجاح.`
+        : `Captain (${restoredName}) has been restored to main tables.`
+    );
+    await loadCaptains(true, showRemoved);
   };
 
   const safeCaptains = Array.isArray(captains) ? captains : [];
@@ -303,7 +381,7 @@ export default function CaptainsManagementPage() {
       <LoadError
         message={loadError}
         onRetry={() => {
-          void loadCaptains(true);
+          void loadCaptains(true, showRemoved);
         }}
         isLoading={isLoading}
       />
@@ -314,14 +392,14 @@ export default function CaptainsManagementPage() {
         subtitle={ui(t("captains.subtitle"))}
         badge={isRTL ? "إدارة الكباتن والسائقين" : "Captains & Drivers"}
         icon={UserPlus}
-        onRefresh={() => void loadCaptains(true)}
+        onRefresh={() => void loadCaptains(true, showRemoved)}
         isRefreshing={isLoading}
         helpGuide={captainsHelpGuide}
         onSeeded={(msg) => {
           setLoadError("");
           setSeedMessage(msg);
-          invalidateClientCache("captains_list");
-          void loadCaptains(true);
+          invalidateCaptainCaches();
+          void loadCaptains(true, showRemoved);
         }}
         onSeedError={(err) => {
           setSeedMessage("");
@@ -380,9 +458,11 @@ export default function CaptainsManagementPage() {
                     ? (isRTL ? "تم الفحص" : "Inspected")
                     : (isRTL ? "بانتظار الفحص" : "Pending"),
                   c.contractCount,
-                  c.active
-                    ? (isRTL ? "نشط" : "Active")
-                    : (isRTL ? "معطل" : "Inactive"),
+                  c.isArchived
+                    ? (isRTL ? "مزال" : "Removed")
+                    : c.active
+                      ? (isRTL ? "نشط" : "Active")
+                      : (isRTL ? "معطل" : "Inactive"),
                 ]),
               ]);
             },
@@ -411,6 +491,26 @@ export default function CaptainsManagementPage() {
         </div>
       )}
 
+      {actionSuccess && (
+        <div
+          role="status"
+          className="rounded-xl border border-emerald-600/35 bg-emerald-500/12 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-950/45 dark:text-emerald-300 flex items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>{actionSuccess}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActionSuccess("")}
+            aria-label={ui("إغلاق")}
+            className="min-h-9 min-w-9 flex items-center justify-center rounded-lg hover:bg-emerald-500/15 transition cursor-pointer"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
       {seedMessage && (
         <p
           role="status"
@@ -425,15 +525,45 @@ export default function CaptainsManagementPage() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder={ui(isRTL ? "البحث بالاسم، رقم الهوية، رقم الجوال، أو اللوحة..." : "Search by name, ID, phone, or plate...")}
-        tabs={[
-          { id: "ALL", label: t("common.all"), count: safeCaptains.length },
-          { id: "ACTIVE", label: isRTL ? "نشط" : "Active", count: activeCount },
-          { id: "INSPECTED", label: isRTL ? "مفحوص اليوم" : "Inspected Today", count: inspectedCount },
-          { id: "INACTIVE", label: isRTL ? "موقف" : "Inactive", count: inactiveCount },
-        ]}
+        tabs={
+          showRemoved
+            ? undefined
+            : [
+                { id: "ALL", label: t("common.all"), count: safeCaptains.length },
+                { id: "ACTIVE", label: isRTL ? "نشط" : "Active", count: activeCount },
+                { id: "INSPECTED", label: isRTL ? "مفحوص اليوم" : "Inspected Today", count: inspectedCount },
+                { id: "INACTIVE", label: isRTL ? "موقف" : "Inactive", count: inactiveCount },
+              ]
+        }
         activeTab={statusFilter}
         onTabChange={setStatusFilter}
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="inline-flex min-h-11 sm:min-h-9 items-center gap-2.5 text-xs sm:text-[0.8125rem] font-bold cursor-pointer">
+          <Checkbox
+            checked={showRemoved}
+            onChange={(event) => {
+              setShowRemoved(event.target.checked);
+              setStatusFilter("ALL");
+            }}
+          />
+          <span>{isRTL ? "عرض الكباتن المزالين" : "Show removed captains"}</span>
+        </label>
+        <p className="text-xs text-[var(--text-muted)]">
+          {isRTL
+            ? "إزالة الكابتن تخفيه من الجداول والقوائم الرئيسية فقط مع بقاء ملفه وعقوده وحسابه المالي."
+            : "Removing a captain hides them from main tables only while preserving their profile, contracts, and financial account."}
+        </p>
+      </div>
+
+      {showRemoved && (
+        <p className="rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)] p-4 text-sm font-medium text-[var(--text-main)]">
+          {isRTL
+            ? "هؤلاء الكباتن مخفيون من الجداول والقوائم الرئيسية فقط. سجلاتهم وعقودهم وفحوصاتهم وحساباتهم المالية محفوظة ويمكن استعادتهم في أي وقت."
+            : "These captains are hidden from main tables only. Their records, contracts, inspections, and financial accounts are preserved and can be restored anytime."}
+        </p>
+      )}
 
       {/* Table */}
       <div className="theme-card rounded-2xl overflow-hidden border theme-border">
@@ -445,7 +575,12 @@ export default function CaptainsManagementPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center text-[var(--text-muted)] text-sm">
-            {ui("لا يوجد كباتن مسجلين يطابقون شروط البحث.")}</div>
+            {showRemoved
+              ? isRTL
+                ? "لا يوجد كباتن مزالين يطابقون شروط البحث."
+                : "No removed captains match these filters."
+              : ui("لا يوجد كباتن مسجلين يطابقون شروط البحث.")}
+          </div>
         ) : (
           <>
             {/* Desktop Table (shadcn Table) */}
@@ -548,33 +683,37 @@ export default function CaptainsManagementPage() {
                           {ui("عقد")}</span>
                       </TableCell>
                       <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(c)}
-                          disabled={isTogglingId === c.id}
-                          className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
-                          aria-label={`${c.name} — ${ui(c.active ? "انقر لتعطيل الحساب" : "انقر لتفعيل وتنشيط الحساب")}`}
-                          title={ui(c.active
-                              ? "انقر لتعطيل الحساب"
-                              : "انقر لتفعيل وتنشيط الحساب")}
-                        >
-                          <StatusBadge
-                            type="captain"
-                            status={c.active ? "ACTIVE" : "INACTIVE"}
-                          />
-                          <span
-                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs transition border ${
-                              c.active
-                                ? "border-emerald-600/35 text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 group-hover:border-rose-500/35 group-hover:text-rose-700 dark:group-hover:text-rose-300 group-hover:bg-rose-500/10"
-                                : "border-[var(--control-border)] text-[var(--text-muted)] group-hover:border-emerald-600/35 group-hover:text-emerald-800 dark:group-hover:text-emerald-300 group-hover:bg-emerald-500/12"
-                            }`}
+                        {c.isArchived ? (
+                          <StatusBadge type="captain" status="ARCHIVED" />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(c)}
+                            disabled={isTogglingId === c.id}
+                            className="group inline-flex items-center gap-1.5 p-1 rounded-xl hover:bg-[var(--bg-card-subtle)] transition cursor-pointer"
+                            aria-label={`${c.name} — ${ui(c.active ? "انقر لتعطيل الحساب" : "انقر لتفعيل وتنشيط الحساب")}`}
+                            title={ui(c.active
+                                ? "انقر لتعطيل الحساب"
+                                : "انقر لتفعيل وتنشيط الحساب")}
                           >
-                            <Power
-                              className={`w-3 h-3 ${isTogglingId === c.id ? "animate-spin" : ""}`}
-                              aria-hidden="true"
+                            <StatusBadge
+                              type="captain"
+                              status={c.active ? "ACTIVE" : "INACTIVE"}
                             />
-                          </span>
-                        </button>
+                            <span
+                              className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs transition border ${
+                                c.active
+                                  ? "border-emerald-600/35 text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 group-hover:border-rose-500/35 group-hover:text-rose-700 dark:group-hover:text-rose-300 group-hover:bg-rose-500/10"
+                                  : "border-[var(--control-border)] text-[var(--text-muted)] group-hover:border-emerald-600/35 group-hover:text-emerald-800 dark:group-hover:text-emerald-300 group-hover:bg-emerald-500/12"
+                              }`}
+                            >
+                              <Power
+                                className={`w-3 h-3 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                                aria-hidden="true"
+                              />
+                            </span>
+                          </button>
+                        )}
                       </TableCell>
                       <TableCell className="text-end">
                         <div className="flex flex-wrap items-center justify-end gap-1.5">
@@ -585,56 +724,71 @@ export default function CaptainsManagementPage() {
                             <Wallet className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
                             <span>{ui("حساب السائق والمستحقات")}</span>
                           </Link>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(c)}
-                            disabled={isTogglingId === c.id}
-                            aria-label={`${ui(c.active ? "تعطيل حساب الكابتن مؤقتاً" : "تنشيط وتفعيل حساب الكابتن")} — ${c.name}`}
-                            className={`min-h-9 min-w-9 p-2 rounded-lg border inline-flex items-center justify-center transition ${
-                              c.active
-                                ? "border-[var(--control-border)] bg-[var(--bg-card)] hover:border-rose-500 text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10"
-                                : "border-emerald-600/40 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"
-                            }`}
-                            title={ui(c.active
-                                ? "تعطيل حساب الكابتن مؤقتاً"
-                                : "تنشيط وتفعيل حساب الكابتن")}
-                          >
-                            <Power
-                              className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
-                              aria-hidden="true"
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleResetPassword(c)}
-                            disabled={isResettingId === c.id}
-                            aria-label={`${ui("توليد كلمة مرور مؤقتة جديدة للكابتن")} — ${c.name}`}
-                            className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--accent-gold)] inline-flex items-center justify-center transition"
-                            title={ui("توليد كلمة مرور مؤقتة جديدة للكابتن")}
-                          >
-                            <KeyRound
-                              className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
-                              aria-hidden="true"
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(c)}
-                            aria-label={`${ui("تعديل بيانات الكابتن وحالته")} — ${c.name}`}
-                            className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition"
-                            title={ui("تعديل بيانات الكابتن وحالته")}
-                          >
-                            <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteId(c.id)}
-                            aria-label={`${ui("حذف / تعطيل الكابتن")} — ${c.name}`}
-                            className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-rose-500 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 inline-flex items-center justify-center transition"
-                            title={ui("حذف / تعطيل الكابتن")}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
+                          {c.isArchived ? (
+                            <button
+                              type="button"
+                              onClick={() => setRestoreTarget(c)}
+                              aria-label={`${isRTL ? "استعادة" : "Restore"} — ${c.name}`}
+                              className="inline-flex items-center gap-1.5 min-h-9 rounded-lg border border-emerald-600/40 bg-emerald-500/12 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20 transition whitespace-nowrap cursor-pointer"
+                              title={isRTL ? "استعادة الكابتن إلى القوائم" : "Restore captain to lists"}
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>{isRTL ? "استعادة" : "Restore"}</span>
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(c)}
+                                disabled={isTogglingId === c.id}
+                                aria-label={`${ui(c.active ? "تعطيل حساب الكابتن مؤقتاً" : "تنشيط وتفعيل حساب الكابتن")} — ${c.name}`}
+                                className={`min-h-9 min-w-9 p-2 rounded-lg border inline-flex items-center justify-center transition ${
+                                  c.active
+                                    ? "border-[var(--control-border)] bg-[var(--bg-card)] hover:border-rose-500 text-[var(--text-muted)] hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10"
+                                    : "border-emerald-600/40 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"
+                                }`}
+                                title={ui(c.active
+                                    ? "تعطيل حساب الكابتن مؤقتاً"
+                                    : "تنشيط وتفعيل حساب الكابتن")}
+                              >
+                                <Power
+                                  className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                                  aria-hidden="true"
+                                />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleResetPassword(c)}
+                                disabled={isResettingId === c.id}
+                                aria-label={`${ui("توليد كلمة مرور مؤقتة جديدة للكابتن")} — ${c.name}`}
+                                className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--accent-gold)] inline-flex items-center justify-center transition"
+                                title={ui("توليد كلمة مرور مؤقتة جديدة للكابتن")}
+                              >
+                                <KeyRound
+                                  className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
+                                  aria-hidden="true"
+                                />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(c)}
+                                aria-label={`${ui("تعديل بيانات الكابتن وحالته")} — ${c.name}`}
+                                className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 text-[var(--text-muted)] hover:text-[var(--text-main)] inline-flex items-center justify-center transition"
+                                title={ui("تعديل بيانات الكابتن وحالته")}
+                              >
+                                <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArchiveTarget(c)}
+                                aria-label={`${isRTL ? "إزالة الكابتن من القوائم" : "Remove captain from lists"} — ${c.name}`}
+                                className="min-h-9 min-w-9 p-2 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card)] hover:border-[var(--accent-gold)] text-[var(--text-main)] hover:text-[var(--accent-gold)] hover:bg-[var(--accent-surface)]/55 inline-flex items-center justify-center transition cursor-pointer"
+                                title={isRTL ? "إزالة الكابتن من القوائم" : "Remove captain from lists"}
+                              >
+                                <Archive className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -673,19 +827,23 @@ export default function CaptainsManagementPage() {
                     </span>
                   }
                   badge={
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(c)}
-                      disabled={isTogglingId === c.id}
-                      className="inline-flex items-center gap-1 min-h-11 rounded-xl transition hover:opacity-85 cursor-pointer"
-                      aria-label={`${c.name} — ${ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}`}
-                      title={ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}
-                    >
-                      <StatusBadge
-                        type="captain"
-                        status={c.active ? "ACTIVE" : "INACTIVE"}
-                      />
-                    </button>
+                    c.isArchived ? (
+                      <StatusBadge type="captain" status="ARCHIVED" />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(c)}
+                        disabled={isTogglingId === c.id}
+                        className="inline-flex items-center gap-1 min-h-11 rounded-xl transition hover:opacity-85 cursor-pointer"
+                        aria-label={`${c.name} — ${ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}`}
+                        title={ui(c.active ? "انقر للتعطيل" : "انقر للتفعيل والتنشيط")}
+                      >
+                        <StatusBadge
+                          type="captain"
+                          status={c.active ? "ACTIVE" : "INACTIVE"}
+                        />
+                      </button>
+                    )
                   }
                   footer={
                     <>
@@ -697,54 +855,70 @@ export default function CaptainsManagementPage() {
                         <span>{ui("حساب السائق")}</span>
                       </Link>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditModal(c)}
-                        className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
-                      >
-                        <Edit2 className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
-                        <span>{ui("تعديل البيانات")}</span>
-                      </Button>
+                      {c.isArchived ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRestoreTarget(c)}
+                          aria-label={`${isRTL ? "استعادة" : "Restore"} — ${c.name}`}
+                          className="flex-1 min-h-11 gap-1.5 text-xs font-bold border-emerald-600/40 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>{isRTL ? "استعادة" : "Restore"}</span>
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditModal(c)}
+                            className="flex-1 min-h-11 gap-1.5 text-xs font-bold"
+                          >
+                            <Edit2 className="w-3.5 h-3.5 text-[var(--accent-gold)]" aria-hidden="true" />
+                            <span>{ui("تعديل البيانات")}</span>
+                          </Button>
 
-                      <ActionMenu
-                        label={`${ui("المزيد من الإجراءات")} — ${c.name}`}
-                        triggerClassName="min-h-11 w-11 shrink-0"
-                      >
-                        <ActionMenuItem
-                          onClick={() => handleResetPassword(c)}
-                          tone="gold"
-                          icon={
-                            <KeyRound
-                              className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
-                              aria-hidden="true"
-                            />
-                          }
-                        >
-                          {ui("توليد كلمة مرور مؤقتة")}
-                        </ActionMenuItem>
-                        <ActionMenuItem
-                          onClick={() => handleToggleStatus(c)}
-                          tone={c.active ? "default" : "emerald"}
-                          icon={
-                            <Power
-                              className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
-                              aria-hidden="true"
-                            />
-                          }
-                        >
-                          {ui(c.active ? "تعطيل حساب الكابتن" : "تنشيط وتفعيل الحساب")}
-                        </ActionMenuItem>
-                        <ActionMenuSeparator />
-                        <ActionMenuItem
-                          onClick={() => setDeleteId(c.id)}
-                          tone="danger"
-                          icon={<Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-                        >
-                          {ui("حذف الكابتن")}
-                        </ActionMenuItem>
-                      </ActionMenu>
+                          <ActionMenu
+                            label={`${ui("المزيد من الإجراءات")} — ${c.name}`}
+                            triggerClassName="min-h-11 w-11 shrink-0"
+                          >
+                            <ActionMenuItem
+                              onClick={() => handleResetPassword(c)}
+                              tone="gold"
+                              icon={
+                                <KeyRound
+                                  className={`w-3.5 h-3.5 ${isResettingId === c.id ? "animate-spin" : ""}`}
+                                  aria-hidden="true"
+                                />
+                              }
+                            >
+                              {ui("توليد كلمة مرور مؤقتة")}
+                            </ActionMenuItem>
+                            <ActionMenuItem
+                              onClick={() => handleToggleStatus(c)}
+                              tone={c.active ? "default" : "emerald"}
+                              icon={
+                                <Power
+                                  className={`w-3.5 h-3.5 ${isTogglingId === c.id ? "animate-spin" : ""}`}
+                                  aria-hidden="true"
+                                />
+                              }
+                            >
+                              {ui(c.active ? "تعطيل حساب الكابتن" : "تنشيط وتفعيل الحساب")}
+                            </ActionMenuItem>
+                            <ActionMenuSeparator />
+                            <ActionMenuItem
+                              onClick={() => setArchiveTarget(c)}
+                              tone="default"
+                              icon={<Archive className="w-3.5 h-3.5" aria-hidden="true" />}
+                            >
+                              {isRTL ? "إزالة الكابتن من القوائم" : "Remove captain from lists"}
+                            </ActionMenuItem>
+                          </ActionMenu>
+                        </>
+                      )}
                     </>
                   }
                 >
@@ -1033,15 +1207,34 @@ export default function CaptainsManagementPage() {
         </Modal>
       )}
 
-      {/* Confirm Delete Dialog */}
+      {/* Confirm Remove Dialog */}
       <ConfirmDialog
-        isOpen={!!deleteId}
-        title={ui("تأكيد حذف / إلغاء تفعيل الكابتن")}
-        message="هل أنت متأكد من رغبتك في حذف هذا الكابتن؟ إذا كان مرتبطاً بعقود سابقة، سيتم تعطيل حسابه فقط حفاظاً على سجلات النظام."
-        variant="danger"
-        confirmText={ui("تأكيد الحذف")}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
+        isOpen={!!archiveTarget}
+        title={isRTL ? "تأكيد إزالة الكابتن" : "Confirm captain removal"}
+        message={
+          isRTL
+            ? `سيتم إخفاء الكابتن (${archiveTarget?.name || ""}) من الجداول والقوائم الرئيسية وإيقاف دخوله، مع الإبقاء على بياناته وعقوده وفحوصاته وحسابه المالي كما هي. يمكنك استعادته في أي وقت.`
+            : `Captain (${archiveTarget?.name || ""}) will be hidden from main tables and lists and blocked from signing in, while keeping their profile, contracts, inspections, and financial account unchanged. You can restore them anytime.`
+        }
+        variant="warning"
+        confirmText={isRTL ? "تأكيد الإزالة" : "Remove captain"}
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setArchiveTarget(null)}
+      />
+
+      {/* Confirm Restore Dialog */}
+      <ConfirmDialog
+        isOpen={!!restoreTarget}
+        title={isRTL ? "تأكيد استعادة الكابتن" : "Confirm captain restore"}
+        message={
+          isRTL
+            ? `سيعود الكابتن (${restoreTarget?.name || ""}) إلى الجداول والقوائم الرئيسية بنفس بياناته وسجلاته السابقة.`
+            : `Captain (${restoreTarget?.name || ""}) will return to main tables and lists with their previous profile and records intact.`
+        }
+        variant="info"
+        confirmText={isRTL ? "استعادة الكابتن" : "Restore captain"}
+        onConfirm={handleConfirmRestore}
+        onCancel={() => setRestoreTarget(null)}
       />
 
       {/* Temporary Password Display Modal */}

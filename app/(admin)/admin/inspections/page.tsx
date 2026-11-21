@@ -1902,11 +1902,13 @@ export default function AdminInspectionsPage() {
                       className="theme-input w-full min-h-11 sm:min-h-9 px-3 py-1.5 text-base sm:text-[0.8125rem] rounded-lg"
                     >
                       <option value="">{ui("-- اختر الكابتن المراد فحصه --")}</option>
-                      {safeCaptains.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} {ui(c.hasTodayInspection ? "(تم فحصه اليوم)" : "(غير مفحوص اليوم)")}
-                        </option>
-                      ))}
+                      {safeCaptains
+                        .filter((c) => c.active && !c.isArchived)
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} {ui(c.hasTodayInspection ? "(تم فحصه اليوم)" : "(غير مفحوص اليوم)")}
+                          </option>
+                        ))}
                     </select>
                   </div>
 

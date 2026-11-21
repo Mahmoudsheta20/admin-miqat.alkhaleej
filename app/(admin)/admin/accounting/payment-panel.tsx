@@ -2,7 +2,20 @@
 import { useUiText } from "@/lib/ui-text";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CreditCard, ArrowDownLeft, ArrowUpRight, CheckCircle2, Calendar, Loader2, AlertCircle, Search, X } from "lucide-react";
+import {
+  CreditCard,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Building2,
+  CheckCircle2,
+  Calendar,
+  Loader2,
+  AlertCircle,
+  Search,
+  SlidersHorizontal,
+  Wallet,
+  X,
+} from "lucide-react";
 import {
   accountingRequest,
   amountLabel,
@@ -13,7 +26,6 @@ import {
   type PaymentListResponse,
 } from "@/lib/accounting";
 import { moneyDecimal, moneyMinor } from "@/lib/money";
-import { backendRequest } from "@/lib/backend";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import { useApiQuery } from "@/lib/use-api-query";
 import { useAuth } from "@/lib/authContext";
@@ -21,11 +33,7 @@ import { hasClientPermission } from "@/lib/permissions";
 import { useUrlState } from "@/lib/use-url-state";
 import { Badge } from "@/app/_components/ui";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
-
-interface Option {
-  id: string;
-  label: string;
-}
+import { AccountingDocumentCombobox } from "./document-combobox";
 
 const INPUT = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
@@ -45,9 +53,6 @@ export default function PaymentPanel({
   const canWrite = hasClientPermission(user, "accounting", "write");
 
   const [type, setType] = useState<"SALE" | "PURCHASE">("SALE");
-  const [options, setOptions] = useState<Option[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
   const [documentId, setDocumentId] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(currentSaudiPeriod().day);
@@ -66,6 +71,7 @@ export default function PaymentPanel({
   const [payFrom, setPayFrom] = useUrlState<string>("payFrom", "");
   const [payTo, setPayTo] = useUrlState<string>("payTo", "");
   const [paySearch, setPaySearch] = useUrlState<string>("paySearch", "");
+  const [showMoreListFilters, setShowMoreListFilters] = useState(false);
 
   useEffect(() => () => {
     if (successTimerRef.current) clearTimeout(successTimerRef.current);
@@ -96,6 +102,8 @@ export default function PaymentPanel({
   );
   const listPageSize = payments.data?.pageSize || 30;
   const listTotal = payments.data?.total ?? payments.data?.items.length ?? 0;
+  const advancedListFiltersCount = [payDir, payDocType, payCash, payFrom, payTo].filter(Boolean).length;
+  const listFiltersExpanded = showMoreListFilters || advancedListFiltersCount > 0;
   const hasListFilters = Boolean(
     payDir || payDocType || payCash || payFrom || payTo || paySearch.trim()
   );
@@ -114,44 +122,6 @@ export default function PaymentPanel({
     documentId ? `/accounting/document-balance/${type}/${documentId}` : null,
     reload
   );
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      if (type === "SALE") {
-        const r = await backendRequest<{
-          items: { id: string; number: number; customerName: string }[];
-          total: number;
-        }>(`/invoices?page=${page}`);
-        if (active) {
-          setOptions(
-            r.data?.items.map((v) => ({ id: v.id, label: `${v.number} · ${v.customerName}` })) ||
-              []
-          );
-          setHasMore(page * 30 < (r.data?.total || 0));
-          if (r.error) setError(r.error);
-        }
-      } else {
-        const r = await accountingRequest<{
-          items: { id: string; invoiceNumber: string; supplierName: string }[];
-          total: number;
-        }>(`/purchases?page=${page}&includeVoided=false`);
-        if (active) {
-          setOptions(
-            r.data?.items.map((v) => ({
-              id: v.id,
-              label: `${v.invoiceNumber} · ${v.supplierName}`,
-            })) || []
-          );
-          setHasMore(page * 30 < (r.data?.total || 0));
-          if (r.error) setError(r.error);
-        }
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [type, page, reload]);
 
   const remainingBalanceRaw = balance.data ? balance.data.balance.trim().replace(/^-/, "") : "";
   const remainingBalanceMinor = moneyMinor(remainingBalanceRaw) ?? BigInt(0);
@@ -255,7 +225,6 @@ export default function PaymentPanel({
                   setDocumentId("");
                   setAmount("");
                   setError("");
-                  setPage(1);
                 }}
                 className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                   type === "SALE"
@@ -278,7 +247,6 @@ export default function PaymentPanel({
                   setDocumentId("");
                   setAmount("");
                   setError("");
-                  setPage(1);
                 }}
                 className={`min-h-11 sm:min-h-9 p-2.5 sm:p-3 rounded-xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                   type === "PURCHASE"
@@ -298,71 +266,62 @@ export default function PaymentPanel({
 
           {/* Form Inputs Grid */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="sm:col-span-2 space-y-2">
-              <label className="text-xs font-bold text-[var(--text-main)] block">
+            <div className="sm:col-span-2 lg:col-span-3 space-y-1.5">
+              <label
+                htmlFor="payment-panel-doc-combobox"
+                className="text-xs font-bold text-[var(--text-main)] block"
+              >
                 {ui("اختر المستند المطلوب تسويته *")}
-                <select
-                  required
-                  className={INPUT}
-                  value={documentId}
-                  onChange={(e) => {
-                    setDocumentId(e.target.value);
-                    setAmount("");
-                    setError("");
-                  }}
-                >
-                  <option value="">
-                    {ui(type === "SALE" ? "اختر فاتورة عميل مرحّلة..." : "اختر فاتورة مورد مرحّلة...")}
-                  </option>
-                  {options.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
               </label>
-              <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                <button
-                  type="button"
-                  disabled={page === 1}
-                  onClick={() => {
-                    setPage((v) => v - 1);
-                    setDocumentId("");
-                  }}
-                  className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
-                >
-                  {ui("السابق")}
-                </button>
-                <span>
-                  {ui("صفحة")} <span className="font-mono">{page}</span>
-                </span>
-                <button
-                  type="button"
-                  disabled={!hasMore}
-                  onClick={() => {
-                    setPage((v) => v + 1);
-                    setDocumentId("");
-                  }}
-                  className="min-h-11 sm:min-h-8 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] disabled:opacity-30 cursor-pointer font-bold"
-                >
-                  {ui("التالي")}
-                </button>
-              </div>
+              <AccountingDocumentCombobox
+                inputId="payment-panel-doc-combobox"
+                documentType={type}
+                value={documentId}
+                language={ui.language}
+                onChange={(opt) => {
+                  setDocumentId(opt?.id ?? "");
+                  setAmount("");
+                  setError("");
+                }}
+              />
             </div>
 
-            <label className="text-xs font-bold text-[var(--text-main)]">
-              {ui("طريقة الدفع / الحساب المالي *")}<select
-                className={INPUT}
-                value={cashAccount}
-                onChange={(e) => setCashAccount(e.target.value)}
-              >
-                {resolvedCashAccounts.map((a) => (
-                  <option key={a.code} value={a.code}>
-                    {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="sm:col-span-2 lg:col-span-3 space-y-2">
+              <span className="text-xs font-bold text-[var(--text-main)] block">
+                {ui("طريقة الدفع / الحساب المالي *")}
+              </span>
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {resolvedCashAccounts.map((a) => {
+                  const selected = cashAccount === a.code;
+                  const isCashBox = a.code.startsWith("1101");
+                  const Icon = isCashBox ? Wallet : Building2;
+                  const label = isEn && a.nameEn ? a.nameEn : a.nameAr;
+                  return (
+                    <button
+                      key={a.code}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setCashAccount(a.code)}
+                      className={`min-h-11 rounded-xl border px-3 py-2.5 text-start transition cursor-pointer flex items-center gap-2.5 ${
+                        selected
+                          ? "bg-[var(--accent-surface)] border-[var(--accent-gold)] ring-1 ring-[var(--accent-gold)]/35 text-[var(--text-main)]"
+                          : "theme-card border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
+                      }`}
+                    >
+                      <Icon
+                        className={`w-4 h-4 shrink-0 ${
+                          selected ? "text-[var(--accent-gold)]" : "text-[var(--text-muted)]"
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-semibold leading-snug truncate">
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[var(--text-main)] block">
@@ -411,10 +370,23 @@ export default function PaymentPanel({
           </label>
 
           <label className="text-xs font-bold text-[var(--text-main)]">
-            {ui("رقم الحوالة أو المرجع *")}<input
-              required
+            {isEn
+              ? cashAccount === "1101"
+                ? "Reference / Note (optional for cash)"
+                : "Transfer reference *"
+              : cashAccount === "1101"
+                ? "المرجع أو البيان (اختياري للنقد)"
+                : "رقم الحوالة أو المرجع *"}
+            <input
+              required={cashAccount !== "1101"}
               maxLength={300}
-              placeholder={ui("مثال: حوالة بنكية رقم 9842")}
+              placeholder={
+                cashAccount === "1101"
+                  ? isEn
+                    ? "e.g. Petty cash receipt"
+                    : "مثال: سند نقدي مباشر (اختياري)"
+                  : ui("مثال: حوالة بنكية رقم 9842")
+              }
               className={INPUT}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
@@ -479,15 +451,18 @@ export default function PaymentPanel({
       )}
 
       {/* Payment List Filters */}
-      <div className="theme-card rounded-2xl border theme-border p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end">
-        <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Search reference" : "بحث في السندات"}</span>
-          <div className="relative">
-            <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" aria-hidden="true" />
+      <div className="theme-card rounded-2xl border theme-border p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search
+              className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none"
+              aria-hidden="true"
+            />
             <input
               type="search"
+              aria-label={isEn ? "Search reference or voucher" : "بحث في السندات"}
               className={`${INPUT} ps-9 mt-0!`}
-              placeholder={isEn ? "Reference or voucher..." : "المرجع أو البيان…"}
+              placeholder={isEn ? "Search reference or voucher..." : "بحث بالمرجع أو البيان…"}
               value={paySearch}
               onChange={(e) => {
                 setPaySearch(e.target.value);
@@ -495,97 +470,123 @@ export default function PaymentPanel({
               }}
             />
           </div>
-        </label>
 
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Direction" : "الاتجاه"}</span>
-          <select
-            className={`${INPUT} mt-0!`}
-            value={payDir}
-            onChange={(e) => {
-              setPayDir(e.target.value);
-              setListPage(1);
-            }}
-          >
-            <option value="">{isEn ? "All" : "الكل"}</option>
-            <option value="RECEIPT">{isEn ? "Receipt" : "سند قبض"}</option>
-            <option value="PAYMENT">{isEn ? "Disbursement" : "سند صرف"}</option>
-          </select>
-        </label>
-
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Document type" : "نوع المستند"}</span>
-          <select
-            className={`${INPUT} mt-0!`}
-            value={payDocType}
-            onChange={(e) => {
-              setPayDocType(e.target.value);
-              setListPage(1);
-            }}
-          >
-            <option value="">{isEn ? "All" : "الكل"}</option>
-            <option value="SALE">{isEn ? "Sales" : "مبيعات"}</option>
-            <option value="PURCHASE">{isEn ? "Purchases" : "مشتريات"}</option>
-          </select>
-        </label>
-
-        <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
-          <span>{isEn ? "Cash/Bank account" : "الحساب المالي"}</span>
-          <select
-            className={`${INPUT} mt-0!`}
-            value={payCash}
-            onChange={(e) => {
-              setPayCash(e.target.value);
-              setListPage(1);
-            }}
-          >
-            <option value="">{isEn ? "All accounts" : "كل الحسابات"}</option>
-            {resolvedCashAccounts.map((a) => (
-              <option key={a.code} value={a.code}>
-                {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="lg:col-span-3 flex items-end gap-1.5">
-          <label className="flex-1 text-xs font-bold text-[var(--text-main)] space-y-1">
-            <span>{isEn ? "From" : "من"}</span>
-            <input
-              type="date"
-              dir="ltr"
-              className={`${INPUT} mt-0! font-mono`}
-              value={payFrom}
-              onChange={(e) => {
-                setPayFrom(e.target.value);
-                setListPage(1);
-              }}
-            />
-          </label>
-          <label className="flex-1 text-xs font-bold text-[var(--text-main)] space-y-1">
-            <span>{isEn ? "To" : "إلى"}</span>
-            <input
-              type="date"
-              dir="ltr"
-              className={`${INPUT} mt-0! font-mono`}
-              value={payTo}
-              onChange={(e) => {
-                setPayTo(e.target.value);
-                setListPage(1);
-              }}
-            />
-          </label>
-          {hasListFilters && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={clearListFilters}
-              aria-label={isEn ? "Clear payment filters" : "مسح فلاتر السندات"}
-              className="min-h-11 sm:min-h-9 px-2.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-rose-700 dark:text-rose-300 hover:border-rose-500 cursor-pointer shrink-0 inline-flex items-center justify-center"
+              aria-expanded={listFiltersExpanded}
+              onClick={() => setShowMoreListFilters((v) => !v)}
+              className={`min-h-11 sm:min-h-9 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                listFiltersExpanded || advancedListFiltersCount > 0
+                  ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] text-[var(--accent-gold)]"
+                  : "border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
+              }`}
             >
-              <X className="h-4 w-4" aria-hidden="true" />
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{isEn ? "More filters" : "فلاتر متقدمة"}</span>
+              {advancedListFiltersCount > 0 && (
+                <span className="inline-flex size-5 items-center justify-center rounded-full bg-[var(--accent-btn-bg)] text-[11px] font-bold text-[var(--accent-btn-fg)]">
+                  {advancedListFiltersCount}
+                </span>
+              )}
             </button>
-          )}
+
+            {hasListFilters && (
+              <button
+                type="button"
+                onClick={clearListFilters}
+                aria-label={isEn ? "Clear payment filters" : "مسح فلاتر السندات"}
+                className="min-h-11 sm:min-h-9 px-3 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-xs font-bold text-rose-700 dark:text-rose-300 hover:border-rose-500 cursor-pointer inline-flex items-center gap-1"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{isEn ? "Reset" : "مسح"}</span>
+              </button>
+            )}
+          </div>
         </div>
+
+        {listFiltersExpanded && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end border-t theme-border pt-3">
+            <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "Direction" : "الاتجاه"}</span>
+              <select
+                className={`${INPUT} mt-0!`}
+                value={payDir}
+                onChange={(e) => {
+                  setPayDir(e.target.value);
+                  setListPage(1);
+                }}
+              >
+                <option value="">{isEn ? "All" : "الكل"}</option>
+                <option value="RECEIPT">{isEn ? "Receipt" : "سند قبض"}</option>
+                <option value="PAYMENT">{isEn ? "Disbursement" : "سند صرف"}</option>
+              </select>
+            </label>
+
+            <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "Document type" : "نوع المستند"}</span>
+              <select
+                className={`${INPUT} mt-0!`}
+                value={payDocType}
+                onChange={(e) => {
+                  setPayDocType(e.target.value);
+                  setListPage(1);
+                }}
+              >
+                <option value="">{isEn ? "All" : "الكل"}</option>
+                <option value="SALE">{isEn ? "Sales" : "مبيعات"}</option>
+                <option value="PURCHASE">{isEn ? "Purchases" : "مشتريات"}</option>
+              </select>
+            </label>
+
+            <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "Cash/Bank account" : "الحساب المالي"}</span>
+              <select
+                className={`${INPUT} mt-0!`}
+                value={payCash}
+                onChange={(e) => {
+                  setPayCash(e.target.value);
+                  setListPage(1);
+                }}
+              >
+                <option value="">{isEn ? "All accounts" : "كل الحسابات"}</option>
+                {resolvedCashAccounts.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {isEn && a.nameEn ? a.nameEn : a.nameAr}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="lg:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "From" : "من"}</span>
+              <input
+                type="date"
+                dir="ltr"
+                className={`${INPUT} mt-0! font-mono`}
+                value={payFrom}
+                onChange={(e) => {
+                  setPayFrom(e.target.value);
+                  setListPage(1);
+                }}
+              />
+            </label>
+
+            <label className="lg:col-span-3 text-xs font-bold text-[var(--text-main)] space-y-1">
+              <span>{isEn ? "To" : "إلى"}</span>
+              <input
+                type="date"
+                dir="ltr"
+                className={`${INPUT} mt-0! font-mono`}
+                value={payTo}
+                onChange={(e) => {
+                  setPayTo(e.target.value);
+                  setListPage(1);
+                }}
+              />
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Recent Payments Table */}

@@ -1,4 +1,4 @@
-import { backendRequest, backendFields } from "@/lib/backend";
+import { backendRequest, backendFields, queryString } from "@/lib/backend";
 import type { SystemUser } from "@/lib/types";
 
 export interface CaptainFormData {
@@ -6,9 +6,15 @@ export interface CaptainFormData {
   licenseNumber?: string; licenseExpiry?: string; assignedVehiclePlate?: string; avatarUrl?: string;
   active?: boolean;
 }
-interface CaptainSummary extends SystemUser { contractCount: number; hasTodayInspection: boolean }
-export async function getCaptains() {
-  const result = await backendRequest<CaptainSummary[]>("/captains");
+export interface CaptainSummary extends SystemUser { contractCount: number; hasTodayInspection: boolean }
+export async function getCaptains(options?: { archived?: boolean | "all" }) {
+  const qs =
+    options?.archived === true
+      ? queryString({ archived: "true" })
+      : options?.archived === "all"
+        ? queryString({ archived: "all" })
+        : "";
+  const result = await backendRequest<CaptainSummary[]>(`/captains${qs}`);
   return { success: result.success, captains: result.data, error: result.error };
 }
 export function createCaptain(data: CaptainFormData) {
@@ -24,4 +30,12 @@ export async function updateCaptain(id: string, data: Partial<CaptainFormData> &
 export async function toggleCaptainStatus(id: string, active: boolean) {
   return updateCaptain(id, { active });
 }
-export function deleteCaptain(id: string) { return backendRequest(`/captains/${encodeURIComponent(id)}`, "DELETE"); }
+export function removeCaptain(id: string) {
+  return backendRequest<{ id: string; isArchived: boolean; archivedAt: string | null }>(`/captains/${encodeURIComponent(id)}`, "DELETE");
+}
+export function restoreCaptain(id: string) {
+  return backendRequest<{ id: string; isArchived: boolean; archivedAt: string | null }>(`/captains/${encodeURIComponent(id)}/restore`, "POST");
+}
+export function deleteCaptain(id: string) {
+  return removeCaptain(id);
+}

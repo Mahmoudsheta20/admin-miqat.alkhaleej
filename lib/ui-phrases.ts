@@ -3454,6 +3454,41 @@ export const UI_PHRASES: Record<string, string> = {
   "رواتب وتريبات السائقين": "Driver Salaries and Trip Bonuses",
   "بيانات داخلية وتريبات (اختياري)": "Internal details & trips (optional)",
   "المناديب والتريبات": "Representatives & trips",
+  "عرض حسابات الكباتن المزالين": "Show removed captains' accounts",
+  "حسابات الكباتن المزالين مخفية من القائمة الرئيسية فقط مع بقاء جميع الحركات المالية.":
+    "Removed captains' accounts are hidden from the main list only while preserving all financial transactions.",
+  "مزال": "Removed",
+  "ملاحظة:": "Note:",
+  "ضريبة القيمة المضافة أمانة ضريبية لا تدخل ضمن الإيراد أو صافي الربح التشغيلي.":
+    "VAT is a statutory tax trust and is excluded from revenue and operating profit.",
+  "مخصص الزكاة/الضريبة:": "Zakat/tax provision:",
+  "تُحفظ الفاتورة والضريبة بالريال السعودي مع أرشفة المستند.":
+    "Invoice and VAT are saved in SAR with document archiving.",
+  "اختر فاتورة معتمدة *": "Select an approved invoice *",
+  "أدخل بيانات المورد ورقم المستند وتصنيف المصروف والمركبة.":
+    "Enter supplier details, voucher reference, expense category, and vehicle.",
+  "المركبة المرتبطة": "Linked vehicle",
+  "لوحة المركبة المرتبطة (إدخال يدوي)": "Linked vehicle plate (manual entry)",
+  "اختر طريقة إدخال السعر وخصم ضريبة المدخلات.":
+    "Choose price entry mode and input VAT deductibility.",
+  "حدد كيف تم السداد للمورد وأرفق صورة أو PDF الفاتورة.":
+    "Select how the supplier was paid and attach an invoice image or PDF.",
+  "اعتماد المصروف فوراً لإدراجه في التقارير والإقرار الضريبي":
+    "Post expense immediately to include it in financial reports and VAT return",
+  "تفاصيل للمحاسب (تاريخ الضريبة والحساب المحاسبي)":
+    "Accountant details (VAT date and ledger account)",
+  "تاريخ احتساب الضريبة *": "VAT recognition date *",
+  "حساب المصروف:": "Expense account:",
+  "المعاملة الضريبية:": "Tax treatment:",
+  "بحث بالمورد، رقم الفاتورة أو اللوحة...":
+    "Search by supplier, invoice number, or plate...",
+  "إظهار المصروفات الملغاة": "Show voided expenses",
+  "تُحتسب الإجماليات للمصروفات المعتمدة خلال الفترة المحددة.":
+    "Totals reflect approved expenses within the selected period.",
+  "يتم تقديم الإقرار الضريبي رسمياً عبر بوابة هيئة الزكاة والضريبة والجمارك. صُممت هذه الصفحة لمراجعة وتدقيق مبالغ المبيعات والمشتريات بدقة، وتتيح لك نسخ الأرقام بنقرة واحدة ولصقها في الخانة المقابلة بالبوابة.":
+    "File your official VAT return on the ZATCA portal. This page audits sales and purchases so you can copy and paste exact box amounts cleanly.",
+  "فواتير المبيعات:": "Sales invoices:",
+  "فواتير المشتريات:": "Purchase invoices:",
 };
 export const UI_TEMPLATES: Record<string, string> = {
   "نسخ {0} للخانة {1} للمطابقة": "Copy {0} for box {1} for review",

@@ -43,6 +43,8 @@ function isReadOnlyPostPath(path: string): boolean {
   return (
     clean === "/accounting/vat-return/manual" ||
     clean === "/accounting/vat-return/manual/export" ||
+    clean === "/accounting/exports/preview" ||
+    clean === "/accounting/exports/download" ||
     clean === "/workforce/selections/report" ||
     clean === "/workforce/selections/export"
   );

@@ -35,6 +35,7 @@ const STATUS_MAP: Record<StatusType, Record<string, StatusConfig>> = {
   captain: {
     ACTIVE: { label: "نشط", className: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-600/30" },
     INACTIVE: { label: "معطل", className: "bg-[var(--bg-card-subtle)] text-[var(--text-muted)] border-[var(--control-border)]/45" },
+    ARCHIVED: { label: "مزال", className: "bg-amber-500/12 text-amber-800 dark:text-amber-300 border-amber-600/35" },
     INSPECTED: { label: "تم الفحص اليوم", className: "bg-sky-500/15 text-sky-800 dark:text-sky-300 border-sky-600/30" },
     PENDING_INSPECTION: { label: "بانتظار الفحص", className: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-600/30" },
   },

@@ -6,7 +6,7 @@ import { useUiText } from "@/lib/ui-text";
 
 import Link from "next/link";
 import { useState, useMemo, type FormEvent } from "react";
-import { BookOpen, Calculator, Landmark } from "lucide-react";
+import { ChevronDown, FileDown, Landmark } from "lucide-react";
 import AccountingPeriodSelector from "@/app/_components/AccountingPeriodSelector";
 import { Badge, Card, PageHeader } from "@/app/_components/ui";
 import { MobileCardField, MobileCardMetaGrid, MobileRecordCard } from "@/app/_components/mobile";
@@ -454,25 +454,6 @@ export default function AccountingPage() {
           setSeedMessage("");
           setError(err);
         }}
-        actions={
-          <>
-            <Link
-              href="/admin/accounts"
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
-            >
-              <BookOpen className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span>{ui(t("nav.accounts"))}</span>
-            </Link>
-
-            <Link
-              href="/admin/vat-returns"
-              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3 py-1.5 text-xs font-bold transition shadow-2xs text-[var(--text-main)]"
-            >
-              <Calculator className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span>{ui(t("nav.vatReturns"))}</span>
-            </Link>
-          </>
-        }
       />
 
       {seedMessage && (
@@ -486,7 +467,7 @@ export default function AccountingPage() {
 
       <nav
         aria-label={ui("صفحات المحاسبة")}
-        className="flex flex-wrap gap-2 border-b theme-border pb-4"
+        className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b theme-border"
       >
         {(
           [
@@ -496,34 +477,37 @@ export default function AccountingPage() {
             ["PAYMENTS", ui("القبض والدفع")],
             ["PERIODS", ui("إقفال الفترة")],
           ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={tab === key}
-            onClick={() => setTab(key)}
-            className={`min-h-11 sm:min-h-9 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-bold border transition-none cursor-pointer ${
-              tab === key
-                ? "bg-[var(--accent-btn-bg)] border-[var(--accent-btn-border)] text-[var(--accent-btn-fg)]"
-                : "theme-card border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        ).map(([key, label]) => {
+          const active = tab === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setTab(key)}
+              className={`shrink-0 whitespace-nowrap min-h-11 sm:min-h-10 px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer rounded-t-lg ${
+                active
+                  ? "border-[var(--accent-gold)] bg-[var(--accent-surface)]/50 text-[var(--accent-gold)]"
+                  : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--control-border)]"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </nav>
 
       {(tab === "REPORTS" || tab === "PERIODS") && (
         <section className="theme-card flex flex-wrap items-end justify-between gap-4 rounded-2xl border theme-border p-5">
           <AccountingPeriodSelector value={period} onChange={setPeriod} />
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="min-h-11 sm:min-h-9 rounded-lg border border-[var(--control-border)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-gold)] px-3.5 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] cursor-pointer transition-colors"
-              onClick={changed}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin/accounting/exports"
+              className="theme-card inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-lg border border-[var(--control-border)] hover:border-[var(--accent-gold)] px-3.5 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-main)] transition-colors"
             >
-              {ui(t("common.refresh"))}
-            </button>
+              <FileDown className="size-4 text-[var(--accent-gold)]" aria-hidden="true" />
+              <span>{ui.language === "en" ? "Advanced Exports" : "مركز التصدير المتقدم"}</span>
+            </Link>
             {(["pdf", "csv"] as const).map((f) => (
               <button
                 key={f}
@@ -618,15 +602,148 @@ export default function AccountingPage() {
             ))}
           </section>
 
-          <div className="p-4 rounded-2xl bg-[var(--accent-surface)]/80 border border-amber-600/35 text-xs sm:text-sm leading-relaxed text-[var(--text-main)] space-y-1">
-            <strong className="font-semibold text-[var(--accent-gold)] block">
-              {ui("💡 إيضاح مالي هام بشأن حساب الأرباح وضريبة القيمة المضافة:")}</strong>
-            <p>
-              {ui("ضريبة القيمة المضافة (15%) هي أمانة ضريبية تُحصّل وتُورّد لهيئة الزكاة والضريبة والجمارك، وليست جزءاً من إيرادات المنشأة ولا تُخصم من صافي أرباح التشغيل. صافي أرباح الفترة يُحسب بمقابلة الإيرادات الصافية قبل الضريبة بالمصروفات التشغيلية المباشرة وتكاليف الأسطول والإدارة.")}</p>
-            <p className="text-xs text-[var(--text-muted)] font-mono pt-1">
-              {ui("مصروف الزكاة / ضريبة الدخل التقديري المسجل:")}{" "}
-              <bdi dir="ltr">{amountLabel(data.profit.taxExpense)}</bdi> {ui("ر.س (لا يُحسب تلقائياً من ضريبة القيمة المضافة).")}
-            </p>
+          {(() => {
+            const cashRows = data.trial.filter(
+              (r) =>
+                r.code.startsWith("11") &&
+                !["1103", "1104", "1105"].includes(r.code),
+            );
+            const cashMinor = cashRows.reduce(
+              (sum, r) =>
+                sum + signedMoneyMinor(r.closingDebit) - signedMoneyMinor(r.closingCredit),
+              BigInt(0),
+            );
+            const cashLedgerCode =
+              cashRows.find((r) => r.code === "1102")?.code ??
+              cashRows[0]?.code ??
+              "1102";
+
+            const receivablesRows = data.trial.filter((r) =>
+              r.code.startsWith("1103"),
+            );
+            const receivablesMinor = receivablesRows.reduce(
+              (sum, r) =>
+                sum + signedMoneyMinor(r.closingDebit) - signedMoneyMinor(r.closingCredit),
+              BigInt(0),
+            );
+
+            const payablesRows = data.trial.filter((r) =>
+              r.code.startsWith("2101"),
+            );
+            const payablesMinor = payablesRows.reduce(
+              (sum, r) =>
+                sum + signedMoneyMinor(r.closingCredit) - signedMoneyMinor(r.closingDebit),
+              BigInt(0),
+            );
+
+            const vatRows = data.trial.filter(
+              (r) => r.code.startsWith("2102") || r.code.startsWith("1104"),
+            );
+            const vatNetMinor = vatRows.reduce(
+              (sum, r) =>
+                sum + signedMoneyMinor(r.closingCredit) - signedMoneyMinor(r.closingDebit),
+              BigInt(0),
+            );
+            const vatRefundable = vatNetMinor < BigInt(0);
+            const vatLedgerCode =
+              vatRows.find((r) => r.code === "210201")?.code ??
+              vatRows[0]?.code ??
+              "2102";
+
+            const balanceCards = [
+              {
+                key: "cash",
+                label:
+                  ui.language === "en" ? "Cash & Bank Balances" : "الرصيد في البنك والصندوق",
+                sub: ui.language === "en" ? "View cash ledger" : "عرض حركة النقدية",
+                amount: formatSignedMinor(cashMinor),
+                code: cashLedgerCode,
+                accent: "text-emerald-700 dark:text-emerald-300",
+              },
+              {
+                key: "receivables",
+                label:
+                  ui.language === "en" ? "Customer Receivables" : "مستحقات لنا عند العملاء",
+                sub: ui.language === "en" ? "Open AR ledger" : "كشف حساب العملاء",
+                amount: formatSignedMinor(receivablesMinor),
+                code: "1103",
+                accent: "text-[var(--text-main)]",
+              },
+              {
+                key: "payables",
+                label:
+                  ui.language === "en" ? "Supplier Payables" : "مستحقات علينا للموردين",
+                sub: ui.language === "en" ? "Open AP ledger" : "كشف حساب الموردين",
+                amount: formatSignedMinor(payablesMinor),
+                code: "2101",
+                accent: "text-[var(--accent-gold)]",
+              },
+              {
+                key: "vat",
+                label: vatRefundable
+                  ? ui.language === "en"
+                    ? "VAT Refundable"
+                    : "ضريبة قابلة للاسترداد"
+                  : ui.language === "en"
+                    ? "Net VAT Payable"
+                    : "صافي الضريبة المستحقة",
+                sub: ui.language === "en" ? "Open VAT ledger" : "كشف حساب الضريبة",
+                amount: formatSignedMinor(vatRefundable ? -vatNetMinor : vatNetMinor),
+                code: vatLedgerCode,
+                accent: vatRefundable
+                  ? "text-emerald-700 dark:text-emerald-300"
+                  : "text-[var(--text-main)]",
+              },
+            ] as const;
+
+            return (
+              <section
+                aria-label={
+                  ui.language === "en"
+                    ? "Cash & Balance Snapshot"
+                    : "ملخص السيولة والذمم حتى نهاية الفترة"
+                }
+                className="grid grid-cols-2 gap-3 xl:grid-cols-4"
+              >
+                {balanceCards.map((card) => (
+                  <button
+                    key={card.key}
+                    type="button"
+                    onClick={() => openAccountLedger(card.code)}
+                    className="theme-card min-h-11 rounded-2xl border theme-border p-4 text-start hover:border-[var(--accent-gold)] transition cursor-pointer"
+                  >
+                    <p className="text-xs font-bold text-[var(--text-muted)]">
+                      {card.label}
+                    </p>
+                    <p
+                      className={`mt-2 font-mono text-lg sm:text-xl font-semibold ${card.accent}`}
+                      dir="ltr"
+                    >
+                      {amountLabel(card.amount)}{" "}
+                      <span className="text-xs font-normal text-[var(--text-muted)]">
+                        SAR
+                      </span>
+                    </p>
+                    <p className="mt-1 text-[11px] font-semibold text-[var(--accent-gold)]">
+                      {card.sub}
+                    </p>
+                  </button>
+                ))}
+              </section>
+            );
+          })()}
+
+          <div className="px-4 py-2.5 rounded-xl bg-[var(--accent-surface)]/70 border border-amber-600/30 text-xs text-[var(--text-main)] flex flex-wrap items-center justify-between gap-2">
+            <span>
+              <strong className="font-semibold text-[var(--accent-gold)]">
+                {ui("ملاحظة:")}{" "}
+              </strong>
+              {ui("ضريبة القيمة المضافة أمانة ضريبية لا تدخل ضمن الإيراد أو صافي الربح التشغيلي.")}
+            </span>
+            <span className="text-[var(--text-muted)] font-mono whitespace-nowrap">
+              {ui("مخصص الزكاة/الضريبة:")}{" "}
+              <bdi dir="ltr">{amountLabel(data.profit.taxExpense)}</bdi> {ui("ر.س")}
+            </span>
           </div>
 
           <section className="theme-card overflow-hidden rounded-2xl border theme-border">
@@ -668,155 +785,200 @@ export default function AccountingPage() {
             </div>
           </section>
 
-          <section className="theme-card overflow-hidden rounded-2xl border theme-border">
-            <h2 className="p-5 text-lg font-bold">{ui("ميزان المراجعة")}</h2>
-
-            <div className="md:hidden px-3.5 pb-4 space-y-3">
-              {data.trial.map((a) => (
-                <MobileRecordCard
-                  key={a.code}
-                  title={
-                    <button
-                      type="button"
-                      onClick={() => openAccountLedger(a.code)}
-                      className="font-mono font-bold text-[var(--accent-gold)] hover:underline cursor-pointer"
+          {(() => {
+            const isTrialBalanced =
+              signedMoneyMinor(data.totals.closingDebit) ===
+              signedMoneyMinor(data.totals.closingCredit);
+            return (
+              <details className="theme-card group overflow-hidden rounded-2xl border theme-border">
+                <summary className="min-h-11 cursor-pointer list-none px-5 py-4 flex flex-wrap items-center justify-between gap-3 hover:bg-[var(--bg-card-subtle)] transition-colors [&::-webkit-details-marker]:hidden">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h2 className="text-base sm:text-lg font-bold text-[var(--text-main)]">
+                      {ui.language === "en"
+                        ? "Trial Balance (Accountant details)"
+                        : "ميزان المراجعة (تفاصيل المحاسب)"}
+                    </h2>
+                    <Badge variant="outline" className="text-[11px] font-mono">
+                      {data.trial.length}{" "}
+                      {ui.language === "en" ? "accounts" : "حساب"}
+                    </Badge>
+                    <Badge
+                      variant={isTrialBalanced ? "success" : "warning"}
+                      className="text-[11px]"
                     >
-                      <bdi>{a.code}</bdi>
-                    </button>
-                  }
-                  subtitle={ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
-                >
-                  <MobileCardMetaGrid columns={2}>
-                    <MobileCardField
-                      label={ui("افتتاحي مدين")}
-                      mono
-                      value={<bdi dir="ltr">{amountLabel(a.openingDebit)}</bdi>}
+                      {isTrialBalanced
+                        ? ui.language === "en"
+                          ? "Balanced"
+                          : "متوازن"
+                        : ui.language === "en"
+                          ? "Out of balance"
+                          : "غير متوازن"}
+                    </Badge>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-gold)]">
+                    <span className="group-open:hidden">
+                      {ui.language === "en" ? "Show table" : "عرض الجدول"}
+                    </span>
+                    <span className="hidden group-open:inline">
+                      {ui.language === "en" ? "Hide table" : "إخفاء الجدول"}
+                    </span>
+                    <ChevronDown
+                      className="size-4 transition-transform group-open:rotate-180"
+                      aria-hidden="true"
                     />
-                    <MobileCardField
-                      label={ui("افتتاحي دائن")}
-                      mono
-                      value={<bdi dir="ltr">{amountLabel(a.openingCredit)}</bdi>}
-                    />
-                    <MobileCardField
-                      label={ui("حركة مدين")}
-                      mono
-                      value={<bdi dir="ltr">{amountLabel(a.debit)}</bdi>}
-                    />
-                    <MobileCardField
-                      label={ui("حركة دائن")}
-                      mono
-                      value={<bdi dir="ltr">{amountLabel(a.credit)}</bdi>}
-                    />
-                    <MobileCardField
-                      label={ui("ختامي مدين")}
-                      mono
-                      value={<bdi dir="ltr">{amountLabel(a.closingDebit)}</bdi>}
-                    />
-                    <MobileCardField
-                      label={ui("ختامي دائن")}
-                      mono
-                      value={<bdi dir="ltr">{amountLabel(a.closingCredit)}</bdi>}
-                    />
-                  </MobileCardMetaGrid>
-                </MobileRecordCard>
-              ))}
+                  </span>
+                </summary>
 
-              <Card className="theme-card-subtle border theme-border shadow-none p-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-[var(--text-main)]">{ui("الإجمالي")}</span>
-                  <Badge variant="gold" className="text-[11px]">{ui("ميزان المراجعة")}</Badge>
+                <div className="border-t theme-border pt-4">
+                  <div className="md:hidden px-3.5 pb-4 space-y-3">
+                    {data.trial.map((a) => (
+                      <MobileRecordCard
+                        key={a.code}
+                        title={
+                          <button
+                            type="button"
+                            onClick={() => openAccountLedger(a.code)}
+                            className="font-mono font-bold text-[var(--accent-gold)] hover:underline cursor-pointer"
+                          >
+                            <bdi>{a.code}</bdi>
+                          </button>
+                        }
+                        subtitle={ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                      >
+                        <MobileCardMetaGrid columns={2}>
+                          <MobileCardField
+                            label={ui("افتتاحي مدين")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(a.openingDebit)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("افتتاحي دائن")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(a.openingCredit)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("حركة مدين")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(a.debit)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("حركة دائن")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(a.credit)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("ختامي مدين")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(a.closingDebit)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("ختامي دائن")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(a.closingCredit)}</bdi>}
+                          />
+                        </MobileCardMetaGrid>
+                      </MobileRecordCard>
+                    ))}
+
+                    <Card className="theme-card-subtle border theme-border shadow-none p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-[var(--text-main)]">{ui("الإجمالي")}</span>
+                        <Badge variant="gold" className="text-[11px]">{ui("ميزان المراجعة")}</Badge>
+                      </div>
+                      <MobileCardMetaGrid columns={2} className="bg-[var(--bg-card)]">
+                        <MobileCardField
+                          label={ui("حركة مدين")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(data.totals.debit)}</bdi>}
+                        />
+                        <MobileCardField
+                          label={ui("حركة دائن")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(data.totals.credit)}</bdi>}
+                        />
+                        <MobileCardField
+                          label={ui("ختامي مدين")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(data.totals.closingDebit)}</bdi>}
+                        />
+                        <MobileCardField
+                          label={ui("ختامي دائن")}
+                          mono
+                          value={<bdi dir="ltr">{amountLabel(data.totals.closingCredit)}</bdi>}
+                        />
+                      </MobileCardMetaGrid>
+                    </Card>
+                  </div>
+
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full min-w-[980px] text-start text-sm">
+                      <thead className="bg-[var(--table-header-bg)] text-xs text-[var(--text-muted)]">
+                        <tr>
+                          {[
+                            "الحساب",
+                            "افتتاحي مدين",
+                            "افتتاحي دائن",
+                            "حركة مدين",
+                            "حركة دائن",
+                            "ختامي مدين",
+                            "ختامي دائن",
+                          ].map((v) => (
+                            <th key={v} className="px-4 py-3">
+                              {ui(v)}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.trial.map((a) => (
+                          <tr key={a.code} className="border-t theme-border hover:bg-[var(--table-row-hover)] transition-colors">
+                            <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => openAccountLedger(a.code)}
+                                className="text-start hover:underline cursor-pointer"
+                              >
+                                <bdi className="font-mono font-bold text-[var(--accent-gold)]">
+                                  {a.code}
+                                </bdi>{" "}
+                                · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
+                              </button>
+                            </td>
+                            {[
+                              a.openingDebit,
+                              a.openingCredit,
+                              a.debit,
+                              a.credit,
+                              a.closingDebit,
+                              a.closingCredit,
+                            ].map((v, i) => (
+                              <td className="px-4 py-3 font-mono" dir="ltr" key={i}>
+                                {amountLabel(v)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                        <tr className="theme-card-subtle font-bold">
+                          <td colSpan={3} className="px-4 py-4">
+                            {ui("الإجمالي")}</td>
+                          {[
+                            data.totals.debit,
+                            data.totals.credit,
+                            data.totals.closingDebit,
+                            data.totals.closingCredit,
+                          ].map((v, i) => (
+                            <td key={i} className="px-4 py-4 font-mono" dir="ltr">
+                              {amountLabel(v)}
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <MobileCardMetaGrid columns={2} className="bg-[var(--bg-card)]">
-                  <MobileCardField
-                    label={ui("حركة مدين")}
-                    mono
-                    value={<bdi dir="ltr">{amountLabel(data.totals.debit)}</bdi>}
-                  />
-                  <MobileCardField
-                    label={ui("حركة دائن")}
-                    mono
-                    value={<bdi dir="ltr">{amountLabel(data.totals.credit)}</bdi>}
-                  />
-                  <MobileCardField
-                    label={ui("ختامي مدين")}
-                    mono
-                    value={<bdi dir="ltr">{amountLabel(data.totals.closingDebit)}</bdi>}
-                  />
-                  <MobileCardField
-                    label={ui("ختامي دائن")}
-                    mono
-                    value={<bdi dir="ltr">{amountLabel(data.totals.closingCredit)}</bdi>}
-                  />
-                </MobileCardMetaGrid>
-              </Card>
-            </div>
-
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full min-w-[980px] text-start text-sm">
-                <thead className="bg-[var(--table-header-bg)] text-xs text-[var(--text-muted)]">
-                  <tr>
-                    {[
-                      "الحساب",
-                      "افتتاحي مدين",
-                      "افتتاحي دائن",
-                      "حركة مدين",
-                      "حركة دائن",
-                      "ختامي مدين",
-                      "ختامي دائن",
-                    ].map((v) => (
-                      <th key={v} className="px-4 py-3">
-                        {ui(v)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.trial.map((a) => (
-                    <tr key={a.code} className="border-t theme-border hover:bg-[var(--table-row-hover)] transition-colors">
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => openAccountLedger(a.code)}
-                          className="text-start hover:underline cursor-pointer"
-                        >
-                          <bdi className="font-mono font-bold text-[var(--accent-gold)]">
-                            {a.code}
-                          </bdi>{" "}
-                          · {ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr)}
-                        </button>
-                      </td>
-                      {[
-                        a.openingDebit,
-                        a.openingCredit,
-                        a.debit,
-                        a.credit,
-                        a.closingDebit,
-                        a.closingCredit,
-                      ].map((v, i) => (
-                        <td className="px-4 py-3 font-mono" dir="ltr" key={i}>
-                          {amountLabel(v)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                  <tr className="theme-card-subtle font-bold">
-                    <td colSpan={3} className="px-4 py-4">
-                      {ui("الإجمالي")}</td>
-                    {[
-                      data.totals.debit,
-                      data.totals.credit,
-                      data.totals.closingDebit,
-                      data.totals.closingCredit,
-                    ].map((v, i) => (
-                      <td key={i} className="px-4 py-4 font-mono" dir="ltr">
-                        {amountLabel(v)}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+              </details>
+            );
+          })()}
 
           <section className="theme-card rounded-2xl border theme-border p-5">
             <h2 className="text-lg font-bold">{ui("تكلفة وربحية المركبات")}</h2>
@@ -825,58 +987,105 @@ export default function AccountingPage() {
             {data.vehicles.length ? (
               <>
                 <div className="md:hidden mt-4 space-y-3">
-                  {data.vehicles.map((v) => (
-                    <MobileRecordCard
-                      key={v.plate}
-                      title={
-                        <span className="font-mono">
-                          <bdi>{v.plate}</bdi>
-                        </span>
-                      }
-                      badge={<Badge variant="outline" className="text-[10px]">{ui("مركبة")}</Badge>}
-                    >
-                      <MobileCardMetaGrid columns={3}>
-                        <MobileCardField
-                          label={ui("الإيراد")}
-                          mono
-                          value={<bdi dir="ltr">{amountLabel(v.revenue)}</bdi>}
-                        />
-                        <MobileCardField
-                          label={ui("التكلفة")}
-                          mono
-                          value={<bdi dir="ltr">{amountLabel(v.cost)}</bdi>}
-                        />
-                        <MobileCardField
-                          label={ui("الربح")}
-                          mono
-                          value={<bdi dir="ltr">{amountLabel(v.profit)}</bdi>}
-                        />
-                      </MobileCardMetaGrid>
-                    </MobileRecordCard>
-                  ))}
+                  {data.vehicles.map((v) => {
+                    const rev = signedMoneyMinor(v.revenue);
+                    const profit = signedMoneyMinor(v.profit);
+                    const marginLabel =
+                      rev > BigInt(0)
+                        ? `${(Number((profit * BigInt(1000)) / rev) / 10).toFixed(1)}%`
+                        : "—";
+                    const profitTone =
+                      profit > BigInt(0)
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : profit < BigInt(0)
+                          ? "text-rose-700 dark:text-rose-400"
+                          : "";
+                    return (
+                      <MobileRecordCard
+                        key={v.plate}
+                        title={
+                          <span className="font-mono">
+                            <bdi>{v.plate}</bdi>
+                          </span>
+                        }
+                        badge={<Badge variant="outline" className="text-[10px]">{ui("مركبة")}</Badge>}
+                      >
+                        <MobileCardMetaGrid columns={2}>
+                          <MobileCardField
+                            label={ui("الإيراد")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(v.revenue)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("التكلفة")}
+                            mono
+                            value={<bdi dir="ltr">{amountLabel(v.cost)}</bdi>}
+                          />
+                          <MobileCardField
+                            label={ui("الربح")}
+                            mono
+                            value={
+                              <bdi dir="ltr" className={`font-bold ${profitTone}`}>
+                                {amountLabel(v.profit)}
+                              </bdi>
+                            }
+                          />
+                          <MobileCardField
+                            label={ui.language === "en" ? "Margin %" : "الهامش %"}
+                            mono
+                            value={
+                              <bdi dir="ltr" className={`font-bold ${profitTone}`}>
+                                {marginLabel}
+                              </bdi>
+                            }
+                          />
+                        </MobileCardMetaGrid>
+                      </MobileRecordCard>
+                    );
+                  })}
                 </div>
 
                 <div className="hidden md:block mt-4 overflow-x-auto">
-                  <table className="w-full min-w-[500px] text-start text-sm">
+                  <table className="w-full min-w-[540px] text-start text-sm">
                   <thead>
-                    <tr>
-                      {["اللوحة", "الإيراد", "التكلفة", "الربح"].map((v) => (
-                        <th key={v} className="py-3">
+                    <tr className="text-xs text-[var(--text-muted)]">
+                      {[
+                        "اللوحة",
+                        "الإيراد",
+                        "التكلفة",
+                        "الربح",
+                        ui.language === "en" ? "Margin %" : "الهامش %",
+                      ].map((v) => (
+                        <th key={v} className="py-3 font-bold">
                           {ui(v)}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {data.vehicles.map((v) => (
-                      <tr key={v.plate} className="border-t theme-border">
-                        {[v.plate, v.revenue, v.cost, v.profit].map((x, i) => (
-                          <td key={i} className="py-3 font-mono" dir={i ? "ltr" : undefined}>
-                            {i ? amountLabel(x) : x}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                    {data.vehicles.map((v) => {
+                      const rev = signedMoneyMinor(v.revenue);
+                      const profit = signedMoneyMinor(v.profit);
+                      const marginLabel =
+                        rev > BigInt(0)
+                          ? `${(Number((profit * BigInt(1000)) / rev) / 10).toFixed(1)}%`
+                          : "—";
+                      const profitTone =
+                        profit > BigInt(0)
+                          ? "text-emerald-700 dark:text-emerald-300 font-bold"
+                          : profit < BigInt(0)
+                            ? "text-rose-700 dark:text-rose-400 font-bold"
+                            : "";
+                      return (
+                        <tr key={v.plate} className="border-t theme-border hover:bg-[var(--table-row-hover)] transition-colors">
+                          <td className="py-3 font-mono font-semibold">{v.plate}</td>
+                          <td className="py-3 font-mono" dir="ltr">{amountLabel(v.revenue)}</td>
+                          <td className="py-3 font-mono" dir="ltr">{amountLabel(v.cost)}</td>
+                          <td className={`py-3 font-mono ${profitTone}`} dir="ltr">{amountLabel(v.profit)}</td>
+                          <td className={`py-3 font-mono ${profitTone}`} dir="ltr">{marginLabel}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                   </table>
                 </div>

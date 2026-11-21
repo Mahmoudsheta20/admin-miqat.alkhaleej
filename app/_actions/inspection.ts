@@ -10,7 +10,7 @@ export interface InspectionInput {
 }
 export interface CaptainInspectionItem {
   id: string; name: string; email: string; phone?: string | null; nationalId?: string | null;
-  assignedVehiclePlate?: string | null; avatarUrl?: string | null; active: boolean;
+  assignedVehiclePlate?: string | null; avatarUrl?: string | null; active: boolean; isArchived?: boolean;
   hasTodayInspection: boolean; todayInspection: VehicleInspection | null;
   lastInspectionDate?: string | null; totalInspections: number;
 }

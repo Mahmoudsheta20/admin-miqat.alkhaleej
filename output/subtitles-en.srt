@@ -1,0 +1,31 @@
+1
+00:00:00,080 --> 00:00:13,600
+Welcome to Miqat Al-Khaleej. Monitor fleet readiness, active contracts, and quarter revenues live from the Executive Dashboard, with instant Light and Dark themes.
+
+2
+00:00:14,080 --> 00:00:28,080
+Track registrations and insurance in Fleet, while 16-point daily safety inspections link automatically to contracts with one-click WhatsApp PDF dispatch.
+
+3
+00:00:28,560 --> 00:00:42,880
+Every contract includes a passenger manifest and public QR link — while captains use an isolated mobile portal for trips, custody, and exact earnings.
+
+4
+00:00:43,360 --> 00:00:57,360
+Invoices now display live Paid, Partially Paid, and Unpaid badges with instant quick filters and one-click bank or cash payment collection.
+
+5
+00:00:57,840 --> 00:01:11,600
+Create invoices in four crisp steps: pick a contract to auto-fill client data, set route details, and watch 15% VAT and side totals update live.
+
+6
+00:01:12,080 --> 00:01:27,600
+Link expenses directly to vehicles with Before/Includes-VAT pricing, then monitor net profits, cash cards, fleet margins, and smart payment lookup.
+
+7
+00:01:28,080 --> 00:01:44,000
+ZATCA Boxes 1–16 stay copy-ready; inside the new Unified Financial Exports Center, filter across 19 fields, preview 9 live tabs, and export PDF or Excel in one click.
+
+8
+00:01:44,480 --> 00:01:58,400
+With automated WhatsApp dispatch, ZATCA readiness, and granular RBAC permissions, Miqat Al-Khaleej delivers total control over fleet operations and finances.

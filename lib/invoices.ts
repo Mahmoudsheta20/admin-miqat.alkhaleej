@@ -1,4 +1,5 @@
 import { backendRequest, backendUrl, queryString } from "./backend";
+import type { DocumentPaymentSummary } from "./accounting";
 import type { TransportDetails } from "./invoice-transport";
 import { moneyDecimal, signedMoneyMinor } from "./money";
 import type { Buyer, InvoiceLineInput } from "./zatca";
@@ -6,6 +7,7 @@ export type { Buyer, InvoiceLineInput } from "./zatca";
 export const INVOICE_TYPE_LABELS = { BOOKING: "فاتورة حجز", PROFORMA: "فاتورة مبدئية", TAX: "مستند ضريبي" };
 export type InvoiceDocumentType = keyof typeof INVOICE_TYPE_LABELS;
 export type InvoiceListFilterType = "ALL" | "BOOKING" | "PROFORMA" | "TAX" | "NOTES";
+export type InvoicePaymentFilter = "ALL" | "UNPAID" | "PARTIAL" | "PAID";
 export interface InvoiceBankDetails { bankName: string; accountHolder: string; accountNumber?: string; iban?: string; swiftCode?: string }
 export interface TaxDocument { kind: "INVOICE" | "CREDIT" | "DEBIT"; profile: "STANDARD" | "SIMPLIFIED"; supplyDate: string; originalInvoiceId?: string; adjustmentReason?: string; adjustmentEventDate?: string }
 export function invoiceTitle(value: { documentType?: InvoiceDocumentType; taxDocument?: Pick<TaxDocument, "kind" | "profile"> }): string {
@@ -25,7 +27,7 @@ export interface InvoiceCreditBalance { availableNet: string; availableVat: stri
 export interface CalculatedInvoiceLine extends InvoiceLineInput { net: string; vat: string; gross: string }
 export interface InvoiceTaxGroup { category: InvoiceLineInput["category"]; rate: string; exemptionCode?: string; exemptionReason?: string; taxable: string; tax: string }
 export interface InvoiceTripSnapshot { contractId: string; reference: string; date: string; time: string; origin: string; destination: string; guestName: string; vehiclePlate: string; netAmount: string }
-export interface InvoiceRow { visibility?:InvoiceVisibility|null; taxDocument?: TaxDocument; documentType?: InvoiceDocumentType; id: string; invoiceNumber: string; customerName: string; netAmount: string; vatAmount: string; totalAmount: string; invoiceDate: string; createdAt: string; status: "SAVED" }
+export interface InvoiceRow { visibility?:InvoiceVisibility|null; taxDocument?: TaxDocument; documentType?: InvoiceDocumentType; id: string; invoiceNumber: string; customerName: string; netAmount: string; vatAmount: string; totalAmount: string; invoiceDate: string; createdAt: string; status: "SAVED"; paymentSummary?: DocumentPaymentSummary | null }
 export interface InvoiceDetail extends InvoiceRow { verificationUrl: string; snapshot: { trips?: InvoiceTripSnapshot[]; issuer: InvoiceCompany; input: BookingInvoiceInput; totals: { net: string; vat: string; gross: string; lines?: CalculatedInvoiceLine[]; groups?: InvoiceTaxGroup[] }; original?: { number: string; issueDate: string } }; contractId: string | null; adjustments?: InvoiceAdjustmentSummary[]; creditBalance?: InvoiceCreditBalance; originalInvoice?: OriginalInvoiceSummary }
 export const invoiceRequest = <T>(path = "", method = "GET", body?: unknown) => backendRequest<T>(`/invoices${path}`, method, body);
 export function dateLabel(value: string, language: "ar"|"en" = "ar"): string { return new Date(value).toLocaleString(language === "en"?"en-GB":"ar-SA", { timeZone: "Asia/Riyadh", calendar: "gregory" }); }
@@ -99,6 +101,7 @@ export function filterInvoiceRows(
   rows: InvoiceRow[],
   params: {
     type?: InvoiceListFilterType;
+    paymentStatus?: InvoicePaymentFilter;
     search?: string;
     fromDate?: string;
     toDate?: string;
@@ -118,6 +121,11 @@ export function filterInvoiceRows(
     if (params.type === "TAX" && (docType !== "TAX" || isNote)) return false;
     if (params.type === "NOTES" && !isNote) return false;
 
+    if (params.paymentStatus && params.paymentStatus !== "ALL") {
+      const status = row.paymentSummary?.status;
+      if (!status || status !== params.paymentStatus) return false;
+    }
+
     if (applyDateRange && (fromDate || toDate)) {
       const dateKey = invoiceRiyadhDateKey(row.invoiceDate);
       if (fromDate && dateKey < fromDate) return false;
@@ -131,6 +139,33 @@ export function filterInvoiceRows(
       row.totalAmount.includes(q)
     );
   });
+}
+
+/** Computes inclusive ISO date bounds for quick invoice date presets from a YYYY-MM-DD Saudi day. */
+export function quickInvoiceDateRange(
+  preset: "THIS_MONTH" | "THIS_QUARTER",
+  todayIso: string,
+): { fromDate: string; toDate: string } {
+  const year = Number(todayIso.slice(0, 4));
+  const month = Number(todayIso.slice(5, 7));
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+    return { fromDate: todayIso, toDate: todayIso };
+  }
+  if (preset === "THIS_MONTH") {
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const mm = String(month).padStart(2, "0");
+    return {
+      fromDate: `${year}-${mm}-01`,
+      toDate: `${year}-${mm}-${String(lastDay).padStart(2, "0")}`,
+    };
+  }
+  const quarterStartMonth = Math.floor((month - 1) / 3) * 3 + 1;
+  const quarterEndMonth = quarterStartMonth + 2;
+  const lastDay = new Date(Date.UTC(year, quarterEndMonth, 0)).getUTCDate();
+  return {
+    fromDate: `${year}-${String(quarterStartMonth).padStart(2, "0")}-01`,
+    toDate: `${year}-${String(quarterEndMonth).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`,
+  };
 }
 
 /** Summarizes counts and exact decimal totals using minor-unit BigInt arithmetic. */

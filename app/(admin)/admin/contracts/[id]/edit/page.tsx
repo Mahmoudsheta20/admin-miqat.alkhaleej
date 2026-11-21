@@ -670,7 +670,18 @@ export default function EditContractPage({ params }: PageProps) {
                   <CaptainSelector
                     label={ui("الكابتن المسؤول عن التنفيذ")}
                     required
-                    captains={captains.filter(captain => captain.active)}
+                    captains={(() => {
+                      const available = captains.filter(
+                        (captain) => (captain.active && !captain.isArchived) || captain.id === contract?.captainId
+                      );
+                      if (
+                        contract?.captain &&
+                        !available.some((captain) => captain.id === contract.captain?.id)
+                      ) {
+                        return [contract.captain, ...available];
+                      }
+                      return available;
+                    })()}
                     selectedCaptainId={field.value}
                     onSelectCaptain={(cap) => {
                       field.onChange(cap.id);

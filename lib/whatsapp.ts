@@ -6,6 +6,22 @@ export type WhatsAppConnectionStatus =
   | "connecting"
   | "disconnected";
 
+export type WhatsAppHaltCode =
+  | "forbidden"
+  | "conflict"
+  | "logged_out"
+  | "reconnect_limit"
+  | "send_failures"
+  | "safety_state";
+
+export interface SavedWhatsAppSessionInfo {
+  hasSession: boolean;
+  me_id?: string;
+  me_push_name?: string;
+}
+
+export type WhatsAppReconnectMode = "same_number" | "new_number";
+
 export interface WhatsAppAntiBanStats {
   queueLength: number;
   maxQueueSize: number;
@@ -33,6 +49,8 @@ export interface WhatsAppStatus {
   status_message?: string;
   driverWorkflow?: { enabled: boolean; managementTarget: string | null };
   recovery?: { canReconnect: boolean; canRelink: boolean };
+  haltCode?: WhatsAppHaltCode | null;
+  savedSession?: SavedWhatsAppSessionInfo;
 }
 
 export interface WhatsAppQrResponse {
@@ -101,6 +119,8 @@ function normalizeWhatsAppStatus(payload: WhatsAppStatusPayload): WhatsAppStatus
     status_message: nested?.status_message ?? payload.status_message,
     driverWorkflow: nested?.driverWorkflow ?? payload.driverWorkflow,
     recovery: nested?.recovery ?? payload.recovery,
+    haltCode: nested?.haltCode !== undefined ? nested.haltCode : payload.haltCode,
+    savedSession: nested?.savedSession ?? payload.savedSession,
   };
 }
 
@@ -504,10 +524,18 @@ export async function sendWhatsAppFlowTest(): Promise<{
   return { success: true, message: data.message, data: data.data };
 }
 
-export async function reconnectWhatsApp(): Promise<WhatsAppStatus> {
+export async function reconnectWhatsApp(
+  mode?: WhatsAppReconnectMode
+): Promise<WhatsAppStatus> {
   const res = await fetch(backendUrl("/whatsapp/reconnect"), {
     method: "POST",
     credentials: "include",
+    ...(mode
+      ? {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode }),
+        }
+      : {}),
   });
   const data = await parseWhatsAppJson<WhatsAppStatusPayload>(res);
   if (!res.ok || !data?.success) {

@@ -1,0 +1,23 @@
+1
+00:00:02,500 --> 00:00:15,860
+Welcome to the Miqat Al-Khaleej Financial Suite. Track live Paid, Partially Paid, and Unpaid invoice status instantly with fast period filters.
+
+2
+00:00:16,150 --> 00:00:30,870
+Inside every invoice, monitor exact collection progress and remaining halalas, record bank or cash payments in one click, and access official ZATCA QR and PDF.
+
+3
+00:00:31,167 --> 00:00:47,007
+Create compliant invoices in four crisp steps: pick a contract to auto-fill client data, enter pricing, and watch 15% VAT and the side summary update live.
+
+4
+00:00:47,317 --> 00:01:02,597
+Link every expense to its fleet vehicle with Before/Includes-VAT pricing, then track net profit, cash and bank liquidity, and per-bus margins in Accounting.
+
+5
+00:01:02,900 --> 00:01:17,620
+Every transaction posts automatically to the Chart of Accounts, keeping ZATCA VAT Return Boxes 1–16 reconciled and copy-ready.
+
+6
+00:01:17,917 --> 00:01:36,317
+With the new Unified Financial Exports Center, combine 19 advanced filters, 9 live preview tabs, and instant A4 PDF, Excel CSV, or JSON export in one place.

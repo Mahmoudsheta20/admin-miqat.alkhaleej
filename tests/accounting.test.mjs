@@ -162,3 +162,73 @@ test('isValidVatReport accepts complete VAT reports and rejects malformed or unr
   assert.equal(exports.isValidVatReport({ ...valid, rows: null }), false);
   assert.equal(exports.computeClientManualVatReport({ items: [], total: 0 }, [], null).items.length, 0);
 });
+
+test('paymentStatusMeta maps AR/EN labels, variants, and canPay for SALE and PURCHASE', () => {
+  assert.deepEqual(exports.paymentStatusMeta('PAID', true, 'SALE'), {
+    label: 'Paid',
+    variant: 'success',
+    canPay: false,
+  });
+  assert.deepEqual(exports.paymentStatusMeta('PARTIAL', false, 'PURCHASE'), {
+    label: 'مدفوعة جزئياً',
+    variant: 'warning',
+    canPay: true,
+  });
+  assert.deepEqual(exports.paymentStatusMeta('UNPAID', true, 'PURCHASE'), {
+    label: 'Unpaid',
+    variant: 'destructive',
+    canPay: true,
+  });
+  assert.deepEqual(exports.paymentStatusMeta('REFUND_DUE', true, 'SALE'), {
+    label: 'Refund due',
+    variant: 'secondary',
+    canPay: false,
+  });
+  assert.deepEqual(exports.paymentStatusMeta('REFUND_DUE', false, 'PURCHASE'), {
+    label: 'رصيد لدى المورد',
+    variant: 'secondary',
+    canPay: false,
+  });
+  assert.deepEqual(exports.paymentStatusMeta('UNPOSTED', true, 'SALE'), {
+    label: 'Needs review',
+    variant: 'outline',
+    canPay: false,
+  });
+  assert.deepEqual(exports.paymentStatusMeta(null, false, 'SALE'), {
+    label: 'غير مدفوعة',
+    variant: 'destructive',
+    canPay: true,
+  });
+});
+
+test('buildPurchasesQueryPath builds QUARTER, YEAR, CUSTOM, legacy and optional filters cleanly', () => {
+  assert.equal(
+    exports.buildPurchasesQueryPath({
+      period: { mode: 'QUARTER', year: 2026, quarter: 2, startDate: '', endDate: '' },
+      page: 2,
+      search: ' Fuel ',
+      includeVoided: true,
+      category: 'FUEL',
+      documentType: 'PURCHASE_INVOICE',
+      postingStatus: 'POSTED',
+      paymentAccountCode: '1102',
+    }),
+    '/purchases?mode=QUARTER&year=2026&quarter=2&page=2&search=Fuel&includeVoided=true&category=FUEL&documentType=PURCHASE_INVOICE&postingStatus=POSTED&paymentAccountCode=1102',
+  );
+  assert.equal(
+    exports.buildPurchasesQueryPath({
+      period: { mode: 'YEAR', year: 2026, quarter: 1, startDate: '', endDate: '' },
+    }),
+    '/purchases?mode=YEAR&year=2026&page=1&search=&includeVoided=false',
+  );
+  assert.equal(
+    exports.buildPurchasesQueryPath({
+      period: { mode: 'CUSTOM', year: 2026, quarter: 1, startDate: '2026-01-01', endDate: '2026-01-31' },
+    }),
+    '/purchases?mode=CUSTOM&startDate=2026-01-01&endDate=2026-01-31&page=1&search=&includeVoided=false',
+  );
+  assert.equal(
+    exports.buildPurchasesQueryPath({ year: 2025, quarter: 4 }),
+    '/purchases?year=2025&quarter=4&page=1&search=&includeVoided=false',
+  );
+});

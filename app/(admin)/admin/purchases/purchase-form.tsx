@@ -1,12 +1,38 @@
 "use client";
 import { useUiText } from "@/lib/ui-text";
 
-
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { X, Loader2, Building2, Receipt, CreditCard, AlertCircle, ChevronDown, Percent, CheckCircle2, Truck, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle2,
+  CreditCard,
+  Landmark,
+  Loader2,
+  Percent,
+  Receipt,
+  RotateCcw,
+  Truck,
+  Wallet,
+  X,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { accountingRequest, currentSaudiPeriod, EXPENSE_CATEGORIES, TAX_TREATMENTS, CATEGORY_ACCOUNTS, filterCashBankAccounts, purchasePreview, purchaseInclusive, type Account, type PurchaseInput, type PurchaseRow } from "@/lib/accounting";
-import { moneyMinor } from "@/lib/money";
+import {
+  accountingRequest,
+  CATEGORY_ACCOUNTS,
+  currentSaudiPeriod,
+  EXPENSE_CATEGORIES,
+  filterCashBankAccounts,
+  purchaseInclusive,
+  purchasePreview,
+  TAX_TREATMENTS,
+  type Account,
+  type PurchaseInput,
+  type PurchaseRow,
+} from "@/lib/accounting";
+import { getVehicles } from "@/app/_actions/fleet";
+import type { Vehicle } from "@/lib/types";
+import { moneyDecimal, moneyMinor } from "@/lib/money";
 import { useAccountingQuery } from "@/lib/use-accounting-query";
 import { useApiQuery } from "@/lib/use-api-query";
 
@@ -24,7 +50,8 @@ interface OriginalOption {
   voucherNumber: number;
 }
 
-const INPUT_STYLE = "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
+const INPUT_STYLE =
+  "theme-input mt-1.5 min-h-11 sm:min-h-9 w-full rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem]";
 
 export default function PurchaseForm({
   existing,
@@ -33,6 +60,8 @@ export default function PurchaseForm({
   onSaved,
 }: Props) {
   const ui = useUiText();
+  const isEn = ui.language === "en";
+  const text = (ar: string, en: string) => (isEn ? en : ar);
 
   const dialog = useRef<HTMLDialogElement>(null);
   const key = useRef("");
@@ -78,7 +107,7 @@ export default function PurchaseForm({
           accountCode: "5101",
           paymentAccountCode: "2101",
           postImmediately: true,
-        }
+        },
   );
 
   const [isSaving, setIsSaving] = useState(false);
@@ -88,7 +117,10 @@ export default function PurchaseForm({
   const [gross, setGross] = useState(existing?.totalAmount || "");
   const [originalSearch, setOriginalSearch] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [showAccountantDetails, setShowAccountantDetails] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [manualPlateMode, setManualPlateMode] = useState(
+    Boolean(existing?.vehiclePlate && !existing?.vehicleId),
+  );
 
   const isReturn = form.documentType === "PURCHASE_RETURN";
   const accounts = useAccountingQuery<{ items: Account[] }>("/accounts");
@@ -98,12 +130,28 @@ export default function PurchaseForm({
       : null,
   );
   const cashBankAccounts = filterCashBankAccounts(accounts.data?.items);
+  const extraCashBank = cashBankAccounts.filter(
+    (a) => a.code !== "1101" && a.code !== "1102",
+  );
   const isRecoverable = Number(form.recoverablePercent) > 0;
-  const isZeroTaxExpense = ["DRIVER_PAYROLL", "GOVERNMENT_FEES"].includes(form.category);
+  const isZeroTaxExpense = ["DRIVER_PAYROLL", "GOVERNMENT_FEES"].includes(
+    form.category,
+  );
 
   useEffect(() => {
     dialog.current?.showModal();
     key.current = crypto.randomUUID();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void getVehicles().then((res) => {
+      if (!active) return;
+      setVehicles(res.vehicles || []);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const update = (change: Partial<PurchaseInput>) =>
@@ -134,6 +182,7 @@ export default function PurchaseForm({
         vatAmount: "0.00",
       });
       setGross("");
+      setManualPlateMode(Boolean(v.vehiclePlate && !v.vehicleId));
     } else {
       setError(result.error || "تعذر تحميل أصل الفاتورة؛ تأكد من رقم المستند.");
     }
@@ -146,7 +195,11 @@ export default function PurchaseForm({
       category: cat,
       accountCode: CATEGORY_ACCOUNTS[cat],
       ...(isSpecialZero
-        ? { taxTreatment: "OUT_OF_SCOPE", vatAmount: "0.00", recoverablePercent: "0" }
+        ? {
+            taxTreatment: "OUT_OF_SCOPE",
+            vatAmount: "0.00",
+            recoverablePercent: "0",
+          }
         : { taxTreatment: "STANDARD" }),
     });
     if (isSpecialZero) setInclusive(false);
@@ -161,27 +214,31 @@ export default function PurchaseForm({
     const vatMinor = moneyMinor(form.vatAmount);
     if (netMinor === null || netMinor <= BigInt(0)) {
       setError(
-        ui.language === "en"
+        isEn
           ? "Enter a valid net amount greater than 0.00."
-          : "يرجى إدخال صافي مبلغ صحيح أكبر من 0.00."
+          : "يرجى إدخال صافي مبلغ صحيح أكبر من 0.00.",
       );
       return;
     }
     if (vatMinor === null || vatMinor < BigInt(0)) {
       setError(
-        ui.language === "en"
+        isEn
           ? "Enter a valid VAT amount (0.00 or higher)."
-          : "يرجى إدخال قيمة ضريبة صحيحة (0.00 فأكثر)."
+          : "يرجى إدخال قيمة ضريبة صحيحة (0.00 فأكثر).",
       );
       return;
     }
     if (form.taxTreatment === "STANDARD" && isRecoverable) {
       const pctMinor = moneyMinor(form.recoverablePercent);
-      if (pctMinor === null || pctMinor <= BigInt(0) || pctMinor > BigInt(10000)) {
+      if (
+        pctMinor === null ||
+        pctMinor <= BigInt(0) ||
+        pctMinor > BigInt(10000)
+      ) {
         setError(
-          ui.language === "en"
+          isEn
             ? "Recoverable VAT percentage must be between 0.01 and 100."
-            : "يجب أن تكون نسبة الخصم القابلة للاسترداد بين 0.01 و 100."
+            : "يجب أن تكون نسبة الخصم القابلة للاسترداد بين 0.01 و 100.",
         );
         return;
       }
@@ -206,7 +263,7 @@ export default function PurchaseForm({
       existing ? "PUT" : "POST",
       existing
         ? { purchase, version: existing.version }
-        : { purchase, operationKey: key.current }
+        : { purchase, operationKey: key.current },
     );
 
     if (result.success && attachmentFile && (result.data?.id || existing?.id)) {
@@ -216,7 +273,7 @@ export default function PurchaseForm({
       const uploadRes = await accountingRequest(
         `/purchases/${targetId}/attachments`,
         "POST",
-        body
+        body,
       );
       if (!uploadRes.success) {
         setIsSaving(false);
@@ -232,7 +289,33 @@ export default function PurchaseForm({
 
   const totals = inclusive
     ? purchaseInclusive(gross || "0", form.taxTreatment === "STANDARD")
-    : purchasePreview(form.netAmount || "0", form.vatAmount || "0");
+    : {
+        net: moneyDecimal(moneyMinor(form.netAmount || "0") ?? BigInt(0)),
+        ...purchasePreview(form.netAmount || "0", form.vatAmount || "0"),
+      };
+
+  const taxSplit = useMemo(() => {
+    const vatMinor = moneyMinor(totals.vat) ?? BigInt(0);
+    const pctMinor = moneyMinor(form.recoverablePercent || "0") ?? BigInt(0);
+    if (form.taxTreatment !== "STANDARD" || vatMinor <= BigInt(0)) {
+      return { recoverable: "0.00", addedToCost: "0.00" };
+    }
+    const clampedPct = pctMinor > BigInt(10000) ? BigInt(10000) : pctMinor < BigInt(0) ? BigInt(0) : pctMinor;
+    const recMinor = (vatMinor * clampedPct + BigInt(5000)) / BigInt(10000);
+    const costMinor = vatMinor - recMinor;
+    return {
+      recoverable: moneyDecimal(recMinor),
+      addedToCost: moneyDecimal(costMinor),
+    };
+  }, [totals.vat, form.recoverablePercent, form.taxTreatment]);
+
+  const vehicleSelectValue = manualPlateMode
+    ? "MANUAL"
+    : form.vehicleId
+      ? form.vehicleId
+      : form.vehiclePlate
+        ? vehicles.find((v) => v.plateNumberAr === form.vehiclePlate)?.id || "MANUAL"
+        : "";
 
   return (
     <dialog
@@ -251,18 +334,28 @@ export default function PurchaseForm({
         <header className="flex items-center justify-between gap-4 border-b theme-border px-6 py-4 bg-[var(--bg-card-subtle)] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center shrink-0">
-              {isReturn ? <RotateCcw className="w-5 h-5" aria-hidden="true" /> : <Receipt className="w-5 h-5" aria-hidden="true" />}
+              {isReturn ? (
+                <RotateCcw className="w-5 h-5" aria-hidden="true" />
+              ) : (
+                <Receipt className="w-5 h-5" aria-hidden="true" />
+              )}
             </div>
             <div>
-              <h2 id="purchase-title" className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                {ui(existing
-                  ? `تعديل مستند ${existing.voucher}`
-                  : isReturn
-                    ? "تسجيل مرتجع مشتريات (إشعار دائن من مورد)"
-                    : "تسجيل فاتورة مصروف أو مشتريات")}
+              <h2
+                id="purchase-title"
+                className="text-base sm:text-lg font-semibold text-[var(--text-main)]"
+              >
+                {ui(
+                  existing
+                    ? `تعديل مستند ${existing.voucher}`
+                    : isReturn
+                      ? "تسجيل مرتجع مشتريات (إشعار دائن من مورد)"
+                      : "تسجيل فاتورة مصروف أو مشتريات",
+                )}
               </h2>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {ui("تُحفظ الفاتورة والضريبة والقيود المحاسبية بالريال السعودي تلقائياً.")}</p>
+                {ui("تُحفظ الفاتورة والضريبة بالريال السعودي مع أرشفة المستند.")}
+              </p>
             </div>
           </div>
           <button
@@ -276,25 +369,36 @@ export default function PurchaseForm({
           </button>
         </header>
 
-        {/* Modal Body - Scrollable 3 Clean Sections (§9) */}
+        {/* Modal Body */}
         <div className="space-y-6 px-6 py-6 overflow-y-auto flex-1">
           {/* Document Type Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               disabled={Boolean(existing)}
-              onClick={() => update({ documentType: "PURCHASE_INVOICE", originalPurchaseId: undefined })}
+              onClick={() =>
+                update({
+                  documentType: "PURCHASE_INVOICE",
+                  originalPurchaseId: undefined,
+                })
+              }
               className={`min-h-11 p-3 rounded-2xl border text-start transition cursor-pointer flex items-center gap-2.5 ${
                 !isReturn
                   ? "bg-[var(--accent-surface)] border-[var(--accent-gold)] ring-1 ring-[var(--accent-gold)]/30"
                   : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
               }`}
             >
-              <Receipt className={`w-4 h-4 shrink-0 ${!isReturn ? "text-[var(--accent-gold)]" : "text-[var(--text-muted)]"}`} aria-hidden="true" />
+              <Receipt
+                className={`w-4 h-4 shrink-0 ${!isReturn ? "text-[var(--accent-gold)]" : "text-[var(--text-muted)]"}`}
+                aria-hidden="true"
+              />
               <div>
                 <strong className="text-xs font-semibold block text-[var(--text-main)]">
-                  {ui("فاتورة مشتريات / مصروف")}</strong>
-                <span className="text-xs text-[var(--text-muted)]">{ui("إثبات تكلفة جديدة للأسطول")}</span>
+                  {ui("فاتورة مشتريات / مصروف")}
+                </strong>
+                <span className="text-xs text-[var(--text-muted)]">
+                  {ui("إثبات تكلفة جديدة للأسطول")}
+                </span>
               </div>
             </button>
 
@@ -308,16 +412,22 @@ export default function PurchaseForm({
                   : "theme-card border-[var(--control-border)] hover:border-[var(--accent-gold)]"
               }`}
             >
-              <RotateCcw className={`w-4 h-4 shrink-0 ${isReturn ? "text-rose-700 dark:text-rose-400" : "text-[var(--text-muted)]"}`} aria-hidden="true" />
+              <RotateCcw
+                className={`w-4 h-4 shrink-0 ${isReturn ? "text-rose-700 dark:text-rose-400" : "text-[var(--text-muted)]"}`}
+                aria-hidden="true"
+              />
               <div>
                 <strong className="text-xs font-semibold block text-[var(--text-main)]">
-                  {ui("مرتجع مورد (إشعار دائن)")}</strong>
-                <span className="text-xs text-[var(--text-muted)]">{ui("رد بضاعة أو تخفيض مصروف")}</span>
+                  {ui("مرتجع مورد (إشعار دائن)")}
+                </strong>
+                <span className="text-xs text-[var(--text-muted)]">
+                  {ui("رد بضاعة أو تخفيض مصروف")}
+                </span>
               </div>
             </button>
           </div>
 
-          {/* Supplier Return Picker (§10) */}
+          {/* Supplier Return Picker */}
           {isReturn && (
             <section className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 space-y-3">
               <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 text-xs font-semibold">
@@ -326,7 +436,8 @@ export default function PurchaseForm({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-bold text-[var(--text-main)]">
-                  {ui("بحث عن الفاتورة الأصلية")}<input
+                  {ui("بحث عن الفاتورة الأصلية")}
+                  <input
                     disabled={Boolean(existing)}
                     className={INPUT_STYLE}
                     value={originalSearch}
@@ -335,7 +446,8 @@ export default function PurchaseForm({
                   />
                 </label>
                 <label className="text-xs font-bold text-[var(--text-main)]">
-                  {ui("اختر فاتورة مرحّلة *")}<select
+                  {ui("اختر فاتورة معتمدة *")}
+                  <select
                     required
                     disabled={Boolean(existing) || isSelecting}
                     aria-label={ui("فاتورة المورد الأصلية")}
@@ -345,25 +457,32 @@ export default function PurchaseForm({
                   >
                     <option value="">{ui("اختر فاتورة من القائمة")}</option>
                     {form.originalPurchaseId &&
-                      !originals.data?.items.some((v) => v.id === form.originalPurchaseId) && (
+                      !originals.data?.items.some(
+                        (v) => v.id === form.originalPurchaseId,
+                      ) && (
                         <option value={form.originalPurchaseId}>
-                          {ui("الفاتورة الأصلية المحددة ·")} {form.supplierName}
+                          {ui("الفاتورة الأصلية المحددة ·")}{" "}
+                          {form.supplierName}
                         </option>
                       )}
                     {originals.data?.items.map((v) => (
                       <option key={v.id} value={v.id}>
-                        EXP-{String(v.voucherNumber).padStart(5, "0")} · {v.supplierName} · {v.invoiceNumber}
+                        EXP-{String(v.voucherNumber).padStart(5, "0")} ·{" "}
+                        {v.supplierName} · {v.invoiceNumber}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
               <p className="text-xs text-rose-700 dark:text-rose-300">
-                {ui("يتم نسخ بيانات المورد والحساب والضريبة تلقائياً من الأصل، ولا يتجاوز مبلغ المرتجع الرصيد المتبقي.")}</p>
+                {ui(
+                  "يتم نسخ بيانات المورد والحساب والضريبة تلقائياً من الأصل، ولا يتجاوز مبلغ المرتجع الرصيد المتبقي.",
+                )}
+              </p>
             </section>
           )}
 
-          {/* SECTION 1: Expense & Supplier Data (§9.1) */}
+          {/* SECTION 1: Expense & Supplier Data */}
           <section className="p-4 sm:p-5 rounded-2xl theme-card border theme-border space-y-4">
             <div className="border-b theme-border pb-2.5">
               <h3 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
@@ -371,12 +490,14 @@ export default function PurchaseForm({
                 <span>{ui("١. بيانات المصروف والمورد")}</span>
               </h3>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {ui("أدخل بيانات المورد ورقم المستند الورقي وتصنيف الخدمة أو الشراء.")}</p>
+                {ui("أدخل بيانات المورد ورقم المستند وتصنيف المصروف والمركبة.")}
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("اسم المورد *")}<input
+                {ui("اسم المورد *")}
+                <input
                   required
                   readOnly={isReturn}
                   maxLength={200}
@@ -388,7 +509,8 @@ export default function PurchaseForm({
               </label>
 
               <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("الرقم الضريبي للمورد")} {ui(isRecoverable ? "*" : "(اختياري)")}
+                {ui("الرقم الضريبي للمورد")}{" "}
+                {ui(isRecoverable ? "*" : "(اختياري)")}
                 <input
                   required={isRecoverable}
                   readOnly={isReturn}
@@ -399,12 +521,15 @@ export default function PurchaseForm({
                   placeholder="300000000000003"
                   className={`${INPUT_STYLE} font-mono`}
                   value={form.supplierVatNumber || ""}
-                  onChange={(e) => update({ supplierVatNumber: e.target.value })}
+                  onChange={(e) =>
+                    update({ supplierVatNumber: e.target.value })
+                  }
                 />
               </label>
 
               <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("رقم مستند المورد (رقم الفاتورة) *")}<input
+                {ui("رقم مستند المورد (رقم الفاتورة) *")}
+                <input
                   required
                   maxLength={200}
                   className={INPUT_STYLE}
@@ -415,11 +540,16 @@ export default function PurchaseForm({
               </label>
 
               <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("تصنيف المصروف *")}<select
+                {ui("تصنيف المصروف *")}
+                <select
                   disabled={isReturn}
                   className={INPUT_STYLE}
                   value={form.category}
-                  onChange={(e) => changeCategory(e.target.value as PurchaseInput["category"])}
+                  onChange={(e) =>
+                    changeCategory(
+                      e.target.value as PurchaseInput["category"],
+                    )
+                  }
                 >
                   {Object.entries(EXPENSE_CATEGORIES).map(([catKey, label]) => (
                     <option key={catKey} value={catKey}>
@@ -430,7 +560,8 @@ export default function PurchaseForm({
               </label>
 
               <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("تاريخ فاتورة المورد *")}<input
+                {ui("تاريخ فاتورة المورد *")}
+                <input
                   required
                   type="date"
                   className={INPUT_STYLE}
@@ -438,68 +569,130 @@ export default function PurchaseForm({
                   onChange={(e) =>
                     update({
                       issueDate: e.target.value,
-                      ...(form.vatDate === form.issueDate ? { vatDate: e.target.value } : {}),
+                      ...(form.vatDate === form.issueDate
+                        ? { vatDate: e.target.value }
+                        : {}),
                     })
                   }
                 />
               </label>
 
               <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("تاريخ احتساب الضريبة والترحيل *")}<input
-                  required
-                  type="date"
-                  min={form.issueDate}
-                  className={INPUT_STYLE}
-                  value={form.vatDate}
-                  onChange={(e) => update({ vatDate: e.target.value })}
-                />
-              </label>
-
-              <label className="text-xs font-bold text-[var(--text-main)] sm:col-span-2">
-                {ui("لوحة المركبة المرتبطة")}{" "}
-                <span className="text-[var(--text-muted)] font-normal">{ui("(اختياري للمصروفات الخاصة بمركبة معينة)")}</span>
+                {ui("المركبة المرتبطة")}{" "}
+                <span className="text-[var(--text-muted)] font-normal">
+                  {ui("(اختياري)")}
+                </span>
                 <div className="relative">
-                  <Truck className="w-4 h-4 text-[var(--text-muted)] absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
-                  <input
-                    maxLength={50}
-                    className={`${INPUT_STYLE} ps-10`}
-                    placeholder={ui("مثال: أ ب ج 1234")}
-                    value={form.vehiclePlate || ""}
-                    onChange={(e) => update({ vehiclePlate: e.target.value })}
+                  <Truck
+                    className="w-4 h-4 text-[var(--text-muted)] absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                    aria-hidden="true"
                   />
+                  <select
+                    disabled={isReturn}
+                    className={`${INPUT_STYLE} ps-10`}
+                    value={vehicleSelectValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                        setManualPlateMode(false);
+                        update({ vehicleId: undefined, vehiclePlate: "" });
+                      } else if (val === "MANUAL") {
+                        setManualPlateMode(true);
+                        update({ vehicleId: undefined });
+                      } else {
+                        const found = vehicles.find((v) => v.id === val);
+                        setManualPlateMode(false);
+                        update({
+                          vehicleId: found?.id,
+                          vehiclePlate: found?.plateNumberAr || "",
+                        });
+                      }
+                    }}
+                  >
+                    <option value="">
+                      {text("— مصروف عام (بدون مركبة) —", "— General (No vehicle) —")}
+                    </option>
+                    {vehicles.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.plateNumberAr} · {v.make} {v.model}
+                      </option>
+                    ))}
+                    <option value="MANUAL">
+                      {text("إدخال رقم لوحة يدوياً...", "Enter plate manually...")}
+                    </option>
+                  </select>
                 </div>
               </label>
+
+              {manualPlateMode && (
+                <label className="text-xs font-bold text-[var(--text-main)] sm:col-span-2">
+                  {ui("لوحة المركبة المرتبطة (إدخال يدوي)")}
+                  <input
+                    maxLength={50}
+                    readOnly={isReturn}
+                    className={INPUT_STYLE}
+                    placeholder={ui("مثال: أ ب ج 1234")}
+                    value={form.vehiclePlate || ""}
+                    onChange={(e) =>
+                      update({ vehicleId: undefined, vehiclePlate: e.target.value })
+                    }
+                  />
+                </label>
+              )}
             </div>
           </section>
 
-          {/* SECTION 2: Amount & Tax Treatment (§9.2) */}
+          {/* SECTION 2: Amount & Tax Treatment */}
           <section className="p-4 sm:p-5 rounded-2xl theme-card border theme-border space-y-4">
-            <div className="border-b theme-border pb-2.5">
-              <h3 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
-                <Percent className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
-                <span>{ui("٢. المبلغ والضريبة")}</span>
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {ui("حدد طريقة إدخال السعر وخصم ضريبة المدخلات 15% في الإقرار الضريبي.")}</p>
-            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-2.5">
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-[var(--accent-gold)]" aria-hidden="true" />
+                  <span>{ui("٢. المبلغ والضريبة")}</span>
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {ui("اختر طريقة إدخال السعر وخصم ضريبة المدخلات.")}
+                </p>
+              </div>
 
-            {/* Input Mode Toggle (Before VAT vs Inclusive 15%) */}
-            <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border flex flex-wrap items-center justify-between gap-2">
-              <label htmlFor="inclusive-toggle" className="inline-flex min-h-11 items-center gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer">
-                <Checkbox
-                  id="inclusive-toggle"
-                  checked={inclusive}
+              {/* Clean Segmented Input Mode Control */}
+              <div
+                role="group"
+                aria-label={text("طريقة إدخال السعر", "Price entry mode")}
+                className="inline-flex rounded-xl border border-[var(--control-border)] bg-[var(--bg-card-subtle)] p-1 gap-1"
+              >
+                <button
+                  type="button"
                   disabled={isZeroTaxExpense}
-                  onChange={(e) => {
-                    setInclusive(e.target.checked);
-                    setGross(purchasePreview(form.netAmount, form.vatAmount).total);
+                  aria-pressed={!inclusive}
+                  onClick={() => setInclusive(false)}
+                  className={`min-h-9 rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer disabled:opacity-50 ${
+                    !inclusive
+                      ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  }`}
+                >
+                  {text("قبل الضريبة", "Before VAT")}
+                </button>
+                <button
+                  type="button"
+                  disabled={isZeroTaxExpense || form.taxTreatment !== "STANDARD"}
+                  aria-pressed={inclusive}
+                  onClick={() => {
+                    setInclusive(true);
+                    setGross(
+                      purchasePreview(form.netAmount, form.vatAmount).total,
+                    );
                   }}
-                />
-                <span>{ui("إدخال الإجمالي شامل 15% من الإيصال أو الفاتورة")}</span>
-              </label>
-              <span className="text-xs text-[var(--text-muted)]">
-                {ui(inclusive ? "احتساب الصافي والضريبة عكسياً" : "إدخال الصافي قبل الضريبة")}
-              </span>
+                  className={`min-h-9 rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer disabled:opacity-50 ${
+                    inclusive
+                      ? "bg-[var(--accent-surface)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/45"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  }`}
+                >
+                  {text("شامل 15%", "Includes 15%")}
+                </button>
+              </div>
             </div>
 
             {/* Amount Fields */}
@@ -518,7 +711,10 @@ export default function PurchaseForm({
                       value={gross}
                       onChange={(e) => {
                         setGross(e.target.value);
-                        const v = purchaseInclusive(e.target.value, form.taxTreatment === "STANDARD");
+                        const v = purchaseInclusive(
+                          e.target.value,
+                          form.taxTreatment === "STANDARD",
+                        );
                         update({ netAmount: v.net, vatAmount: v.vat });
                       }}
                     />
@@ -579,7 +775,9 @@ export default function PurchaseForm({
 
               {!inclusive && (
                 <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border flex flex-col justify-center">
-                  <span className="text-xs text-[var(--text-muted)]">{ui("الإجمالي الشامل المحسوب:")}</span>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {ui("الإجمالي الشامل المحسوب:")}
+                  </span>
                   <strong className="text-base font-semibold font-mono text-[var(--text-main)] mt-0.5">
                     <bdi dir="ltr">{totals.total}</bdi> {ui("ر.س")}
                   </strong>
@@ -587,48 +785,107 @@ export default function PurchaseForm({
               )}
             </div>
 
-            {/* Tax Deductibility Question (§9.2) */}
+            {/* Live Breakdown Strip */}
+            <div className="rounded-xl bg-[var(--bg-card-subtle)] border theme-border px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-[var(--text-muted)]">
+                {text("الصافي", "Net")}:{" "}
+                <strong className="font-mono text-[var(--text-main)]" dir="ltr">
+                  {totals.net} {ui("ر.س")}
+                </strong>
+              </span>
+              <span className="text-[var(--text-muted)]">
+                {text("الضريبة", "VAT")}:{" "}
+                <strong className="font-mono text-[var(--accent-gold)]" dir="ltr">
+                  {totals.vat} {ui("ر.س")}
+                </strong>
+              </span>
+              <span className="text-[var(--text-muted)]">
+                {text("الإجمالي", "Total")}:{" "}
+                <strong className="font-mono text-[var(--text-main)]" dir="ltr">
+                  {totals.total} {ui("ر.س")}
+                </strong>
+              </span>
+            </div>
+
+            {/* Tax Deductibility Question */}
             {form.taxTreatment === "STANDARD" ? (
               <div className="p-4 rounded-xl border border-[var(--accent-gold)]/40 bg-[var(--accent-surface)]/75 space-y-3">
                 <label className="flex min-h-11 items-start gap-2.5 text-xs font-semibold text-[var(--text-main)] cursor-pointer">
                   <Checkbox
                     disabled={isReturn}
                     checked={isRecoverable}
-                    onChange={(e) => update({ recoverablePercent: e.target.checked ? "100" : "0" })}
+                    onChange={(e) =>
+                      update({
+                        recoverablePercent: e.target.checked ? "100" : "0",
+                      })
+                    }
                     className="mt-0.5"
                   />
                   <div>
-                    <span>{ui("هل يمكن خصم ضريبة هذه الفاتورة في الإقرار الضريبي؟")}</span>
+                    <span>
+                      {ui("هل يمكن خصم ضريبة هذه الفاتورة في الإقرار الضريبي؟")}
+                    </span>
                     <p className="text-xs text-[var(--text-muted)] font-normal mt-0.5">
-                      {ui("يُشترط توفر فاتورة ضريبية رسمية باسم المنشأة وتحتوي على الرقم الضريبي للمورد.")}</p>
+                      {ui(
+                        "يُشترط توفر فاتورة ضريبية رسمية باسم المنشأة وتحتوي على الرقم الضريبي للمورد.",
+                      )}
+                    </p>
                   </div>
                 </label>
 
                 {isRecoverable && (
-                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-[var(--accent-gold)]/25">
-                    <label className="text-xs font-bold text-[var(--text-main)]">
-                      {ui("نسبة الخصم القابلة للاسترداد (%) *")}<input
-                        required
-                        readOnly={isReturn}
-                        type="text"
-                        inputMode="decimal"
-                        dir="ltr"
-                        className={`${INPUT_STYLE} font-mono`}
-                        value={form.recoverablePercent}
-                        onChange={(e) => update({ recoverablePercent: e.target.value })}
-                      />
-                    </label>
+                  <div className="space-y-3 pt-2 border-t border-[var(--accent-gold)]/25">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="text-xs font-bold text-[var(--text-main)]">
+                        {ui("نسبة الخصم القابلة للاسترداد (%) *")}
+                        <input
+                          required
+                          readOnly={isReturn}
+                          type="text"
+                          inputMode="decimal"
+                          dir="ltr"
+                          className={`${INPUT_STYLE} font-mono`}
+                          value={form.recoverablePercent}
+                          onChange={(e) =>
+                            update({ recoverablePercent: e.target.value })
+                          }
+                        />
+                      </label>
 
-                    <label className="text-xs font-bold text-[var(--text-main)]">
-                      {ui("مرجع المستند الضريبي المؤيد *")}<input
-                        required
-                        maxLength={200}
-                        placeholder={ui("مثال: فاتورة ضريبية 9481 / إيصال إلكتروني")}
-                        className={INPUT_STYLE}
-                        value={form.evidenceReference || ""}
-                        onChange={(e) => update({ evidenceReference: e.target.value })}
-                      />
-                    </label>
+                      <label className="text-xs font-bold text-[var(--text-main)]">
+                        {ui("مرجع المستند الضريبي المؤيد *")}
+                        <input
+                          required
+                          maxLength={200}
+                          placeholder={ui(
+                            "مثال: فاتورة ضريبية 9481 / إيصال إلكتروني",
+                          )}
+                          className={INPUT_STYLE}
+                          value={form.evidenceReference || ""}
+                          onChange={(e) =>
+                            update({ evidenceReference: e.target.value })
+                          }
+                        />
+                      </label>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 text-xs">
+                      <div className="rounded-lg bg-[var(--bg-card)] border theme-border px-3 py-2 flex items-center justify-between">
+                        <span className="text-[var(--text-muted)]">
+                          {text("ضريبة تُخصم بالإقرار", "Deductible VAT")}
+                        </span>
+                        <strong className="font-mono text-emerald-700 dark:text-emerald-300" dir="ltr">
+                          {taxSplit.recoverable} {ui("ر.س")}
+                        </strong>
+                      </div>
+                      <div className="rounded-lg bg-[var(--bg-card)] border theme-border px-3 py-2 flex items-center justify-between">
+                        <span className="text-[var(--text-muted)]">
+                          {text("تُضاف لتكلفة المصروف", "Added to expense")}
+                        </span>
+                        <strong className="font-mono text-[var(--text-main)]" dir="ltr">
+                          {taxSplit.addedToCost} {ui("ر.س")}
+                        </strong>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -636,12 +893,17 @@ export default function PurchaseForm({
               <div className="p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border flex items-center gap-2 text-xs text-[var(--text-muted)]">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0" />
                 <span>
-                  {ui("هذا المصروف (")}{ui(TAX_TREATMENTS[form.taxTreatment])}{ui(") غير خاضع لضريبة المدخلات وتم ضبط الضريبة على 0.00 ر.س لضمان دقة إقرار هيئة الزكاة.")}</span>
+                  {ui("هذا المصروف (")}
+                  {ui(TAX_TREATMENTS[form.taxTreatment])}
+                  {ui(
+                    ") غير خاضع لضريبة المدخلات وتم ضبط الضريبة على 0.00 ر.س لضمان دقة إقرار هيئة الزكاة.",
+                  )}
+                </span>
               </div>
             )}
           </section>
 
-          {/* SECTION 3: Payment, Attachments & Notes (§9.3) */}
+          {/* SECTION 3: Payment, Attachments & Notes */}
           <section className="p-4 sm:p-5 rounded-2xl theme-card border theme-border space-y-4">
             <div className="border-b theme-border pb-2.5">
               <h3 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
@@ -649,46 +911,110 @@ export default function PurchaseForm({
                 <span>{ui("٣. طريقة الدفع والمرفقات")}</span>
               </h3>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {ui("حدد وسيلة السداد للمورد وأرفق صورة أو PDF الفاتورة للأرشفة.")}</p>
+                {ui("حدد كيف تم السداد للمورد وأرفق صورة أو PDF الفاتورة.")}
+              </p>
+            </div>
+
+            {/* Clean Payment Method Cards */}
+            <div className="space-y-2.5">
+              <span className="text-xs font-bold text-[var(--text-main)] block">
+                {ui("كيف تم سداد المبلغ؟ *")}
+              </span>
+              <div className="grid gap-2.5 sm:grid-cols-3">
+                {[
+                  {
+                    code: "2101",
+                    label: text("آجل على المورد", "Pay Later"),
+                    sub: text("يُسدد لاحقاً", "Due to supplier"),
+                    icon: Receipt,
+                  },
+                  {
+                    code: "1102",
+                    label: text("تحويل بنكي", "Bank Transfer"),
+                    sub: text("مدفوع من البنك", "Paid from bank"),
+                    icon: Landmark,
+                  },
+                  {
+                    code: "1101",
+                    label: text("نقداً", "Cash"),
+                    sub: text("مدفوع من الصندوق", "Paid in cash"),
+                    icon: Wallet,
+                  },
+                ].map((opt) => {
+                  const Icon = opt.icon;
+                  const active = form.paymentAccountCode === opt.code;
+                  return (
+                    <button
+                      key={opt.code}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => update({ paymentAccountCode: opt.code })}
+                      className={`min-h-11 p-3 rounded-xl border text-start transition flex items-center gap-2.5 cursor-pointer ${
+                        active
+                          ? "border-[var(--accent-gold)] bg-[var(--accent-surface)] ring-1 ring-[var(--accent-gold)]/30"
+                          : "bg-[var(--bg-card)] border-[var(--control-border)] hover:border-[var(--accent-gold)]/55"
+                      }`}
+                    >
+                      <Icon
+                        className={`w-4 h-4 shrink-0 ${active ? "text-[var(--accent-gold)]" : "text-[var(--text-muted)]"}`}
+                        aria-hidden="true"
+                      />
+                      <div className="min-w-0">
+                        <strong className="text-xs font-semibold block text-[var(--text-main)]">
+                          {opt.label}
+                        </strong>
+                        <span className="text-[11px] text-[var(--text-muted)]">
+                          {opt.sub}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {extraCashBank.length > 0 && (
+                <label className="text-xs font-bold text-[var(--text-muted)] block pt-1">
+                  {text("أو اختر حساب دفع آخر:", "Or select another cash/bank account:")}
+                  <select
+                    className={INPUT_STYLE}
+                    value={form.paymentAccountCode}
+                    onChange={(e) =>
+                      update({ paymentAccountCode: e.target.value })
+                    }
+                  >
+                    <option value="2101">
+                      {text("آجل على المورد", "Pay later")}
+                    </option>
+                    {cashBankAccounts.map((acc) => (
+                      <option key={acc.code} value={acc.code}>
+                        {isEn && acc.nameEn ? acc.nameEn : acc.nameAr} ({acc.code})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("كيف تم سداد المبلغ؟ *")}<select
-                  className={INPUT_STYLE}
-                  value={form.paymentAccountCode}
-                  onChange={(e) => update({ paymentAccountCode: e.target.value })}
-                >
-                  <option value="2101">{ui("آجل على حساب المورد (ذمم دائنة)")}</option>
-                  {cashBankAccounts.length > 0 ? (
-                    cashBankAccounts.map((acc) => (
-                      <option key={acc.code} value={acc.code}>
-                        {acc.code} · {ui.language === "en" && acc.nameEn ? acc.nameEn : ui(acc.nameAr)}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="1102">{ui("تحويل بنكي - البنك الأهلي SNB")}</option>
-                      <option value="1101">{ui("نقداً من الصندوق الرئيسي")}</option>
-                    </>
-                  )}
-                </select>
-              </label>
-
-              <label className="text-xs font-bold text-[var(--text-main)]">
-                {ui("مرفق فاتورة المورد (PDF أو صورة)")}<div className="relative mt-1.5">
+              <label className="text-xs font-bold text-[var(--text-main)] sm:col-span-2">
+                {ui("مرفق فاتورة المورد (PDF أو صورة)")}
+                <div className="relative mt-1.5">
                   <input
                     type="file"
                     accept="application/pdf,image/png,image/jpeg,image/webp"
                     className="block w-full text-xs text-[var(--text-muted)] file:me-3 file:rounded-xl file:border file:border-[var(--accent-gold)]/35 file:bg-[var(--accent-surface)] file:px-3 file:py-2.5 file:text-xs file:font-bold file:text-[var(--accent-gold)] cursor-pointer"
-                    onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      setAttachmentFile(e.target.files?.[0] || null)
+                    }
                   />
                 </div>
               </label>
 
               <label className="text-xs font-bold text-[var(--text-main)] sm:col-span-2">
                 {ui("ملاحظات أو بيان إضافي")}{" "}
-                <span className="text-[var(--text-muted)] font-normal">{ui("(اختياري)")}</span>
+                <span className="text-[var(--text-muted)] font-normal">
+                  {ui("(اختياري)")}
+                </span>
                 <textarea
                   maxLength={1000}
                   rows={2}
@@ -701,71 +1027,88 @@ export default function PurchaseForm({
             </div>
 
             {/* Posting Checkbox */}
-            <label className="flex min-h-11 items-center gap-2.5 text-xs font-semibold text-[var(--text-main)] cursor-pointer pt-2">
+            <label className="flex min-h-11 items-center gap-2.5 text-xs font-semibold text-[var(--text-main)] cursor-pointer pt-1">
               <Checkbox
                 disabled={existing?.postingStatus === "POSTED"}
                 checked={form.postImmediately !== false}
                 onChange={(e) => update({ postImmediately: e.target.checked })}
               />
-              <span>{ui("اعتماد وترحيل المصروف فوراً إلى الحسابات والإقرار الضريبي")}</span>
+              <span>
+                {ui("اعتماد المصروف فوراً لإدراجه في التقارير والإقرار الضريبي")}
+              </span>
             </label>
 
-            {/* Collapsible Details for Accountant (§2, §9) */}
-            <div className="pt-2">
-              <button
-                type="button"
-                aria-expanded={showAccountantDetails}
-                onClick={() => setShowAccountantDetails((v) => !v)}
-                className="inline-flex min-h-11 sm:min-h-8 items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] transition cursor-pointer"
-              >
-                <ChevronDown className={`size-3.5 transition-transform ${showAccountantDetails ? "rotate-180" : ""}`} aria-hidden="true" />
-                <span>{ui("تفاصيل للمحاسب (تلقائية)")}</span>
-              </button>
+            {/* Collapsible Details for Accountant (Native <details>) */}
+            <details
+              open={Boolean(existing && existing.vatDate !== existing.issueDate)}
+              className="pt-2 border-t theme-border"
+            >
+              <summary className="min-h-11 sm:min-h-8 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--accent-gold)] cursor-pointer">
+                <span>{ui("تفاصيل للمحاسب (تاريخ الضريبة والحساب المحاسبي)")}</span>
+              </summary>
 
-              {showAccountantDetails && (
-                <div className="mt-3 p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border grid gap-3 sm:grid-cols-2 text-xs animate-in fade-in">
-                  <label className="font-bold text-[var(--text-main)]">
-                    {ui("حساب المصروف (المدين):")}<select
-                      disabled={isReturn}
-                      className={INPUT_STYLE}
-                      value={form.accountCode}
-                      onChange={(e) => update({ accountCode: e.target.value })}
-                    >
-                      {accounts.data?.items
-                        .filter(
-                          (a) =>
-                            a.isActive &&
-                            a.isPosting &&
-                            ["EXPENSE", "ASSET"].includes(a.type) &&
-                            !["1101", "1102", "1103", "1104"].includes(a.code)
-                        )
-                        .map((a) => (
-                          <option key={a.code} value={a.code}>
-                            {a.code} · {(ui.language === "en" && a.nameEn ? a.nameEn : ui(a.nameAr))}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
+              <div className="mt-3 p-3.5 rounded-xl bg-[var(--bg-card-subtle)] border theme-border grid gap-3 sm:grid-cols-3 text-xs">
+                <label className="font-bold text-[var(--text-main)]">
+                  {ui("تاريخ احتساب الضريبة *")}
+                  <input
+                    required
+                    type="date"
+                    min={form.issueDate}
+                    className={INPUT_STYLE}
+                    value={form.vatDate}
+                    onChange={(e) => update({ vatDate: e.target.value })}
+                  />
+                </label>
 
-                  <label className="font-bold text-[var(--text-main)]">
-                    {ui("المعاملة الضريبية الرسمية:")}<select
-                      disabled={isReturn || isZeroTaxExpense}
-                      className={INPUT_STYLE}
-                      value={form.taxTreatment}
-                      onChange={(e) =>
-                        update({ taxTreatment: e.target.value as PurchaseInput["taxTreatment"] })
-                      }
-                    >
-                      {Object.entries(TAX_TREATMENTS).map(([tKey, label]) => (
-                        <option key={tKey} value={tKey}>
-                          {ui(label)}
+                <label className="font-bold text-[var(--text-main)]">
+                  {ui("حساب المصروف:")}
+                  <select
+                    disabled={isReturn}
+                    className={INPUT_STYLE}
+                    value={form.accountCode}
+                    onChange={(e) => update({ accountCode: e.target.value })}
+                  >
+                    {accounts.data?.items
+                      .filter(
+                        (a) =>
+                          a.isActive &&
+                          a.isPosting &&
+                          ["EXPENSE", "ASSET"].includes(a.type) &&
+                          !["1101", "1102", "1103", "1104"].includes(a.code),
+                      )
+                      .map((a) => (
+                        <option key={a.code} value={a.code}>
+                          {a.code} ·{" "}
+                          {ui.language === "en" && a.nameEn
+                            ? a.nameEn
+                            : ui(a.nameAr)}
                         </option>
                       ))}
-                    </select>
-                  </label>
-                </div>
-              )}
-            </div>
+                  </select>
+                </label>
+
+                <label className="font-bold text-[var(--text-main)]">
+                  {ui("المعاملة الضريبية:")}
+                  <select
+                    disabled={isReturn || isZeroTaxExpense}
+                    className={INPUT_STYLE}
+                    value={form.taxTreatment}
+                    onChange={(e) =>
+                      update({
+                        taxTreatment: e.target
+                          .value as PurchaseInput["taxTreatment"],
+                      })
+                    }
+                  >
+                    {Object.entries(TAX_TREATMENTS).map(([tKey, label]) => (
+                      <option key={tKey} value={tKey}>
+                        {ui(label)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </details>
           </section>
 
           {/* Error Notice */}
@@ -783,7 +1126,9 @@ export default function PurchaseForm({
         {/* Modal Footer */}
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t theme-border px-6 py-4 bg-[var(--bg-card-subtle)] shrink-0">
           <div className="text-xs">
-            <span className="text-[var(--text-muted)]">{ui("الإجمالي النهائي:")}</span>{" "}
+            <span className="text-[var(--text-muted)]">
+              {ui("الإجمالي النهائي:")}
+            </span>{" "}
             <strong className="font-mono font-semibold text-[var(--text-main)] text-sm">
               <bdi dir="ltr">{totals.total}</bdi> {ui("ر.س")}
             </strong>
@@ -796,7 +1141,8 @@ export default function PurchaseForm({
               onClick={onClose}
               className="secondary-btn min-h-11 sm:min-h-9 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold cursor-pointer"
             >
-              {ui("إلغاء")}</button>
+              {ui("إلغاء")}
+            </button>
             <button
               type="submit"
               disabled={isSaving || isSelecting || accounts.isLoading}

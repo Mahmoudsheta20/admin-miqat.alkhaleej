@@ -1,0 +1,558 @@
+{
+  "meta": {
+    "project": "Miqat Al-Khaleej — Complete Enterprise Transport & Financial Suite",
+    "targetDurationSec": 145,
+    "audience": "Business owners, operations managers, financial controllers, and enterprise clients",
+    "demoUrl": "http://127.0.0.1:3429",
+    "outputVideo": "output/miqat-full-system-v3.mp4",
+    "outputSubtitlesAr": "output/miqat-full-system-v3-ar.srt",
+    "outputSubtitlesEn": "output/miqat-full-system-v3-en.srt",
+    "ttsEngine": "elevenlabs",
+    "modelId": "eleven_v4",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+    "elevenlabs": {
+      "modelId": "eleven_v4",
+      "languageCode": "ar",
+      "outputFormat": "mp3_44100_128",
+      "stability": 0.64,
+      "similarityBoost": 0.78,
+      "useSpeakerBoost": true,
+      "preferredVoices": [
+        {
+          "id": "cFUFIbKkO2iZFwS8cRnY",
+          "label": "Nasser AlJubaily - Authentic Saudi Pro"
+        },
+        {
+          "id": "MI88rOZjXbH22N8KHXUo",
+          "label": "Ali - Calm & Deep Arabic Saudi Narrator"
+        },
+        {
+          "id": "JBFqnCBsd6RMkjVDRZzb",
+          "label": "George - Warm Storyteller (Premade)"
+        },
+        {
+          "id": "onwK4e9ZLuTAKqWW03F9",
+          "label": "Daniel - Steady Broadcaster (Premade)"
+        }
+      ]
+    },
+    "measuredTotalDurationSec": 167.12
+  },
+  "scenes": [
+    {
+      "id": "scene_01",
+      "chapterNum": "01",
+      "titleAr": "لوحة التحكم التنفيذية",
+      "titleEn": "Executive Dashboard",
+      "routes": [
+        "/admin"
+      ],
+      "estimatedDurationSec": 13,
+      "durationMs": 15520,
+      "audioFile": "demo/v3/audio/scene_01.mp3",
+      "narrationAr": "حياكم الله في منظومة ميقات الخليج. من لوحة التحكم التنفيذية تتابع العقود النشطة، وجاهزية الأسطول والكباتن، وإيرادات الربع لحظياً، مع دعم كامل للغتين والوضع الداكن.",
+      "ttsAr": "حَيَّاكُمُ اللَّهُ فِي مَنْظُومَةِ مِيقَاتِ الخَلِيجِ. مِنْ لَوْحَةِ التَّحَكُّمِ التَّنْفِيذِيَّةِ، تُتَابِعُ العُقُودَ النَّشِطَةَ، وَجَاهِزِيَّةَ الأُسْطُولِ وَالكَبَاتِنِ، وَإِيرَادَاتِ الرُّبْعِ لَحْظِيًّا، مَعَ دَعْمٍ كَامِلٍ لِللُّغَتَيْنِ وَالوَضْعِ الدَّاكِنِ.",
+      "narrationEn": "Welcome to Miqat Al-Khaleej. Monitor active contracts, fleet and captain readiness, and quarter revenues live from the Executive Dashboard with bilingual and dark-mode support.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main .grid",
+          "scale": 1.13,
+          "durationMs": 4200
+        },
+        {
+          "action": "glideClick",
+          "target": "button[aria-label='تفعيل الوضع الداكن']",
+          "holdMs": 1200
+        },
+        {
+          "action": "glideClick",
+          "target": "button[aria-label='تفعيل الوضع الفاتح']",
+          "holdMs": 700
+        },
+        {
+          "action": "smoothScroll",
+          "y": 320,
+          "durationMs": 750
+        }
+      ]
+    },
+    {
+      "id": "scene_02",
+      "chapterNum": "02",
+      "titleAr": "أسطول المركبات والفحص الفني",
+      "titleEn": "Fleet Registry & 16-Point Technical Inspections",
+      "routes": [
+        "/admin/fleet",
+        "/admin/inspections"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 14960,
+      "audioFile": "demo/v3/audio/scene_02.mp3",
+      "narrationAr": "في قسم الأسطول تراقب الحافلات وتواريخ الاستمارات والتأمين؛ وفي الفحص الفني يوثّق النظام ستة عشر بند سلامة يومية ترتبط بالعقد مع إرسال ملف PDF على واتساب.",
+      "ttsAr": "فِي قِسْمِ الأُسْطُولِ، تُرَاقِبُ الحَافِلَاتِ وَتَوَارِيخَ الِاسْتِمَارَاتِ وَالتَّأْمِينِ؛ وَفِي الفَحْصِ الفَنِّيِّ، يُوَثِّقُ النِّظَامُ سِتَّةَ عَشَرَ بَنْدَ سَلَامَةٍ يَوْمِيَّةٍ تَرْتَبِطُ بِالعَقْدِ، مَعَ إِرْسَالِ مَلَفِّ بِي دِي إِفْ عَلَى وَاتْسَابْ.",
+      "narrationEn": "In Fleet, monitor buses, registrations, and insurance; in Technical Inspections, 16 daily safety checkpoints link to contracts with WhatsApp PDF dispatch.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/fleet"
+        },
+        {
+          "action": "pause",
+          "durationMs": 1300
+        },
+        {
+          "action": "goto",
+          "target": "/admin/inspections"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('سجل الفحوصات التشغيلية')",
+          "holdMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main table",
+          "scale": 1.13,
+          "durationMs": 4200
+        },
+        {
+          "action": "glideClick",
+          "target": "table tbody tr:first-child button",
+          "holdMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "scene_03",
+      "chapterNum": "03",
+      "titleAr": "العقود الرسمية والتحقق العام",
+      "titleEn": "Official Contracts & Public QR Verification",
+      "routes": [
+        "/admin/contracts",
+        "/admin/contracts/11111111-1111-4111-8111-111111111111"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 16000,
+      "audioFile": "demo/v3/audio/scene_03.mp3",
+      "narrationAr": "تدير عقود النقل والرحلات الخاصة بكامل تفاصيل المسار وكشف الركاب، ويصدر لكل عقد ملف رسمي ورمز QR يتيح للعميل والجهات الرسمية التحقق الفوري من صحة العقد.",
+      "ttsAr": "تُدِيرُ عُقُودَ النَّقْلِ وَالرِّحْلَاتِ الخَاصَّةِ بِكَامِلِ تَفَاصِيلِ المَسَارِ وَكَشْفِ الرُّكَّابِ، وَيَصْدُرُ لِكُلِّ عَقْدٍ مَلَفٌّ رَسْمِيٌّ وَرَمْزُ كْيُو آرْ يُتِيحُ لِلْعَمِيلِ وَالجِهَاتِ الرَّسْمِيَّةِ التَّحَقُّقَ الفَوْرِيَّ مِنْ صِحَّةِ العَقْدِ.",
+      "narrationEn": "Manage transport and VIP charter contracts with route details, passenger manifests, official PDFs, and public QR verification.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/contracts"
+        },
+        {
+          "action": "pause",
+          "durationMs": 1300
+        },
+        {
+          "action": "goto",
+          "target": "/admin/contracts/11111111-1111-4111-8111-111111111111"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main",
+          "scale": 1.13,
+          "durationMs": 4500
+        },
+        {
+          "action": "smoothScroll",
+          "y": 380,
+          "durationMs": 800
+        }
+      ]
+    },
+    {
+      "id": "scene_04",
+      "chapterNum": "04",
+      "titleAr": "الكباتن وبوابة السائق المستقلة",
+      "titleEn": "Captains & Isolated Driver Portal",
+      "routes": [
+        "/admin/captains",
+        "/captain",
+        "/captain/account"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 15520,
+      "audioFile": "demo/v3/audio/scene_04.mp3",
+      "narrationAr": "ومن قسم الكباتن تتابع السائقين وحساباتهم؛ بينما يدخل الكابتن على بوابة مستقلة تماماً عن المالية، يرفع منها فحصه اليومي ويتابع رحلاته وعهدته ومستحقاته.",
+      "ttsAr": "وَمِنْ قِسْمِ الكَبَاتِنِ، تُتَابِعُ السَّائِقِينَ وَحِسَابَاتِهِمْ؛ بَيْنَمَا يَدْخُلُ الكَابْتِنُ عَلَى بَوَّابَةٍ مُسْتَقِلَّةٍ تَمَامًا عَنِ المَالِيَّةِ، يَرْفَعُ مِنْهَا فَحْصَهُ اليَوْمِيَّ، وَيُتَابِعُ رِحْلَاتِهِ وَعُهْدَتَهُ وَمُسْتَحَقَّاتِهِ.",
+      "narrationEn": "Track drivers and accounts in Captains, while drivers use an isolated Captain Portal to submit daily inspections and view trips, custody, and earnings.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/captains"
+        },
+        {
+          "action": "pause",
+          "durationMs": 1300
+        },
+        {
+          "action": "switchContext",
+          "role": "CAPTAIN",
+          "target": "/captain"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main",
+          "scale": 1.13,
+          "durationMs": 4500
+        },
+        {
+          "action": "pause",
+          "durationMs": 950
+        },
+        {
+          "action": "glideClick",
+          "target": "a[href='/captain/account']",
+          "holdMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "scene_05",
+      "chapterNum": "05",
+      "titleAr": "العملاء، العاملون، والمناديب",
+      "titleEn": "Customers, Staff Custody & Representatives",
+      "routes": [
+        "/admin/customers",
+        "/admin/staff",
+        "/admin/representatives"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 16080,
+      "audioFile": "demo/v3/audio/scene_05.mp3",
+      "narrationAr": "وفي إدارة الأشخاص، تحفظ ملفات العملاء وأرقامهم الضريبية، وتضبط حسابات العاملين والعهد والسلف، مع متابعة المناديب والتريبات وعمولات التشغيل في شاشات واضحة.",
+      "ttsAr": "وَفِي إِدَارَةِ الأَشْخَاصِ، تَحْفَظُ مِلَفَّاتِ العُمَلَاءِ وَأَرْقَامَهُمُ الضَّرِيبِيَّةَ، وَتَضْبِطُ حِسَابَاتِ العَامِلِينَ وَالعُهَدِ وَالسُّلَفِ، مَعَ مُتَابَعَةِ المَنَادِيبِ وَالتِّرِيبَاتِ وَعُمُولَاتِ التَّشْغِيلِ فِي شَاشَاتٍ وَاضِحَةٍ.",
+      "narrationEn": "In People Management, store customer profiles and VAT IDs, manage staff custody and advances, and track representatives and trip commissions.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/customers"
+        },
+        {
+          "action": "pause",
+          "durationMs": 1300
+        },
+        {
+          "action": "goto",
+          "target": "/admin/staff"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main",
+          "scale": 1.13,
+          "durationMs": 4000
+        },
+        {
+          "action": "pause",
+          "durationMs": 1200
+        },
+        {
+          "action": "goto",
+          "target": "/admin/representatives"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 240,
+          "durationMs": 700
+        }
+      ]
+    },
+    {
+      "id": "scene_06",
+      "chapterNum": "06",
+      "titleAr": "الفواتير والتحصيل المباشر",
+      "titleEn": "Live Invoices & Direct Collection",
+      "routes": [
+        "/admin/invoices",
+        "/admin/invoices/55555555-5555-4555-8555-555555555502"
+      ],
+      "estimatedDurationSec": 15,
+      "durationMs": 18960,
+      "audioFile": "demo/v3/audio/scene_06.mp3",
+      "narrationAr": "في شاشة الفواتير تظهر حالة السداد الحية فوراً: مدفوعة، جزئية، أو آجلة؛ وداخل تفاصيل الفاتورة تتابع نسبة التحصيل والمبلغ المتبقي بالهللة، وتسجّل أي دفعة بنكية أو نقدية مباشرة.",
+      "ttsAr": "فِي شَاشَةِ الفَوَاتِيرِ، تَظْهَرُ حَالَةُ السَّدَادِ الحَيَّةُ فَوْرًا: مَدْفُوعَةٌ، جُزْئِيَّةٌ، أَوْ آجِلَةٌ؛ وَدَاخِلَ تَفَاصِيلِ الفَاتُورَةِ، تُتَابِعُ نِسْبَةَ التَّحْصِيلِ وَالمَبْلَغَ المُتَبَقِّيَ بِالهَلَلَةِ، وَتُسَجِّلُ أَيَّ دُفْعَةٍ بَنْكِيَّةٍ أَوْ نَقْدِيَّةٍ مُبَاشَرَةً.",
+      "narrationEn": "Invoices show live Paid, Partial, or Unpaid status; inside invoice details, track collection progress to the halala and record bank or cash payments directly.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('جزئي')",
+          "holdMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('كل الحالات')",
+          "holdMs": 450
+        },
+        {
+          "action": "goto",
+          "target": "/admin/invoices/55555555-5555-4555-8555-555555555502"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "section:has-text('حالة السداد والتحصيل')",
+          "scale": 1.13,
+          "durationMs": 4600
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تسجيل دفعة جديدة للعميل')",
+          "holdMs": 1300
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "scene_07",
+      "chapterNum": "07",
+      "titleAr": "معالج إنشاء الفاتورة الضريبية",
+      "titleEn": "4-Stage ZATCA Invoice Wizard",
+      "routes": [
+        "/admin/invoices/new?type=TAX"
+      ],
+      "estimatedDurationSec": 15,
+      "durationMs": 15920,
+      "audioFile": "demo/v3/audio/scene_07.mp3",
+      "narrationAr": "أما إنشاء الفاتورة الضريبية فيتم بأربع خطوات مرتبة: تربط العقد فتتعبأ بيانات العميل تلقائياً، وتُدخل السعر فتُحتسب ضريبة خمسة عشر بالمئة والملخص الجانبي لحظياً.",
+      "ttsAr": "أَمَّا إِنْشَاءُ الفَاتُورَةِ الضَّرِيبِيَّةِ فَيَتِمُّ بِأَرْبَعِ خُطُوَاتٍ مُرَتَّبَةٍ: تَرْبِطُ العَقْدَ فَتَتَعَبَّأُ بَيَانَاتُ العَمِيلِ تِلْقَائِيًّا، وَتُدْخِلُ السِّعْرَ فَتُحْتَسَبُ ضَرِيبَةُ خَمْسَةَ عَشَرَ بِالمِئَةِ وَالمُلَخَّصُ الجَانِبِيُّ لَحْظِيًّا.",
+      "narrationEn": "Create tax invoices in four organized steps: link a contract to auto-fill client data, enter price, and watch 15% VAT and the side summary calculate live.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/new?type=TAX"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('ابحث برقم العقد')",
+          "holdMs": 380
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('MQ-2026')",
+          "holdMs": 450
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: مسار الرحلة والخدمة')",
+          "holdMs": 400
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: السعر والضريبة')",
+          "holdMs": 400
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main form",
+          "scale": 1.12,
+          "durationMs": 5500
+        },
+        {
+          "action": "typeSlow",
+          "target": "input[aria-label='السعر (ر.س) *']",
+          "value": "12500"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('اختر المعاملة الضريبية')",
+          "holdMs": 320
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('خاضع لضريبة')",
+          "holdMs": 1150
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: الدفع والمراجعة')",
+          "holdMs": 900
+        }
+      ]
+    },
+    {
+      "id": "scene_08",
+      "chapterNum": "08",
+      "titleAr": "المشتريات، المحاسبة، ودليل الحسابات",
+      "titleEn": "Purchases, Accounting Hub & Chart of Accounts",
+      "routes": [
+        "/admin/purchases",
+        "/admin/accounting",
+        "/admin/accounts"
+      ],
+      "estimatedDurationSec": 15,
+      "durationMs": 17520,
+      "audioFile": "demo/v3/audio/scene_08.mp3",
+      "narrationAr": "في المشتريات تربط كل مصروف بمركبته وتبدّل بين قبل الضريبة وشامل الضريبة؛ وفي المحاسبة ودليل الحسابات تتابع صافي الأرباح، وسيولة الصندوق والبنك، وربحية كل حافلة بدقة.",
+      "ttsAr": "فِي المُشْتَرَيَاتِ، تَرْبِطُ كُلَّ مَصْرُوفٍ بِمَرْكَبَتِهِ وَتُبَدِّلُ بَيْنَ قَبْلَ الضَّرِيبَةِ وَشَامِلِ الضَّرِيبَةِ؛ وَفِي المُحَاسَبَةِ وَدَلِيلِ الحِسَابَاتِ، تُتَابِعُ صَافِيَ الأَرْبَاحِ، وَسُيُولَةَ الصُّنْدُوقِ وَالبَنْكِ، وَرِبْحِيَّةَ كُلِّ حَافِلَةٍ بِدِقَّةٍ.",
+      "narrationEn": "In Purchases, link expenses to vehicles with Before or Includes-VAT pricing; in Accounting and Chart of Accounts, track net profit, liquidity, and per-bus margins.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/purchases"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تسجيل فاتورة مورد')",
+          "holdMs": 550
+        },
+        {
+          "action": "glideClick",
+          "target": "dialog[open] button:has-text('شامل 15%')",
+          "holdMs": 750
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        },
+        {
+          "action": "goto",
+          "target": "/admin/accounting"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main .grid",
+          "scale": 1.13,
+          "durationMs": 4200
+        },
+        {
+          "action": "smoothScroll",
+          "y": 420,
+          "durationMs": 700
+        },
+        {
+          "action": "goto",
+          "target": "/admin/accounts"
+        }
+      ]
+    },
+    {
+      "id": "scene_09",
+      "chapterNum": "09",
+      "titleAr": "الإقرار الضريبي ومركز التصدير الموحد",
+      "titleEn": "VAT Returns & Unified Financial Exports Center",
+      "routes": [
+        "/admin/vat-returns",
+        "/admin/accounting/exports"
+      ],
+      "estimatedDurationSec": 16,
+      "durationMs": 18800,
+      "audioFile": "demo/v3/audio/scene_09.mp3",
+      "narrationAr": "إقرار هيئة الزكاة والضريبة جاهز بخاناته الست عشرة للنسخ المباشر؛ ومن مركز التصدير المالي الموحد تفلتر بتسعة عشر معياراً، وتعاين تسع قوائم مالية، وتصدّر PDF أو إكسل أو JSON بضغطة زر.",
+      "ttsAr": "إِقْرَارُ هَيْئَةِ الزَّكَاةِ وَالضَّرِيبَةِ جَاهِزٌ بِخَانَاتِهِ السِّتَّ عَشْرَةَ لِلنَّسْخِ المُبَاشِرِ؛ وَمِنْ مَرْكَزِ التَّصْدِيرِ المَالِيِّ المُوَحَّدِ، تُفَلْتِرُ بِتِسْعَةَ عَشَرَ مِعْيَارًا، وَتُعَايِنُ تِسْعَ قَوَائِمَ مَالِيَّةٍ، وَتُصَدِّرُ مَلَفَّاتِ بِي دِي إِفْ أَوْ إِكْسِلْ أَوْ جَيْسُونْ بِضَغْطَةِ زِرٍّ.",
+      "narrationEn": "ZATCA VAT Return Boxes 1–16 stay copy-ready; in the Unified Financial Exports Center, filter across 19 criteria, preview 9 financial statements, and export PDF, Excel, or JSON in one click.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/vat-returns"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 440,
+          "durationMs": 650
+        },
+        {
+          "action": "pause",
+          "durationMs": 850
+        },
+        {
+          "action": "goto",
+          "target": "/admin/accounting/exports"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('فلاتر متقدمة')",
+          "holdMs": 650
+        },
+        {
+          "action": "zoomFocus",
+          "target": "section:has-text('فلاتر فواتير المبيعات')",
+          "scale": 1.13,
+          "durationMs": 4200
+        },
+        {
+          "action": "smoothScroll",
+          "y": 780,
+          "durationMs": 700
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='تبويبات معاينة التصدير'] button:has-text('ربحية المركبات')",
+          "holdMs": 750
+        },
+        {
+          "action": "glideHover",
+          "target": "button:has-text('تصدير تقرير PDF رسمي')",
+          "holdMs": 850
+        }
+      ]
+    },
+    {
+      "id": "scene_10",
+      "chapterNum": "10",
+      "titleAr": "الإعدادات، ZATCA، واتساب، والصلاحيات",
+      "titleEn": "Settings, ZATCA, WhatsApp & Granular RBAC",
+      "routes": [
+        "/admin/zatca",
+        "/admin/whatsapp",
+        "/admin/admins"
+      ],
+      "estimatedDurationSec": 15,
+      "durationMs": 17840,
+      "audioFile": "demo/v3/audio/scene_10.mp3",
+      "narrationAr": "وتكتمل المنظومة بإعدادات الشركة والبنك، والربط المباشر مع هيئة الزكاة زاتكا، وإشعارات واتساب التلقائية، وصلاحيات المشرفين الدقيقة لكل قسم، لتدير أسطولك وماليتك بثقة وسرعة.",
+      "ttsAr": "وَتَكْتَمِلُ المَنْظُومَةُ بِإِعْدَادَاتِ الشَّرِكَةِ وَالبَنْكِ، وَالرَّبْطِ المُبَاشِرِ مَعَ هَيْئَةِ الزَّكَاةِ زَاتْكَا، وَإِشْعَارَاتِ وَاتْسَابْ التِّلْقَائِيَّةِ، وَصَلَاحِيَّاتِ المُشْرِفِينَ الدَّقِيقَةِ لِكُلِّ قِسْمٍ، لِتُدِيرَ أُسْطُولَكَ وَمَالِيَّتَكَ بِثِقَةٍ وَسُرْعَةٍ.",
+      "narrationEn": "Complete with company and bank settings, direct ZATCA integration, automated WhatsApp notifications, and granular administrator permissions across every module.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/zatca"
+        },
+        {
+          "action": "pause",
+          "durationMs": 1300
+        },
+        {
+          "action": "goto",
+          "target": "/admin/whatsapp"
+        },
+        {
+          "action": "pause",
+          "durationMs": 1300
+        },
+        {
+          "action": "goto",
+          "target": "/admin/admins"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main table",
+          "scale": 1.13,
+          "durationMs": 4200
+        },
+        {
+          "action": "smoothScroll",
+          "y": 220,
+          "durationMs": 700
+        }
+      ]
+    }
+  ]
+}

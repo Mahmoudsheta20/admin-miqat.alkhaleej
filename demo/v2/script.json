@@ -1,0 +1,350 @@
+{
+  "meta": {
+    "project": "Miqat Al-Khaleej Financial & Unified Exports Suite",
+    "targetDurationSec": 85,
+    "audience": "Business owners, CFOs, financial controllers, and operations managers",
+    "demoUrl": "http://127.0.0.1:3429",
+    "outputVideo": "output/miqat-finance-v2.mp4",
+    "outputSubtitlesAr": "output/miqat-finance-v2-ar.srt",
+    "outputSubtitlesEn": "output/miqat-finance-v2-en.srt",
+    "ttsEngine": "elevenlabs",
+    "modelId": "eleven_v4",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+    "elevenlabs": {
+      "modelId": "eleven_v4",
+      "languageCode": "ar",
+      "outputFormat": "mp3_44100_128",
+      "stability": 0.62,
+      "similarityBoost": 0.78,
+      "useSpeakerBoost": true,
+      "preferredVoices": [
+        {
+          "id": "cFUFIbKkO2iZFwS8cRnY",
+          "label": "Nasser AlJubaily - Authentic Saudi Pro"
+        },
+        {
+          "id": "MI88rOZjXbH22N8KHXUo",
+          "label": "Ali - Calm & Deep Arabic Saudi Narrator"
+        },
+        {
+          "id": "JBFqnCBsd6RMkjVDRZzb",
+          "label": "George - Warm Storyteller (Premade)"
+        },
+        {
+          "id": "onwK4e9ZLuTAKqWW03F9",
+          "label": "Daniel - Steady Broadcaster (Premade)"
+        }
+      ]
+    },
+    "measuredTotalDurationSec": 92.32
+  },
+  "scenes": [
+    {
+      "id": "scene_01",
+      "chapterNum": "01",
+      "titleAr": "الفواتير وحالة السداد الحية",
+      "titleEn": "Live Invoices & Payment Status",
+      "routes": [
+        "/admin/invoices"
+      ],
+      "estimatedDurationSec": 12,
+      "durationMs": 13360,
+      "audioFile": "demo/v2/audio/scene_01.mp3",
+      "narrationAr": "حياكم الله في المنظومة المالية لميقات الخليج. من شاشة الفواتير تتابع حالة السداد الحية فوراً: مدفوعة، جزئية، أو آجلة، مع فلاتر سريعة لأي فترة.",
+      "ttsAr": "حَيَّاكُمُ الله في المَنْظُومَة المَالِيَّة لمِيقَات الخَلِيج. مِن شَاشَة الفَوَاتِير تُتَابِع حَالَة السَّدَاد الحَيَّة فَوراً: مَدْفُوعَة، جُزْئِيَّة، أَو آجِلَة، مَع فَلَاتِر سَرِيعَة لأَيِّ فَتْرَة.",
+      "narrationEn": "Welcome to the Miqat Al-Khaleej Financial Suite. Track live Paid, Partially Paid, and Unpaid invoice status instantly with fast period filters.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "div[aria-label='تصفية بحالة السداد']",
+          "scale": 1.15,
+          "durationMs": 4200
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('جزئي')",
+          "holdMs": 1200
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('كل الحالات')",
+          "holdMs": 900
+        }
+      ]
+    },
+    {
+      "id": "scene_02",
+      "chapterNum": "02",
+      "titleAr": "تفاصيل الفاتورة والتحصيل المباشر",
+      "titleEn": "Invoice Details & Instant Collection",
+      "routes": [
+        "/admin/invoices/55555555-5555-4555-8555-555555555502"
+      ],
+      "estimatedDurationSec": 13,
+      "durationMs": 14720,
+      "audioFile": "demo/v2/audio/scene_02.mp3",
+      "narrationAr": "وداخل تفاصيل كل فاتورة، يظهر شريط التحصيل والمبلغ المتبقي بالهللة، وتقدر تسجّل دفعة بنكية أو نقدية بضغطة زر مع جاهزية رمز QR وملف PDF الرسمي.",
+      "ttsAr": "وَدَاخِل تَفَاصِيل كُلِّ فَاتُورَة، يَظْهَر شَرِيط التَّحْصِيل والمَبْلَغ المُتَبَقِّي بالهَلَلَة، وَتَقْدِر تُسَجِّل دُفْعَة بَنْكِيَّة أَو نَقْدِيَّة بِضَغْطَةِ زِرّ، مَع جَاهِزِيَّة رَمْز كْيُو آر وَمَلَفّ بِي دِي إِف الرَّسْمِي.",
+      "narrationEn": "Inside every invoice, monitor exact collection progress and remaining halalas, record bank or cash payments in one click, and access official ZATCA QR and PDF.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/55555555-5555-4555-8555-555555555502"
+        },
+        {
+          "action": "pause",
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "section:has-text('حالة السداد والتحصيل')",
+          "scale": 1.14,
+          "durationMs": 4500
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تسجيل دفعة جديدة للعميل')",
+          "holdMs": 1400
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        },
+        {
+          "action": "glideHover",
+          "target": "button:has-text('تنزيل الفاتورة PDF')",
+          "holdMs": 900
+        }
+      ]
+    },
+    {
+      "id": "scene_03",
+      "chapterNum": "03",
+      "titleAr": "معالج إنشاء الفاتورة الضريبية",
+      "titleEn": "4-Stage ZATCA Invoice Wizard",
+      "routes": [
+        "/admin/invoices/new?type=TAX"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 15840,
+      "audioFile": "demo/v2/audio/scene_03.mp3",
+      "narrationAr": "أما إنشاء الفاتورة الجديدة فيتم بأربع خطوات مرتبة: تختار العقد فتتعبأ بيانات العميل تلقائياً، وتُدخل السعر فتُحتسب ضريبة خمسة عشر بالمئة والملخص الجانبي لحظياً.",
+      "ttsAr": "أَمَّا إِنْشَاء الفَاتُورَة الجَدِيدَة فَيَتِمّ بِأَرْبَع خُطُوَات مُرَتَّبَة: تَخْتَار العَقْد فَتَتَعَبَّأ بَيَانَات العَمِيل تِلْقَائِيًّا، وَتُدْخِل السِّعْر فَتُحْتَسَب ضَرِيبَة خَمْسَة عَشَر بِالمِئَة والمُلَخَّص الجَانِبِي لَحْظِيًّا.",
+      "narrationEn": "Create compliant invoices in four crisp steps: pick a contract to auto-fill client data, enter pricing, and watch 15% VAT and the side summary update live.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/new?type=TAX"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('ابحث برقم العقد')",
+          "holdMs": 380
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('MQ-2026')",
+          "holdMs": 450
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: مسار الرحلة والخدمة')",
+          "holdMs": 400
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: السعر والضريبة')",
+          "holdMs": 400
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main form",
+          "scale": 1.12,
+          "durationMs": 5800
+        },
+        {
+          "action": "typeSlow",
+          "target": "input[aria-label='السعر (ر.س) *']",
+          "value": "12500"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('اختر المعاملة الضريبية')",
+          "holdMs": 320
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('خاضع لضريبة')",
+          "holdMs": 1200
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: الدفع والمراجعة')",
+          "holdMs": 950
+        }
+      ]
+    },
+    {
+      "id": "scene_04",
+      "chapterNum": "04",
+      "titleAr": "المشتريات والمركز المحاسبي",
+      "titleEn": "Fleet Purchases & Accounting Hub",
+      "routes": [
+        "/admin/purchases",
+        "/admin/accounting"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 15280,
+      "audioFile": "demo/v2/audio/scene_04.mp3",
+      "narrationAr": "في المشتريات تربط كل مصروف بمركبته وتبدّل بين قبل الضريبة وشامل الضريبة؛ وفي المحاسبة تتابع صافي الأرباح، وسيولة الصندوق والبنك، وربحية كل حافلة بدقة.",
+      "ttsAr": "في المُشْتَرَيَات تَرْبِط كُلّ مَصْرُوف بِمَرْكَبَتِه وَتُبَدِّل بَيْن قَبْل الضَّرِيبَة وَشَامِل الضَّرِيبَة؛ وَفي المُحَاسَبَة تُتَابِع صَافِي الأَرْبَاح، وَسُيُولَة الصُّنْدُوق والبَنْك، وَرِبْحِيَّة كُلّ حَافِلَة بِدِقَّة.",
+      "narrationEn": "Link every expense to its fleet vehicle with Before/Includes-VAT pricing, then track net profit, cash and bank liquidity, and per-bus margins in Accounting.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/purchases"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تسجيل فاتورة مورد')",
+          "holdMs": 600
+        },
+        {
+          "action": "glideClick",
+          "target": "dialog[open] button:has-text('شامل 15%')",
+          "holdMs": 800
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        },
+        {
+          "action": "goto",
+          "target": "/admin/accounting"
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main .grid",
+          "scale": 1.13,
+          "durationMs": 4500
+        },
+        {
+          "action": "smoothScroll",
+          "y": 420,
+          "durationMs": 750
+        }
+      ]
+    },
+    {
+      "id": "scene_05",
+      "chapterNum": "05",
+      "titleAr": "دليل الحسابات والإقرار الضريبي",
+      "titleEn": "Chart of Accounts & ZATCA VAT Return",
+      "routes": [
+        "/admin/accounts",
+        "/admin/vat-returns"
+      ],
+      "estimatedDurationSec": 13,
+      "durationMs": 14720,
+      "audioFile": "demo/v2/audio/scene_05.mp3",
+      "narrationAr": "كل حركة تترحّل تلقائياً لدليل الحسابات، ليجهز أمامك إقرار هيئة الزكاة والضريبة بخاناته الست عشرة مطابقةً للفواتير والمشتريات وجاهزةً للنسخ المباشر.",
+      "ttsAr": "كُلّ حَرَكَة تَتَرَحَّل تِلْقَائِيًّا لِدَلِيل الحِسَابَات، لِيَجْهَز أَمَامَك إِقْرَار هَيْئَة الزَّكَاة والضَّرِيبَة بِخَانَاتِه السِّتّ عَشْرَة مُطَابِقَة للفَوَاتِير والمُشْتَرَيَات وَجَاهِزَة لِلنَّسْخ المُبَاشِر.",
+      "narrationEn": "Every transaction posts automatically to the Chart of Accounts, keeping ZATCA VAT Return Boxes 1–16 reconciled and copy-ready.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/accounts"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 240,
+          "durationMs": 750
+        },
+        {
+          "action": "pause",
+          "durationMs": 1200
+        },
+        {
+          "action": "goto",
+          "target": "/admin/vat-returns"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 460,
+          "durationMs": 700
+        },
+        {
+          "action": "zoomFocus",
+          "target": "main table",
+          "scale": 1.14,
+          "durationMs": 4500
+        }
+      ]
+    },
+    {
+      "id": "scene_06",
+      "chapterNum": "06",
+      "titleAr": "مركز التصدير المالي الموحد",
+      "titleEn": "Unified Financial Exports Center",
+      "routes": [
+        "/admin/accounting/exports"
+      ],
+      "estimatedDurationSec": 18,
+      "durationMs": 18400,
+      "audioFile": "demo/v2/audio/scene_06.mp3",
+      "narrationAr": "ومع مركز التصدير المالي الموحد الجديد، تجمع كل تقاريرك في شاشة واحدة: تسعة عشر فلتراً متقدماً، ومعاينة حية لتسع قوائم مالية، وتصدير فوري بصيغة PDF أو إكسل أو JSON بضغطة زر.",
+      "ttsAr": "وَمَع مَرْكَز التَّصْدِير المَالِي المُوَحَّد الجَدِيد، تَجْمَع كُلّ تَقَارِيرَك في شَاشَة وَاحِدَة: تِسْعَة عَشَر فِلْتَراً مُتَقَدِّماً، وَمُعَايَنَة حَيَّة لِتِسْع قَوَائِم مَالِيَّة، وَتَصْدِير فَوْرِي بِصِيغَة بِي دِي إِف أَو إِكْسِل أَو جَيْسُون بِضَغْطَةِ زِرّ.",
+      "narrationEn": "With the new Unified Financial Exports Center, combine 19 advanced filters, 9 live preview tabs, and instant A4 PDF, Excel CSV, or JSON export in one place.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/accounting/exports"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('حزمة الضريبة والزكاة')",
+          "holdMs": 600
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('ملف المراجعة الشامل')",
+          "holdMs": 500
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('فلاتر متقدمة')",
+          "holdMs": 650
+        },
+        {
+          "action": "zoomFocus",
+          "target": "section:has-text('فلاتر فواتير المبيعات')",
+          "scale": 1.13,
+          "durationMs": 4200
+        },
+        {
+          "action": "smoothScroll",
+          "y": 780,
+          "durationMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "nav[aria-label='تبويبات معاينة التصدير'] button:has-text('ربحية المركبات')",
+          "holdMs": 750
+        },
+        {
+          "action": "glideHover",
+          "target": "button:has-text('تصدير تقرير PDF رسمي')",
+          "holdMs": 950
+        }
+      ]
+    }
+  ]
+}

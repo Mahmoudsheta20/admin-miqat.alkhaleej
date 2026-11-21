@@ -963,7 +963,7 @@ export default function AdminContractBuilder({
                   <CaptainSelector
                     label={ui("الكابتن المسؤول عن التنفيذ")}
                     required
-                    captains={safeCaptains}
+                    captains={safeCaptains.filter((c) => c.active && !c.isArchived)}
                     selectedCaptainId={field.value}
                     onSelectCaptain={(cap) => {
                       field.onChange(cap.id);

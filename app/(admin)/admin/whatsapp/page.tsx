@@ -29,6 +29,9 @@ import {
   sendWhatsAppMessage,
 } from "@/lib/whatsapp";
 
+type ConfirmResetMode = "logout_connected" | "new_number" | "relink_same_number";
+type LinkingIntent = "same_number" | "new_number";
+
 function formatAccountPhone(meId?: string): string | null {
   if (!meId) return null;
   const raw = meId.split(":")[0]?.split("@")[0];
@@ -50,7 +53,8 @@ export default function AdminWhatsAppSettingsPage() {
   const isRefreshing = statusQuery.isFetching;
   const refreshStatus = statusQuery.refetch;
   const [isReconnecting, setIsReconnecting] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [confirmMode, setConfirmMode] = useState<ConfirmResetMode | null>(null);
+  const [linkingIntent, setLinkingIntent] = useState<LinkingIntent | null>(null);
   const loadError = statusQuery.error;
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
@@ -62,17 +66,23 @@ export default function AdminWhatsAppSettingsPage() {
   const [sendSuccess, setSendSuccess] = useState("");
   const [sendError, setSendError] = useState("");
 
-  async function handleReconnect() {
-    if (!canWrite) return;
+  async function handleReconnectSameNumber() {
+    if (!canWrite || isReconnecting) return;
     setIsReconnecting(true);
     setActionError("");
     setActionMessage("");
+    setLinkingIntent(null);
     try {
-      const next = await reconnectWhatsApp();
+      const next = await reconnectWhatsApp("same_number");
       refreshStatus();
-      setActionMessage(next.status === "connected"
-        ? text("جلسة واتساب متصلة بالفعل.", "WhatsApp is already connected.")
-        : text("تم طلب إعادة الاتصال. تابع الحالة؛ قد يُطلب مسح رمز QR.", "Reconnect requested. Follow the status; QR pairing may be required."));
+      setActionMessage(
+        next.status === "connected"
+          ? text("جلسة واتساب متصلة بالفعل.", "WhatsApp is already connected.")
+          : text(
+              "تم بدء إعادة الاتصال بنفس الرقم. تابع الحالة؛ قد يُطلب مسح رمز QR إذا انتهت صلاحية الجلسة.",
+              "Reconnect requested with the saved session. Follow the status; QR pairing may still be required if the session expired."
+            )
+      );
     } catch (err) {
       setActionError(
         err instanceof Error
@@ -84,18 +94,25 @@ export default function AdminWhatsAppSettingsPage() {
     }
   }
 
-  async function handleConfirmLogout() {
-    if (!canWrite) return;
+  async function handleConfirmSessionReset() {
+    if (!canWrite || !confirmMode) return;
+    const mode = confirmMode;
     setActionError("");
     setActionMessage("");
     await logoutWhatsApp();
+    setLinkingIntent(mode === "relink_same_number" ? "same_number" : "new_number");
     refreshStatus();
-    setIsLogoutModalOpen(false);
+    setConfirmMode(null);
     setActionMessage(
-      text(
-        "تم تسجيل الخروج من جلسة الواتساب وإعداد رمز QR جديد.",
-        "Logged out of WhatsApp session and started generating a fresh QR code."
-      )
+      mode === "relink_same_number"
+        ? text(
+            "تم مسح الجلسة المنتهية وإعداد رمز QR جديد لإعادة ربط نفس الرقم.",
+            "Cleared the expired session and started generating a fresh QR code to re-link the same number."
+          )
+        : text(
+            "تم مسح الجلسة السابقة وإعداد رمز QR جديد لربط رقم واتساب جديد.",
+            "Cleared the previous session and started generating a fresh QR code for a new WhatsApp number."
+          )
     );
   }
 
@@ -137,8 +154,96 @@ export default function AdminWhatsAppSettingsPage() {
   const status = waState?.status || "disconnected";
   const qrImage = waState?.qrImage || null;
   const connectedPhone = formatAccountPhone(waState?.me_id);
+  const savedSession = waState?.savedSession;
+  const savedPhone = formatAccountPhone(savedSession?.me_id);
+  const savedName = savedSession?.me_push_name || null;
+  const hasSavedSession = Boolean(savedSession?.hasSession);
+  const noSavedSessionConfirmed = savedSession?.hasSession === false;
+  const haltCode = waState?.haltCode ?? null;
+  const isLoggedOut = haltCode === "logged_out";
+  const isForbidden = haltCode === "forbidden";
+  const canReconnect = waState?.recovery?.canReconnect !== false;
+  const canRelink = waState?.recovery?.canRelink !== false;
   const antiBan = waState?.antiBan;
   const queueLength = antiBan?.queueLength ?? waState?.queueLength ?? 0;
+
+  const headerSecondaryActions = !canWrite
+    ? undefined
+    : status === "connected"
+      ? [
+          {
+            label: text("تسجيل الخروج وتبديل الرقم", "Logout & Switch Number"),
+            icon: LogOut,
+            variant: "danger" as const,
+            disabled: !canRelink,
+            onClick: () => setConfirmMode("logout_connected"),
+          },
+        ]
+      : status === "qr_ready"
+        ? [
+            {
+              label: text("توليد رمز QR جديد", "Generate New QR"),
+              icon: RefreshCw,
+              variant: "secondary" as const,
+              disabled: !canRelink,
+              onClick: () => setConfirmMode("new_number"),
+            },
+          ]
+        : [
+            {
+              label: text("تغيير الرقم / رقم جديد", "Change / New Number"),
+              icon: QrCode,
+              variant: "secondary" as const,
+              disabled: !canRelink,
+              onClick: () => setConfirmMode("new_number"),
+            },
+          ];
+
+  const confirmDialogConfig =
+    confirmMode === "logout_connected"
+      ? {
+          variant: "danger" as const,
+          title: text("تسجيل الخروج وتبديل الرقم", "Logout & Switch WhatsApp Number"),
+          message: connectedPhone
+            ? text(
+                `سيتم فصل الرقم المرتبط حالياً (${connectedPhone}) وحذف بيانات الجلسة وتوليد رمز QR جديد لربط رقم آخر. هل أنت متأكد؟`,
+                `This will disconnect the currently linked number (${connectedPhone}), clear local session credentials, and generate a new QR code to link another number. Continue?`
+              )
+            : text(
+                "سيتم فصل الرقم المرتبط حالياً وحذف بيانات الجلسة وتوليد رمز QR جديد للربط. هل أنت متأكد؟",
+                "This will disconnect the currently linked WhatsApp account, clear local session credentials, and generate a new QR code. Continue?"
+              ),
+          confirmLabel: text("نعم، تسجيل الخروج", "Yes, Disconnect"),
+        }
+      : confirmMode === "relink_same_number"
+        ? {
+            variant: "info" as const,
+            title: text("إعادة ربط نفس الرقم", "Re-link Same Number"),
+            message: savedPhone
+              ? text(
+                  `سيتم مسح بيانات الجلسة المنتهية للرقم (${savedPhone}) وتوليد رمز QR جديد لتتمكن من مسحه من نفس الهاتف. هل تريد المتابعة؟`,
+                  `This will clear the expired session credentials for (${savedPhone}) and generate a fresh QR code so you can scan it with the same phone. Continue?`
+                )
+              : text(
+                  "سيتم مسح بيانات الجلسة المنتهية وتوليد رمز QR جديد لإعادة ربط نفس الهاتف. هل تريد المتابعة؟",
+                  "This will clear the expired session credentials and generate a fresh QR code to re-link the same phone. Continue?"
+                ),
+            confirmLabel: text("توليد رمز QR", "Generate QR Code"),
+          }
+        : {
+            variant: "warning" as const,
+            title: text("تغيير رقم الواتساب (رقم جديد)", "Switch to a New WhatsApp Number"),
+            message: savedPhone
+              ? text(
+                  `سيتم إغلاق أي محاولة اتصال جارية وحذف بيانات الجلسة المحفوظة للرقم (${savedPhone}) وتوليد رمز QR جديد لربط رقم مختلف. هل تريد المتابعة؟`,
+                  `This will cancel any active connection attempt, clear saved credentials for (${savedPhone}), and generate a fresh QR code to link a different number. Continue?`
+                )
+              : text(
+                  "سيتم مسح بيانات الجلسة المؤقتة وإعادة تهيئة الاتصال لتوليد رمز QR جديد لربط رقم واتساب. هل تريد المتابعة؟",
+                  "This will clear temporary session credentials and reinitialize the connection to generate a fresh QR code for linking a WhatsApp number. Continue?"
+                ),
+            confirmLabel: text("نعم، ربط رقم جديد", "Yes, Link New Number"),
+          };
 
   return (
     <div className="space-y-6">
@@ -150,19 +255,7 @@ export default function AdminWhatsAppSettingsPage() {
         )}
         onRefresh={() => void refreshStatus()}
         isRefreshing={isRefreshing}
-        secondaryActions={
-          canWrite && (status === "connected" || status === "qr_ready")
-            ? [
-                {
-                  label: text("تسجيل الخروج وتبديل الرقم", "Logout & Switch Number"),
-                  icon: LogOut,
-                  variant: "danger",
-                  disabled: waState?.recovery?.canRelink === false,
-                  onClick: () => setIsLogoutModalOpen(true),
-                },
-              ]
-            : undefined
-        }
+        secondaryActions={headerSecondaryActions}
       />
 
       {!canWrite && (
@@ -326,8 +419,8 @@ export default function AdminWhatsAppSettingsPage() {
                 <div className="pt-2 flex flex-wrap gap-3">
                   <button
                     type="button"
-                    onClick={() => setIsLogoutModalOpen(true)}
-                    disabled={waState?.recovery?.canRelink === false}
+                    onClick={() => setConfirmMode("logout_connected")}
+                    disabled={!canRelink}
                     className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-rose-500/35 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <LogOut className="w-4 h-4" aria-hidden="true" />
@@ -352,14 +445,30 @@ export default function AdminWhatsAppSettingsPage() {
               </div>
 
               <div className="space-y-4">
+                {linkingIntent && (
+                  <p
+                    role="status"
+                    className="rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--accent-surface)] px-3.5 py-2.5 text-xs font-semibold text-[var(--text-main)]"
+                  >
+                    {linkingIntent === "new_number"
+                      ? text(
+                          "جاهز لربط رقم واتساب جديد — امسح الرمز من الهاتف الذي تريد استخدامه للإرسال.",
+                          "Ready to link a new WhatsApp number — scan this code from the phone you want to use."
+                        )
+                      : text(
+                          "جاهز لإعادة ربط نفس الرقم — امسح الرمز من نفس هاتف الواتساب المرتبط سابقاً.",
+                          "Ready to re-link the same number — scan this code from your previously linked WhatsApp phone."
+                        )}
+                  </p>
+                )}
                 <h3 className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                   {text("خطوات ربط الواتساب:", "How to link WhatsApp:")}
                 </h3>
                 <ol className="space-y-2.5 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed list-decimal ps-5">
                   <li>
                     {text(
-                      "افتح تطبيق واتساب على الهاتف المعتمد للشركة.",
-                      "Open WhatsApp on your company phone."
+                      "افتح تطبيق واتساب على الهاتف المراد ربطه (نفس الرقم أو الرقم الجديد).",
+                      "Open WhatsApp on the phone you want to link (same number or new number)."
                     )}
                   </li>
                   <li>
@@ -384,6 +493,19 @@ export default function AdminWhatsAppSettingsPage() {
                     )}
                   </span>
                 </p>
+                {canWrite && (
+                  <div className="pt-1 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={!canRelink}
+                      onClick={() => setConfirmMode("new_number")}
+                      className="min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                      <span>{text("توليد رمز QR جديد", "Generate Fresh QR")}</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ) : status === "connecting" ? (
@@ -391,17 +513,49 @@ export default function AdminWhatsAppSettingsPage() {
               <div className="w-14 h-14 rounded-2xl bg-[var(--accent-surface)] border border-[var(--accent-gold)]/30 text-[var(--accent-gold)] flex items-center justify-center">
                 <Loader2 className="w-7 h-7 animate-spin" aria-hidden="true" />
               </div>
-              <div className="space-y-1 max-w-md">
+              <div className="space-y-2 max-w-md">
                 <p className="text-sm sm:text-base font-bold text-[var(--text-main)]">
-                  {text("جارٍ تهيئة اتصال الواتساب...", "Initializing WhatsApp Connection...")}
+                  {hasSavedSession
+                    ? text("جارٍ إعادة الاتصال بالرقم المحفوظ...", "Reconnecting to Saved Number...")
+                    : text("جارٍ تهيئة اتصال الواتساب...", "Initializing WhatsApp Connection...")}
                 </p>
+                {hasSavedSession && (savedName || savedPhone || savedSession?.me_id) && (
+                  <div className="inline-flex flex-wrap items-center justify-center gap-2 rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-3.5 py-2 text-xs text-[var(--text-muted)]">
+                    <Smartphone className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                    {savedName && <strong className="text-[var(--text-main)]">{savedName}</strong>}
+                    {(savedPhone || savedSession?.me_id) && (
+                      <bdi dir="ltr" className="font-mono font-bold text-[var(--text-main)]">
+                        {savedPhone ?? savedSession?.me_id}
+                      </bdi>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                  {text(
-                    "يتم الاتصال بخوادم واتساب وتحميل الجلسة أو توليد رمز QR جديد خلال ثوانٍ.",
-                    "Connecting to WhatsApp servers to restore session or generate a fresh QR code."
-                  )}
+                  {hasSavedSession
+                    ? text(
+                        "يتم استئناف الجلسة المحفوظة مع خوادم واتساب. يمكنك الانتظار أو إلغاء الاتصال لربط رقم آخر.",
+                        "Restoring your saved WhatsApp session. Wait a moment or cancel to switch to another number."
+                      )
+                    : text(
+                        "يتم الاتصال بخوادم واتساب وتحميل الجلسة أو توليد رمز QR جديد خلال ثوانٍ.",
+                        "Connecting to WhatsApp servers to restore session or generate a fresh QR code."
+                      )}
                 </p>
               </div>
+              {canWrite && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    disabled={!canRelink}
+                    onClick={() => setConfirmMode("new_number")}
+                    className="min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer disabled:opacity-50"
+                  >
+                    {hasSavedSession
+                      ? text("إلغاء وتغيير الرقم", "Cancel & Switch Number")
+                      : text("إعادة تهيئة وربط رقم جديد", "Reset & Link New Number")}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-8 flex flex-col items-center text-center gap-4">
@@ -412,36 +566,131 @@ export default function AdminWhatsAppSettingsPage() {
                 <p className="text-sm sm:text-base font-bold text-[var(--text-main)]">
                   {text("الاتصال بالواتساب متوقف حالياً", "WhatsApp Is Currently Disconnected")}
                 </p>
-                <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                  {text(
-                    "اضغط على زر إعادة الاتصال لتشغيل الجلسة وتوليد رمز QR جديد.",
-                    "Click Reconnect to start the WhatsApp socket and generate a new QR code."
-                  )}
-                </p>
+                {!hasSavedSession && (
+                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                    {isForbidden
+                      ? text(
+                          "تم رفض الاتصال من واتساب (403). راجع حالة الحساب مع الدعم الفني قبل أي محاولة جديدة.",
+                          "WhatsApp refused the connection (403). Review the account status before retrying."
+                        )
+                      : noSavedSessionConfirmed
+                        ? text(
+                            "لا توجد جلسة رقم محفوظة حالياً. ابدأ ربط رقم جديد لتوليد رمز QR.",
+                            "No saved number session found. Start connecting a new number to generate a QR code."
+                          )
+                        : text(
+                            "يمكنك إعادة الاتصال بالجلسة المحفوظة أو مسح الجلسة وربط رقم جديد عبر رمز QR.",
+                            "Reconnect using the saved session or reset to link a new number via QR code."
+                          )}
+                  </p>
+                )}
               </div>
+              {hasSavedSession && (
+                <div className="w-full max-w-lg rounded-xl border theme-border bg-[var(--bg-card-subtle)] p-4 text-start space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <Smartphone className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
+                    <span className="text-xs font-bold text-[var(--text-main)]">
+                      {text("الجلسة المحفوظة على الخادم", "Saved Session on Server")}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-[var(--text-muted)]">
+                    {savedName && (
+                      <span>
+                        {text("الاسم:", "Name:")}{" "}
+                        <strong className="text-[var(--text-main)]">{savedName}</strong>
+                      </span>
+                    )}
+                    {(savedPhone || savedSession?.me_id) && (
+                      <span>
+                        {text("الرقم المحفوظ:", "Saved Phone:")}{" "}
+                        <bdi dir="ltr" className="font-mono font-bold text-[var(--text-main)]">
+                          {savedPhone ?? savedSession?.me_id}
+                        </bdi>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                    {isForbidden
+                      ? text(
+                          "تم إيقاف هذا الحساب من واتساب (403). يلزم مراجعة حالة الحساب قبل محاولة إعادة الاتصال أو الربط.",
+                          "WhatsApp refused this connection (403). Account review is required before reconnecting or relinking."
+                        )
+                      : isLoggedOut
+                        ? text(
+                            "تم تسجيل خروج هذا الجهاز أو فصله من واتساب. يمكنك إعادة ربط نفس الرقم برمز QR جديد أو تغيير الرقم بالكامل.",
+                            "This device was logged out or unlinked from WhatsApp. You can re-link the same number with a new QR code or switch to a new number."
+                          )
+                        : text(
+                            "يمكنك إعادة الاتصال بنفس الرقم باستخدام بيانات الجلسة المحفوظة، أو مسح الجلسة وربط رقم جديد.",
+                            "Reconnect with the same number using saved session credentials, or clear the session to link a new number."
+                          )}
+                  </p>
+                </div>
+              )}
               {canWrite && (
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                  <button
-                    type="button"
-                    disabled={isReconnecting || waState?.recovery?.canReconnect === false}
-                    onClick={() => void handleReconnect()}
-                    className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
-                  >
-                    {isReconnecting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" aria-hidden="true" />
-                    )}
-                    <span>{text("إعادة الاتصال", "Reconnect")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsLogoutModalOpen(true)}
-                    disabled={waState?.recovery?.canRelink === false}
-                    className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer disabled:opacity-50"
-                  >
-                    {text("مسح الجلسة السابقة", "Reset Session")}
-                  </button>
+                  {hasSavedSession && isLoggedOut ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={isReconnecting || !canRelink}
+                        onClick={() => setConfirmMode("relink_same_number")}
+                        className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                      >
+                        <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                        <span>{text("إعادة ربط نفس الرقم (QR جديد)", "Re-link Same Number (New QR)")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isReconnecting || !canRelink}
+                        onClick={() => setConfirmMode("new_number")}
+                        className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer disabled:opacity-50"
+                      >
+                        {text("تغيير الرقم (ربط رقم جديد)", "Connect New Number")}
+                      </button>
+                    </>
+                  ) : noSavedSessionConfirmed ? (
+                    <button
+                      type="button"
+                      disabled={isReconnecting || (!canReconnect && !canRelink)}
+                      onClick={() => {
+                        if (canReconnect) void handleReconnectSameNumber();
+                        else if (canRelink) setConfirmMode("new_number");
+                      }}
+                      className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                    >
+                      {isReconnecting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <QrCode className="w-4 h-4" aria-hidden="true" />
+                      )}
+                      <span>{text("ربط رقم جديد (توليد رمز QR)", "Connect New Number (Generate QR)")}</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        disabled={isReconnecting || !canReconnect}
+                        onClick={() => void handleReconnectSameNumber()}
+                        className="gold-gradient-btn min-h-11 sm:min-h-11 px-5 py-2 rounded-lg text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                      >
+                        {isReconnecting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                        )}
+                        <span>{text("إعادة الاتصال بنفس الرقم", "Reconnect Same Number")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmMode("new_number")}
+                        disabled={isReconnecting || !canRelink}
+                        className="min-h-11 sm:min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer disabled:opacity-50"
+                      >
+                        {text("تغيير الرقم (ربط رقم جديد)", "Connect New Number")}
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -647,17 +896,15 @@ export default function AdminWhatsAppSettingsPage() {
       </section>
 
       <ConfirmDialog
-        isOpen={isLogoutModalOpen}
-        title={text("تسجيل الخروج من الواتساب", "Disconnect WhatsApp Session")}
-        message={text(
-          "سيتم فصل الرقم المرتبط حالياً وحذف بيانات الجلسة وتوليد رمز QR جديد للربط. هل أنت متأكد؟",
-          "This will disconnect the currently linked WhatsApp account, clear local session credentials, and generate a new QR code. Continue?"
-        )}
-        confirmLabel={text("نعم، تسجيل الخروج", "Yes, Disconnect")}
+        key={confirmMode ?? "closed"}
+        isOpen={confirmMode !== null}
+        title={confirmDialogConfig.title}
+        message={confirmDialogConfig.message}
+        confirmLabel={confirmDialogConfig.confirmLabel}
         cancelLabel={text("إلغاء", "Cancel")}
-        variant="danger"
-        onConfirm={handleConfirmLogout}
-        onCancel={() => setIsLogoutModalOpen(false)}
+        variant={confirmDialogConfig.variant}
+        onConfirm={handleConfirmSessionReset}
+        onCancel={() => setConfirmMode(null)}
       />
     </div>
   );

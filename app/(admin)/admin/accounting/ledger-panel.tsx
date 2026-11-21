@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertCircle,
   BookOpen,
@@ -34,6 +34,15 @@ import {
 const INPUT =
   "theme-input min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 text-base sm:text-[0.8125rem] w-full";
 
+const QUICK_LEDGER_ACCOUNTS = [
+  { code: "1102", labelAr: "البنك", labelEn: "Bank" },
+  { code: "1101", labelAr: "الصندوق", labelEn: "Cash" },
+  { code: "1103", labelAr: "العملاء", labelEn: "Customers AR" },
+  { code: "2101", labelAr: "الموردون", labelEn: "Suppliers AP" },
+  { code: "2102", labelAr: "ضريبة القيمة المضافة", labelEn: "VAT Account" },
+  { code: "1104", labelAr: "ضريبة المدخلات", labelEn: "Input VAT" },
+] as const;
+
 export default function LedgerPanel({
   reload,
   rangeStart,
@@ -49,6 +58,7 @@ export default function LedgerPanel({
   const isEn = ui.language === "en";
 
   const [accountCode, setAccountCode] = useUrlState<string>("accountCode", "");
+  const [accountQuery, setAccountQuery] = useState("");
   const [from, setFrom] = useUrlState<string>("ledgerFrom", "");
   const [to, setTo] = useUrlState<string>("ledgerTo", "");
   const [search, setSearch] = useUrlState<string>("ledgerSearch", "");
@@ -60,6 +70,39 @@ export default function LedgerPanel({
     const list = accounts.data?.items ?? [];
     return [...list].sort((a, b) => a.code.localeCompare(b.code, "en"));
   }, [accounts.data?.items]);
+
+  const filteredAccounts = useMemo(() => {
+    const needle = accountQuery.trim().toLowerCase();
+    if (!needle) return sortedAccounts;
+    return sortedAccounts.filter(
+      (a) =>
+        a.code === accountCode ||
+        a.code.toLowerCase().includes(needle) ||
+        a.nameAr.toLowerCase().includes(needle) ||
+        (a.nameEn?.toLowerCase().includes(needle) ?? false),
+    );
+  }, [sortedAccounts, accountQuery, accountCode]);
+
+  const quickPickAccounts = useMemo(() => {
+    return QUICK_LEDGER_ACCOUNTS.flatMap((preset) => {
+      if (sortedAccounts.length === 0) {
+        return [
+          {
+            code: preset.code,
+            label: isEn ? preset.labelEn : preset.labelAr,
+          },
+        ];
+      }
+      const exact = sortedAccounts.find((a) => a.code === preset.code);
+      if (!exact) return [];
+      return [
+        {
+          code: exact.code,
+          label: isEn && exact.nameEn ? exact.nameEn : exact.nameAr,
+        },
+      ];
+    });
+  }, [sortedAccounts, isEn]);
 
   const trimmedCode = accountCode.trim();
   const ledgerPath = trimmedCode
@@ -168,13 +211,62 @@ export default function LedgerPanel({
           )}
         </div>
 
+        {/* Quick-Pick Account Chips */}
+        {quickPickAccounts.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-[var(--text-muted)] me-1">
+              {isEn ? "Quick pick:" : "اختيار سريع:"}
+            </span>
+            {quickPickAccounts.map((chip) => {
+              const selected = trimmedCode === chip.code;
+              return (
+                <button
+                  key={chip.code}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setAccountCode(chip.code);
+                    setPage(1);
+                  }}
+                  className={`min-h-11 sm:min-h-8 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    selected
+                      ? "bg-[var(--accent-btn-bg)] border-[var(--accent-btn-border)] text-[var(--accent-btn-fg)]"
+                      : "theme-card border-[var(--control-border)] text-[var(--text-main)] hover:border-[var(--accent-gold)]"
+                  }`}
+                >
+                  <bdi dir="ltr" className="font-mono">
+                    {chip.code}
+                  </bdi>
+                  <span className="truncate max-w-[140px]">{chip.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Account & Filter Inputs */}
         <div className="grid gap-3 md:grid-cols-12 items-end">
-          <label className="md:col-span-4 text-xs font-bold text-[var(--text-main)] space-y-1.5">
-            <span>{isEn ? "Account" : "الحساب المحاسبي"}</span>
+          <div className="md:col-span-4 space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <label
+                htmlFor="ledger-account-select"
+                className="text-xs font-bold text-[var(--text-main)]"
+              >
+                {isEn ? "Account" : "الحساب المحاسبي"}
+              </label>
+              <input
+                type="search"
+                aria-label={isEn ? "Filter accounts list" : "تصفية قائمة الحسابات"}
+                placeholder={isEn ? "Filter code or name..." : "تصفية برمز أو اسم..."}
+                value={accountQuery}
+                onChange={(e) => setAccountQuery(e.target.value)}
+                className="theme-input min-h-8 w-40 rounded-lg px-2.5 py-1 text-xs"
+              />
+            </div>
             <select
+              id="ledger-account-select"
               aria-label={isEn ? "Select ledger account" : "اختر الحساب المحاسبي"}
-              className={INPUT}
+              className={`${INPUT} mt-0!`}
               value={accountCode}
               onChange={(e) => {
                 setAccountCode(e.target.value);
@@ -184,7 +276,7 @@ export default function LedgerPanel({
               <option value="">
                 {isEn ? "Choose an account..." : "اختر حساباً لعرض كشف الأستاذ…"}
               </option>
-              {sortedAccounts.map((a) => (
+              {filteredAccounts.map((a) => (
                 <option key={a.code} value={a.code}>
                   {a.code} · {isEn && a.nameEn ? a.nameEn : a.nameAr}
                   {!a.isPosting ? (isEn ? " (Group)" : " (رئيسي)") : ""}
@@ -192,7 +284,7 @@ export default function LedgerPanel({
                 </option>
               ))}
             </select>
-          </label>
+          </div>
 
           <label className="md:col-span-2 text-xs font-bold text-[var(--text-main)] space-y-1.5">
             <span>{isEn ? "From date" : "من تاريخ"}</span>

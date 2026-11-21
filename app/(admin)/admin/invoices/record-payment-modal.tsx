@@ -27,6 +27,7 @@ interface RecordPaymentModalProps {
   invoiceNumber: string;
   customerName: string;
   totalAmount: string;
+  documentType?: "SALE" | "PURCHASE";
   isOpen: boolean;
   onClose: () => void;
   onPaymentSuccess: () => void;
@@ -34,7 +35,7 @@ interface RecordPaymentModalProps {
 
 export default function RecordPaymentModal(props: RecordPaymentModalProps) {
   if (!props.isOpen) return null;
-  return <RecordPaymentModalContent key={props.invoiceId} {...props} />;
+  return <RecordPaymentModalContent key={`${props.documentType || "SALE"}-${props.invoiceId}`} {...props} />;
 }
 
 function RecordPaymentModalContent({
@@ -42,10 +43,12 @@ function RecordPaymentModalContent({
   invoiceNumber,
   customerName,
   totalAmount,
+  documentType = "SALE",
   onClose,
   onPaymentSuccess,
 }: RecordPaymentModalProps) {
   const ui = useUiText();
+  const isPurchase = documentType === "PURCHASE";
 
   const { t, isRTL } = useLanguage();
   const [balance, setBalance] = useState<string | null>(null);
@@ -72,7 +75,7 @@ function RecordPaymentModalContent({
     setIsLoadingBalance(true);
     setBalanceError("");
     const res = await accountingRequest<{ balance: string; direction: string }>(
-      `/document-balance/SALE/${invoiceId}`,
+      `/document-balance/${documentType}/${invoiceId}`,
     );
     setIsLoadingBalance(false);
     if (res.data) {
@@ -82,7 +85,7 @@ function RecordPaymentModalContent({
       setBalance(null);
       setBalanceError(res.error || "");
     }
-  }, [invoiceId]);
+  }, [documentType, invoiceId]);
 
   // Fetch current remaining balance + optional active cash/bank accounts when dialog mounts
   useEffect(() => {
@@ -92,7 +95,7 @@ function RecordPaymentModalContent({
 
     void Promise.all([
       accountingRequest<{ balance: string; direction: string }>(
-        `/document-balance/SALE/${invoiceId}`,
+        `/document-balance/${documentType}/${invoiceId}`,
       ),
       accountingRequest<{
         items?: Array<{ code: string; nameAr: string; nameEn?: string; isActive?: boolean; isPosting?: boolean }>;
@@ -135,7 +138,7 @@ function RecordPaymentModalContent({
     return () => {
       active = false;
     };
-  }, [invoiceId]);
+  }, [documentType, invoiceId]);
 
   const remainingMinor = balance === null ? null : signedMoneyMinor(balance);
   const isRefundDue = remainingMinor !== null && remainingMinor < BigInt(0);
@@ -166,16 +169,32 @@ function RecordPaymentModalContent({
     try {
       const result = await accountingRequest("/payments", "POST", {
         operationKey: key.current || crypto.randomUUID(),
-        documentType: "SALE",
+        documentType,
         documentId: invoiceId,
         amount: moneyDecimal(payMinor),
         paymentDate: date,
         cashAccount,
-        reference: reference.trim() || (isRTL ? `تحصيل دفعة للفاتورة ${invoiceNumber}` : `Payment collection for invoice ${invoiceNumber}`),
+        reference:
+          reference.trim() ||
+          (isPurchase
+            ? isRTL
+              ? `سداد دفعة للمورد ${invoiceNumber}`
+              : `Supplier payment for bill ${invoiceNumber}`
+            : isRTL
+              ? `تحصيل دفعة للفاتورة ${invoiceNumber}`
+              : `Payment collection for invoice ${invoiceNumber}`),
       });
 
       if (result.success) {
-        setSuccessMessage(isRTL ? "تم تسجيل سند القبض وتحديث رصيد الفاتورة بنجاح!" : "Receipt voucher recorded and invoice balance updated successfully!");
+        setSuccessMessage(
+          isPurchase
+            ? isRTL
+              ? "تم تسجيل سداد المورد وتحديث الرصيد المتبقي بنجاح!"
+              : "Supplier payment recorded and balance updated successfully!"
+            : isRTL
+              ? "تم تسجيل سند القبض وتحديث رصيد الفاتورة بنجاح!"
+              : "Receipt voucher recorded and invoice balance updated successfully!",
+        );
         closeTimerRef.current = setTimeout(() => {
           onPaymentSuccess();
           onClose();
@@ -192,7 +211,19 @@ function RecordPaymentModalContent({
   }
 
   return (
-    <Modal label={isRTL ? "تسجيل دفعة للعميل" : "Record customer payment"} onClose={onClose} isBusy={isSubmitting}>
+    <Modal
+      label={
+        isPurchase
+          ? isRTL
+            ? "تسجيل سداد للمورد"
+            : "Record supplier payment"
+          : isRTL
+            ? "تسجيل دفعة للعميل"
+            : "Record customer payment"
+      }
+      onClose={onClose}
+      isBusy={isSubmitting}
+    >
       <div
         className="mobile-dialog-panel theme-card w-full max-w-lg rounded-3xl border theme-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         aria-labelledby="payment-modal-title"
@@ -208,10 +239,22 @@ function RecordPaymentModalContent({
                 id="payment-modal-title"
                 className="text-base sm:text-lg font-semibold text-[var(--text-main)]"
               >
-                {isRTL ? "تسجيل دفعة للعميل" : "Record Customer Payment"}
+                {isPurchase
+                  ? isRTL
+                    ? "تسجيل سداد للمورد"
+                    : "Record Supplier Payment"
+                  : isRTL
+                    ? "تسجيل دفعة للعميل"
+                    : "Record Customer Payment"}
               </h2>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                {isRTL ? "سند قبض محاسبي وتخفيض الرصيد المستحق" : "Receipt voucher and receivable balance reduction"}
+                {isPurchase
+                  ? isRTL
+                    ? "تسوية فاتورة المورد وتخفيض الرصيد المستحق"
+                    : "Settle supplier bill and reduce payable balance"
+                  : isRTL
+                    ? "تخفيض المبلغ المتبقي على الفاتورة تلقائياً"
+                    : "Automatically reduce remaining invoice balance"}
               </p>
             </div>
           </div>
@@ -231,13 +274,29 @@ function RecordPaymentModalContent({
           {/* Invoice Summary Ribbon */}
           <div className="p-4 rounded-2xl bg-[var(--bg-card-subtle)] border theme-border space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[var(--text-muted)]">{isRTL ? "رقم الفاتورة:" : "Invoice Number:"}</span>
+              <span className="text-[var(--text-muted)]">
+                {isPurchase
+                  ? isRTL
+                    ? "رقم فاتورة المورد:"
+                    : "Supplier Bill:"
+                  : isRTL
+                    ? "رقم الفاتورة:"
+                    : "Invoice Number:"}
+              </span>
               <span className="font-mono font-semibold text-[var(--accent-gold)]" dir="ltr">
                 {invoiceNumber}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[var(--text-muted)]">{isRTL ? "اسم العميل:" : "Customer Name:"}</span>
+              <span className="text-[var(--text-muted)]">
+                {isPurchase
+                  ? isRTL
+                    ? "اسم المورد:"
+                    : "Supplier:"
+                  : isRTL
+                    ? "اسم العميل:"
+                    : "Customer Name:"}
+              </span>
               <span className="font-bold text-[var(--text-main)] truncate max-w-[240px]">
                 {customerName}
               </span>
@@ -333,7 +392,13 @@ function RecordPaymentModalContent({
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                   <label htmlFor="pay-amount" className="text-xs font-bold text-[var(--text-main)]">
-                    {isRTL ? "المبلغ المحصل الآن (ر.س) *" : "Amount Collected (SAR) *"}
+                    {isPurchase
+                      ? isRTL
+                        ? "المبلغ المدفوع الآن (ر.س) *"
+                        : "Amount Paid (SAR) *"
+                      : isRTL
+                        ? "المبلغ المحصل الآن (ر.س) *"
+                        : "Amount Collected (SAR) *"}
                   </label>
                   {balance && remainingMinor !== null && remainingMinor > BigInt(0) && (
                     <div className="flex items-center gap-1.5">
@@ -380,7 +445,13 @@ function RecordPaymentModalContent({
               {/* Payment Account */}
               <div>
                 <span className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] block mb-1.5">
-                  {isRTL ? "طريقة استلام المبلغ (حساب الإيداع) *" : "Payment Method (Deposit Account) *"}
+                  {isPurchase
+                    ? isRTL
+                      ? "وسيلة الدفع *"
+                      : "Payment Method *"
+                    : isRTL
+                      ? "طريقة استلام المبلغ *"
+                      : "Payment Method *"}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {depositAccounts.map((acc) => {
@@ -403,8 +474,8 @@ function RecordPaymentModalContent({
                           <strong className="text-xs font-semibold block text-[var(--text-main)] truncate">
                             {isRTL ? acc.nameAr : acc.nameEn}
                           </strong>
-                          <span className="text-xs text-[var(--text-muted)] font-mono" dir="ltr">
-                            ({acc.code})
+                          <span className="text-[11px] text-[var(--text-muted)]">
+                            {isCash ? (isRTL ? "نقداً" : "Cash") : isRTL ? "تحويل بنكي" : "Bank transfer"}
                           </span>
                         </div>
                       </button>
@@ -417,7 +488,7 @@ function RecordPaymentModalContent({
               <div>
                 <label htmlFor="pay-date" className="text-xs sm:text-[0.8125rem] font-bold text-[var(--text-main)] inline-flex items-center gap-1.5 mb-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[var(--text-muted)]" aria-hidden="true" />
-                  <span>{isRTL ? "تاريخ التحصيل *" : "Collection Date *"}</span>
+                  <span>{isPurchase ? (isRTL ? "تاريخ السداد *" : "Payment Date *") : isRTL ? "تاريخ التحصيل *" : "Collection Date *"}</span>
                 </label>
                 <input
                   id="pay-date"
@@ -449,9 +520,13 @@ function RecordPaymentModalContent({
               <div className="p-3 rounded-xl bg-[var(--bg-card-subtle)] border theme-border flex items-start gap-2 text-xs text-[var(--text-muted)]">
                 <ArrowDownLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0 mt-0.5" aria-hidden="true" />
                 <p>
-                  {isRTL
-                    ? "يتم قيد العملية تلقائياً: طرف مدين لحساب النقد/البنك، وطرف دائن لذمم العميل لتخفيض الرصيد المستحق فوراً."
-                    : "Automated entry: Debit Cash/Bank account, Credit Accounts Receivable to immediately reduce balance."}
+                  {isPurchase
+                    ? isRTL
+                      ? "يُسجل السداد تلقائياً ويُخفض المبلغ المتبقي للمورد فوراً."
+                      : "Payment posts automatically and reduces remaining supplier balance immediately."
+                    : isRTL
+                      ? "يُسجل التحصيل تلقائياً ويُخفض الرصيد المتبقي على الفاتورة فوراً."
+                      : "Collection posts automatically and reduces remaining invoice balance immediately."}
                 </p>
               </div>
 
@@ -478,7 +553,15 @@ function RecordPaymentModalContent({
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" aria-hidden="true" />
-                      <span>{isRTL ? "تسجيل سند القبض" : "Record Receipt Voucher"}</span>
+                      <span>
+                        {isPurchase
+                          ? isRTL
+                            ? "تأكيد سداد المورد"
+                            : "Confirm Supplier Payment"
+                          : isRTL
+                            ? "تسجيل الدفعة"
+                            : "Record Payment"}
+                      </span>
                     </>
                   )}
                 </button>

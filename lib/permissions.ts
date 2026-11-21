@@ -395,6 +395,15 @@ export function canAccessAdminPath(
   if (clean.startsWith("/admin/purchases")) {
     return hasClientPermission(user, "purchases", "view");
   }
+  if (clean === "/admin/accounting/exports" || clean.startsWith("/admin/accounting/exports/")) {
+    return (
+      hasClientPermission(user, "accounting", "view") ||
+      hasClientPermission(user, "invoices", "view") ||
+      hasClientPermission(user, "purchases", "view") ||
+      hasClientPermission(user, "vatReturns", "view") ||
+      hasClientPermission(user, "accounts", "view")
+    );
+  }
   if (clean.startsWith("/admin/accounting")) {
     return hasClientPermission(user, "accounting", "view");
   }

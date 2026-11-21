@@ -23,6 +23,7 @@ export const NAVIGATION: NavigationItem[] = [
   { href: "/admin/invoices", ar: "الفواتير", en: "Invoices", icon: "invoice", group: "finance", roles: ["ADMIN"], module: "invoices", mobile: true, action: { href: "/admin/invoices/new", ar: "إنشاء فاتورة", en: "Create invoice" } },
   { href: "/admin/purchases", ar: "المشتريات والمصروفات", en: "Purchases & expenses", icon: "purchase", group: "finance", roles: ["ADMIN"], module: "purchases" },
   { href: "/admin/accounting", ar: "المحاسبة", en: "Accounting", icon: "accounting", group: "finance", roles: ["ADMIN"], module: "accounting" },
+  { href: "/admin/accounting/exports", ar: "مركز التصدير المالي", en: "Financial exports", icon: "exports", group: "finance", roles: ["ADMIN"], module: "accounting" },
   { href: "/admin/accounts", ar: "دليل الحسابات", en: "Chart of accounts", icon: "accounts", group: "finance", roles: ["ADMIN"], module: "accounts" },
   { href: "/admin/vat-returns", ar: "الإقرار الضريبي", en: "VAT returns", icon: "vat", group: "finance", roles: ["ADMIN"], module: "vatReturns" },
   { href: "/admin/invoices/settings", ar: "الشركة والبنك", en: "Company & bank", icon: "company", group: "settings", roles: ["ADMIN"], module: "companySettings" },

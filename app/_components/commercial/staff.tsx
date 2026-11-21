@@ -275,7 +275,12 @@ export function MembersPage({ representatives = false }: { representatives?: boo
   const ui = useUiText();
   const { user } = useAuth();
   const canWrite = hasClientPermission(user, "staff", "write");
-  const list = useCommercialData<{ items: Member[] }>(`/members?representatives=${representatives}&includeBalances=true`);
+  const [showRemovedDrivers, setShowRemovedDrivers] = useUrlState<boolean>("archived", false);
+  const membersQueryPath =
+    !representatives && showRemovedDrivers
+      ? "/members?representatives=false&includeBalances=true&archived=true"
+      : `/members?representatives=${representatives}&includeBalances=true`;
+  const list = useCommercialData<{ items: Member[] }>(membersQueryPath);
   const [editing, setEditing] = useState<Member | "NEW" | null>(null);
   const [search, setSearch] = useUrlState<string>("q", "");
   const [kindFilter, setKindFilter] = useUrlState<MemberFilter>("kind", "ALL", MEMBER_FILTERS);
@@ -629,6 +634,26 @@ export function MembersPage({ representatives = false }: { representatives?: boo
               )}
             </div>
           </div>
+
+          {!representatives && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <label className="inline-flex min-h-11 sm:min-h-9 items-center gap-2.5 text-xs sm:text-[0.8125rem] font-bold cursor-pointer">
+                <Checkbox
+                  checked={showRemovedDrivers}
+                  onChange={(event) => {
+                    setShowRemovedDrivers(event.target.checked);
+                    setKindFilter("ALL");
+                  }}
+                />
+                <span>{ui("عرض حسابات الكباتن المزالين")}</span>
+              </label>
+              {showRemovedDrivers && (
+                <span className="text-xs font-medium text-[var(--accent-gold)]">
+                  {ui("حسابات الكباتن المزالين مخفية من القائمة الرئيسية فقط مع بقاء جميع الحركات المالية.")}
+                </span>
+              )}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="p-0">
@@ -831,6 +856,14 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                                     />
                                     <span>{ui(r.active ? "نشط" : "موقوف")}</span>
                                   </Badge>
+                                  {r.captainArchived && (
+                                    <Badge
+                                      variant="gold"
+                                      className="rounded-lg text-[11px] font-semibold px-2 py-0.5 whitespace-nowrap"
+                                    >
+                                      <span>{ui("مزال")}</span>
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -997,9 +1030,16 @@ export function MembersPage({ representatives = false }: { representatives?: boo
                       </span>
                     }
                     badge={
-                      <Badge variant={r.active ? "success" : "secondary"} className="text-xs">
-                        {ui(r.active ? "نشط" : "موقوف")}
-                      </Badge>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Badge variant={r.active ? "success" : "secondary"} className="text-xs">
+                          {ui(r.active ? "نشط" : "موقوف")}
+                        </Badge>
+                        {r.captainArchived && (
+                          <Badge variant="gold" className="text-xs">
+                            {ui("مزال")}
+                          </Badge>
+                        )}
+                      </div>
                     }
                     footer={
                       <div className="mobile-card-actions w-full flex flex-wrap items-center gap-2">

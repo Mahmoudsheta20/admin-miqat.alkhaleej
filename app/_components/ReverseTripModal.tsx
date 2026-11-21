@@ -75,7 +75,7 @@ function ReverseTripForm({ onClose, contract, onSuccess }: ReverseTripModalProps
     void Promise.all([getCaptains(), getVehicles()]).then(([caps, fleet]) => {
       if (!isActive) return;
       if (!caps.success || !fleet.success) throw new Error(isRTL ? "تعذر تحميل الكباتن والمركبات. أغلق النافذة وأعد المحاولة." : "Failed to load captains and vehicles. Close and retry.");
-      const activeCaptains = (caps.captains || []).filter(captain => captain.active);
+      const activeCaptains = (caps.captains || []).filter(captain => captain.active && !captain.isArchived);
       setCaptains(activeCaptains);
       setVehicles(fleet.vehicles || []);
       if (!activeCaptains.some(captain => captain.id === contract.captainId)) {

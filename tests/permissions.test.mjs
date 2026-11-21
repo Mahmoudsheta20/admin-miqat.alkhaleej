@@ -148,8 +148,17 @@ test("canAccessAdminPath enforces companySettings separately from invoices and h
   };
   assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/invoices"), true);
   assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/invoices/new"), true);
+  assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/accounting/exports"), true);
+  assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/accounting"), false);
   assert.equal(canAccessAdminPath(invoicesOnlyAdmin, "/admin/invoices/settings"), false);
   assert.equal(hasAnyAdminModule(invoicesOnlyAdmin), true);
+
+  const opsOnlyAdmin = {
+    role: "ADMIN",
+    email: "ops@example.test",
+    permissions: { contracts: { view: true }, fleet: { view: true } },
+  };
+  assert.equal(canAccessAdminPath(opsOnlyAdmin, "/admin/accounting/exports"), false);
 
   const emptyAdmin = {
     role: "ADMIN",

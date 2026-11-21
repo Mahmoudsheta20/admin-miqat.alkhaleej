@@ -1,0 +1,378 @@
+{
+  "meta": {
+    "project": "Miqat Al-Khaleej Transport & Finance Suite",
+    "targetDurationSec": 87,
+    "audience": "Business owners, operations managers, financial controllers, and enterprise clients",
+    "demoUrl": "http://127.0.0.1:3429",
+    "alternateLocalUrl": "http://localhost:3000",
+    "outputVideo": "output/system-demo-sa.mp4",
+    "outputSubtitles": "output/subtitles.srt",
+    "ttsEngine": "elevenlabs",
+    "modelId": "eleven_v4",
+    "voiceId": "JBFqnCBsd6RMkjVDRZzb",
+    "elevenlabs": {
+      "modelId": "eleven_v4",
+      "languageCode": "ar",
+      "outputFormat": "mp3_44100_128",
+      "stability": 0.6,
+      "similarityBoost": 0.78,
+      "useSpeakerBoost": true,
+      "preferredVoices": [
+        {
+          "id": "cFUFIbKkO2iZFwS8cRnY",
+          "label": "Nasser AlJubaily - Authentic Saudi Pro"
+        },
+        {
+          "id": "MI88rOZjXbH22N8KHXUo",
+          "label": "Ali - Calm & Deep Arabic Saudi Narrator"
+        },
+        {
+          "id": "JBFqnCBsd6RMkjVDRZzb",
+          "label": "George - Premade Storyteller (Free-tier compatible)"
+        },
+        {
+          "id": "onwK4e9ZLuTAKqWW03F9",
+          "label": "Daniel - Premade Broadcaster (Free-tier compatible)"
+        }
+      ]
+    },
+    "measuredTotalDurationSec": 115.6
+  },
+  "scenes": [
+    {
+      "id": "scene_01",
+      "titleAr": "مقدمة ولوحة التحكم التنفيذية",
+      "titleEn": "Branded Intro & Executive Dashboard",
+      "routes": [
+        "/admin"
+      ],
+      "estimatedDurationSec": 10,
+      "durationMs": 13600,
+      "audioFile": "demo/audio/scene_01.mp3",
+      "narrationAr": "حياكم الله في نظام ميقات الخليج. من لوحة التحكم تتابع الأسطول والعقود وإيرادات الربع لحظياً، وتبدّل بسهولة بين العربي والإنجليزي والوضع الداكن.",
+      "ttsAr": "حَيَّاكُمُ اللَّهُ فِي نِظَامِ مِيقَاتِ الخَلِيجِ. مِنْ لَوْحَةِ التَّحَكُّمِ، تُتَابِعُ الأُسْطُولَ وَالعُقُودَ وَإِيرَادَاتِ الرُّبْعِ لَحْظِيًّا، وَتُبَدِّلُ بِسُهُولَةٍ بَيْنَ العَرَبِيِّ وَالإِنْجِلِيزِيِّ وَالوَضْعِ الدَّاكِنِ.",
+      "narrationEn": "Welcome to Miqat Al-Khaleej. Monitor fleet readiness, active contracts, and quarter revenues live from the Executive Dashboard, with instant Light and Dark themes.",
+      "uiActions": [
+        {
+          "action": "introSlate",
+          "durationMs": 3000
+        },
+        {
+          "action": "goto",
+          "target": "/admin"
+        },
+        {
+          "action": "highlight",
+          "target": "main .grid",
+          "holdMs": 950
+        },
+        {
+          "action": "glideClick",
+          "target": "button[aria-label='تفعيل الوضع الداكن']",
+          "holdMs": 1200
+        },
+        {
+          "action": "glideClick",
+          "target": "button[aria-label='تفعيل الوضع الفاتح']",
+          "holdMs": 450
+        }
+      ]
+    },
+    {
+      "id": "scene_02",
+      "titleAr": "أسطول المركبات والفحص الفني",
+      "titleEn": "Fleet Registry & 16-Point Safety Inspections",
+      "routes": [
+        "/admin/fleet",
+        "/admin/inspections"
+      ],
+      "estimatedDurationSec": 10,
+      "durationMs": 14080,
+      "audioFile": "demo/audio/scene_02.mp3",
+      "narrationAr": "من شاشة الأسطول تراقب الاستمارات والتأمين، وفي الفحص اليومي يتأكد الكابتن من ستة عشر بند سلامة، وترتبط تلقائياً بالعقد مع إرسال ملف PDF على واتساب.",
+      "ttsAr": "مِنْ شَاشَةِ الأُسْطُولِ، تُرَاقِبُ الِاسْتِمَارَاتِ وَالتَّأْمِينَ. وَفِي الفَحْصِ اليَوْمِيِّ، يَتَأَكَّدُ الكَابْتِنُ مِنْ سِتَّةَ عَشَرَ بَنْدَ سَلَامَةٍ، وَتَرْتَبِطُ تِلْقَائِيًّا بِالعَقْدِ مَعَ إِرْسَالِ مَلَفِّ بِي دِي إِفْ عَلَى وَاتْسَابْ.",
+      "narrationEn": "Track registrations and insurance in Fleet, while 16-point daily safety inspections link automatically to contracts with one-click WhatsApp PDF dispatch.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/fleet"
+        },
+        {
+          "action": "highlight",
+          "target": "table tbody tr:first-child",
+          "holdMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "a[href='/admin/inspections']",
+          "holdMs": 550
+        },
+        {
+          "action": "glideClick",
+          "target": "table tbody tr:first-child button",
+          "holdMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "scene_03",
+      "titleAr": "العقود الرسمية وبوابة الكابتن",
+      "titleEn": "Official Contracts & Isolated Captain Portal",
+      "routes": [
+        "/admin/contracts/11111111-1111-4111-8111-111111111111",
+        "/captain",
+        "/captain/account"
+      ],
+      "estimatedDurationSec": 11,
+      "durationMs": 14400,
+      "audioFile": "demo/audio/scene_03.mp3",
+      "narrationAr": "العقد يوثق كشف الركاب ورمز QR للتحقق العام؛ وبالمقابل، يدخل الكابتن بوابة مستقلة تماماً عن المالية، يتابع منها رحلاته وعهدته ومستحقاته.",
+      "ttsAr": "العَقْدُ يُوَثِّقُ كَشْفَ الرُّكَّابِ وَرَمْزَ كْيُو آرْ لِلتَّحَقُّقِ العَامِّ. وَبِالمُقَابِلِ، يَدْخُلُ الكَابْتِنُ بَوَّابَةً مُسْتَقِلَّةً تَمَامًا عَنِ المَالِيَّةِ، يُتَابِعُ مِنْهَا رِحْلَاتِهِ وَعُهْدَتَهُ وَمُسْتَحَقَّاتِهِ.",
+      "narrationEn": "Every contract includes a passenger manifest and public QR link — while captains use an isolated mobile portal for trips, custody, and exact earnings.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/contracts/11111111-1111-4111-8111-111111111111"
+        },
+        {
+          "action": "smoothScroll",
+          "y": 380,
+          "durationMs": 750
+        },
+        {
+          "action": "switchContext",
+          "role": "CAPTAIN",
+          "target": "/captain"
+        },
+        {
+          "action": "highlight",
+          "target": "main section",
+          "holdMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "a[href='/captain/account']",
+          "holdMs": 950
+        }
+      ]
+    },
+    {
+      "id": "scene_04",
+      "titleAr": "شاشة الفواتير وتفاصيل التحصيل",
+      "titleEn": "Redesigned Invoices & Live Collection",
+      "routes": [
+        "/admin/invoices",
+        "/admin/invoices/55555555-5555-4555-8555-555555555502"
+      ],
+      "estimatedDurationSec": 11,
+      "durationMs": 14080,
+      "audioFile": "demo/audio/scene_04.mp3",
+      "narrationAr": "في شاشة الفواتير تظهر حالة السداد الحية فوراً: مدفوعة، جزئية، أو آجلة؛ مع فلاتر سريعة وتسجيل تحصيل بنكي أو نقدي في ثوانٍ.",
+      "ttsAr": "فِي شَاشَةِ الفَوَاتِيرِ، تَظْهَرُ حَالَةُ السَّدَادِ الحَيَّةُ فَوْرًا: مَدْفُوعَةٌ، جُزْئِيَّةٌ، أَوْ آجِلَةٌ؛ مَعَ فَلَاتِرَ سَرِيعَةٍ، وَتَسْجِيلِ تَحْصِيلٍ بَنْكِيٍّ أَوْ نَقْدِيٍّ فِي ثَوَانٍ.",
+      "narrationEn": "Invoices now display live Paid, Partially Paid, and Unpaid badges with instant quick filters and one-click bank or cash payment collection.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('مدفوعة جزئياً')",
+          "holdMs": 750
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('الكل')",
+          "holdMs": 400
+        },
+        {
+          "action": "glideClick",
+          "target": "a[href*='/admin/invoices/55555555']",
+          "holdMs": 600
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('تحصيل دفعة'), button:has-text('تسجيل')",
+          "holdMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "scene_05",
+      "titleAr": "معالج الفواتير من أربع مراحل",
+      "titleEn": "4-Stage ZATCA Invoice Creation Wizard",
+      "routes": [
+        "/admin/invoices/new"
+      ],
+      "estimatedDurationSec": 10,
+      "durationMs": 13840,
+      "audioFile": "demo/audio/scene_05.mp3",
+      "narrationAr": "إنشاء الفاتورة يتم بأربع خطوات مرتبة: تختار العقد فتتعبأ البيانات تلقائياً، وتُدخل السعر فتُحتسب ضريبة خمسة عشر بالمئة والملخص الجانبي فوراً.",
+      "ttsAr": "إِنْشَاءُ الفَاتُورَةِ يَتِمُّ بِأَرْبَعِ خُطُوَاتٍ مُرَتَّبَةٍ: تَخْتَارُ العَقْدَ، فَتَتَعَبَّأُ البَيَانَاتُ تِلْقَائِيًّا، وَتُدْخِلُ السِّعْرَ، فَتُحْتَسَبُ ضَرِيبَةُ خَمْسَةَ عَشَرَ بِالمِئَةِ وَالمُلَخَّصُ الجَانِبِيُّ فَوْرًا.",
+      "narrationEn": "Create invoices in four crisp steps: pick a contract to auto-fill client data, set route details, and watch 15% VAT and side totals update live.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/invoices/new"
+        },
+        {
+          "action": "selectContract",
+          "index": 1
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: مسار الرحلة والخدمة')",
+          "holdMs": 450
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: السعر والضريبة')",
+          "holdMs": 450
+        },
+        {
+          "action": "typeSlow",
+          "target": "input[type='number']",
+          "value": "12500"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('المتابعة: الدفع والمراجعة')",
+          "holdMs": 950
+        }
+      ]
+    },
+    {
+      "id": "scene_06",
+      "titleAr": "المشتريات والمركز المحاسبي",
+      "titleEn": "Fleet Purchases & Accounting Hub",
+      "routes": [
+        "/admin/purchases",
+        "/admin/accounting"
+      ],
+      "estimatedDurationSec": 11,
+      "durationMs": 15600,
+      "audioFile": "demo/audio/scene_06.mp3",
+      "narrationAr": "تربط مصروفاتك بالمركبات وتبدّل بين قبل الضريبة وشامل الضريبة؛ وفي المحاسبة تتابع الأرباح، وبطاقات السيولة، وهامش كل حافلة، والبحث الذكي للقبض والدفع.",
+      "ttsAr": "تَرْبِطُ مَصْرُوفَاتِكَ بِالمَرْكَبَاتِ، وَتُبَدِّلُ بَيْنَ قَبْلَ الضَّرِيبَةِ وَشَامِلِ الضَّرِيبَةِ. وَفِي المُحَاسَبَةِ، تُتَابِعُ الأَرْبَاحَ، وَبِطَاقَاتِ السُّيُولَةِ، وَهَامِشَ كُلِّ حَافِلَةٍ، وَالبَحْثَ الذَّكِيَّ لِلْقَبْضِ وَالدَّفْعِ.",
+      "narrationEn": "Link expenses directly to vehicles with Before/Includes-VAT pricing, then monitor net profits, cash cards, fleet margins, and smart payment lookup.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/purchases"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('مصروف جديد'), button:has-text('تسجيل فاتورة مورد')",
+          "holdMs": 600
+        },
+        {
+          "action": "glideClick",
+          "target": "[role='dialog'] button:has-text('شامل 15%')",
+          "holdMs": 650
+        },
+        {
+          "action": "pressKey",
+          "key": "Escape"
+        },
+        {
+          "action": "goto",
+          "target": "/admin/accounting"
+        },
+        {
+          "action": "highlight",
+          "target": "main .grid",
+          "holdMs": 950
+        }
+      ]
+    },
+    {
+      "id": "scene_07",
+      "titleAr": "الضريبة ومركز التصدير الموحد",
+      "titleEn": "VAT Returns & Unified Financial Exports Center",
+      "routes": [
+        "/admin/vat-returns",
+        "/admin/accounting/exports"
+      ],
+      "estimatedDurationSec": 14,
+      "durationMs": 16000,
+      "audioFile": "demo/audio/scene_07.mp3",
+      "narrationAr": "إقرار الزكاة جاهز بخاناته الست عشرة للنسخ؛ ومن مركز التصدير الموحد الجديد تفلتر بتسعة عشر معياراً، وتعاين تسع قوائم مالية، وتصدّر PDF أو إكسل بضغطة زر.",
+      "ttsAr": "إِقْرَارُ الزَّكَاةِ جَاهِزٌ بِخَانَاتِهِ السِّتَّ عَشْرَةَ لِلنَّسْخِ. وَمِنْ مَرْكَزِ التَّصْدِيرِ المُوَحَّدِ الجَدِيدِ، تُفَلْتِرُ بِتِسْعَةَ عَشَرَ مِعْيَارًا، وَتُعَايِنُ تِسْعَ قَوَائِمَ مَالِيَّةٍ، وَتُصَدِّرُ مَلَفَّاتِ بِي دِي إِفْ أَوْ إِكْسِلْ بِضَغْطَةِ زِرٍّ.",
+      "narrationEn": "ZATCA Boxes 1–16 stay copy-ready; inside the new Unified Financial Exports Center, filter across 19 fields, preview 9 live tabs, and export PDF or Excel in one click.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/vat-returns"
+        },
+        {
+          "action": "highlight",
+          "target": "main table",
+          "holdMs": 700
+        },
+        {
+          "action": "goto",
+          "target": "/admin/accounting/exports"
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('حزمة الضريبة والزكاة')",
+          "holdMs": 550
+        },
+        {
+          "action": "glideClick",
+          "target": "button:has-text('فلاتر متقدمة')",
+          "holdMs": 650
+        },
+        {
+          "action": "smoothScroll",
+          "y": 760,
+          "durationMs": 650
+        },
+        {
+          "action": "glideClick",
+          "target": "[role='tab']:has-text('ربحية المركبات')",
+          "holdMs": 650
+        },
+        {
+          "action": "glideHover",
+          "target": "button:has-text('PDF A4')",
+          "holdMs": 600
+        }
+      ]
+    },
+    {
+      "id": "scene_08",
+      "titleAr": "الأتمتة والصلاحيات والختام",
+      "titleEn": "WhatsApp Automation, RBAC & Executive Outro",
+      "routes": [
+        "/admin/whatsapp",
+        "/admin/admins"
+      ],
+      "estimatedDurationSec": 10,
+      "durationMs": 14000,
+      "audioFile": "demo/audio/scene_08.mp3",
+      "narrationAr": "ومع ربط واتساب التلقائي، وجاهزية زاتكا، وصلاحيات المشرفين الدقيقة؛ يمنحك ميقات الخليج تحكماً كاملاً في أسطولك وماليتك، بثقة وسرعة.",
+      "ttsAr": "وَمَعَ رَبْطِ وَاتْسَابْ التِّلْقَائِيِّ، وَجَاهِزِيَّةِ زَاتْكَا، وَصَلَاحِيَّاتِ المُشْرِفِينَ الدَّقِيقَةِ؛ يَمْنَحُكَ مِيقَاتُ الخَلِيجِ تَحَكُّمًا كَامِلًا فِي أُسْطُولِكَ وَمَالِيَّتِكَ، بِثِقَةٍ وَسُرْعَةٍ.",
+      "narrationEn": "With automated WhatsApp dispatch, ZATCA readiness, and granular RBAC permissions, Miqat Al-Khaleej delivers total control over fleet operations and finances.",
+      "uiActions": [
+        {
+          "action": "goto",
+          "target": "/admin/whatsapp"
+        },
+        {
+          "action": "goto",
+          "target": "/admin/admins"
+        },
+        {
+          "action": "highlight",
+          "target": "table",
+          "holdMs": 750
+        },
+        {
+          "action": "outroSlate",
+          "durationMs": 4000
+        }
+      ]
+    }
+  ]
+}
