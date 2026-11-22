@@ -264,3 +264,37 @@ test("a saved 403 exposes pairing for a distinct number", async ({ page }) => {
   await expect(page.getByRole("img", { name: "WhatsApp Login QR Code" })).toBeVisible();
   await expect(page.getByText("Scan the QR code from the phone for the new number you entered.", { exact: true })).toBeVisible();
 });
+
+test("reset an unidentified refused sender and link later from settings", async ({ page }) => {
+  let removed = false;
+  let pairing = false;
+  await page.route("**/api/proxy/whatsapp/status", route => route.fulfill({ json: { success: true, data: {
+    status: pairing ? "connecting" : "disconnected", qrImage: null, haltCode: pairing ? null : "forbidden",
+    savedSession: { hasSession: false }, recovery: { canReconnect: false, canRelink: false },
+    sessionActions: { canResetUnidentified: !removed, intentionallyRemoved: removed, needsPreviousNumber: true,
+      canReplaceRefused: removed && !pairing, replacementPending: pairing, queueBusy: false },
+  } } }));
+  await page.route("**/api/proxy/whatsapp/session/remove", route => {
+    expect(route.request().postDataJSON()).toEqual({ expectedAccount: null });
+    removed = true;
+    return route.fulfill({ json: { success: true } });
+  });
+  await page.route("**/api/proxy/whatsapp/session/replace-refused", route => {
+    expect(route.request().postDataJSON()).toEqual({ previousPhone: "+966500000001", phone: "+966500000002" });
+    pairing = true;
+    return route.fulfill({ json: { success: true } });
+  });
+  await openWhatsApp(page);
+  await page.getByRole("button", { name: "Reset session", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm reset" }).click();
+  await expect(page.getByRole("button", { name: "Enter new number" })).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Enter new number" }).click();
+  await page.getByLabel("Previous sender number").fill("+966500000001");
+  await page.getByLabel("New WhatsApp number").fill("+966500000001");
+  await page.getByRole("button", { name: "Show QR code" }).click();
+  await expect(page.getByText("Choose a number different from the previous sender.")).toBeVisible();
+  await page.getByLabel("New WhatsApp number").fill("+966500000002");
+  await page.getByRole("button", { name: "Show QR code" }).click();
+  await expect(page.getByText("Scan the QR code from the phone for the new number you entered.")).toBeVisible();
+});

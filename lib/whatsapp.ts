@@ -53,6 +53,8 @@ export interface WhatsAppStatus {
     queueBusy: boolean;
     canRemove: boolean;
     intentionallyRemoved: boolean;
+    canResetUnidentified?: boolean;
+    needsPreviousNumber?: boolean;
     canReplaceRefused?: boolean;
     replacementPending?: boolean;
   };
@@ -293,12 +295,12 @@ export async function logoutWhatsApp(): Promise<WhatsAppStatus> {
   return normalizeWhatsAppStatus(data);
 }
 
-export async function replaceRefusedWhatsAppSession(phone: string): Promise<void> {
+export async function replaceRefusedWhatsAppSession(phone: string, previousPhone?: string): Promise<void> {
   const response = await fetch(backendUrl("/whatsapp/session/replace-refused"), {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify({ phone, previousPhone }),
   });
   const data = await parseWhatsAppJson<WhatsAppStatusPayload>(response);
   if (!response.ok || !data?.success) {
@@ -309,7 +311,7 @@ export async function replaceRefusedWhatsAppSession(phone: string): Promise<void
   notifyWhatsAppMutation();
 }
 
-export async function removeSavedWhatsAppSession(expectedAccount: string): Promise<void> {
+export async function removeSavedWhatsAppSession(expectedAccount: string | null): Promise<void> {
   const res = await fetch(backendUrl("/whatsapp/session/remove"), {
     method: "POST",
     credentials: "include",

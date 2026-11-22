@@ -32,7 +32,7 @@ import {
   sendWhatsAppMessage,
 } from "@/lib/whatsapp";
 
-type ConfirmResetMode = "logout_connected" | "new_number" | "relink_same_number" | "remove_number";
+type ConfirmResetMode = "logout_connected" | "new_number" | "relink_same_number" | "remove_number" | "reset_unidentified";
 type LinkingIntent = "same_number" | "new_number";
 
 function formatAccountPhone(meId?: string): string | null {
@@ -59,6 +59,7 @@ export default function AdminWhatsAppSettingsPage() {
   const [confirmMode, setConfirmMode] = useState<ConfirmResetMode | null>(null);
   const [replacementOpen, setReplacementOpen] = useState(false);
   const [replacementPhone, setReplacementPhone] = useState("");
+  const [previousPhone, setPreviousPhone] = useState("");
   const [replacementError, setReplacementError] = useState("");
   const [replacing, setReplacing] = useState(false);
   const replacementLock = useRef(false);
@@ -108,9 +109,9 @@ export default function AdminWhatsAppSettingsPage() {
     const mode = confirmMode;
     setActionError("");
     setActionMessage("");
-    if (mode === "remove_number") {
-      if (!removalAccount) throw new Error(text("حدّث الصفحة للتحقق من الرقم المحفوظ.", "Refresh the page to verify the saved number."));
-      await removeSavedWhatsAppSession(removalAccount);
+    if (mode === "remove_number" || mode === "reset_unidentified") {
+      if (mode === "remove_number" && !removalAccount) throw new Error(text("حدّث الصفحة للتحقق من الرقم المحفوظ.", "Refresh the page to verify the saved number."));
+      await removeSavedWhatsAppSession(mode === "reset_unidentified" ? null : removalAccount ?? null);
       setLinkingIntent(null);
       refreshStatus();
       setConfirmMode(null);
@@ -137,6 +138,13 @@ export default function AdminWhatsAppSettingsPage() {
     );
   }
 
+  function openReplacement() {
+    setPreviousPhone("");
+    setReplacementPhone("");
+    setReplacementError("");
+    setReplacementOpen(true);
+  }
+
   async function handleReplaceRefused(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canWrite || replacementLock.current || !waState?.sessionActions?.canReplaceRefused) return;
@@ -145,13 +153,22 @@ export default function AdminWhatsAppSettingsPage() {
       setReplacementError(text("أدخل الرقم الجديد مع رمز الدولة وبدون مسافات.", "Enter the new number with country code and no spaces."));
       return;
     }
+    const previous = needsPreviousNumber ? previousPhone.trim() : undefined;
+    if (needsPreviousNumber && (!previous || !/^\+?[1-9]\d{7,14}$/.test(previous))) {
+      setReplacementError(text("أدخل رقم الإرسال السابق مع رمز الدولة.", "Enter the previous sender number with its country code."));
+      return;
+    }
+    if (previous && previous.replace(/^\+/, "") === next.replace(/^\+/, "")) {
+      setReplacementError(text("يجب أن يختلف الرقم الجديد عن السابق.", "Choose a number different from the previous sender."));
+      return;
+    }
     replacementLock.current = true;
     setReplacing(true);
     setReplacementError("");
     setActionError("");
     setActionMessage("");
     try {
-      await replaceRefusedWhatsAppSession(next);
+      await replaceRefusedWhatsAppSession(next, previous);
       setLinkingIntent("new_number");
       setReplacementOpen(false);
       refreshStatus();
@@ -218,6 +235,8 @@ export default function AdminWhatsAppSettingsPage() {
   const queueBusy = waState?.sessionActions?.queueBusy ?? Boolean(waState?.antiBan?.queueLength ?? waState?.queueLength);
   const canRelink = waState?.recovery?.canRelink !== false && !queueBusy;
   const canRemove = waState?.sessionActions?.canRemove === true && !queueBusy;
+  const canResetUnidentified = waState?.sessionActions?.canResetUnidentified === true && !queueBusy;
+  const needsPreviousNumber = waState?.sessionActions?.needsPreviousNumber === true;
   const canReplaceRefused = waState?.sessionActions?.canReplaceRefused === true && !queueBusy;
   const replacementPending = waState?.sessionActions?.replacementPending === true;
   const replacementTitle = text("ربط رقم مختلف", "Link a different number");
@@ -262,12 +281,8 @@ export default function AdminWhatsAppSettingsPage() {
       label: replacementTitle,
       icon: QrCode,
       variant: "secondary" as const,
-      onClick: () => {
-        setReplacementPhone("");
-        setReplacementError("");
-        setReplacementOpen(true);
-      },
-    }] : switchActions ?? []),
+      onClick: openReplacement,
+    }] : canResetUnidentified ? [] : switchActions ?? []),
     ...(canWrite && waState?.sessionActions && hasSavedSession ? [{
       label: text("إزالة الرقم المحفوظ", "Remove saved number"),
       icon: LogOut,
@@ -281,7 +296,14 @@ export default function AdminWhatsAppSettingsPage() {
   ];
 
   const confirmDialogConfig =
-    confirmMode === "remove_number"
+    confirmMode === "reset_unidentified"
+      ? {
+          variant: "danger" as const,
+          title: text("إعادة ضبط جلسة واتساب", "Reset WhatsApp session"),
+          message: text("ستُحذف بيانات الربط القديمة من ميقات. سيبقى الإرسال متوقفاً حتى تربط رقماً آخر من هذه الصفحة.", "This clears the old linking credentials. Sending stays paused until you link another number from this page."),
+          confirmLabel: text("تأكيد إعادة الضبط", "Confirm reset"),
+        }
+    : confirmMode === "remove_number"
       ? {
           variant: "danger" as const,
           title: text("إزالة رقم واتساب المحفوظ", "Remove saved WhatsApp number"),
@@ -354,7 +376,7 @@ export default function AdminWhatsAppSettingsPage() {
           {text("انتظر انتهاء الإرسال الجاري والرسائل المنتظرة قبل تغيير الرقم أو إزالته.", "Wait for queued messages and the current send to finish before changing or removing the number.")}
         </p>
       )}
-      {intentionallyRemoved && !hasSavedSession && !isForbidden && status === "disconnected" && (
+      {intentionallyRemoved && !hasSavedSession && status === "disconnected" && (
         <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm">
           {text("أُزيل الرقم المحفوظ. اختر ربط رقم جديد عندما تكون جاهزاً.", "The saved number was removed. Link a new number when you’re ready.")}
         </p>
@@ -676,7 +698,9 @@ export default function AdminWhatsAppSettingsPage() {
                 </p>
                 {!hasSavedSession && (
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                    {isForbidden
+                    {isForbidden && (canResetUnidentified || canReplaceRefused)
+                      ? text("توقف الإرسال من الرقم السابق. يمكنك ربط رقم آخر من هذه الصفحة.", "Sending from the previous number is paused. You can link another number here.")
+                      : isForbidden
                       ? text(
                           "تم رفض الاتصال من واتساب (403). راجع حالة الحساب مع الدعم الفني قبل أي محاولة جديدة.",
                           "WhatsApp refused the connection (403). Review the account status before retrying."
@@ -720,8 +744,8 @@ export default function AdminWhatsAppSettingsPage() {
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                     {isForbidden
                       ? text(
-                          "تم إيقاف هذا الحساب من واتساب (403). يلزم مراجعة حالة الحساب قبل محاولة إعادة الاتصال أو الربط.",
-                          "WhatsApp refused this connection (403). Account review is required before reconnecting or relinking."
+                          "رفض واتساب الاتصال بهذا الرقم (403). راجع حالته مع واتساب قبل استخدامه مجدداً.",
+                          "WhatsApp refused this number’s connection (403). Review its status with WhatsApp before using it again."
                         )
                       : isLoggedOut
                         ? text(
@@ -737,7 +761,20 @@ export default function AdminWhatsAppSettingsPage() {
               )}
               {canWrite && (
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                  {hasSavedSession && isLoggedOut ? (
+                  {canResetUnidentified || canReplaceRefused ? (
+                    <>
+                      {canResetUnidentified && (
+                        <button type="button" onClick={() => setConfirmMode("reset_unidentified")} className="theme-input min-h-11 rounded-lg px-4">
+                          {text("إعادة ضبط الجلسة", "Reset session")}
+                        </button>
+                      )}
+                      {canReplaceRefused && (
+                        <button type="button" onClick={openReplacement} className="gold-gradient-btn min-h-11 rounded-lg px-4">
+                          {text("إدخال الرقم الجديد", "Enter new number")}
+                        </button>
+                      )}
+                    </>
+                  ) : hasSavedSession && isLoggedOut ? (
                     <>
                       <button
                         type="button"
@@ -1008,8 +1045,19 @@ export default function AdminWhatsAppSettingsPage() {
           <form onSubmit={handleReplaceRefused} className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 space-y-4">
             <h2 className="text-base font-semibold">{replacementTitle}</h2>
             <p className="text-sm text-[var(--text-muted)]">
-              {text("ستُزال جلسة الرقم المرفوض من ميقات. بعد ظهور رمز QR امسحه من الهاتف المرتبط بالرقم الجديد.", "Miqat will remove the refused number’s session. Scan the QR code from the phone registered to the new number.")}
+              {intentionallyRemoved
+                ? text("أدخل الرقم الجديد ثم امسح رمز QR من هاتفه.", "Enter the new number, then scan the QR code from that phone.")
+                : text("ستُزال جلسة الرقم المرفوض من ميقات. بعد ظهور رمز QR امسحه من الهاتف المرتبط بالرقم الجديد.", "Miqat will remove the refused number’s session. Scan the QR code from the phone registered to the new number.")}
             </p>
+            {needsPreviousNumber && (
+              <div className="space-y-1">
+                <label htmlFor="wa-previous-phone" className="block text-sm font-medium">{text("رقم الإرسال السابق", "Previous sender number")}</label>
+                <input id="wa-previous-phone" type="tel" dir="ltr" required autoComplete="off" maxLength={16}
+                  value={previousPhone} onChange={event => setPreviousPhone(event.target.value)} disabled={replacing}
+                  aria-describedby="wa-previous-hint" className="theme-input min-h-11 w-full rounded-lg px-3" />
+                <p id="wa-previous-hint" className="text-xs text-[var(--text-muted)]">{text("تعذر قراءة الرقم القديم. تحقق منه من رسالة سابقة وأدخله مع رمز الدولة.", "Miqat could not identify the old sender. Confirm it from a previous message and include its country code.")}</p>
+              </div>
+            )}
             <div className="space-y-1">
               <label htmlFor="wa-replacement-phone" className="block text-sm font-medium">{text("رقم واتساب الجديد", "New WhatsApp number")}</label>
               <input id="wa-replacement-phone" type="tel" inputMode="tel" dir="ltr" autoComplete="off" required maxLength={16}
@@ -1021,7 +1069,7 @@ export default function AdminWhatsAppSettingsPage() {
             <div className="flex justify-end flex-wrap gap-2">
               <button type="button" disabled={replacing} onClick={() => setReplacementOpen(false)} className="theme-input min-h-11 rounded-lg px-4">{text("إلغاء", "Cancel")}</button>
               <button type="submit" disabled={replacing || !canReplaceRefused} className="gold-gradient-btn min-h-11 rounded-lg px-4 disabled:opacity-50">
-                {replacing ? text("جار تجهيز الربط…", "Preparing link…") : text("إزالة القديم وتجهيز رمز الربط", "Remove old session and show QR")}
+                {replacing ? text("جار تجهيز الربط…", "Preparing link…") : intentionallyRemoved ? text("إظهار رمز الربط", "Show QR code") : text("إزالة القديم وتجهيز رمز الربط", "Remove old session and show QR")}
               </button>
             </div>
           </form>
