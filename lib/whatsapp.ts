@@ -49,7 +49,13 @@ export interface WhatsAppStatus {
   status_message?: string;
   driverWorkflow?: { enabled: boolean; managementTarget: string | null };
   recovery?: { canReconnect: boolean; canRelink: boolean };
-  sessionActions?: { queueBusy: boolean; canRemove: boolean; intentionallyRemoved: boolean };
+  sessionActions?: {
+    queueBusy: boolean;
+    canRemove: boolean;
+    intentionallyRemoved: boolean;
+    canReplaceRefused?: boolean;
+    replacementPending?: boolean;
+  };
   haltCode?: WhatsAppHaltCode | null;
   savedSession?: SavedWhatsAppSessionInfo;
 }
@@ -285,6 +291,22 @@ export async function logoutWhatsApp(): Promise<WhatsAppStatus> {
   }
   notifyWhatsAppMutation();
   return normalizeWhatsAppStatus(data);
+}
+
+export async function replaceRefusedWhatsAppSession(phone: string): Promise<void> {
+  const response = await fetch(backendUrl("/whatsapp/session/replace-refused"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone }),
+  });
+  const data = await parseWhatsAppJson<WhatsAppStatusPayload>(response);
+  if (!response.ok || !data?.success) {
+    throw new Error(resolveWhatsAppError(
+      response, data, waText("تعذر ربط الرقم الجديد", "Unable to link the new number")
+    ));
+  }
+  notifyWhatsAppMutation();
 }
 
 export async function removeSavedWhatsAppSession(expectedAccount: string): Promise<void> {

@@ -241,3 +241,26 @@ test("disconnected and connecting sessions support reconnecting same number vs s
   await expect(page.getByRole("button", { name: "Change / New Number", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Remove saved number", exact: true })).toHaveCount(0);
 });
+
+test("a saved 403 exposes pairing for a distinct number", async ({ page }) => {
+  const qrImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jI2YAAAAASUVORK5CYII=";
+  let submitted = false;
+  await page.route("**/api/proxy/whatsapp/status", route => route.fulfill({ json: { success: true, data: submitted
+    ? { status: "qr_ready", qrImage, sessionActions: { replacementPending: true } }
+    : { status: "disconnected", qrImage: null, haltCode: "forbidden", recovery: { canReconnect: false, canRelink: false },
+      savedSession: { hasSession: true, me_id: "966501112233@s.whatsapp.net" },
+      sessionActions: { canReplaceRefused: true, canRemove: true, queueBusy: false } }
+  } }));
+  await page.route("**/api/proxy/whatsapp/session/replace-refused", route => {
+    expect(route.request().postDataJSON()).toEqual({ phone: "+966500000009" });
+    submitted = true;
+    return route.fulfill({ json: { success: true, data: { status: "qr_ready" } } });
+  });
+  await openWhatsApp(page);
+  await page.getByRole("button", { name: "Link a different number", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "New WhatsApp number" }).fill("+966500000009");
+  await dialog.getByRole("button", { name: "Remove old session and show QR" }).click();
+  await expect(page.getByRole("img", { name: "WhatsApp Login QR Code" })).toBeVisible();
+  await expect(page.getByText("Scan the QR code from the phone for the new number you entered.", { exact: true })).toBeVisible();
+});

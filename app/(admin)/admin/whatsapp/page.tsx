@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type FormEvent } from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
 import {
   AlertCircle,
@@ -16,6 +16,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { PageHeader } from "@/app/_components/ui";
+import Modal from "@/app/_components/Modal";
 import ConfirmDialog from "@/app/_components/ConfirmDialog";
 import WhatsAppDriverTrips from "@/app/_components/WhatsAppDriverTrips";
 import WhatsAppFlowPanel from "@/app/_components/WhatsAppFlowPanel";
@@ -27,6 +28,7 @@ import {
   logoutWhatsApp,
   reconnectWhatsApp,
   removeSavedWhatsAppSession,
+  replaceRefusedWhatsAppSession,
   sendWhatsAppMessage,
 } from "@/lib/whatsapp";
 
@@ -55,6 +57,11 @@ export default function AdminWhatsAppSettingsPage() {
   const refreshStatus = statusQuery.refetch;
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmResetMode | null>(null);
+  const [replacementOpen, setReplacementOpen] = useState(false);
+  const [replacementPhone, setReplacementPhone] = useState("");
+  const [replacementError, setReplacementError] = useState("");
+  const [replacing, setReplacing] = useState(false);
+  const replacementLock = useRef(false);
   const [removalAccount, setRemovalAccount] = useState<string>();
   const [linkingIntent, setLinkingIntent] = useState<LinkingIntent | null>(null);
   const loadError = statusQuery.error;
@@ -130,6 +137,37 @@ export default function AdminWhatsAppSettingsPage() {
     );
   }
 
+  async function handleReplaceRefused(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canWrite || replacementLock.current || !waState?.sessionActions?.canReplaceRefused) return;
+    const next = replacementPhone.trim();
+    if (!/^\+?[1-9]\d{7,14}$/.test(next)) {
+      setReplacementError(text("أدخل الرقم الجديد مع رمز الدولة وبدون مسافات.", "Enter the new number with country code and no spaces."));
+      return;
+    }
+    replacementLock.current = true;
+    setReplacing(true);
+    setReplacementError("");
+    setActionError("");
+    setActionMessage("");
+    try {
+      await replaceRefusedWhatsAppSession(next);
+      setLinkingIntent("new_number");
+      setReplacementOpen(false);
+      refreshStatus();
+      setActionMessage(text(
+        "أُزيلت الجلسة السابقة. امسح رمز الربط من هاتف الرقم الجديد عند ظهوره.",
+        "Old session removed. Scan the QR code from the new number’s phone when it appears."
+      ));
+    } catch (error) {
+      setReplacementError(error instanceof Error ? error.message : text("تعذر ربط الرقم الجديد", "Unable to link the new number"));
+      refreshStatus();
+    } finally {
+      replacementLock.current = false;
+      setReplacing(false);
+    }
+  }
+
   async function handleSendTestMessage(e: FormEvent) {
     e.preventDefault();
     if (!canWrite || isSending || !statusQuery.canSend) return;
@@ -180,6 +218,9 @@ export default function AdminWhatsAppSettingsPage() {
   const queueBusy = waState?.sessionActions?.queueBusy ?? Boolean(waState?.antiBan?.queueLength ?? waState?.queueLength);
   const canRelink = waState?.recovery?.canRelink !== false && !queueBusy;
   const canRemove = waState?.sessionActions?.canRemove === true && !queueBusy;
+  const canReplaceRefused = waState?.sessionActions?.canReplaceRefused === true && !queueBusy;
+  const replacementPending = waState?.sessionActions?.replacementPending === true;
+  const replacementTitle = text("ربط رقم مختلف", "Link a different number");
   const intentionallyRemoved = waState?.sessionActions?.intentionallyRemoved === true;
   const antiBan = waState?.antiBan;
   const queueLength = antiBan?.queueLength ?? waState?.queueLength ?? 0;
@@ -217,7 +258,16 @@ export default function AdminWhatsAppSettingsPage() {
           ];
 
   const headerSecondaryActions = [
-    ...(switchActions ?? []),
+    ...(canWrite && canReplaceRefused ? [{
+      label: replacementTitle,
+      icon: QrCode,
+      variant: "secondary" as const,
+      onClick: () => {
+        setReplacementPhone("");
+        setReplacementError("");
+        setReplacementOpen(true);
+      },
+    }] : switchActions ?? []),
     ...(canWrite && waState?.sessionActions && hasSavedSession ? [{
       label: text("إزالة الرقم المحفوظ", "Remove saved number"),
       icon: LogOut,
@@ -336,6 +386,12 @@ export default function AdminWhatsAppSettingsPage() {
             {text("إعادة المحاولة", "Retry")}
           </button>
         </div>
+      )}
+
+      {replacementPending && !isForbidden && status !== "connected" && (
+        <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm">
+          {text("امسح رمز الربط من هاتف الرقم الجديد الذي أدخلته.", "Scan the QR code from the phone for the new number you entered.")}
+        </p>
       )}
 
       {antiBan?.haltReason && (
@@ -946,6 +1002,31 @@ export default function AdminWhatsAppSettingsPage() {
           </div>
         </div>
       </section>
+
+      {replacementOpen && (
+        <Modal label={replacementTitle} onClose={() => setReplacementOpen(false)} isBusy={replacing}>
+          <form onSubmit={handleReplaceRefused} className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 space-y-4">
+            <h2 className="text-base font-semibold">{replacementTitle}</h2>
+            <p className="text-sm text-[var(--text-muted)]">
+              {text("ستُزال جلسة الرقم المرفوض من ميقات. بعد ظهور رمز QR امسحه من الهاتف المرتبط بالرقم الجديد.", "Miqat will remove the refused number’s session. Scan the QR code from the phone registered to the new number.")}
+            </p>
+            <div className="space-y-1">
+              <label htmlFor="wa-replacement-phone" className="block text-sm font-medium">{text("رقم واتساب الجديد", "New WhatsApp number")}</label>
+              <input id="wa-replacement-phone" type="tel" inputMode="tel" dir="ltr" autoComplete="off" required maxLength={16}
+                value={replacementPhone} onChange={event => setReplacementPhone(event.target.value)} disabled={replacing}
+                aria-describedby="wa-replacement-hint" className="theme-input min-h-11 w-full rounded-lg px-3" />
+              <p id="wa-replacement-hint" className="text-xs text-[var(--text-muted)]">{text("استخدم رمز الدولة، مثال: ‎+9665XXXXXXXX", "Include the country code, for example +9665XXXXXXXX.")}</p>
+            </div>
+            {replacementError && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{replacementError}</p>}
+            <div className="flex justify-end flex-wrap gap-2">
+              <button type="button" disabled={replacing} onClick={() => setReplacementOpen(false)} className="theme-input min-h-11 rounded-lg px-4">{text("إلغاء", "Cancel")}</button>
+              <button type="submit" disabled={replacing || !canReplaceRefused} className="gold-gradient-btn min-h-11 rounded-lg px-4 disabled:opacity-50">
+                {replacing ? text("جار تجهيز الربط…", "Preparing link…") : text("إزالة القديم وتجهيز رمز الربط", "Remove old session and show QR")}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       <ConfirmDialog
         key={confirmMode ?? "closed"}
