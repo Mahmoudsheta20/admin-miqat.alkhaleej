@@ -104,6 +104,7 @@ test("disconnected and connecting sessions support reconnecting same number vs s
     recovery: { canReconnect: true, canRelink: true },
   };
   const reconnectBodies: unknown[] = [];
+  const removals: unknown[] = [];
   let logoutCalls = 0;
 
   await page.route("**/api/proxy/whatsapp/status", (route) =>
@@ -133,6 +134,15 @@ test("disconnected and connecting sessions support reconnecting same number vs s
       haltCode: null,
       savedSession: { hasSession: false },
       recovery: { canReconnect: true, canRelink: true },
+    };
+    await route.fulfill({ json: { success: true, data: currentStatus } });
+  });
+
+  await page.route("**/api/proxy/whatsapp/session/remove", async route => {
+    removals.push(route.request().postDataJSON());
+    currentStatus = {
+      ...currentStatus, savedSession: { hasSession: false },
+      sessionActions: { queueBusy: false, canRemove: false, intentionallyRemoved: true },
     };
     await route.fulfill({ json: { success: true, data: currentStatus } });
   });
@@ -202,6 +212,7 @@ test("disconnected and connecting sessions support reconnecting same number vs s
       me_push_name: "Miqat Ops",
     },
     recovery: { canReconnect: false, canRelink: false },
+    sessionActions: { queueBusy: false, canRemove: true, intentionallyRemoved: false },
     antiBan: {
       queueLength: 0,
       maxQueueSize: 100,
@@ -220,4 +231,13 @@ test("disconnected and connecting sessions support reconnecting same number vs s
   await expect(page.getByRole("button", { name: "Reconnect Same Number", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Connect New Number", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Change / New Number", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Remove saved number", exact: true }).click();
+  const removeDialog = page.getByRole("dialog");
+  await expect(removeDialog.getByText(/\+966501112233/)).toBeVisible();
+  await removeDialog.getByRole("button", { name: "Remove number", exact: true }).click();
+  expect(removals).toEqual([{ expectedAccount: "966501112233:2@s.whatsapp.net" }]);
+  await expect(page.getByText(/Number removed from Miqat/)).toBeVisible();
+  await expect(page.getByText("403 refusal", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Change / New Number", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Remove saved number", exact: true })).toHaveCount(0);
 });

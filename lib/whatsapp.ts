@@ -49,6 +49,7 @@ export interface WhatsAppStatus {
   status_message?: string;
   driverWorkflow?: { enabled: boolean; managementTarget: string | null };
   recovery?: { canReconnect: boolean; canRelink: boolean };
+  sessionActions?: { queueBusy: boolean; canRemove: boolean; intentionallyRemoved: boolean };
   haltCode?: WhatsAppHaltCode | null;
   savedSession?: SavedWhatsAppSessionInfo;
 }
@@ -119,6 +120,7 @@ function normalizeWhatsAppStatus(payload: WhatsAppStatusPayload): WhatsAppStatus
     status_message: nested?.status_message ?? payload.status_message,
     driverWorkflow: nested?.driverWorkflow ?? payload.driverWorkflow,
     recovery: nested?.recovery ?? payload.recovery,
+    sessionActions: nested?.sessionActions ?? payload.sessionActions,
     haltCode: nested?.haltCode !== undefined ? nested.haltCode : payload.haltCode,
     savedSession: nested?.savedSession ?? payload.savedSession,
   };
@@ -283,6 +285,22 @@ export async function logoutWhatsApp(): Promise<WhatsAppStatus> {
   }
   notifyWhatsAppMutation();
   return normalizeWhatsAppStatus(data);
+}
+
+export async function removeSavedWhatsAppSession(expectedAccount: string): Promise<void> {
+  const res = await fetch(backendUrl("/whatsapp/session/remove"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expectedAccount }),
+  });
+  const data = await parseWhatsAppJson<WhatsAppStatusPayload>(res);
+  if (!res.ok || !data?.success) {
+    throw new Error(resolveWhatsAppError(
+      res, data, waText("تعذرت إزالة الرقم المحفوظ", "Unable to remove the saved number")
+    ));
+  }
+  notifyWhatsAppMutation();
 }
 
 export interface WhatsAppAutoSendResult {

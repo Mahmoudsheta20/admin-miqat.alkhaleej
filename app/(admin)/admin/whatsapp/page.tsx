@@ -26,10 +26,11 @@ import { useWhatsAppStatus } from "@/lib/use-whatsapp-status";
 import {
   logoutWhatsApp,
   reconnectWhatsApp,
+  removeSavedWhatsAppSession,
   sendWhatsAppMessage,
 } from "@/lib/whatsapp";
 
-type ConfirmResetMode = "logout_connected" | "new_number" | "relink_same_number";
+type ConfirmResetMode = "logout_connected" | "new_number" | "relink_same_number" | "remove_number";
 type LinkingIntent = "same_number" | "new_number";
 
 function formatAccountPhone(meId?: string): string | null {
@@ -54,6 +55,7 @@ export default function AdminWhatsAppSettingsPage() {
   const refreshStatus = statusQuery.refetch;
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmResetMode | null>(null);
+  const [removalAccount, setRemovalAccount] = useState<string>();
   const [linkingIntent, setLinkingIntent] = useState<LinkingIntent | null>(null);
   const loadError = statusQuery.error;
   const [actionMessage, setActionMessage] = useState("");
@@ -99,6 +101,18 @@ export default function AdminWhatsAppSettingsPage() {
     const mode = confirmMode;
     setActionError("");
     setActionMessage("");
+    if (mode === "remove_number") {
+      if (!removalAccount) throw new Error(text("حدّث الصفحة للتحقق من الرقم المحفوظ.", "Refresh the page to verify the saved number."));
+      await removeSavedWhatsAppSession(removalAccount);
+      setLinkingIntent(null);
+      refreshStatus();
+      setConfirmMode(null);
+      setActionMessage(text(
+        "أُزيل الرقم من ميقات. إذا ظل الجهاز ظاهراً في واتساب على الهاتف، أزله من الأجهزة المرتبطة.",
+        "Number removed from Miqat. If the device is still listed on the old phone, remove it from WhatsApp’s Linked devices."
+      ));
+      return;
+    }
     await logoutWhatsApp();
     setLinkingIntent(mode === "relink_same_number" ? "same_number" : "new_number");
     refreshStatus();
@@ -163,16 +177,19 @@ export default function AdminWhatsAppSettingsPage() {
   const isLoggedOut = haltCode === "logged_out";
   const isForbidden = haltCode === "forbidden";
   const canReconnect = waState?.recovery?.canReconnect !== false;
-  const canRelink = waState?.recovery?.canRelink !== false;
+  const queueBusy = waState?.sessionActions?.queueBusy ?? Boolean(waState?.antiBan?.queueLength ?? waState?.queueLength);
+  const canRelink = waState?.recovery?.canRelink !== false && !queueBusy;
+  const canRemove = waState?.sessionActions?.canRemove === true && !queueBusy;
+  const intentionallyRemoved = waState?.sessionActions?.intentionallyRemoved === true;
   const antiBan = waState?.antiBan;
   const queueLength = antiBan?.queueLength ?? waState?.queueLength ?? 0;
 
-  const headerSecondaryActions = !canWrite
+  const switchActions = !canWrite
     ? undefined
     : status === "connected"
       ? [
           {
-            label: text("تسجيل الخروج وتبديل الرقم", "Logout & Switch Number"),
+            label: text("تغيير رقم واتساب", "Change WhatsApp number"),
             icon: LogOut,
             variant: "danger" as const,
             disabled: !canRelink,
@@ -199,11 +216,35 @@ export default function AdminWhatsAppSettingsPage() {
             },
           ];
 
+  const headerSecondaryActions = [
+    ...(switchActions ?? []),
+    ...(canWrite && waState?.sessionActions && hasSavedSession ? [{
+      label: text("إزالة الرقم المحفوظ", "Remove saved number"),
+      icon: LogOut,
+      variant: "danger" as const,
+      disabled: !canRemove,
+      onClick: () => {
+        setRemovalAccount(savedSession?.me_id ?? waState.me_id);
+        setConfirmMode("remove_number");
+      },
+    }] : []),
+  ];
+
   const confirmDialogConfig =
-    confirmMode === "logout_connected"
+    confirmMode === "remove_number"
       ? {
           variant: "danger" as const,
-          title: text("تسجيل الخروج وتبديل الرقم", "Logout & Switch WhatsApp Number"),
+          title: text("إزالة رقم واتساب المحفوظ", "Remove saved WhatsApp number"),
+          message: text(
+            `ستُزال جلسة الرقم ${formatAccountPhone(removalAccount) || ""} من ميقات. سيظل الإرسال متوقفاً حتى ربط رقم آخر.`,
+            `Miqat will remove the session for ${formatAccountPhone(removalAccount) || "the saved number"}. Link a number again to resume sending.`
+          ),
+          confirmLabel: text("إزالة الرقم", "Remove number"),
+        }
+    : confirmMode === "logout_connected"
+      ? {
+          variant: "danger" as const,
+          title: text("تغيير رقم واتساب", "Change WhatsApp number"),
           message: connectedPhone
             ? text(
                 `سيتم فصل الرقم المرتبط حالياً (${connectedPhone}) وحذف بيانات الجلسة وتوليد رمز QR جديد لربط رقم آخر. هل أنت متأكد؟`,
@@ -213,7 +254,7 @@ export default function AdminWhatsAppSettingsPage() {
                 "سيتم فصل الرقم المرتبط حالياً وحذف بيانات الجلسة وتوليد رمز QR جديد للربط. هل أنت متأكد؟",
                 "This will disconnect the currently linked WhatsApp account, clear local session credentials, and generate a new QR code. Continue?"
               ),
-          confirmLabel: text("نعم، تسجيل الخروج", "Yes, Disconnect"),
+          confirmLabel: text("فصل الرقم وإظهار رمز الربط", "Disconnect and show QR"),
         }
       : confirmMode === "relink_same_number"
         ? {
@@ -257,6 +298,17 @@ export default function AdminWhatsAppSettingsPage() {
         isRefreshing={isRefreshing}
         secondaryActions={headerSecondaryActions}
       />
+
+      {canWrite && queueBusy && (
+        <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm">
+          {text("انتظر انتهاء الإرسال الجاري والرسائل المنتظرة قبل تغيير الرقم أو إزالته.", "Wait for queued messages and the current send to finish before changing or removing the number.")}
+        </p>
+      )}
+      {intentionallyRemoved && !hasSavedSession && !isForbidden && status === "disconnected" && (
+        <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm">
+          {text("أُزيل الرقم المحفوظ. اختر ربط رقم جديد عندما تكون جاهزاً.", "The saved number was removed. Link a new number when you’re ready.")}
+        </p>
+      )}
 
       {!canWrite && (
         <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm text-[var(--text-muted)]">
