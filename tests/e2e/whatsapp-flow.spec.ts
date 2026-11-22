@@ -298,3 +298,28 @@ test("reset an unidentified refused sender and link later from settings", async 
   await page.getByRole("button", { name: "Show QR code" }).click();
   await expect(page.getByText("Scan the QR code from the phone for the new number you entered.")).toBeVisible();
 });
+
+test("admin can verify and correct the pending sender after a rejected scan", async ({ page }) => {
+  let pendingPhone = "+966500009224";
+  let submitted = false;
+  await page.route("**/api/proxy/whatsapp/status", route => route.fulfill({ json: { success: true, data: {
+    status: submitted ? "connecting" : "disconnected", haltCode: submitted ? null : "logged_out", qrImage: null,
+    savedSession: submitted ? { hasSession: false } : { hasSession: true, me_id: "201000008461:3@s.whatsapp.net" },
+    sessionActions: { replacementPending: true, pendingPhone, canEditPending: true, queueBusy: false },
+  } } }));
+  await page.route("**/api/proxy/whatsapp/session/pair-pending", route => {
+    expect(route.request().postDataJSON()).toEqual({ expectedPhone: pendingPhone, phone: "+966500002245" });
+    pendingPhone = "+966500002245";
+    submitted = true;
+    return route.fulfill({ json: { success: true } });
+  });
+  await openWhatsApp(page);
+  await expect(page.getByText("Expected WhatsApp sender", { exact: false })).toContainText(pendingPhone);
+  await expect(page.getByRole("button", { name: "Re-link Same Number (New QR)" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Review sender and get a fresh QR" }).click();
+  const phone = page.getByRole("dialog").getByRole("textbox", { name: "New WhatsApp number" });
+  await expect(phone).toHaveValue(pendingPhone);
+  await phone.fill("\u202a+966 50 000 2245\u202c");
+  await page.getByRole("button", { name: "Show QR code" }).click();
+  await expect(page.getByText("Expected WhatsApp sender", { exact: false })).toContainText("+966500002245");
+});

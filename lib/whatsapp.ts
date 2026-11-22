@@ -57,6 +57,8 @@ export interface WhatsAppStatus {
     needsPreviousNumber?: boolean;
     canReplaceRefused?: boolean;
     replacementPending?: boolean;
+    pendingPhone?: string;
+    canEditPending?: boolean;
   };
   haltCode?: WhatsAppHaltCode | null;
   savedSession?: SavedWhatsAppSessionInfo;
@@ -302,6 +304,20 @@ export async function replaceRefusedWhatsAppSession(phone: string, previousPhone
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone, previousPhone }),
   });
+  await finishPairingRequest(response);
+}
+
+export async function retryPendingWhatsAppPairing(expectedPhone: string, phone: string): Promise<void> {
+  const response = await fetch(backendUrl("/whatsapp/session/pair-pending"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expectedPhone, phone }),
+  });
+  await finishPairingRequest(response);
+}
+
+async function finishPairingRequest(response: Response): Promise<void> {
   const data = await parseWhatsAppJson<WhatsAppStatusPayload>(response);
   if (!response.ok || !data?.success) {
     throw new Error(resolveWhatsAppError(

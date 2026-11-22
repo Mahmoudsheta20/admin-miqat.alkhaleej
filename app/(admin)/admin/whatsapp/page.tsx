@@ -29,6 +29,7 @@ import {
   reconnectWhatsApp,
   removeSavedWhatsAppSession,
   replaceRefusedWhatsAppSession,
+  retryPendingWhatsAppPairing,
   sendWhatsAppMessage,
 } from "@/lib/whatsapp";
 
@@ -37,8 +38,8 @@ type LinkingIntent = "same_number" | "new_number";
 
 function formatAccountPhone(meId?: string): string | null {
   if (!meId) return null;
-  const raw = meId.split(":")[0]?.split("@")[0];
-  return raw ? `+${raw}` : null;
+  const phone = /^(\d+)(?::\d+)?@(?:s\.whatsapp\.net|c\.us)$/.exec(meId)?.[1];
+  return phone ? `+${phone}` : null;
 }
 
 export default function AdminWhatsAppSettingsPage() {
@@ -57,6 +58,7 @@ export default function AdminWhatsAppSettingsPage() {
   const refreshStatus = statusQuery.refetch;
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [confirmMode, setConfirmMode] = useState<ConfirmResetMode | null>(null);
+  const [editingPending, setEditingPending] = useState<string>();
   const [replacementOpen, setReplacementOpen] = useState(false);
   const [replacementPhone, setReplacementPhone] = useState("");
   const [previousPhone, setPreviousPhone] = useState("");
@@ -140,15 +142,16 @@ export default function AdminWhatsAppSettingsPage() {
 
   function openReplacement() {
     setPreviousPhone("");
-    setReplacementPhone("");
+    setEditingPending(pendingPhone);
+    setReplacementPhone(pendingPhone ?? "");
     setReplacementError("");
     setReplacementOpen(true);
   }
 
   async function handleReplaceRefused(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canWrite || replacementLock.current || !waState?.sessionActions?.canReplaceRefused) return;
-    const next = replacementPhone.trim();
+    if (!canWrite || replacementLock.current || !canSubmitPairing) return;
+    const next = replacementPhone.replace(/[\s\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "");
     if (!/^\+?[1-9]\d{7,14}$/.test(next)) {
       setReplacementError(text("أدخل الرقم الجديد مع رمز الدولة وبدون مسافات.", "Enter the new number with country code and no spaces."));
       return;
@@ -168,7 +171,8 @@ export default function AdminWhatsAppSettingsPage() {
     setActionError("");
     setActionMessage("");
     try {
-      await replaceRefusedWhatsAppSession(next, previous);
+      if (editingPending) await retryPendingWhatsAppPairing(editingPending, next);
+      else await replaceRefusedWhatsAppSession(next, previous);
       setLinkingIntent("new_number");
       setReplacementOpen(false);
       refreshStatus();
@@ -239,7 +243,12 @@ export default function AdminWhatsAppSettingsPage() {
   const needsPreviousNumber = waState?.sessionActions?.needsPreviousNumber === true;
   const canReplaceRefused = waState?.sessionActions?.canReplaceRefused === true && !queueBusy;
   const replacementPending = waState?.sessionActions?.replacementPending === true;
-  const replacementTitle = text("ربط رقم مختلف", "Link a different number");
+  const pendingPhone = waState?.sessionActions?.pendingPhone;
+  const canEditPending = Boolean(pendingPhone && waState?.sessionActions?.canEditPending && !queueBusy);
+  const canSubmitPairing = editingPending ? canEditPending && editingPending === pendingPhone : canReplaceRefused;
+  const replacementTitle = pendingPhone
+    ? text("تأكيد رقم الربط", "Confirm pairing number")
+    : text("ربط رقم مختلف", "Link a different number");
   const intentionallyRemoved = waState?.sessionActions?.intentionallyRemoved === true;
   const antiBan = waState?.antiBan;
   const queueLength = antiBan?.queueLength ?? waState?.queueLength ?? 0;
@@ -277,7 +286,7 @@ export default function AdminWhatsAppSettingsPage() {
           ];
 
   const headerSecondaryActions = [
-    ...(canWrite && canReplaceRefused ? [{
+    ...(canWrite && (canReplaceRefused || canEditPending) ? [{
       label: replacementTitle,
       icon: QrCode,
       variant: "secondary" as const,
@@ -412,7 +421,9 @@ export default function AdminWhatsAppSettingsPage() {
 
       {replacementPending && !isForbidden && status !== "connected" && (
         <p role="status" className="rounded-xl border theme-border bg-[var(--bg-card-subtle)] px-4 py-3 text-sm">
-          {text("امسح رمز الربط من هاتف الرقم الجديد الذي أدخلته.", "Scan the QR code from the phone for the new number you entered.")}
+          {pendingPhone
+            ? <>{text("رقم واتساب المطلوب للربط", "Expected WhatsApp sender")} <bdi dir="ltr">{pendingPhone}</bdi></>
+            : text("امسح رمز الربط من هاتف الرقم الجديد الذي أدخلته.", "Scan the QR code from the phone for the new number you entered.")}
         </p>
       )}
 
@@ -627,8 +638,8 @@ export default function AdminWhatsAppSettingsPage() {
                   <div className="pt-1 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      disabled={!canRelink}
-                      onClick={() => setConfirmMode("new_number")}
+                      disabled={pendingPhone ? !canEditPending : !canRelink}
+                      onClick={pendingPhone ? openReplacement : () => setConfirmMode("new_number")}
                       className="min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -676,11 +687,11 @@ export default function AdminWhatsAppSettingsPage() {
                 <div className="pt-1">
                   <button
                     type="button"
-                    disabled={!canRelink}
-                    onClick={() => setConfirmMode("new_number")}
+                    disabled={pendingPhone ? !canEditPending : !canRelink}
+                    onClick={pendingPhone ? openReplacement : () => setConfirmMode("new_number")}
                     className="min-h-11 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-[var(--control-border)] bg-[var(--bg-card-subtle)] text-[var(--text-main)] hover:bg-[var(--table-row-hover)] transition cursor-pointer disabled:opacity-50"
                   >
-                    {hasSavedSession
+                    {pendingPhone ? replacementTitle : hasSavedSession
                       ? text("إلغاء وتغيير الرقم", "Cancel & Switch Number")
                       : text("إعادة تهيئة وربط رقم جديد", "Reset & Link New Number")}
                   </button>
@@ -722,7 +733,9 @@ export default function AdminWhatsAppSettingsPage() {
                   <div className="flex items-center gap-2.5">
                     <Smartphone className="w-4 h-4 text-[var(--accent-gold)] shrink-0" aria-hidden="true" />
                     <span className="text-xs font-bold text-[var(--text-main)]">
-                      {text("الجلسة المحفوظة على الخادم", "Saved Session on Server")}
+                      {replacementPending
+                        ? text("الرقم الظاهر في بيانات الربط", "Number in the pairing credentials")
+                        : text("الجلسة المحفوظة على الخادم", "Saved Session on Server")}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-[var(--text-muted)]">
@@ -734,7 +747,7 @@ export default function AdminWhatsAppSettingsPage() {
                     )}
                     {(savedPhone || savedSession?.me_id) && (
                       <span>
-                        {text("الرقم المحفوظ:", "Saved Phone:")}{" "}
+                        {savedPhone ? text("الرقم المحفوظ:", "Saved Phone:") : text("معرف الحساب:", "Account ID:")}{" "}
                         <bdi dir="ltr" className="font-mono font-bold text-[var(--text-main)]">
                           {savedPhone ?? savedSession?.me_id}
                         </bdi>
@@ -747,6 +760,8 @@ export default function AdminWhatsAppSettingsPage() {
                           "رفض واتساب الاتصال بهذا الرقم (403). راجع حالته مع واتساب قبل استخدامه مجدداً.",
                           "WhatsApp refused this number’s connection (403). Review its status with WhatsApp before using it again."
                         )
+                      : pendingPhone
+                        ? text("تحقق من رقم الربط المطلوب ثم امسح الرمز من حساب واتساب الخاص به.", "Check the expected sender, then scan using that WhatsApp account.")
                       : isLoggedOut
                         ? text(
                             "تم تسجيل خروج هذا الجهاز أو فصله من واتساب. يمكنك إعادة ربط نفس الرقم برمز QR جديد أو تغيير الرقم بالكامل.",
@@ -761,7 +776,11 @@ export default function AdminWhatsAppSettingsPage() {
               )}
               {canWrite && (
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                  {canResetUnidentified || canReplaceRefused ? (
+                  {pendingPhone ? (
+                    <button type="button" disabled={!canEditPending} onClick={openReplacement} className="gold-gradient-btn min-h-11 rounded-lg px-4 disabled:opacity-50">
+                      {text("مراجعة الرقم وإصدار رمز جديد", "Review sender and get a fresh QR")}
+                    </button>
+                  ) : canResetUnidentified || canReplaceRefused ? (
                     <>
                       {canResetUnidentified && (
                         <button type="button" onClick={() => setConfirmMode("reset_unidentified")} className="theme-input min-h-11 rounded-lg px-4">
@@ -1045,7 +1064,9 @@ export default function AdminWhatsAppSettingsPage() {
           <form onSubmit={handleReplaceRefused} className="mobile-dialog-panel theme-card w-full max-w-md rounded-2xl p-5 space-y-4">
             <h2 className="text-base font-semibold">{replacementTitle}</h2>
             <p className="text-sm text-[var(--text-muted)]">
-              {intentionallyRemoved
+              {editingPending
+                ? text("سيتم إلغاء محاولة الربط الحالية وإصدار رمز جديد للرقم الذي تؤكده.", "Confirm the sender to replace the current pairing attempt and issue a fresh QR.")
+                : intentionallyRemoved
                 ? text("أدخل الرقم الجديد ثم امسح رمز QR من هاتفه.", "Enter the new number, then scan the QR code from that phone.")
                 : text("ستُزال جلسة الرقم المرفوض من ميقات. بعد ظهور رمز QR امسحه من الهاتف المرتبط بالرقم الجديد.", "Miqat will remove the refused number’s session. Scan the QR code from the phone registered to the new number.")}
             </p>
@@ -1060,7 +1081,7 @@ export default function AdminWhatsAppSettingsPage() {
             )}
             <div className="space-y-1">
               <label htmlFor="wa-replacement-phone" className="block text-sm font-medium">{text("رقم واتساب الجديد", "New WhatsApp number")}</label>
-              <input id="wa-replacement-phone" type="tel" inputMode="tel" dir="ltr" autoComplete="off" required maxLength={16}
+              <input id="wa-replacement-phone" type="tel" inputMode="tel" dir="ltr" autoComplete="off" required maxLength={32}
                 value={replacementPhone} onChange={event => setReplacementPhone(event.target.value)} disabled={replacing}
                 aria-describedby="wa-replacement-hint" className="theme-input min-h-11 w-full rounded-lg px-3" />
               <p id="wa-replacement-hint" className="text-xs text-[var(--text-muted)]">{text("استخدم رمز الدولة، مثال: ‎+9665XXXXXXXX", "Include the country code, for example +9665XXXXXXXX.")}</p>
@@ -1068,8 +1089,8 @@ export default function AdminWhatsAppSettingsPage() {
             {replacementError && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{replacementError}</p>}
             <div className="flex justify-end flex-wrap gap-2">
               <button type="button" disabled={replacing} onClick={() => setReplacementOpen(false)} className="theme-input min-h-11 rounded-lg px-4">{text("إلغاء", "Cancel")}</button>
-              <button type="submit" disabled={replacing || !canReplaceRefused} className="gold-gradient-btn min-h-11 rounded-lg px-4 disabled:opacity-50">
-                {replacing ? text("جار تجهيز الربط…", "Preparing link…") : intentionallyRemoved ? text("إظهار رمز الربط", "Show QR code") : text("إزالة القديم وتجهيز رمز الربط", "Remove old session and show QR")}
+              <button type="submit" disabled={replacing || !canSubmitPairing} className="gold-gradient-btn min-h-11 rounded-lg px-4 disabled:opacity-50">
+                {replacing ? text("جار تجهيز الربط…", "Preparing link…") : editingPending || intentionallyRemoved ? text("إظهار رمز الربط", "Show QR code") : text("إزالة القديم وتجهيز رمز الربط", "Remove old session and show QR")}
               </button>
             </div>
           </form>
