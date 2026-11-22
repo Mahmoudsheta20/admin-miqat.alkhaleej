@@ -71,7 +71,7 @@ test("fetchWhatsAppFlowOverview requests /api/proxy/whatsapp/flow with credentia
         success: true,
         config: {
           enabled: true,
-          adminPhone: "+966577842926",
+          adminPhone: "+966500000008",
           notifyOnContractSent: true,
           notifyOnInvoiceSent: true,
           notifyOnCaptainAction: true,
@@ -108,7 +108,7 @@ test("fetchWhatsAppFlowOverview requests /api/proxy/whatsapp/flow with credentia
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "/api/proxy/whatsapp/flow");
   assert.equal(calls[0].init.credentials, "include");
-  assert.equal(overview.config.adminPhone, "+966577842926");
+  assert.equal(overview.config.adminPhone, "+966500000008");
   assert.equal(overview.config.interactiveMode, "reactions_and_links");
   assert.equal(overview.config.captainButtons[0]?.emoji, "👍");
 });
@@ -122,7 +122,7 @@ test("updateWhatsAppFlowConfig sends PUT payload and returns updated config", as
         success: true,
         config: {
           enabled: true,
-          adminPhone: "+966577842926",
+          adminPhone: "+966500000008",
           autoSendContractDefault: true,
         },
       }),
@@ -131,12 +131,12 @@ test("updateWhatsAppFlowConfig sends PUT payload and returns updated config", as
   });
 
   const saved = await api.updateWhatsAppFlowConfig({
-    adminPhone: "+966577842926",
+    adminPhone: "+966500000008",
     autoSendContractDefault: true,
   });
   assert.equal(sent.url, "/api/proxy/whatsapp/flow/config");
   assert.equal(sent.method, "PUT");
-  assert.equal(sent.body.adminPhone, "+966577842926");
+  assert.equal(sent.body.adminPhone, "+966500000008");
   assert.equal(sent.body.autoSendContractDefault, true);
   assert.equal(saved.autoSendContractDefault, true);
 });
@@ -192,7 +192,7 @@ test("sendWhatsAppFlowTest posts to /api/proxy/whatsapp/flow/test", async () => 
       JSON.stringify({
         success: true,
         message: "Queued",
-        data: { jobId: "wa_1", position: 1, adminPhone: "+966577842926" },
+        data: { jobId: "wa_1", position: 1, adminPhone: "+966500000008" },
       }),
       { status: 200, headers: { "content-type": "application/json" } },
     );
@@ -201,7 +201,7 @@ test("sendWhatsAppFlowTest posts to /api/proxy/whatsapp/flow/test", async () => 
   const res = await api.sendWhatsAppFlowTest();
   assert.equal(targetUrl, "/api/proxy/whatsapp/flow/test");
   assert.equal(method, "POST");
-  assert.equal(res.data.adminPhone, "+966577842926");
+  assert.equal(res.data.adminPhone, "+966500000008");
 });
 
 test("document adapters preserve PDF fallback metadata and prefer server error reasons", async () => {

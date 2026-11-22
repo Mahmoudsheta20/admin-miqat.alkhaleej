@@ -989,7 +989,7 @@ export default function AdminWhatsAppSettingsPage() {
         </section>
       </div>
 
-      {/* WhatsApp Interactive Flow Designer & Monitor (+966577842926) */}
+      {/* WhatsApp Interactive Flow Designer & Monitor */}
       {statusQuery.data?.driverWorkflow?.enabled
         ? <WhatsAppDriverTrips canSend={statusQuery.canSend} managementTarget={statusQuery.data.driverWorkflow.managementTarget} />
         : statusQuery.data && !statusQuery.error ? <WhatsAppFlowPanel waConnected={statusQuery.canSend} /> : null}

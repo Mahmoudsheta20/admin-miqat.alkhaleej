@@ -9,7 +9,6 @@ import {
   Loader2,
   MousePointerClick,
   RefreshCw,
-  RotateCcw,
   Save,
   Send,
   Workflow,
@@ -27,8 +26,6 @@ import {
   type WhatsAppFlowOverview,
   type WhatsAppFlowStatus,
 } from "@/lib/whatsapp";
-
-const DEFAULT_ADMIN_PHONE = "+966577842926";
 
 /** Prefix a captain step label with its reaction emoji without duplicating leading emoji. */
 function formatCaptainStepLabel(emoji: string | undefined, label: string): string {
@@ -146,18 +143,21 @@ export default function WhatsAppFlowPanel({
   }
 
   async function handleSendFlowTest() {
-    if (!canWrite || isTesting || hasUnsavedChanges || !waConnected) return;
+    if (!canWrite || isTesting || hasUnsavedChanges || !waConnected || !draftConfig?.adminPhone?.trim()) return;
     setIsTesting(true);
     setSaveError("");
     setSaveMessage("");
     try {
       const res = await sendWhatsAppFlowTest();
+      const targetPhone = res.data?.adminPhone || draftConfig.adminPhone.trim();
       setSaveMessage(
         res.message ||
-          text(
-            `تمت جدولة رسالة اختبار التدفق إلى ${draftConfig?.adminPhone || DEFAULT_ADMIN_PHONE}`,
-            `Flow test message queued to ${draftConfig?.adminPhone || DEFAULT_ADMIN_PHONE}`,
-          ),
+          (targetPhone
+            ? text(
+                `تمت جدولة رسالة اختبار التدفق إلى ${targetPhone}`,
+                `Flow test message queued to ${targetPhone}`,
+              )
+            : text("تمت جدولة رسالة اختبار التدفق.", "Flow test message queued.")),
       );
     } catch (err: unknown) {
       setSaveError(
@@ -221,10 +221,15 @@ export default function WhatsAppFlowPanel({
               )}
             </h2>
             <p className="text-xs text-[var(--text-muted)]">
-              {text(
-                `إشعار فوري لرقم الإدارة (${draftConfig?.adminPhone || DEFAULT_ADMIN_PHONE}) عند كل عملية مع أزرار تفاعلية للكابتن والإدارة.`,
-                `Mirrors contract/invoice/arrival events to admin phone (${draftConfig?.adminPhone || DEFAULT_ADMIN_PHONE}) with interactive buttons.`,
-              )}
+              {draftConfig?.adminPhone?.trim()
+                ? text(
+                    `إشعار فوري لرقم الإدارة (${draftConfig.adminPhone.trim()}) عند كل عملية مع أزرار تفاعلية للكابتن والإدارة.`,
+                    `Mirrors contract/invoice/arrival events to admin phone (${draftConfig.adminPhone.trim()}) with interactive buttons.`,
+                  )
+                : text(
+                    "أدخل رقم الإدارة أدناه لتلقي إشعارات فورية عند كل عملية مع أزرار تفاعلية للكابتن والإدارة.",
+                    "Enter an admin phone below to mirror contract/invoice/arrival events with interactive buttons.",
+                  )}
             </p>
           </div>
         </div>
@@ -253,7 +258,7 @@ export default function WhatsAppFlowPanel({
           {canWrite && (
             <button
               type="button"
-              disabled={!waConnected || isTesting || hasUnsavedChanges || isSaving || Boolean(loadError)}
+              disabled={!waConnected || isTesting || hasUnsavedChanges || isSaving || Boolean(loadError) || !draftConfig?.adminPhone?.trim()}
               onClick={() => void handleSendFlowTest()}
               className="min-h-11 sm:min-h-11 px-3.5 py-1.5 rounded-lg border border-emerald-600/35 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20 text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
@@ -421,24 +426,13 @@ export default function WhatsAppFlowPanel({
                     type="tel"
                     inputMode="tel"
                     dir="ltr"
-                    required
+                    placeholder="+9665xxxxxxxx"
                     value={draftConfig.adminPhone}
                     onChange={(e) =>
                       setDraftConfig({ ...draftConfig, adminPhone: e.target.value })
                     }
                     className="theme-input flex-1 min-h-11 sm:min-h-11 rounded-lg px-3 py-1.5 text-sm font-mono text-start"
                   />
-                  <button
-                    type="button"
-                    title={text("استعادة الرقم الافتراضي +966577842926", "Restore +966577842926")}
-                    onClick={() =>
-                      setDraftConfig({ ...draftConfig, adminPhone: DEFAULT_ADMIN_PHONE })
-                    }
-                    className="min-h-11 sm:min-h-11 px-3 rounded-lg border theme-border bg-[var(--bg-card)] hover:bg-[var(--table-row-hover)] text-xs font-bold text-[var(--text-main)] inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span dir="ltr">{DEFAULT_ADMIN_PHONE}</span>
-                  </button>
                 </div>
               </div>
 

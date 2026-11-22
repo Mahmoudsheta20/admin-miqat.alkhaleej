@@ -172,7 +172,7 @@ export default function InvoiceForm({
         flowRes.status === "fulfilled" ? flowRes.value?.config ?? null : null;
       setWhatsAppMeta({
         connected,
-        adminFlowPhone: flowConfig?.adminPhone || "+966577842926",
+        adminFlowPhone: flowConfig?.adminPhone?.trim() || "",
       });
       if (flowConfig?.autoSendInvoiceDefault && !autoSendTouchedRef.current) {
         setAutoSendWhatsApp(true);

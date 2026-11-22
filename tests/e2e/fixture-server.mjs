@@ -36,7 +36,7 @@ const nowIso=new Date().toISOString();
 const waFixtureFlow={
  config:{
   enabled:true,
-  adminPhone:'+966577842926',
+  adminPhone:'+966500000008',
   notifyOnContractSent:true,
   notifyOnInvoiceSent:true,
   notifyOnCaptainAction:true,
@@ -79,7 +79,7 @@ const waFixtureFlow={
   actorRole:'SYSTEM',
   actorPhone:captain.phone,
   label:'إرسال عقد للكابتن',
-  summary:`تم إرسال العقد ${contract.referenceNumber} للكابتن وتنبيه ${'+966577842926'}`,
+  summary:`تم إرسال العقد ${contract.referenceNumber} للكابتن وتنبيه ${'+966500000008'}`,
   timestamp:nowIso,
  }],
 };

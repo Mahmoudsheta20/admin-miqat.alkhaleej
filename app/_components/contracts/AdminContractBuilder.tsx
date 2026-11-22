@@ -287,7 +287,7 @@ export default function AdminContractBuilder({
         flowRes.status === "fulfilled" ? flowRes.value?.config ?? null : null;
       setWhatsAppMeta({
         connected,
-        adminFlowPhone: flowConfig?.adminPhone || "+966577842926",
+        adminFlowPhone: flowConfig?.adminPhone?.trim() || "",
       });
       if (flowConfig?.autoSendContractDefault && !autoSendTouchedRef.current) {
         setAutoSendWhatsApp(true);
@@ -781,10 +781,15 @@ export default function AdminContractBuilder({
             {createdContract.whatsAppAutoSend.success &&
               createdContract.whatsAppAutoSend.adminNotified && (
                 <p className="text-xs opacity-90">
-                  {text(
-                    `تمت جدولة إشعار الإدارة (${createdContract.whatsAppAutoSend.adminPhone || "+966577842926"}). تابع سجل الأحداث لتأكيد الإرسال.`,
-                    `Admin notification queued for ${createdContract.whatsAppAutoSend.adminPhone || "+966577842926"}. Check the event log for dispatch confirmation.`,
-                  )}
+                  {createdContract.whatsAppAutoSend.adminPhone
+                    ? text(
+                        `تمت جدولة إشعار الإدارة (${createdContract.whatsAppAutoSend.adminPhone}). تابع سجل الأحداث لتأكيد الإرسال.`,
+                        `Admin notification queued for ${createdContract.whatsAppAutoSend.adminPhone}. Check the event log for dispatch confirmation.`,
+                      )
+                    : text(
+                        "تمت جدولة إشعار الإدارة. تابع سجل الأحداث لتأكيد الإرسال.",
+                        "Admin notification queued. Check the event log for dispatch confirmation.",
+                      )}
                 </p>
               )}
           </div>

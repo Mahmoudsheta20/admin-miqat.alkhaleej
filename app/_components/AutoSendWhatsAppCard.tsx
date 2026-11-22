@@ -45,7 +45,7 @@ export default function AutoSendWhatsAppCard({
   titleEn,
   subtitleEn,
   waConnected,
-  adminFlowPhone = "+966577842926",
+  adminFlowPhone = "",
   disabled = false,
   guestPhone = "",
   onGuestPhoneChange,
@@ -251,7 +251,7 @@ export default function AutoSendWhatsAppCard({
             <p className="font-semibold text-[var(--text-main)]">
               {text("إشعار التدفق للإدارة:", "Admin flow alert:")}{" "}
               <bdi dir="ltr" className="font-mono text-[var(--accent-gold)]">
-                {adminFlowPhone || "+966577842926"}
+                {adminFlowPhone?.trim() || text("غير محدد", "Not set")}
               </bdi>
             </p>
             <p className="mt-0.5 leading-snug">

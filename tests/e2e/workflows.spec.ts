@@ -681,13 +681,13 @@ test("admin WhatsApp settings page displays QR code from backend status", async 
   await login(page);
   await page.goto("/admin/whatsapp");
   await expect(
-    page.getByRole("heading", { name: /ربط الواتساب/ }),
+    page.getByRole("heading", { level: 1, name: /ربط الواتساب/ }),
   ).toBeVisible();
   const qrImg = page.getByAltText("رمز QR لربط الواتساب");
   await expect(qrImg).toBeVisible();
   await expect(qrImg).toHaveAttribute("src", /^data:image\/png;base64,/);
 });
-test("admin WhatsApp flow panel configures +966577842926 and triggers flow steps cleanly", async ({
+test("admin WhatsApp flow panel configures admin phone and triggers flow steps cleanly", async ({
   page,
 }) => {
   await preferences(page, "ar");
@@ -702,7 +702,7 @@ test("admin WhatsApp flow panel configures +966577842926 and triggers flow steps
 
   const adminPhoneInput = page.locator("#wa-flow-admin-phone");
   await expect(adminPhoneInput).toBeVisible();
-  await expect(adminPhoneInput).toHaveValue("+966577842926");
+  await expect(adminPhoneInput).toHaveValue("+966500000008");
   await expect(page.getByText("MQ-FIXTURE-001").first()).toBeVisible();
 
   await adminPhoneInput.fill("+966500000001");
@@ -719,10 +719,8 @@ test("admin WhatsApp flow panel configures +966577842926 and triggers flow steps
     page.getByText("تم حفظ إعدادات نظام التدفق والأزرار التفاعلية بنجاح."),
   ).toBeVisible();
 
-  await page
-    .getByRole("button", { name: "+966577842926", exact: true })
-    .click();
-  await expect(adminPhoneInput).toHaveValue("+966577842926");
+  await adminPhoneInput.fill("+966500000008");
+  await expect(adminPhoneInput).toHaveValue("+966500000008");
   const restoreSave = page.waitForResponse(
     (res) =>
       res.request().method() === "PUT" &&
@@ -795,7 +793,7 @@ test("admin contract creation supports WhatsApp auto-send and shows confirmation
   ).toBeVisible();
   await expect(
     page.getByText(
-      "Admin notification queued for +966577842926. Check the event log for dispatch confirmation.",
+      "Admin notification queued for +966500000008. Check the event log for dispatch confirmation.",
     ),
   ).toBeVisible();
 });
@@ -848,7 +846,7 @@ test("admin invoice creation supports WhatsApp auto-send and shows notice on inv
   await expect(statusBanner).toContainText(
     "تم إرسال الفاتورة تلقائياً عبر واتساب إلى +966559998877",
   );
-  await expect(statusBanner).toContainText("+966577842926");
+  await expect(statusBanner).toContainText("+966500000008");
 });
 test("expense entry saves supplier details and exact amounts in the isolated backend", async ({
   page,
